@@ -644,6 +644,20 @@ export default function SubDealerDashboard() {
   const [rejectReason, setRejectReason] = useState('')
   const [rejectSubmitting, setRejectSubmitting] = useState(false)
 
+  // ── BUY COIN (request to Dealer) ──
+  const [showBuyCoin, setShowBuyCoin] = useState(false)
+  const [coinCart, setCoinCart] = useState([])
+  const [coinBuyMsg, setCoinBuyMsg] = useState('')
+  const [coinBuySubmitting, setCoinBuySubmitting] = useState(false)
+  const [selCoinMetal, setSelCoinMetal] = useState('gold_22k')
+  const [selCoinWeight, setSelCoinWeight] = useState('')
+  const [selCoinQty, setSelCoinQty] = useState('')
+
+  // ── STORED COIN ──
+  const [showStoredCoin, setShowStoredCoin] = useState(false)
+  const [coinStock, setCoinStock] = useState([])
+  const [coinStockLoading, setCoinStockLoading] = useState(false)
+
   const [replyAnn, setReplyAnn] = useState(null)
   const [replyText, setReplyText] = useState('')
   const [replyLoading, setReplyLoading] = useState(false)
@@ -1091,6 +1105,62 @@ const rejectCoinRequest = async (reqId) => {
   setRejectSubmitting(false)
 }
 
+// ── BUY COIN helpers ──
+const COIN_WEIGHTS_GOLD = [
+  { label: '50 mg', grams: 0.05 }, { label: '100 mg', grams: 0.10 }, { label: '150 mg', grams: 0.15 },
+  { label: '200 mg', grams: 0.20 }, { label: '500 mg', grams: 0.50 }, { label: '1 gm', grams: 1 },
+  { label: '2 gm', grams: 2 }, { label: '4 gm', grams: 4 }, { label: '8 gm', grams: 8 },
+]
+const COIN_WEIGHTS_SILVER = [
+  { label: '500 mg', grams: 0.50 }, { label: '1 gm', grams: 1 }, { label: '2 gm', grams: 2 },
+  { label: '5 gm', grams: 5 }, { label: '10 gm', grams: 10 }, { label: '20 gm', grams: 20 },
+  { label: '50 gm', grams: 50 }, { label: '100 gm', grams: 100 },
+]
+
+const addToCoinCart = () => {
+  if (!selCoinWeight || !selCoinQty || Number(selCoinQty) < 1) {
+    setCoinBuyMsg('error:Please select weight and quantity')
+    return
+  }
+  const weightsArr = selCoinMetal === 'silver_999' ? COIN_WEIGHTS_SILVER : COIN_WEIGHTS_GOLD
+  const w = weightsArr.find(x => x.label === selCoinWeight)
+  if (!w) return
+  setCoinCart(prev => [...prev, { metal_type: selCoinMetal, weight_label: w.label, weight_grams: w.grams, qty: Number(selCoinQty) }])
+  setSelCoinWeight('')
+  setSelCoinQty('')
+  setCoinBuyMsg('')
+}
+
+const removeCoinCartItem = (idx) => {
+  setCoinCart(prev => prev.filter((_, i) => i !== idx))
+}
+
+const submitCoinRequest = async () => {
+  if (coinCart.length === 0) {
+    setCoinBuyMsg('error:Add at least one item to the cart')
+    return
+  }
+  setCoinBuySubmitting(true)
+  try {
+    await api.post('/coin-requests/', { items: coinCart })
+    setCoinBuyMsg('success:Request sent to Dealer!')
+    setCoinCart([])
+    setTimeout(() => { setShowBuyCoin(false); setCoinBuyMsg('') }, 1400)
+  } catch (err) {
+    setCoinBuyMsg('error:' + (err.response?.data?.error || 'Failed to send request'))
+  }
+  setCoinBuySubmitting(false)
+}
+
+const fetchCoinStock = async () => {
+  setCoinStockLoading(true)
+  try {
+    const res = await api.get('/coin-stock/')
+    setCoinStock(res.data)
+  } catch { setCoinStock([]) }
+  setCoinStockLoading(false)
+}
+
   const fetchAnnouncements = async () => {
     try {
       const res = await api.get('/announcements/')
@@ -1246,7 +1316,33 @@ const handleSubmit = async e => {
             title="View Profile"
           >💎</div>
 
-          {/* 🪙 Request Coin Button */}
+          {/* Buy Coin Button */}
+          <div
+            onClick={() => { setShowBuyCoin(true); setCoinCart([]); setCoinBuyMsg('') }}
+            style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>
+            </svg>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#fbbf24' }}>Buy Coin</span>
+          </div>
+
+          {/* Stored Coin Button */}
+          <div
+            onClick={() => { setShowStoredCoin(true); fetchCoinStock() }}
+            style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(74,222,128,0.4)', background: 'rgba(74,222,128,0.1)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>
+            </svg>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#4ade80' }}>Stored Coin</span>
+          </div>
+
+          {/* Coin Requests Button */}
           <div
             onClick={() => { setShowRequestCoin(true); fetchCoinRequests(); setCoinReqMsg('') }}
             style={{ position: 'relative', cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease' }}
@@ -1880,6 +1976,117 @@ const handleSubmit = async e => {
                         </div>
                       </div>
                     )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── BUY COIN POPUP (request to Dealer) ── */}
+        {showBuyCoin && (
+          <div onClick={() => setShowBuyCoin(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 1400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#0a1628,#060e1c)' : '#f8fafc', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '24px', width: '95%', maxWidth: '560px', maxHeight: '88vh', overflowY: 'auto', padding: '28px', boxShadow: '0 32px 90px rgba(0,0,0,0.8)' }}>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: '16px' }}>Buy Coin — Request</div>
+                  <div style={{ color: subtext, fontSize: '11px', marginTop: '3px' }}>Add coin types and weights, then send request to your Dealer</div>
+                </div>
+                <button onClick={() => setShowBuyCoin(false)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                {['gold_22k', 'gold_24k', 'silver_999'].map(m => (
+                  <div key={m} onClick={() => { setSelCoinMetal(m); setSelCoinWeight('') }}
+                    style={{ flex: 1, textAlign: 'center', padding: '10px 0', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: '12px',
+                      background: selCoinMetal === m ? 'rgba(251,191,36,0.2)' : inpBg,
+                      border: `1.5px solid ${selCoinMetal === m ? 'rgba(251,191,36,0.7)' : inpBorder}`,
+                      color: selCoinMetal === m ? '#fbbf24' : subtext }}>
+                    {COIN_METAL_LABELS_TEXT[m]}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', marginBottom: '14px' }}>
+                <div>
+                  <label style={{ color: subtext, fontSize: '11px', fontWeight: 700, display: 'block', marginBottom: '6px' }}>WEIGHT</label>
+                  <select value={selCoinWeight} onChange={e => setSelCoinWeight(e.target.value)}
+                    style={{ width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '10px', padding: '11px 12px', color: text, fontSize: '13px', outline: 'none', cursor: 'pointer' }}>
+                    <option value="" style={{ background: optionBg }}>-- Select --</option>
+                    {(selCoinMetal === 'silver_999' ? COIN_WEIGHTS_SILVER : COIN_WEIGHTS_GOLD).map(w => (
+                      <option key={w.label} value={w.label} style={{ background: optionBg }}>{w.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ color: subtext, fontSize: '11px', fontWeight: 700, display: 'block', marginBottom: '6px' }}>QTY</label>
+                  <input type="number" min="1" value={selCoinQty} onChange={e => setSelCoinQty(e.target.value)}
+                    style={{ width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '10px', padding: '11px 12px', color: text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <button onClick={addToCoinCart}
+                    style={{ padding: '11px 18px', background: 'linear-gradient(90deg,#f472b6,#a78bfa)', border: 'none', borderRadius: '10px', color: '#3b0024', fontWeight: 800, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    + Add
+                  </button>
+                </div>
+              </div>
+
+              {coinCart.length > 0 && (
+                <div style={{ marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {coinCart.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '10px' }}>
+                      <span style={{ color: text, fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} — {item.weight_label} × {item.qty}</span>
+                      <button onClick={() => removeCoinCartItem(idx)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', fontSize: '11px' }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {coinBuyMsg && (
+                <div style={{
+                  background: coinBuyMsg.startsWith('success:') ? 'rgba(74,222,128,0.1)' : 'rgba(239,68,68,0.1)',
+                  border: `1px solid ${coinBuyMsg.startsWith('success:') ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                  color: coinBuyMsg.startsWith('success:') ? '#4ade80' : '#f87171',
+                  borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px'
+                }}>
+                  {coinBuyMsg.replace('success:', '').replace('error:', '')}
+                </div>
+              )}
+
+              <button
+                disabled={coinBuySubmitting || coinCart.length === 0}
+                onClick={submitCoinRequest}
+                style={{ width: '100%', padding: '14px', background: coinBuySubmitting || coinCart.length === 0 ? 'rgba(244,114,182,0.2)' : 'linear-gradient(90deg,#f472b6,#a78bfa)', border: 'none', borderRadius: '12px', fontWeight: 900, fontSize: '14px', color: '#3b0024', cursor: coinBuySubmitting || coinCart.length === 0 ? 'not-allowed' : 'pointer' }}>
+                {coinBuySubmitting ? 'Sending Request...' : 'Confirm & Send Request'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── STORED COIN POPUP ── */}
+        {showStoredCoin && (
+          <div onClick={() => setShowStoredCoin(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(10px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#0a1628,#060e1c)' : '#f8fafc', border: '1px solid rgba(74,222,128,0.3)', borderRadius: '24px', width: '95%', maxWidth: '520px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
+              <div style={{ flexShrink: 0, padding: '22px 26px', borderBottom: '1px solid rgba(74,222,128,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ color: '#4ade80', fontWeight: 800, fontSize: '15px' }}>Stored Coins</div>
+                  <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>Coins approved by your Dealer</div>
+                </div>
+                <button onClick={() => setShowStoredCoin(false)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '20px 26px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {coinStockLoading ? (
+                  <div style={{ textAlign: 'center', color: subtext, padding: '40px 0' }}>Loading...</div>
+                ) : coinStock.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: subtext, padding: '40px 0' }}>No stock yet — send a Buy Coin request</div>
+                ) : coinStock.map(s => (
+                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '12px' }}>
+                    <div>
+                      <div style={{ color: '#4ade80', fontWeight: 700, fontSize: '13px' }}>{COIN_METAL_LABELS_TEXT[s.metal_type]}</div>
+                      <div style={{ color: subtext, fontSize: '12px', marginTop: '2px' }}>{s.weight_label}</div>
+                    </div>
+                    <div style={{ color: text, fontWeight: 900, fontSize: '20px', fontFamily: 'monospace' }}>{s.qty}</div>
                   </div>
                 ))}
               </div>

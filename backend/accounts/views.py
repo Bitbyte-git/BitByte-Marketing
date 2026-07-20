@@ -1858,7 +1858,9 @@ class CoinRequestView(APIView):
 
 
 class CoinRequestApproveView(APIView):
-    """Any role (Sub Dealer/Dealer/Admin/Super Admin) approves a pending request sent to them — moves coins into requester's stock."""
+    """Any role approves a pending request sent to them — deducts coins from
+    approver's own stock and adds them into the requester's stock (a transfer).
+    Super Admin has no upstream supplier, so their stock is unlimited (no deduction check)."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
@@ -1869,16 +1871,38 @@ class CoinRequestApproveView(APIView):
         except CoinRequest.DoesNotExist:
             return Response({'error': 'Request not found or already resolved'}, status=404)
 
-        # Add each item's qty into the promotor's (requested_by) stock
+        is_super_admin = request.user.role == 'super_admin'
+
+        # First pass: validate approver has enough stock for every item (skip for super admin)
+        if not is_super_admin:
+            for item in coin_request.items.all():
+                approver_stock = CoinStock.objects.filter(
+                    user=request.user, metal_type=item.metal_type, weight_label=item.weight_label
+                ).first()
+                available = approver_stock.qty if approver_stock else 0
+                if available < item.qty:
+                    return Response({
+                        'error': f'Insufficient stock for {item.metal_type} {item.weight_label}. '
+                                 f'Available: {available}, Requested: {item.qty}'
+                    }, status=400)
+
+        # Second pass: deduct from approver (unless super admin) and add to requester
         for item in coin_request.items.all():
-            stock, created = CoinStock.objects.get_or_create(
+            if not is_super_admin:
+                approver_stock = CoinStock.objects.get(
+                    user=request.user, metal_type=item.metal_type, weight_label=item.weight_label
+                )
+                approver_stock.qty -= item.qty
+                approver_stock.save()
+
+            requester_stock, created = CoinStock.objects.get_or_create(
                 user=coin_request.requested_by,
                 metal_type=item.metal_type,
                 weight_label=item.weight_label,
                 defaults={'weight_grams': item.weight_grams, 'qty': 0}
             )
-            stock.qty += item.qty
-            stock.save()
+            requester_stock.qty += item.qty
+            requester_stock.save()
 
         coin_request.status = 'sent'
         coin_request.sent_at = timezone.now()
@@ -1912,22 +1936,51 @@ class CoinRequestRejectView(APIView):
 
 
 class CoinRequestApproveAllView(APIView):
-    """Any role approves ALL pending requests sent to them in one click."""
+    """Any role approves ALL pending requests sent to them in one click.
+    Deducts from approver's stock (skipped for super admin) and adds to each requester's stock."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        is_super_admin = request.user.role == 'super_admin'
         pending = CoinRequest.objects.filter(requested_to=request.user, status='pending').prefetch_related('items')
+
+        # Validate total stock is enough across ALL pending requests combined (skip for super admin)
+        if not is_super_admin:
+            needed = {}
+            for coin_request in pending:
+                for item in coin_request.items.all():
+                    key = (item.metal_type, item.weight_label)
+                    needed[key] = needed.get(key, 0) + item.qty
+            for (metal_type, weight_label), qty_needed in needed.items():
+                approver_stock = CoinStock.objects.filter(
+                    user=request.user, metal_type=metal_type, weight_label=weight_label
+                ).first()
+                available = approver_stock.qty if approver_stock else 0
+                if available < qty_needed:
+                    return Response({
+                        'error': f'Insufficient stock for {metal_type} {weight_label}. '
+                                 f'Available: {available}, Needed: {qty_needed}'
+                    }, status=400)
+
         count = 0
         for coin_request in pending:
             for item in coin_request.items.all():
-                stock, created = CoinStock.objects.get_or_create(
+                if not is_super_admin:
+                    approver_stock = CoinStock.objects.get(
+                        user=request.user, metal_type=item.metal_type, weight_label=item.weight_label
+                    )
+                    approver_stock.qty -= item.qty
+                    approver_stock.save()
+
+                requester_stock, created = CoinStock.objects.get_or_create(
                     user=coin_request.requested_by,
                     metal_type=item.metal_type,
                     weight_label=item.weight_label,
                     defaults={'weight_grams': item.weight_grams, 'qty': 0}
                 )
-                stock.qty += item.qty
-                stock.save()
+                requester_stock.qty += item.qty
+                requester_stock.save()
+
             coin_request.status = 'sent'
             coin_request.sent_at = timezone.now()
             coin_request.save()
