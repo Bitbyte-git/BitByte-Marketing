@@ -1840,13 +1840,16 @@ class CoinRequestView(APIView):
 
     def get(self, request):
         role = request.user.role
-        box = request.query_params.get('box')  # optional override: 'sent' or 'received'
+        box = request.query_params.get('box')  # optional override: 'sent', 'received', or 'history'
         receiver_roles = ['sub_dealer', 'dealer', 'admin', 'super_admin']
 
         if box == 'sent':
             reqs = CoinRequest.objects.filter(requested_by=request.user)
         elif box == 'received':
             reqs = CoinRequest.objects.filter(requested_to=request.user, status='pending')
+        elif box == 'history':
+            # Full transaction history: every request ever sent TO me, any status
+            reqs = CoinRequest.objects.filter(requested_to=request.user)
         elif role in receiver_roles:
             reqs = CoinRequest.objects.filter(requested_to=request.user, status='pending')
         else:

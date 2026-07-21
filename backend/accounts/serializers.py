@@ -562,19 +562,55 @@ class CoinRequestSerializer(serializers.ModelSerializer):
     items = CoinRequestItemSerializer(many=True)
     requested_by_email = serializers.EmailField(source='requested_by.email', read_only=True)
     requested_by_id_str = serializers.SerializerMethodField()
+    requested_by_name = serializers.SerializerMethodField()
+    requested_by_phone = serializers.SerializerMethodField()
+    requested_by_role = serializers.CharField(source='requested_by.role', read_only=True)
 
     class Meta:
         model = CoinRequest
         fields = ['id', 'requested_by', 'requested_by_email', 'requested_by_id_str',
+                  'requested_by_name', 'requested_by_phone', 'requested_by_role',
                   'requested_to', 'status', 'reject_reason', 'items', 'created_at', 'sent_at']
         read_only_fields = ['requested_by', 'requested_to', 'status', 'reject_reason', 'created_at', 'sent_at']
 
-    def get_requested_by_id_str(self, obj):
+    def _get_profile(self, obj):
+        role_map = {
+            'promotor': 'promotor_profile',
+            'sub_dealer': 'sub_dealer_profile',
+            'dealer': 'dealer_profile',
+            'admin': 'admin_profile',
+        }
+        attr = role_map.get(obj.requested_by.role)
+        if not attr:
+            return None
         try:
-            if obj.requested_by.role == 'promotor':
-                return obj.requested_by.promotor_profile.promotor_id
+            return getattr(obj.requested_by, attr)
         except Exception:
-            pass
+            return None
+
+    def get_requested_by_id_str(self, obj):
+        role_id_field = {
+            'promotor': 'promotor_id',
+            'sub_dealer': 'sub_dealer_id',
+            'dealer': 'dealer_id',
+            'admin': 'admin_id',
+        }
+        p = self._get_profile(obj)
+        field = role_id_field.get(obj.requested_by.role)
+        if p and field:
+            return getattr(p, field, None)
+        return None
+
+    def get_requested_by_name(self, obj):
+        p = self._get_profile(obj)
+        if p:
+            return f"{p.first_name} {p.last_name or ''}".strip()
+        return None
+
+    def get_requested_by_phone(self, obj):
+        p = self._get_profile(obj)
+        if p:
+            return getattr(p, 'mobile_number', None)
         return None
 
     def create(self, validated_data):

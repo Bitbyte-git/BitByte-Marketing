@@ -71,6 +71,10 @@ import Report from './Orders/Report'
 import LoginActive from './Orders/login_active'
 import LoginInactive from './Orders/login_inactive'
 
+import StoredCoins from './Coins_products/Stored_coins'
+import CoinRequests from './Coins_products/Coin_Requests'
+import TransactionHistory from './Coins_products/Transaction_History'
+
 
 
 
@@ -235,6 +239,10 @@ export default function App() {
 
         <Route path="/login-active" element={<LoginActive />} />
         <Route path="/login-inactive" element={<LoginInactive />} />
+
+        <Route path="/stored-coins" element={<StoredCoins />} />
+        <Route path="/coin-requests-page" element={<CoinRequests />} />
+        <Route path="/coin-transactions" element={<TransactionHistory />} />
 
 
       </Routes>
