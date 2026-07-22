@@ -519,6 +519,81 @@ function LoginStatusPie({ activeCount, inactiveCount, scopeLabel, cardBg, border
     </div>
   )
 }
+
+const COIN_LABELS = { gold_22k: 'Gold 22K', gold_24k: 'Gold 24K', silver_999: 'Silver 999' }
+const COIN_COLORS = { gold_22k: '#fbbf24', gold_24k: '#ffd700', silver_999: '#c0c0c0' }
+
+function CoinStockPie({ stock, scopeLabel, cardBg, border, text, subtext }) {
+  const total = stock.reduce((s, item) => s + item.qty, 0)
+  const size = 170, stroke = 26, r = (size - stroke) / 2, c = 2 * Math.PI * r
+
+  const grouped = ['gold_22k', 'gold_24k', 'silver_999'].map(m => ({
+    metal: m,
+    qty: stock.filter(s => s.metal_type === m).reduce((sum, s) => sum + s.qty, 0),
+  })).filter(g => g.qty > 0)
+
+  let offset = 0
+  const segments = grouped.map(g => {
+    const frac = total > 0 ? g.qty / total : 0
+    const len = c * frac
+    const seg = { ...g, len, offset }
+    offset += len
+    return seg
+  })
+
+  return (
+    <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+      <div style={{ fontSize: '11px', fontWeight: 800, color: '#a78bfa', letterSpacing: '1px', alignSelf: 'flex-start' }}>
+        COIN STOCK
+      </div>
+      <div style={{ fontSize: '11px', color: subtext, alignSelf: 'flex-start', marginTop: '-8px' }}>
+        {scopeLabel}
+      </div>
+
+      {total === 0 ? (
+        <div style={{ color: subtext, fontSize: '13px', padding: '30px 0' }}>No stock</div>
+      ) : (
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {segments.map(seg => (
+            <circle
+              key={seg.metal}
+              cx={size / 2} cy={size / 2} r={r} fill="none"
+              stroke={COIN_COLORS[seg.metal]} strokeWidth={stroke}
+              strokeDasharray={`${seg.len} ${c - seg.len}`}
+              strokeDashoffset={-seg.offset + c / 4}
+              transform={`rotate(-90 ${size / 2} ${size / 2})`}
+              style={{ transition: 'stroke-dasharray 0.4s ease' }}
+            />
+          ))}
+          <text x={size / 2} y={size / 2 - 2} textAnchor="middle" fontSize="22" fontWeight="800" fill={text}>{total}</text>
+          <text x={size / 2} y={size / 2 + 16} textAnchor="middle" fontSize="10" fill={subtext}>total coins</text>
+        </svg>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+        {grouped.map(g => (
+          <div key={g.metal} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: 9, height: 9, borderRadius: '50%', background: COIN_COLORS[g.metal] }} />
+              <span style={{ color: COIN_COLORS[g.metal], fontWeight: 700, fontSize: '12px' }}>{COIN_LABELS[g.metal]}</span>
+            </div>
+            <span style={{ color: text, fontWeight: 700, fontSize: '12px' }}>{g.qty}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Weight-wise breakdown */}
+      <div style={{ width: '100%', borderTop: `1px solid ${border}`, paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {stock.map(item => (
+          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+            <span style={{ color: subtext }}>{COIN_LABELS[item.metal_type]} — {item.weight_label}</span>
+            <span style={{ color: COIN_COLORS[item.metal_type], fontWeight: 700 }}>{item.qty}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 export default function Report() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -536,6 +611,9 @@ const [gridSelectedNode, setGridSelectedNode] = useState(null)
 
 // ── NEW: full active/inactive login list (super_admin only) ──
 const [loginStatusFull, setLoginStatusFull] = useState({ active: [], inactive: [] })
+
+// ── NEW: coin stock for scoped node (or own account) ──
+const [coinStock, setCoinStock] = useState([])
 
 const [nodeSearch, setNodeSearch] = useState('')
 const [debouncedNodeSearch, setDebouncedNodeSearch] = useState('')
@@ -567,13 +645,28 @@ useEffect(() => {
     fetchReport()
   }, [])
 
-  // ── NEW: super_admin ku mattum login status fetch pannu ──
+// ── NEW: super_admin ku mattum login status fetch pannu ──
   useEffect(() => {
     if (role !== 'super_admin') return
     api.get('/today-login-status/')
       .then(res => setLoginStatusFull({ active: res.data.active || [], inactive: res.data.inactive || [] }))
       .catch(() => {})
   }, [role])
+
+  // ── NEW: coin stock fetch — scoped node select pannirundha andha user_id ku,
+  // illama own account (login pannirukura role) ku ──
+  useEffect(() => {
+    const targetUserId = scopedNode?.user_id
+    if (targetUserId) {
+      api.get('/coin-stock/for-user/', { params: { user_id: targetUserId } })
+        .then(res => setCoinStock(res.data || []))
+        .catch(() => setCoinStock([]))
+    } else {
+      api.get('/coin-stock/')
+        .then(res => setCoinStock(res.data || []))
+        .catch(() => setCoinStock([]))
+    }
+  }, [scopedNode])
 
   const cfg = ROLE_CFG[role] || { label: role, color: '#a5f3fc' }
   const availableLevels = DRILL_LEVELS[role] || ['own']
@@ -1064,9 +1157,9 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 
         </div>
 
-        {/* ── RIGHT: Login Status Pie panel ── */}
-        {role === 'super_admin' && (
-          <div style={{ width: '320px', flexShrink: 0, position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* ── RIGHT: Login Status + Coin Stock Pie panels ── */}
+        <div style={{ width: '320px', flexShrink: 0, position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {role === 'super_admin' && (
             <LoginStatusPie
               activeCount={scopedLoginStats.active.length}
               inactiveCount={scopedLoginStats.inactive.length}
@@ -1078,8 +1171,16 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
               onClickActive={goToActiveLogin}
               onClickInactive={goToInactiveLogin}
             />
-          </div>
-        )}
+          )}
+          <CoinStockPie
+            stock={coinStock}
+            scopeLabel={scopedNode ? scopedLoginLabel : 'My own stock'}
+            cardBg={cardBg}
+            border={border}
+            text={text}
+            subtext={subtext}
+          />
+        </div>
 
       </div>
     </div>

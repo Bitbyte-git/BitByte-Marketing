@@ -1406,7 +1406,7 @@ def _build_customer(c, orders_by_user):
 def _build_promotor(p, orders_by_user):
     customers = [_build_customer(c, orders_by_user) for c in p.assigned_customers.all()]
     return {
-        'type': 'promotor', 'id': p.id, 'promotor_id': p.promotor_id,
+        'type': 'promotor', 'id': p.id, 'promotor_id': p.promotor_id, 'user_id': p.user_id,
         'first_name': p.first_name, 'last_name': p.last_name,
         'mobile_number': p.mobile_number, 'city_name': p.city_name,
         'customers': customers,
@@ -1417,7 +1417,7 @@ def _build_promotor(p, orders_by_user):
 def _build_sub_dealer(sd, orders_by_user):
     promotors = [_build_promotor(p, orders_by_user) for p in sd.assigned_promotors.all()]
     return {
-        'type': 'sub_dealer', 'id': sd.id, 'sub_dealer_id': sd.sub_dealer_id,
+        'type': 'sub_dealer', 'id': sd.id, 'sub_dealer_id': sd.sub_dealer_id, 'user_id': sd.user_id,
         'first_name': sd.first_name, 'last_name': sd.last_name,
         'mobile_number': sd.mobile_number, 'city_name': sd.city_name,
         'promotors': promotors,
@@ -1428,7 +1428,7 @@ def _build_sub_dealer(sd, orders_by_user):
 def _build_dealer(d, orders_by_user):
     sub_dealers = [_build_sub_dealer(sd, orders_by_user) for sd in d.assigned_sub_dealers.all()]
     return {
-        'type': 'dealer', 'id': d.id, 'dealer_id': d.dealer_id,
+        'type': 'dealer', 'id': d.id, 'dealer_id': d.dealer_id, 'user_id': d.user_id,
         'first_name': d.first_name, 'last_name': d.last_name,
         'mobile_number': d.mobile_number, 'city_name': d.city_name,
         'sub_dealers': sub_dealers,
@@ -1439,7 +1439,7 @@ def _build_dealer(d, orders_by_user):
 def _build_admin(a, orders_by_user):
     dealers = [_build_dealer(d, orders_by_user) for d in a.assigned_dealers.all()]
     return {
-        'type': 'admin', 'id': a.id, 'admin_id': a.admin_id,
+        'type': 'admin', 'id': a.id, 'admin_id': a.admin_id, 'user_id': a.user_id,
         'first_name': a.first_name, 'last_name': a.last_name,
         'mobile_number': a.mobile_number, 'city_name': a.city_name,
         'dealers': dealers,
@@ -2011,6 +2011,29 @@ class CoinStockView(APIView):
 
     def get(self, request):
         stock = CoinStock.objects.filter(user=request.user, qty__gt=0).order_by('metal_type', 'weight_grams')
+        serializer = CoinStockSerializer(stock, many=True)
+        return Response(serializer.data)
+
+
+class CoinStockForUserView(APIView):
+    """View any user's (admin/dealer/sub_dealer/promotor) coin stock by user_id —
+    used by the Sales Report page's coin distribution pie chart."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role == 'customer':
+            return Response({'error': 'Permission denied'}, status=403)
+
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({'error': 'user_id required'}, status=400)
+
+        try:
+            target_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
+        stock = CoinStock.objects.filter(user=target_user, qty__gt=0).order_by('metal_type', 'weight_grams')
         serializer = CoinStockSerializer(stock, many=True)
         return Response(serializer.data)
 
