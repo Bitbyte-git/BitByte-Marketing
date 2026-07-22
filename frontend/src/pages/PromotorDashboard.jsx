@@ -942,7 +942,7 @@ const handleSubmit = async e => {
 
           {/* 📦 Stored Coin Button */}
           <div
-            onClick={() => { setShowStoredCoin(true); fetchCoinStock() }}
+            onClick={() => navigate('/stored-coins')}
             style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(74,222,128,0.4)', background: 'rgba(74,222,128,0.1)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
@@ -953,7 +953,7 @@ const handleSubmit = async e => {
 
           {/* 🧾 My Coin Requests Button */}
           <div
-            onClick={() => { setShowMyRequests(true); fetchMyCoinRequests() }}
+            onClick={() => navigate('/coin-requests-page')}
             style={{ position: 'relative', cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.1)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(56,189,248,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(56,189,248,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}

@@ -1267,7 +1267,7 @@ const fetchCoinStock = async () => {
 
           {/* Stored Coin Button */}
           <div
-            onClick={() => { setShowStoredCoin(true); fetchCoinStock() }}
+            onClick={() => navigate('/stored-coins')}
             style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(74,222,128,0.4)', background: 'rgba(74,222,128,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1278,7 +1278,7 @@ const fetchCoinStock = async () => {
 
           {/* Coin Requests Button */}
           <div
-            onClick={() => { setShowRequestCoin(true); fetchCoinRequests(); setCoinReqMsg('') }}
+            onClick={() => navigate('/coin-requests-page')}
             style={{ position: 'relative', cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

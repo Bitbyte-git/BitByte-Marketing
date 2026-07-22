@@ -1309,12 +1309,12 @@ const fetchCoinStock = async () => {
   <span style={{ fontSize: '12px', fontWeight: 700, color: '#fbbf24' }}>Buy Coin</span>
 </div>
 
-<div onClick={() => { setShowStoredCoin(true); fetchCoinStock() }}
+<div onClick={() => navigate('/stored-coins')}
   style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(74,222,128,0.4)', background: 'rgba(74,222,128,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}>
   <span style={{ fontSize: '12px', fontWeight: 700, color: '#4ade80' }}>Stored Coin</span>
 </div>
 
-<div onClick={() => { setShowRequestCoin(true); fetchCoinRequests(); setCoinReqMsg('') }}
+<div onClick={() => navigate('/coin-requests-page')}
   style={{ position: 'relative', cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}>
   <span style={{ fontSize: '12px', fontWeight: 700, color: '#38bdf8' }}>Coin Requests</span>
   {coinRequests.filter(r => r.status === 'pending').length > 0 && (
