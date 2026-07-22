@@ -653,20 +653,7 @@ useEffect(() => {
       .catch(() => {})
   }, [role])
 
-  // ── NEW: coin stock fetch — scoped node select pannirundha andha user_id ku,
-  // illama own account (login pannirukura role) ku ──
-  useEffect(() => {
-    const targetUserId = scopedNode?.user_id
-    if (targetUserId) {
-      api.get('/coin-stock/for-user/', { params: { user_id: targetUserId } })
-        .then(res => setCoinStock(res.data || []))
-        .catch(() => setCoinStock([]))
-    } else {
-      api.get('/coin-stock/')
-        .then(res => setCoinStock(res.data || []))
-        .catch(() => setCoinStock([]))
-    }
-  }, [scopedNode])
+
 
   const cfg = ROLE_CFG[role] || { label: role, color: '#a5f3fc' }
   const availableLevels = DRILL_LEVELS[role] || ['own']
@@ -721,9 +708,21 @@ useEffect(() => { setGridSelectedNode(null) }, [activeTree])
 const statsTree = gridSelectedNode ? [gridSelectedNode] : activeTree
 const isMultiAdminViewStats = !gridSelectedNode && isMultiAdminView
 
-// ── NEW: pie chart ku scoped node — grid click OR dropdown single-node select ──
 const scopedNode = gridSelectedNode || (selectedLevel !== 'own' && activeTree.length === 1 ? activeTree[0] : null)
 const scopedLoginLabel = scopedNode ? `${LEVEL_LABELS[scopedNode.type] || scopedNode.type} · ${nodeName(scopedNode)}` : 'Full Network'
+
+useEffect(() => {
+  const targetUserId = scopedNode?.user_id
+  if (targetUserId) {
+    api.get('/coin-stock/for-user/', { params: { user_id: targetUserId } })
+      .then(res => setCoinStock(res.data || []))
+      .catch(() => setCoinStock([]))
+  } else {
+    api.get('/coin-stock/')
+      .then(res => setCoinStock(res.data || []))
+      .catch(() => setCoinStock([]))
+  }
+}, [scopedNode])
 
 const scopedLoginStats = useMemo(() => {
   if (!scopedNode) return loginStatusFull
@@ -1157,7 +1156,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 
         </div>
 
-        {/* ── RIGHT: Login Status + Coin Stock Pie panels ── */}
+       {/* ── RIGHT: Login Status + Coin Stock Pie panels ── */}
         <div style={{ width: '320px', flexShrink: 0, position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {role === 'super_admin' && (
             <LoginStatusPie
