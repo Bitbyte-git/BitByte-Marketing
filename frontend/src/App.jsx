@@ -4,10 +4,11 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import SuperAdminDashboard from './pages/SuperAdminDashboard'
 import SuperadminHierarchy from './Hierarchy/Superadmin_Hierarchy'
-import SuperadminHierarchyGrid from './Hierarchy/Superadmin_Hierarchy_grid'
+import SuperadminHierarchyGrid from './Grid/Superadmin_Hierarchy_grid'
 import SuperAdminHierarchySalesCount from './Hierarchy/superadmin_Hierarchy_SalesCount'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminHierarchy from './Hierarchy/Admin_Hierarchy'
+import AdminHierarchyGrid from './Grid/Admin_Hierarchy_grid'
 import DealerDashboard from './pages/DealerDashboard'
 import DealerHierarchy from './Hierarchy/Dealer_Hierarchy'
 import SubDealerDashboard from './pages/SubDealerDashboard'
@@ -122,6 +123,9 @@ export default function App() {
 } />
 
 <Route path="/admin-hierarchy" element={<AdminHierarchy />} />
+<Route path="/admin-hierarchy-grid" element={
+  <ProtectedRoute role="admin"><AdminHierarchyGrid /></ProtectedRoute>
+} />
 
         <Route path="/dealer" element={
           <ProtectedRoute role="dealer"><DealerDashboard /></ProtectedRoute>

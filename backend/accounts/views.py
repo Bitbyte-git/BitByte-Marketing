@@ -1491,6 +1491,50 @@ class HierarchySubtreeOrdersView(APIView):
 
         return Response({'root': root})
 
+# ── NEW: role-scoped hierarchy for Admin / Dealer / Sub Dealer / Promotor logins.
+# Ovvoruthar their own subtree mattum kaanpanum — SuperAdmin mari full tree venaam. ──
+class MyHierarchyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        role = user.role
+
+        if role not in ['admin', 'dealer', 'sub_dealer', 'promotor']:
+            return Response({'error': 'Use /hierarchy/full/ for your role'}, status=403)
+
+        try:
+            if role == 'admin':
+                node = AdminProfile.objects.prefetch_related(
+                    'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
+                ).get(user=user)
+                orders_by_user = _bulk_orders_for_admin(node)
+                root = _build_admin(node, orders_by_user)
+            elif role == 'dealer':
+                node = DealerProfile.objects.prefetch_related(
+                    'assigned_sub_dealers__assigned_promotors__assigned_customers'
+                ).get(user=user)
+                orders_by_user = _bulk_orders_for_dealer(node)
+                root = _build_dealer(node, orders_by_user)
+            elif role == 'sub_dealer':
+                node = SubDealerProfile.objects.prefetch_related(
+                    'assigned_promotors__assigned_customers'
+                ).get(user=user)
+                orders_by_user = _bulk_orders_for_sub_dealer(node)
+                root = _build_sub_dealer(node, orders_by_user)
+            elif role == 'promotor':
+                node = PromotorProfile.objects.prefetch_related('assigned_customers').get(user=user)
+                orders_by_user = _bulk_orders_for_promotor(node)
+                root = _build_promotor(node, orders_by_user)
+        except Exception as e:
+            return Response({'error': str(e)}, status=404)
+
+        return Response({
+            'super_admin_email': User.objects.filter(role='super_admin').first().email if User.objects.filter(role='super_admin').exists() else '',
+            'viewer_role': role,
+            'root': root,
+        })
+
 def get_report_ancestors(role, profile):
     """Build the chain from Super Admin down to (but not including) the logged-in user's own node."""
     ancestors = [{'type': 'super_admin'}]
