@@ -1451,12 +1451,30 @@ const fetchCoinStock = async () => {
           <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0 }}>Sub Dealer Management</h2>
           <div style={{ display: 'flex', gap: '12px' }}>
 <button onClick={() => navigate('/sales-report')}
-  style={{ padding: '11px 28px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: '12px', fontWeight: 700, color: '#4ade80', fontSize: '14px', cursor: 'pointer' }}>
-  📊 Sales Report
+  style={{ padding: '11px 28px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: '12px', fontWeight: 700, color: '#4ade80', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2">
+    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+  Sales Report
+</button>
+<button onClick={() => navigate('/dealer-hierarchy-grid')}
+  style={{ padding: '11px 28px', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.3)', borderRadius: '12px', fontWeight: 700, color: '#38bdf8', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  Hierarchy Grid
 </button>
 <button onClick={() => navigate('/dealer-hierarchy')}
-  style={{ padding: '11px 28px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px', fontWeight: 700, color: '#fcd34d', fontSize: '14px', cursor: 'pointer' }}>
-  🏢 Sub Dealer Hierarchy
+  style={{ padding: '11px 28px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px', fontWeight: 700, color: '#fcd34d', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fcd34d" strokeWidth="2">
+    <rect x="3" y="10" width="6" height="10" rx="1"/>
+    <rect x="9" y="4" width="6" height="16" rx="1"/>
+    <rect x="15" y="13" width="6" height="7" rx="1"/>
+  </svg>
+  Sub Dealer Hierarchy
 </button>
             <button onClick={() => setShowForm(!showForm)} className="dl-grad-btn"
               style={{ padding: '11px 28px', background: 'linear-gradient(90deg,#f59e0b,#22d3ee)', border: 'none', borderRadius: '12px', fontWeight: 800, color: '#003b40', fontSize: '14px', cursor: 'pointer' }}>

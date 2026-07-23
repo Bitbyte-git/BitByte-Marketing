@@ -1138,12 +1138,30 @@ const handleSubmit = async e => {
           <h2 style={{ fontSize:'22px', fontWeight:800, margin:0 }}>Customer Management</h2>
           <div style={{ display:'flex', gap:'12px' }}>
             <button onClick={() => navigate('/sales-report')}
-  style={{ padding:'11px 28px', background:'rgba(74,222,128,0.08)', border:'1px solid rgba(74,222,128,0.3)', borderRadius:'12px', fontWeight:700, color:'#4ade80', fontSize:'14px', cursor:'pointer' }}>
-  📊 Sales Report
+  style={{ padding:'11px 28px', background:'rgba(74,222,128,0.08)', border:'1px solid rgba(74,222,128,0.3)', borderRadius:'12px', fontWeight:700, color:'#4ade80', fontSize:'14px', cursor:'pointer', display:'flex', alignItems:'center', gap:'8px' }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2">
+    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+  Sales Report
+</button>
+<button onClick={() => navigate('/promotor-hierarchy-grid')}
+  style={{ padding:'11px 28px', background:'rgba(212,160,23,0.08)', border:'1px solid rgba(212,160,23,0.3)', borderRadius:'12px', fontWeight:700, color:'#eab308', fontSize:'14px', cursor:'pointer', display:'flex', alignItems:'center', gap:'8px' }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  Hierarchy Grid
 </button>
 <button onClick={() => navigate('/promotor-hierarchy')}
-  style={{ padding:'11px 28px', background:'rgba(244,114,182,0.08)', border:'1px solid rgba(244,114,182,0.3)', borderRadius:'12px', fontWeight:700, color:'#fbcfe8', fontSize:'14px', cursor:'pointer' }}>
-  🏢 Customer Hierarchy
+  style={{ padding:'11px 28px', background:'rgba(244,114,182,0.08)', border:'1px solid rgba(244,114,182,0.3)', borderRadius:'12px', fontWeight:700, color:'#fbcfe8', fontSize:'14px', cursor:'pointer', display:'flex', alignItems:'center', gap:'8px' }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbcfe8" strokeWidth="2">
+    <rect x="3" y="10" width="6" height="10" rx="1"/>
+    <rect x="9" y="4" width="6" height="16" rx="1"/>
+    <rect x="15" y="13" width="6" height="7" rx="1"/>
+  </svg>
+  Customer Hierarchy
 </button>
             <button onClick={() => setShowForm(!showForm)} className="pr-grad-btn"
               style={{ padding:'11px 28px', background:'linear-gradient(90deg,#f472b6,#a78bfa)', border:'none', borderRadius:'12px', fontWeight:800, color:'#3b0024', fontSize:'14px', cursor:'pointer' }}>

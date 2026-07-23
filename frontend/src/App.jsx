@@ -11,10 +11,13 @@ import AdminHierarchy from './Hierarchy/Admin_Hierarchy'
 import AdminHierarchyGrid from './Grid/Admin_Hierarchy_grid'
 import DealerDashboard from './pages/DealerDashboard'
 import DealerHierarchy from './Hierarchy/Dealer_Hierarchy'
+import DealerHierarchyGrid from './Grid/Dealer_Hierarchy_grid'
 import SubDealerDashboard from './pages/SubDealerDashboard'
 import SubdealerHierarchy from './Hierarchy/Subdealer_Hierarchy'
+import SubdealerHierarchyGrid from './Grid/Subdealer_Hierarchy_grid'
 import PromotorDashboard from './pages/PromotorDashboard'
 import PromotorHierarchy from './Hierarchy/Promotor_Hierarchy'
+import PromotorHierarchyGrid from './Grid/Promotor_Hierarchy_grid'
 import CustomerDashboard from './pages/CustomerDashboard'
 import Profile from './collection/profile'
 import RingCollection from './collection/ring_collection'
@@ -132,18 +135,27 @@ export default function App() {
         } />
 
         <Route path="/dealer-hierarchy" element={<DealerHierarchy />} />
+        <Route path="/dealer-hierarchy-grid" element={
+          <ProtectedRoute role="dealer"><DealerHierarchyGrid /></ProtectedRoute>
+        } />
 
         <Route path="/sub-dealer" element={
           <ProtectedRoute role="sub_dealer"><SubDealerDashboard /></ProtectedRoute>
         } />
 
         <Route path="/subdealer-hierarchy" element={<SubdealerHierarchy />} />
+        <Route path="/subdealer-hierarchy-grid" element={
+          <ProtectedRoute role="sub_dealer"><SubdealerHierarchyGrid /></ProtectedRoute>
+        } />
 
         <Route path="/promotor" element={
           <ProtectedRoute role="promotor"><PromotorDashboard /></ProtectedRoute>
         } />
 
         <Route path="/promotor-hierarchy" element={<PromotorHierarchy />} />
+        <Route path="/promotor-hierarchy-grid" element={
+          <ProtectedRoute role="promotor"><PromotorHierarchyGrid /></ProtectedRoute>
+        } />
 
 
         <Route path="/customer" element={
