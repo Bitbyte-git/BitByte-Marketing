@@ -1,3 +1,4 @@
+﻿
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import CustomerNavbar from './collection/CustomerNavbar'
@@ -6,7 +7,7 @@ const LandingPage = lazy(() => import('./pages/LandingPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'))
 const SuperadminHierarchy = lazy(() => import('./Hierarchy/Superadmin_Hierarchy'))
-const SuperadminHierarchyGrid = lazy(() => import('./Hierarchy/Superadmin_Hierarchy_grid'))
+const SuperadminHierarchyGrid = lazy(() => import('./Grid/Superadmin_Hierarchy_grid'))
 const SuperAdminHierarchySalesCount = lazy(() => import('./Hierarchy/superadmin_Hierarchy_SalesCount'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const AdminHierarchy = lazy(() => import('./Hierarchy/Admin_Hierarchy'))
@@ -196,6 +197,5 @@ export default function App() {
     </BrowserRouter>
   )
 }
-
 
 

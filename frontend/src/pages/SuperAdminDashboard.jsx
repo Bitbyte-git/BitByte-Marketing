@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+﻿import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
@@ -12,16 +12,16 @@ const OCCUPATION_OPTIONS = ['employee', 'business', 'others']
 
 const COLORS = ['#BDCFCE', '#CCA881', '#0C4044', '#C92035', '#BB8958', '#D1DFDE']
 
-// ─── ROLE CONFIG ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ ROLE CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ROLE_CFG = {
-  admin: { color: '#53615F', label: '🛡️ ADMIN', idKey: 'admin_id' },
-  dealer: { color: '#0C4044', label: '🏪 DEALER', idKey: 'dealer_id' },
-  sub_dealer: { color: '#BB8958', label: '🔗 SUB DEALER', idKey: 'sub_dealer_id' },
-  promotor: { color: '#CCA881', label: '🌟 PROMOTOR', idKey: 'promotor_id' },
-  customer: { color: '#C92035', label: '👤 CUSTOMER', idKey: 'customer_id' },
+  admin: { color: '#53615F', label: 'ðŸ›¡ï¸ ADMIN', idKey: 'admin_id' },
+  dealer: { color: '#0C4044', label: 'ðŸª DEALER', idKey: 'dealer_id' },
+  sub_dealer: { color: '#BB8958', label: 'ðŸ”— SUB DEALER', idKey: 'sub_dealer_id' },
+  promotor: { color: '#CCA881', label: 'ðŸŒŸ PROMOTOR', idKey: 'promotor_id' },
+  customer: { color: '#C92035', label: 'ðŸ‘¤ CUSTOMER', idKey: 'customer_id' },
 }
 
-// ─── TREE NODE COMPONENT ───────────────────────────────────────────────────────
+// â”€â”€â”€ TREE NODE COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, ancestors = [], superAdminEmail = '', flatMode = false }) {
   const [expanded, setExpanded] = useState(depth < 2)
   const cfg = ROLE_CFG[role]
@@ -95,12 +95,12 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
 
         {/* Phone */}
         <div style={{ color: subtext, fontSize: '11px', marginBottom: '2px' }}>
-          📞 {node.mobile_number}
+          ðŸ“ž {node.mobile_number}
         </div>
 
         {/* City */}
         {node.city_name && (
-          <div style={{ color: subtext, fontSize: '11px' }}>📍 {node.city_name}</div>
+          <div style={{ color: subtext, fontSize: '11px' }}>ðŸ“ {node.city_name}</div>
         )}
 
         {/* Gradient bar */}
@@ -127,7 +127,7 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
             onMouseEnter={e => { e.currentTarget.style.background = `rgba(${hexToRgb(c)},0.25)` }}
             onMouseLeave={e => { e.currentTarget.style.background = `rgba(${hexToRgb(c)},0.1)` }}
           >
-            🖨️ PRINT
+            ðŸ–¨ï¸ PRINT
           </button>
 
           <button
@@ -147,7 +147,7 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.25)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.1)' }}
           >
-            📊 SALES
+            ðŸ“Š SALES
             <span style={{
               background: '#0C4044', color: '#FDFDFC', borderRadius: '10px',
               padding: '0 5px', fontSize: '9px', fontWeight: 900, minWidth: '14px',
@@ -165,7 +165,7 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
             transition: 'transform 0.3s ease',
             transform: expanded ? 'rotate(0deg)' : 'rotate(180deg)',
           }}>
-            ▲
+            â–²
           </div>
         )}
 
@@ -185,13 +185,13 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
       {hasChildren && expanded && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
 
-          {/* ── Vertical stem down from parent ── */}
+          {/* â”€â”€ Vertical stem down from parent â”€â”€ */}
           <div style={{ width: 2, height: 28, background: `linear-gradient(180deg,${c},rgba(${hexToRgb(c)},0.3))`, marginTop: '10px' }} />
 
-          {/* ── Horizontal line + children ── */}
+          {/* â”€â”€ Horizontal line + children â”€â”€ */}
           <div style={{ position: 'relative', width: '100%' }}>
 
-            {/* Horizontal connector line — spans full width */}
+            {/* Horizontal connector line â€” spans full width */}
             {children.length > 1 && (
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0, height: 2,
@@ -244,13 +244,13 @@ function hexToRgb(hex) {
 let _popupEl = null
 let _hideTimer = null
 
-// ─── CHAIN POPUP (hover on any tree node) ──────────────────────────────────
+// â”€â”€â”€ CHAIN POPUP (hover on any tree node) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ROLE_LABELS = {
-  admin: { emoji: '🛡️', label: 'ADMIN', color: '#53615F', idKey: 'admin_id' },
-  dealer: { emoji: '🏪', label: 'DEALER', color: '#0C4044', idKey: 'dealer_id' },
-  sub_dealer: { emoji: '🔗', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
-  promotor: { emoji: '🌟', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
-  customer: { emoji: '👤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
+  admin: { emoji: 'ðŸ›¡ï¸', label: 'ADMIN', color: '#53615F', idKey: 'admin_id' },
+  dealer: { emoji: 'ðŸª', label: 'DEALER', color: '#0C4044', idKey: 'dealer_id' },
+  sub_dealer: { emoji: 'ðŸ”—', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
+  promotor: { emoji: 'ðŸŒŸ', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
+  customer: { emoji: 'ðŸ‘¤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
 }
 
 let _chainPopupEl = null
@@ -268,11 +268,11 @@ function scheduleHideChainPopup() {
 
 function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
   const ROLE_PRINT = {
-    admin: { label: 'ADMIN', emoji: '🛡️', idKey: 'admin_id' },
-    dealer: { label: 'DEALER', emoji: '🏪', idKey: 'dealer_id' },
-    sub_dealer: { label: 'SUB DEALER', emoji: '🔗', idKey: 'sub_dealer_id' },
-    promotor: { label: 'PROMOTOR', emoji: '🌟', idKey: 'promotor_id' },
-    customer: { label: 'CUSTOMER', emoji: '👤', idKey: 'customer_id' },
+    admin: { label: 'ADMIN', emoji: 'ðŸ›¡ï¸', idKey: 'admin_id' },
+    dealer: { label: 'DEALER', emoji: 'ðŸª', idKey: 'dealer_id' },
+    sub_dealer: { label: 'SUB DEALER', emoji: 'ðŸ”—', idKey: 'sub_dealer_id' },
+    promotor: { label: 'PROMOTOR', emoji: 'ðŸŒŸ', idKey: 'promotor_id' },
+    customer: { label: 'CUSTOMER', emoji: 'ðŸ‘¤', idKey: 'customer_id' },
   }
 
   // Full chain: Super Admin + ancestors + current
@@ -288,8 +288,8 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
     if (item.type === 'super_admin') {
       return `
         <div class="chain-item ${isLast ? 'current' : ''}">
-          <div class="chain-role">🛡️ SUPER ADMIN</div>
-          <div class="chain-email">${item.data.email || '—'}</div>
+          <div class="chain-role">ðŸ›¡ï¸ SUPER ADMIN</div>
+          <div class="chain-email">${item.data.email || 'â€”'}</div>
         </div>
         ${idx < chain.length - 1 ? `<div class="chain-arrow"><div style="display:flex;flex-direction:column;align-items:center;gap:0px;"><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid #7A8987;"></div><div style="width:2px;height:12px;background:linear-gradient(180deg,#7A8987,rgba(122,137,135,0.2));"></div></div></div>` : ''}      `
     }
@@ -297,24 +297,24 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
     const r = ROLE_PRINT[item.type]
     if (!r) return ''
     const d = item.data || {}
-    const idVal = d[r.idKey] || d.id || '—'
-    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || '—'
-    const phone = d.mobile_number || '—'
-    const city = d.city_name || '—'
+    const idVal = d[r.idKey] || d.id || 'â€”'
+    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || 'â€”'
+    const phone = d.mobile_number || 'â€”'
+    const city = d.city_name || 'â€”'
 
     return `
       <div class="chain-item ${isLast ? 'current' : ''}">
         <div class="chain-role">${r.emoji} ${r.label}</div>
         <div class="chain-id">${idVal}</div>
         <div class="chain-name">${name}</div>
-        <div class="chain-info">📞 ${phone}</div>
-        <div class="chain-info">📍 ${city}</div>
+        <div class="chain-info">ðŸ“ž ${phone}</div>
+        <div class="chain-info">ðŸ“ ${city}</div>
       </div>
       ${idx < chain.length - 1 ? `<div class="chain-arrow"><div style="display:flex;flex-direction:column;align-items:center;gap:0px;"><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid #7A8987;"></div><div style="width:2px;height:12px;background:linear-gradient(180deg,#7A8987,rgba(122,137,135,0.2));"></div></div></div>` : ''}
     `
   }).join('')
 
-  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || '—'
+  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || 'â€”'
   const roleLabel = ROLE_PRINT[role]?.label || role.toUpperCase()
 
   const printWindow = window.open('', '_blank')
@@ -322,7 +322,7 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${roleLabel} — ${currentName}</title>
+      <title>${roleLabel} â€” ${currentName}</title>
       <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
@@ -404,7 +404,7 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
     <body>
       <div class="wrapper">
         <div class="header">
-          <h1>BitByte — ${roleLabel} Profile</h1>
+          <h1>BitByte â€” ${roleLabel} Profile</h1>
           <p>Hierarchy Chain Report</p>
         </div>
         ${chainHtml}
@@ -490,17 +490,17 @@ const arrowHtml = idx > 0 ? `
         ">
           <div style="position:absolute;top:-10px;right:-10px;width:70px;height:70px;background:radial-gradient(circle,rgba(204,168,129,0.14),transparent 70%);pointer-events:none;"></div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">🛡️</div>
+            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">ðŸ›¡ï¸</div>
             <div>
               <div style="font-size:9px;color:#CCA881;font-weight:800;letter-spacing:1.8px;">SUPER ADMIN</div>
-              <div style="font-size:8px;color:rgba(204,168,129,0.45);margin-top:2px;letter-spacing:0.5px;">ROOT • FULL ACCESS</div>
+              <div style="font-size:8px;color:rgba(204,168,129,0.45);margin-top:2px;letter-spacing:0.5px;">ROOT â€¢ FULL ACCESS</div>
             </div>
             <div style="margin-left:auto;display:flex;align-items:center;gap:5px;">
               <div style="width:7px;height:7px;border-radius:50%;background:#0C4044;animation:acpPulse 1.8s ease-in-out infinite;box-shadow:0 0 8px rgba(12,64,68,0.9);"></div>
               <span style="font-size:9px;color:#0C4044;font-weight:700;">LIVE</span>
             </div>
           </div>
-          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || '—'}</div>
+          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || 'â€”'}</div>
         </div>
       `
     }
@@ -508,9 +508,9 @@ const arrowHtml = idx > 0 ? `
     const cfg = ROLE_LABELS[item.type]
     if (!cfg) return ''
     const d = item.data || {}
-    const idVal = d[cfg.idKey] || d.id || '—'
-    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || '—'
-    const phone = d.mobile_number || '—'
+    const idVal = d[cfg.idKey] || d.id || 'â€”'
+    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || 'â€”'
+    const phone = d.mobile_number || 'â€”'
     const city = d.city_name || ''
     const rc = hexToRgb(cfg.color)
 
@@ -540,20 +540,20 @@ const arrowHtml = idx > 0 ? `
             background:rgba(${rc},0.18);color:${cfg.color};
             border:1px solid rgba(${rc},0.4);
             animation:acpBadgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-            white-space:nowrap;letter-spacing:0.5px;">● CURRENT</div>` : ''}
+            white-space:nowrap;letter-spacing:0.5px;">â— CURRENT</div>` : ''}
         </div>
 
         <div style="font-size:14px;color:${isDark ? '#E7EDEC' : '#111817'};font-weight:700;margin-bottom:9px;letter-spacing:-0.3px;">${name}</div>
 
         <div style="display:flex;flex-direction:column;gap:6px;">
-          ${phone !== '—' ? `
+          ${phone !== 'â€”' ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">📞</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“ž</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${phone}</span>
           </div>` : ''}
           ${city ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">📍</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${city}</span>
           </div>` : ''}
         </div>
@@ -564,7 +564,7 @@ const arrowHtml = idx > 0 ? `
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid ${isDark ? 'rgba(189,207,206,0.1)' : 'rgba(12,64,68,0.08)'};">
       <div style="display:flex;align-items:center;gap:9px;">
-        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#BDCFCE,#0C4044);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(189,207,206,0.4);">🔗</div>
+        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#BDCFCE,#0C4044);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(189,207,206,0.4);">ðŸ”—</div>
         <div>
           <div style="font-size:11px;color:${isDark ? '#BDCFCE' : '#0C4044'};font-weight:800;letter-spacing:1.8px;">HIERARCHY CHAIN</div>
           <div style="font-size:9px;color:${isDark ? '#7A8987' : '#7A8987'};margin-top:2px;">${totalNodes} level${totalNodes !== 1 ? 's' : ''} deep</div>
@@ -577,13 +577,13 @@ const arrowHtml = idx > 0 ? `
         animation:acpShimmer 2.5s linear infinite;
         border:1px solid rgba(189,207,206,0.22);
         color:${isDark ? '#D1DFDE' : '#0C4044'};
-        letter-spacing:1px;">● LIVE</div>
+        letter-spacing:1px;">â— LIVE</div>
     </div>
 
     ${itemsHtml}
 
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid ${isDark ? 'rgba(253,253,252,0.04)' : 'rgba(17,24,23,0.05)'};">
-      <div style="font-size:9px;color:${isDark ? '#7A8987' : '#111817'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network • Hierarchy View</div>
+      <div style="font-size:9px;color:${isDark ? '#7A8987' : '#111817'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network â€¢ Hierarchy View</div>
     </div>
   `
 
@@ -651,9 +651,9 @@ function createAdminPopup(a, i, anchorEl, dark, subtext, text) {
       CREATED BY
     </div>
     <div style="border-radius:9px;padding:11px;margin-bottom:10px;background:${saBoxBg};border:1px solid ${saBoxBorder};">
-      <div style="font-size:9px;color:#CCA881;font-weight:700;margin-bottom:5px;">🛡️ SUPER ADMIN</div>
+      <div style="font-size:9px;color:#CCA881;font-weight:700;margin-bottom:5px;">ðŸ›¡ï¸ SUPER ADMIN</div>
       <div style="font-size:11px;color:${subtext};word-break:break-all;">${localStorage.getItem('email')}</div>
-      <div style="margin-top:6px;font-size:9px;padding:2px 8px;background:rgba(204,168,129,0.1);border:1px solid rgba(204,168,129,0.25);border-radius:20px;color:#CCA881;display:inline-block;">● ONLINE</div>
+      <div style="margin-top:6px;font-size:9px;padding:2px 8px;background:rgba(204,168,129,0.1);border:1px solid rgba(204,168,129,0.25);border-radius:20px;color:#CCA881;display:inline-block;">â— ONLINE</div>
     </div>
     <div style="display:flex;justify-content:center;align-items:center;padding:4px 0;">
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
@@ -665,8 +665,8 @@ function createAdminPopup(a, i, anchorEl, dark, subtext, text) {
       <div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(189,207,206,0.12);color:#BDCFCE;border:1px solid rgba(189,207,206,0.25);margin-bottom:6px;">ADMIN</div>
       <div style="font-size:10px;color:${c};font-family:monospace;margin-bottom:3px;">${a.admin_id}</div>
       <div style="font-size:13px;color:${text};font-weight:700;margin-bottom:6px;">${a.first_name}</div>
-      <div style="font-size:11px;color:${subtext};margin-bottom:3px;">📞 ${a.mobile_number}</div>
-      <div style="font-size:11px;color:${subtext};">📍 ${a.city_name}</div>
+      <div style="font-size:11px;color:${subtext};margin-bottom:3px;">ðŸ“ž ${a.mobile_number}</div>
+      <div style="font-size:11px;color:${subtext};">ðŸ“ ${a.city_name}</div>
     </div>
   `
   document.body.appendChild(el)
@@ -688,7 +688,7 @@ function createAdminPopup(a, i, anchorEl, dark, subtext, text) {
 }
 
 
-// ─── ORDER TREND CHART — clean area chart, peak marker, no duplicate axis ──
+// â”€â”€â”€ ORDER TREND CHART â€” clean area chart, peak marker, no duplicate axis â”€â”€
 function OrderTrendChart({ dark }) {
   const [period, setPeriod] = useState('today')
   const [data, setData] = useState([])
@@ -737,7 +737,7 @@ function OrderTrendChart({ dark }) {
 
   useEffect(() => { fetchData(period) }, [period])
 
-  // ── KPI: total orders + trend % (second half avg vs first half avg) ──
+  // â”€â”€ KPI: total orders + trend % (second half avg vs first half avg) â”€â”€
   const totalOrders = data.reduce((sum, d) => sum + (d.count || 0), 0)
   const mid = Math.floor(data.length / 2)
   const firstHalf = data.slice(0, mid)
@@ -748,12 +748,12 @@ function OrderTrendChart({ dark }) {
   const trendPercent = firstAvg > 0 ? (((secondAvg - firstAvg) / firstAvg) * 100).toFixed(1) : (secondAvg > 0 ? 100 : 0)
   const isUp = trendPercent >= 0
 
-  // ── Peak point index — used to show a highlighted dot on the busiest bucket ──
+  // â”€â”€ Peak point index â€” used to show a highlighted dot on the busiest bucket â”€â”€
   const peakIndex = data.length
     ? data.reduce((maxIdx, d, i, arr) => (d.count > arr[maxIdx].count ? i : maxIdx), 0)
     : -1
 
-  // ── Only label buckets that actually have orders (skip empty stretches) ──
+  // â”€â”€ Only label buckets that actually have orders (skip empty stretches) â”€â”€
   const activeLabels = data.filter(d => d.count > 0).map(d => d.label)
   const tickFormatter = (label) => (activeLabels.includes(label) ? label : '')
 
@@ -775,7 +775,7 @@ function OrderTrendChart({ dark }) {
     )
   }
 
-  // ── Custom dot: only render a visible marker on the peak bucket ──
+  // â”€â”€ Custom dot: only render a visible marker on the peak bucket â”€â”€
   const PeakDot = (props) => {
     const { cx, cy, index } = props
     if (index !== peakIndex || cx == null || cy == null) return null
@@ -914,7 +914,7 @@ export default function SuperAdminDashboard() {
  const [hierarchySearch, setHierarchySearch] = useState('')
 const [debouncedSearch, setDebouncedSearch] = useState('')
 
-// Debounce — typing niruthi 300ms aana appuram than search run aagum
+// Debounce â€” typing niruthi 300ms aana appuram than search run aagum
 useEffect(() => {
   const t = setTimeout(() => setDebouncedSearch(hierarchySearch.trim()), 120)
   return () => clearTimeout(t)
@@ -973,13 +973,40 @@ const [showTodayRates, setShowTodayRates] = useState(false)
   const [metalLoading, setMetalLoading] = useState(false)
   const [usdToInr, setUsdToInr] = useState(null)
 
-  // NEW — Rate entry popup
+
+
+
+  // NEW â€” Rate entry popup
   const [showRatePopup, setShowRatePopup] = useState(false)
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [productForm, setProductForm] = useState({
     category: '', metal: '', grade: '', name: '', description: '',
     weight_grams: '', tag: '',
   })
+
+
+  const [showRequestCoin, setShowRequestCoin] = useState(false)
+const [coinRequests, setCoinRequests] = useState([])
+const [coinReqLoading, setCoinReqLoading] = useState(false)
+const [approvingReqId, setApprovingReqId] = useState(null)
+const [approvingAll, setApprovingAll] = useState(false)
+const [coinReqMsg, setCoinReqMsg] = useState('')
+const [coinReqMsgType, setCoinReqMsgType] = useState('success')
+const [rejectingReqId, setRejectingReqId] = useState(null)
+const [rejectReason, setRejectReason] = useState('')
+const [rejectSubmitting, setRejectSubmitting] = useState(false)
+const [showAddCoin, setShowAddCoin] = useState(false)
+const [coinCart, setCoinCart] = useState([])
+const [coinBuyMsg, setCoinBuyMsg] = useState('')
+const [coinBuySubmitting, setCoinBuySubmitting] = useState(false)
+const [selCoinMetal, setSelCoinMetal] = useState('gold_22k')
+const [selCoinWeight, setSelCoinWeight] = useState('')
+const [selCoinQty, setSelCoinQty] = useState('')
+const [showStoredCoin, setShowStoredCoin] = useState(false)
+const [coinStock, setCoinStock] = useState([])
+const [coinStockLoading, setCoinStockLoading] = useState(false)
+
+
   const [productImages, setProductImages] = useState([])  // File objects
   const [productPreviewUrls, setProductPreviewUrls] = useState([])  // preview URLs
   const [productMsg, setProductMsg] = useState('')
@@ -1173,20 +1200,20 @@ const fetchAllMembers = async (adminsData = []) => {
       const res = await api.get('/profile-update-request/')
       setProfileRequests(res.data)
     } catch (err) {
-      setRequestMsg('❌ Failed to load requests')
+      setRequestMsg('âŒ Failed to load requests')
     }
   }
 
   const approveProfileRequest = async (id) => {
     try {
       await api.post(`/profile-update-request/${id}/approve/`)
-      setRequestMsg('✅ Request approved successfully!')
+      setRequestMsg('âœ… Request approved successfully!')
       setSelectedRequest(null)
       fetchProfileRequests()
       fetchAdmins()
       fetchHierarchy()
     } catch (err) {
-      setRequestMsg('❌ Approve failed: ' + JSON.stringify(err.response?.data))
+      setRequestMsg('âŒ Approve failed: ' + JSON.stringify(err.response?.data))
     }
   }
 
@@ -1261,7 +1288,7 @@ const fetchMetalPrices = async () => {
         month: { gold_22k: empty(), gold_24k: empty(), silver_999: empty() },
       }
 
-      // ── NEW: per-customer breakdown ──────────────────────────────────
+      // â”€â”€ NEW: per-customer breakdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const details = {
         today: { gold_22k: {}, gold_24k: {}, silver_999: {} },
         week: { gold_22k: {}, gold_24k: {}, silver_999: {} },
@@ -1314,7 +1341,7 @@ const fetchMetalPrices = async () => {
       })
 
       setOrderStats(stats)
-      setOrderDetails(details) // ── NEW
+      setOrderDetails(details) // â”€â”€ NEW
     } catch (e) {
       console.error('fetchOrderStats error:', e)
     }
@@ -1376,7 +1403,7 @@ useEffect(() => {
     e.preventDefault()
 
     if (form.password !== confirmPassword) {
-      setPasswordError('❌ Passwords do not match')
+      setPasswordError('âŒ Passwords do not match')
       return
     }
 
@@ -1390,17 +1417,17 @@ useEffect(() => {
         admin_contact_no: undefined,
       }
 
-      console.log('📤 SENDING:', JSON.stringify(cleanedForm, null, 2))  // ← ADD
+      console.log('ðŸ“¤ SENDING:', JSON.stringify(cleanedForm, null, 2))  // â† ADD
 
       await api.post('/admins/', cleanedForm)
-      setMsg('✅ Admin created successfully!')
+      setMsg('âœ… Admin created successfully!')
       setShowForm(false)
       setConfirmPassword('')
       setPasswordError('')
       fetchAdmins()
     } catch (err) {
-      console.log('❌ ERROR RESPONSE:', err.response?.data)  // ← ADD
-      setMsg('❌ Error: ' + JSON.stringify(err.response?.data))
+      console.log('âŒ ERROR RESPONSE:', err.response?.data)  // â† ADD
+      setMsg('âŒ Error: ' + JSON.stringify(err.response?.data))
     }
   }
 
@@ -1457,13 +1484,13 @@ const searchAllHierarchy = (query) => {
   return result
 }
 
-// ✅ NEW — idha inga add pannunga (function-ku keezha)
+// âœ… NEW â€” idha inga add pannunga (function-ku keezha)
 const searchResults = useMemo(() => {
   if (!debouncedSearch) return []
   return searchAllHierarchy(debouncedSearch)
 }, [debouncedSearch, hierarchyData])
 
-  // ── ORDER HIERARCHY BUILDER ─────────────────────────────────────────────────
+  // â”€â”€ ORDER HIERARCHY BUILDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const buildHierarchyOrders = (period, metalKey) => {
   if (!hierarchyData) return null
   const custOrders = orderDetails[period]?.[metalKey] || {}
@@ -1480,11 +1507,11 @@ const buildHierarchyOrders = (period, metalKey) => {
         const promotors = (sd.promotors || []).map(pr => {
           let prTotal = 0
 
-          // ✅ FIX: Try all possible customer array keys
+          // âœ… FIX: Try all possible customer array keys
           const customerList = pr.customers || pr.customer || []
 
           const customers = customerList.map(c => {
-            // ✅ FIX: Try all possible id fields
+            // âœ… FIX: Try all possible id fields
             const custId = c.customer_id || c.id || c.pk
             const o = custOrders[custId] || { count: 0, amount: 0 }
 
@@ -1533,6 +1560,124 @@ const buildHierarchyOrders = (period, metalKey) => {
     promotors: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.reduce((b, d) => b + d.sub_dealers.reduce((c, sd) => c + sd.promotors.length, 0), 0), 0),
     customers: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.reduce((b, d) => b + d.sub_dealers.reduce((c, sd) => c + sd.promotors.reduce((e, pr) => e + pr.customers.length, 0), 0), 0), 0),
   } : null
+
+
+  const COIN_METAL_LABELS_TEXT = { gold_22k: 'Gold 22K', gold_24k: 'Gold 24K', silver_999: 'Silver 999' }
+const COIN_WEIGHTS_GOLD = [
+  { label: '50 mg', grams: 0.05 }, { label: '100 mg', grams: 0.10 }, { label: '150 mg', grams: 0.15 },
+  { label: '200 mg', grams: 0.20 }, { label: '500 mg', grams: 0.50 }, { label: '1 gm', grams: 1 },
+  { label: '2 gm', grams: 2 }, { label: '4 gm', grams: 4 }, { label: '8 gm', grams: 8 },
+]
+const COIN_WEIGHTS_SILVER = [
+  { label: '500 mg', grams: 0.50 }, { label: '1 gm', grams: 1 }, { label: '2 gm', grams: 2 },
+  { label: '5 gm', grams: 5 }, { label: '10 gm', grams: 10 }, { label: '20 gm', grams: 20 },
+  { label: '50 gm', grams: 50 }, { label: '100 gm', grams: 100 },
+]
+
+const fetchCoinRequests = async () => {
+  setCoinReqLoading(true)
+  try {
+    const res = await api.get('/coin-requests/')
+    setCoinRequests(res.data)
+  } catch { setCoinRequests([]) }
+  setCoinReqLoading(false)
+}
+
+const approveCoinRequest = async (reqId) => {
+  setApprovingReqId(reqId)
+  setCoinReqMsg('')
+  try {
+    await api.post(`/coin-requests/${reqId}/approve/`)
+    setCoinReqMsgType('success')
+    setCoinReqMsg('Request approved successfully.')
+    fetchCoinRequests()
+  } catch (err) {
+    setCoinReqMsgType('error')
+    setCoinReqMsg('Failed to approve request. Please try again.')
+  }
+  setApprovingReqId(null)
+}
+
+const approveAllCoinRequests = async () => {
+  setApprovingAll(true)
+  setCoinReqMsg('')
+  try {
+    await api.post('/coin-requests/approve-all/')
+    setCoinReqMsgType('success')
+    setCoinReqMsg('All requests approved successfully.')
+    fetchCoinRequests()
+  } catch (err) {
+    setCoinReqMsgType('error')
+    setCoinReqMsg('Failed to approve requests. Please try again.')
+  }
+  setApprovingAll(false)
+}
+
+const rejectCoinRequest = async (reqId) => {
+  if (!rejectReason.trim()) {
+    setCoinReqMsgType('error')
+    setCoinReqMsg('Please enter a reason for rejection.')
+    return
+  }
+  setRejectSubmitting(true)
+  setCoinReqMsg('')
+  try {
+    await api.post(`/coin-requests/${reqId}/reject/`, { message: rejectReason.trim() })
+    setCoinReqMsgType('success')
+    setCoinReqMsg('Request rejected successfully.')
+    setRejectingReqId(null)
+    setRejectReason('')
+    fetchCoinRequests()
+  } catch (err) {
+    setCoinReqMsgType('error')
+    setCoinReqMsg('Failed to reject request. Please try again.')
+  }
+  setRejectSubmitting(false)
+}
+
+const addToCoinCart = () => {
+  if (!selCoinWeight || !selCoinQty || Number(selCoinQty) < 1) {
+    setCoinBuyMsg('error:Please select weight and quantity')
+    return
+  }
+  const weightsArr = selCoinMetal === 'silver_999' ? COIN_WEIGHTS_SILVER : COIN_WEIGHTS_GOLD
+  const w = weightsArr.find(x => x.label === selCoinWeight)
+  if (!w) return
+  setCoinCart(prev => [...prev, { metal_type: selCoinMetal, weight_label: w.label, weight_grams: w.grams, qty: Number(selCoinQty) }])
+  setSelCoinWeight('')
+  setSelCoinQty('')
+  setCoinBuyMsg('')
+}
+
+const removeCoinCartItem = (idx) => {
+  setCoinCart(prev => prev.filter((_, i) => i !== idx))
+}
+
+const submitAddCoins = async () => {
+  if (coinCart.length === 0) {
+    setCoinBuyMsg('error:Add at least one item to the cart')
+    return
+  }
+  setCoinBuySubmitting(true)
+  try {
+    await api.post('/coin-stock/add/', { items: coinCart })
+    setCoinBuyMsg('success:Coins added to your stock!')
+    setCoinCart([])
+    setTimeout(() => { setShowAddCoin(false); setCoinBuyMsg('') }, 1400)
+  } catch (err) {
+    setCoinBuyMsg('error:' + (err.response?.data?.error || 'Failed to add coins'))
+  }
+  setCoinBuySubmitting(false)
+}
+
+const fetchCoinStock = async () => {
+  setCoinStockLoading(true)
+  try {
+    const res = await api.get('/coin-stock/')
+    setCoinStock(res.data)
+  } catch { setCoinStock([]) }
+  setCoinStockLoading(false)
+}
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, transition: 'background 0.8s ease, color 0.4s ease', fontFamily: '"Manrope","Inter",system-ui,sans-serif', position: 'relative', overflow: 'hidden' }}>
@@ -1752,7 +1897,7 @@ const buildHierarchyOrders = (period, metalKey) => {
 </span>
 
 
-          {/* 💰 Rate Entry Button */}
+          {/* ðŸ’° Rate Entry Button */}
           <div
             className="sa-command-btn"
             onClick={() => {
@@ -1794,7 +1939,7 @@ const buildHierarchyOrders = (period, metalKey) => {
 
 
 
-            {/* 🛍️ Add Product Button */}
+            {/* ðŸ›ï¸ Add Product Button */}
           <div
             className="sa-command-btn"
             onClick={() => navigate('/add-product')}
@@ -1816,7 +1961,7 @@ const buildHierarchyOrders = (period, metalKey) => {
             <span style={{ fontSize: '12px', fontWeight: 900, color: '#FFFFFF' }}>Add Product</span>
           </div>
 
-          {/* 📋 Orders Button — NEW */}
+          {/* ðŸ“‹ Orders Button â€” NEW */}
 <div
   className="sa-command-btn"
   onClick={() => navigate('/admin-orders')}
@@ -1843,7 +1988,7 @@ const buildHierarchyOrders = (period, metalKey) => {
             className="sa-icon-action"
             onClick={() => { setShowRequests(true); setRequestMsg('') }}
             style={{
-              position: 'relative',          // ← badge-ku base
+              position: 'relative',          // â† badge-ku base
               cursor: 'pointer',
               padding: '6px',
               borderRadius: '10px',
@@ -1872,7 +2017,7 @@ const buildHierarchyOrders = (period, metalKey) => {
             <span style={{ fontSize: '11px', fontWeight: 700, color: '#CCA881' }}>Requests</span>
             {profileRequests.length > 0 && (
               <div style={{
-                position: 'absolute', top: '-7px', right: '-7px',   // ← இப்போ சரியா work ஆகும்
+                position: 'absolute', top: '-7px', right: '-7px',   // â† à®‡à®ªà¯à®ªà¯‹ à®šà®°à®¿à®¯à®¾ work à®†à®•à¯à®®à¯
                 background: 'linear-gradient(135deg,#CCA881,#BB8958)',
                 color: '#FDFDFC', borderRadius: '50%', minWidth: '18px', height: '18px',
                 fontSize: '9px', fontWeight: 900, display: 'flex', alignItems: 'center',
@@ -1884,7 +2029,7 @@ const buildHierarchyOrders = (period, metalKey) => {
             )}
           </div>
 
-          {/* 🎂 Birthday Icon */}
+          {/* ðŸŽ‚ Birthday Icon */}
           <div
             className="sa-icon-action"
             onClick={() => { setShowBirthdayList(true) }}
@@ -1905,7 +2050,7 @@ const buildHierarchyOrders = (period, metalKey) => {
             )}
           </div>
 
-          {/* 💍 Anniversary Icon */}
+          {/* ðŸ’ Anniversary Icon */}
           <div
             className="sa-icon-action"
             onClick={() => { setShowAnniversaryList(true) }}
@@ -1924,7 +2069,7 @@ const buildHierarchyOrders = (period, metalKey) => {
             )}
           </div>
 
-          {/* 🏆 Join Date Icon */}
+          {/* ðŸ† Join Date Icon */}
           <div
             className="sa-icon-action"
             onClick={() => { setShowJoinDateList(true) }}
@@ -1946,7 +2091,7 @@ const buildHierarchyOrders = (period, metalKey) => {
           </div>
 
 
-          {/* 📢 Announcement Icon */}
+          {/* ðŸ“¢ Announcement Icon */}
           <div
             className="sa-icon-action"
             onClick={() => {
@@ -1971,7 +2116,7 @@ const buildHierarchyOrders = (period, metalKey) => {
             )}
           </div>
 
-          {/* 📬 Super Admin View Announcements */}
+          {/* ðŸ“¬ Super Admin View Announcements */}
           <div
             className="sa-icon-action"
             onClick={() => {
@@ -2007,7 +2152,7 @@ const buildHierarchyOrders = (period, metalKey) => {
 </svg>
           </div>
 
-          {/* 📊 Today Rates Icon */}
+          {/* ðŸ“Š Today Rates Icon */}
           <div
             className="sa-icon-action"
             onClick={() => setShowTodayRates(true)}
@@ -2026,8 +2171,34 @@ const buildHierarchyOrders = (period, metalKey) => {
 </svg>
             <span style={{ fontSize: '11px', fontWeight: 700, color: '#CCA881' }}>Today Rates</span>
           </div>
-          <button className="sa-logout" onClick={() => { localStorage.clear(); navigate('/login') }}
-            style={{ padding: '8px 18px', background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}>
+          <div onClick={() => { setShowAddCoin(true); setCoinCart([]); setCoinBuyMsg('') }}
+  style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+  <span style={{ fontSize: '12px', fontWeight: 700, color: '#fbbf24' }}>Add Coins</span>
+</div>
+
+<div onClick={() => navigate('/stored-coins')}
+  style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(74,222,128,0.4)', background: 'rgba(74,222,128,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+  <span style={{ fontSize: '12px', fontWeight: 700, color: '#4ade80' }}>Stored Coin</span>
+</div>
+
+<div onClick={() => navigate('/coin-requests-page')}
+  style={{ position: 'relative', cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+  <span style={{ fontSize: '12px', fontWeight: 700, color: '#38bdf8' }}>Coin Requests</span>
+  {coinRequests.filter(r => r.status === 'pending').length > 0 && (
+    <div style={{ position: 'absolute', top: '-7px', right: '-7px', background: '#fbbf24', color: '#000', borderRadius: '50%', minWidth: '18px', height: '18px', fontSize: '9px', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {coinRequests.filter(r => r.status === 'pending').length}
+    </div>
+  )}
+</div>
+
+          <button onClick={() => setDark(!dark)}
+
+
+            style={{ padding: '8px 16px', borderRadius: '16px', border: `1px solid ${border}`, background: 'transparent', color: text, cursor: 'pointer', fontWeight: 600, fontSize: '13px', transition: 'all 0.3s ease' }}>
+            {dark ? 'â˜€ï¸ Light' : 'ðŸŒ™ Dark'}
+          </button>
+          <button onClick={() => { localStorage.clear(); navigate('/login') }}
+            style={{ padding: '8px 18px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}>
             Logout
           </button>
         </div>
@@ -2055,7 +2226,7 @@ const buildHierarchyOrders = (period, metalKey) => {
         </div>
         <OrderTrendChart dark={dark} />
 
-        {/* ── RIGHT SIDE: Role Distribution + Login Status Pies ── */}
+        {/* â”€â”€ RIGHT SIDE: Role Distribution + Login Status Pies â”€â”€ */}
         <div className="sa-pie-row" style={{ flex: '0 0 38%', minWidth: 360, display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
           {/* Role Distribution Pie */}
@@ -2164,12 +2335,12 @@ const buildHierarchyOrders = (period, metalKey) => {
 
       <div className="sa-main-offset" style={{ position: 'relative', padding: '28px 34px 48px', width: 'calc(100% - 286px)', marginLeft: 286, boxSizing: 'border-box' }}>
         {msg && (
-          <div style={{ background: msg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${msg.includes('✅') ? 'rgba(12,64,68,0.25)' : 'rgba(201,32,53,0.3)'}`, color: msg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', marginBottom: '20px' }}>
+          <div style={{ background: msg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${msg.includes('âœ…') ? 'rgba(12,64,68,0.25)' : 'rgba(201,32,53,0.3)'}`, color: msg.includes('âœ…') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', marginBottom: '20px' }}>
             {msg}
           </div>
         )}
 
-        {/* ── GOLD & SILVER PRICE TABLE — HORIZONTAL LAYOUT ── */}
+        {/* â”€â”€ GOLD & SILVER PRICE TABLE â€” HORIZONTAL LAYOUT â”€â”€ */}
         <div className="sa-rates-layout" style={{
           display: 'flex',
           gap: '0',
@@ -2181,7 +2352,7 @@ const buildHierarchyOrders = (period, metalKey) => {
           minHeight: '420px',
         }}>
 
-          {/* ── LEFT 20% : Sales Summary ── */}
+          {/* â”€â”€ LEFT 20% : Sales Summary â”€â”€ */}
           <div className="sa-order-summary-panel" style={{
             width: '20%',
             minWidth: '230px',
@@ -2196,7 +2367,7 @@ const buildHierarchyOrders = (period, metalKey) => {
               letterSpacing: '1.5px', textTransform: 'uppercase',
               paddingBottom: '10px', borderBottom: `1px solid ${border}`,
             }}>
-              📊 Order Summary
+              ðŸ“Š Order Summary
             </div>
 
             {[
@@ -2242,7 +2413,7 @@ const buildHierarchyOrders = (period, metalKey) => {
                     className="sa-summary-block"
                     style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
                   >
-                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>🏅 22K</div>
+                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>ðŸ… 22K</div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>{total22k.count}</span>
@@ -2253,7 +2424,7 @@ const buildHierarchyOrders = (period, metalKey) => {
                     </div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Value</span>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>₹{total22k.amount.toFixed(0)}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>â‚¹{total22k.amount.toFixed(0)}</span>
                     </div>
                   </div>
 
@@ -2280,7 +2451,7 @@ setOrderPopupState({
                     className="sa-summary-block"
                     style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
                   >
-                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>🥇 24K</div>
+                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>ðŸ¥‡ 24K</div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>{total24k.count}</span>
@@ -2291,7 +2462,7 @@ setOrderPopupState({
                     </div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Value</span>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>₹{total24k.amount.toFixed(0)}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>â‚¹{total24k.amount.toFixed(0)}</span>
                     </div>
                   </div>
 
@@ -2318,7 +2489,7 @@ setOrderPopupState({
                     className="sa-summary-block"
                     style={{ cursor: 'pointer' }}
                   >
-                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#53615F', fontWeight: 700, marginBottom: '3px' }}>🥈 Silver</div>
+                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#53615F', fontWeight: 700, marginBottom: '3px' }}>ðŸ¥ˆ Silver</div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#53615F' }}>{totalSilver.count}</span>
@@ -2329,7 +2500,7 @@ setOrderPopupState({
                     </div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Value</span>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#53615F' }}>₹{totalSilver.amount.toFixed(0)}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#53615F' }}>â‚¹{totalSilver.amount.toFixed(0)}</span>
                     </div>
                   </div>
                 </div>
@@ -2337,29 +2508,29 @@ setOrderPopupState({
             })}
 
             <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: `1px solid ${border}`, textAlign: 'center' }}>
-              <div style={{ fontSize: '9px', color: '#7A8987' }}>Live • Auto refresh</div>
+              <div style={{ fontSize: '9px', color: '#7A8987' }}>Live â€¢ Auto refresh</div>
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#0C4044', margin: '6px auto 0', boxShadow: '0 0 8px rgba(12,64,68,0.8)' }} />
             </div>
           </div>
 
-          {/* ── CENTER 60% : Gold & Silver Table ── */}
+          {/* â”€â”€ CENTER 60% : Gold & Silver Table â”€â”€ */}
           <div className="sa-rates-center" style={{ width: '60%', padding: '20px 18px', overflowX: 'auto' }}>
             {/* Header */}
             <div className="sa-rates-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '20px' }}>⚖️</span>
+                <span style={{ fontSize: '20px' }}>âš–ï¸</span>
                 <div>
                   <div style={{ color: '#0C4044', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                     Today's Gold & Silver Rates
                   </div>
                   <div className="sa-rates-meta" style={{ color: subtext, fontSize: '10px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span>📍 Chennai, India</span>
-                    <span style={{ opacity: 0.4 }}>•</span>
-                    <span>₹ per gram</span>
-                    <span style={{ opacity: 0.4 }}>•</span>
+                    <span>ðŸ“ Chennai, India</span>
+                    <span style={{ opacity: 0.4 }}>â€¢</span>
+                    <span>â‚¹ per gram</span>
+                    <span style={{ opacity: 0.4 }}>â€¢</span>
                     {dbRateDate ? (
                       <span style={{ color: '#0C4044', fontSize: '9px', fontWeight: 700 }}>
-                        📅 {new Date(dbRateDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        ðŸ“… {new Date(dbRateDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
                       </span>
                     ) : (
                       <span style={{ color: '#C92035', fontSize: '9px', fontWeight: 700 }}>No rate entered yet</span>
@@ -2392,16 +2563,16 @@ setOrderPopupState({
 return (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-    {/* ── GOLD 22K CARDS ── */}
+    {/* â”€â”€ GOLD 22K CARDS â”€â”€ */}
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-        <span style={{ fontSize: '16px' }}>🏅</span>
+        <span style={{ fontSize: '16px' }}>ðŸ…</span>
         <span style={{ color: '#CCA881', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>
           GOLD 22K
         </span>
         {metalPrices.gold22k && (
           <span style={{ color: 'rgba(204,168,129,0.55)', fontSize: '11px' }}>
-            ₹{metalPrices.gold22k.toFixed(2)}/gm
+            â‚¹{metalPrices.gold22k.toFixed(2)}/gm
           </span>
         )}
       </div>
@@ -2464,8 +2635,8 @@ return (
                 fontFamily: 'monospace', paddingBottom: '8px'
               }}>
                 {metalPrices.gold22k != null
-                  ? `₹${(w.grams * metalPrices.gold22k).toFixed(2)}`
-                  : '—'}
+                  ? `â‚¹${(w.grams * metalPrices.gold22k).toFixed(2)}`
+                  : 'â€”'}
               </div>
             </div>
           </div>
@@ -2473,16 +2644,16 @@ return (
       </div>
     </div>
 
-    {/* ── GOLD 24K CARDS ── */}
+    {/* â”€â”€ GOLD 24K CARDS â”€â”€ */}
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-        <span style={{ fontSize: '16px' }}>🥇</span>
+        <span style={{ fontSize: '16px' }}>ðŸ¥‡</span>
         <span style={{ color: '#CCA881', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>
           GOLD 24K
         </span>
         {metalPrices.gold24k && (
           <span style={{ color: 'rgba(204,168,129,0.55)', fontSize: '11px' }}>
-            ₹{metalPrices.gold24k.toFixed(2)}/gm
+            â‚¹{metalPrices.gold24k.toFixed(2)}/gm
           </span>
         )}
       </div>
@@ -2542,8 +2713,8 @@ return (
                 fontFamily: 'monospace', paddingBottom: '8px'
               }}>
                 {metalPrices.gold24k != null
-                  ? `₹${(w.grams * metalPrices.gold24k).toFixed(2)}`
-                  : '—'}
+                  ? `â‚¹${(w.grams * metalPrices.gold24k).toFixed(2)}`
+                  : 'â€”'}
               </div>
             </div>
           </div>
@@ -2551,16 +2722,16 @@ return (
       </div>
     </div>
 
-    {/* ── SILVER 999 CARDS ── */}
+    {/* â”€â”€ SILVER 999 CARDS â”€â”€ */}
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-        <span style={{ fontSize: '16px' }}>🥈</span>
+        <span style={{ fontSize: '16px' }}>ðŸ¥ˆ</span>
         <span style={{ color: '#53615F', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>
           SILVER 999
         </span>
         {metalPrices.silver && (
           <span style={{ color: 'rgba(192,192,192,0.55)', fontSize: '11px' }}>
-            ₹{metalPrices.silver.toFixed(2)}/gm
+            â‚¹{metalPrices.silver.toFixed(2)}/gm
           </span>
         )}
       </div>
@@ -2620,8 +2791,8 @@ return (
                 fontFamily: 'monospace', paddingBottom: '8px'
               }}>
                 {metalPrices.silver != null
-                  ? `₹${(w.grams * metalPrices.silver).toFixed(2)}`
-                  : '—'}
+                  ? `â‚¹${(w.grams * metalPrices.silver).toFixed(2)}`
+                  : 'â€”'}
               </div>
             </div>
           </div>
@@ -2635,7 +2806,7 @@ return (
             })()}
           </div>
 
-          {/* ── RIGHT 20% : Today's Sales Breakdown ── */}
+          {/* â”€â”€ RIGHT 20% : Today's Sales Breakdown â”€â”€ */}
           <div className="sa-today-orders-panel" style={{
             width: '20%',
             minWidth: '230px',
@@ -2650,24 +2821,24 @@ return (
               letterSpacing: '1.5px', textTransform: 'uppercase',
               paddingBottom: '10px', borderBottom: `1px solid ${border}`,
             }}>
-              🏆 Today Orders
+              ðŸ† Today Orders
             </div>
 
             {[
               {
-                icon: '🏅', label: 'Gold 22K', color: '#CCA881',
+                icon: 'ðŸ…', label: 'Gold 22K', color: '#CCA881',
                 bg: 'rgba(204,168,129,0.06)', bd: 'rgba(204,168,129,0.25)',
                 data: orderStats.today.gold_22k,
                 metalKey: 'gold_22k'
               },
               {
-                icon: '🥇', label: 'Gold 24K', color: '#CCA881',
+                icon: 'ðŸ¥‡', label: 'Gold 24K', color: '#CCA881',
                 bg: 'rgba(204,168,129,0.06)', bd: 'rgba(204,168,129,0.25)',
                 data: orderStats.today.gold_24k,
                 metalKey: 'gold_24k'
               },
               {
-                icon: '🥈', label: 'Silver 999', color: '#53615F',
+                icon: 'ðŸ¥ˆ', label: 'Silver 999', color: '#53615F',
                 bg: 'rgba(192,192,192,0.05)', bd: 'rgba(192,192,192,0.2)',
                 data: orderStats.today.silver_999,
                 metalKey: 'silver_999',
@@ -2717,7 +2888,7 @@ setOrderPopupState({
                 <div className="sa-today-divider" style={{ height: '1px', background: `rgba(253,253,252,0.05)`, margin: '6px 0' }} />
                 <div className="sa-side-stat-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '9px', color: subtext }}>Total Amount</span>
-                  <span style={{ fontSize: '12px', fontWeight: 800, fontFamily: 'monospace', color: s.color }}>₹{s.data.amount.toFixed(0)}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 800, fontFamily: 'monospace', color: s.color }}>â‚¹{s.data.amount.toFixed(0)}</span>
                 </div>
               </div>
             ))}
@@ -2766,7 +2937,7 @@ setOrderPopupState({
           </div>
         </div>
 
-        {/* ── RATE ENTRY POPUP ── */}
+        {/* â”€â”€ RATE ENTRY POPUP â”€â”€ */}
      {showRatePopup && (
           <div
             onClick={() => setShowRatePopup(false)}
@@ -2832,16 +3003,16 @@ setOrderPopupState({
 
               {rateMsg && (
                 <div style={{
-                  background: rateMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)',
-                  border: `1px solid ${rateMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`,
-                  color: rateMsg.includes('✅') ? '#0C4044' : '#C92035',
+                  background: rateMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)',
+                  border: `1px solid ${rateMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`,
+                  color: rateMsg.includes('âœ…') ? '#0C4044' : '#C92035',
                   borderRadius: '12px', padding: '13px 16px', fontSize: '13px', marginBottom: '18px'
                 }}>
                   {rateMsg}
                 </div>
               )}
 
-              {/* Date — full width */}
+              {/* Date â€” full width */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: subtext, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -2868,7 +3039,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/>
                     </svg>
-                    Gold 22K (₹)
+                    Gold 22K (â‚¹)
                   </label>
                   <input
                     type="number"
@@ -2881,7 +3052,7 @@ setOrderPopupState({
                   />
                   {rateForm.gold_22k && (
                     <div style={{ color: '#CCA881', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = ₹{parseFloat(rateForm.gold_22k).toFixed(2)}
+                      1gm = â‚¹{parseFloat(rateForm.gold_22k).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -2892,7 +3063,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/>
                     </svg>
-                    Gold 24K (₹)
+                    Gold 24K (â‚¹)
                   </label>
                   <input
                     type="number"
@@ -2905,7 +3076,7 @@ setOrderPopupState({
                   />
                   {rateForm.gold_24k && (
                     <div style={{ color: '#CCA881', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = ₹{parseFloat(rateForm.gold_24k).toFixed(2)}
+                      1gm = â‚¹{parseFloat(rateForm.gold_24k).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -2916,7 +3087,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/>
                     </svg>
-                    Silver 999 (₹)
+                    Silver 999 (â‚¹)
                   </label>
                   <input
                     type="number"
@@ -2929,7 +3100,7 @@ setOrderPopupState({
                   />
                   {rateForm.silver_999 && (
                     <div style={{ color: '#53615F', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = ₹{parseFloat(rateForm.silver_999).toFixed(2)}
+                      1gm = â‚¹{parseFloat(rateForm.silver_999).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -2940,7 +3111,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D1DFDE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/>
                     </svg>
-                    Diamond 18K (₹)
+                    Diamond 18K (â‚¹)
                   </label>
                   <input
                     type="number"
@@ -2953,7 +3124,7 @@ setOrderPopupState({
                   />
                   {rateForm.diamond_18k && (
                     <div style={{ color: '#D1DFDE', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = ₹{parseFloat(rateForm.diamond_18k).toFixed(2)}
+                      1gm = â‚¹{parseFloat(rateForm.diamond_18k).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -2964,7 +3135,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/>
                     </svg>
-                    Diamond 22K (₹)
+                    Diamond 22K (â‚¹)
                   </label>
                   <input
                     type="number"
@@ -2977,7 +3148,7 @@ setOrderPopupState({
                   />
                   {rateForm.diamond_22k && (
                     <div style={{ color: '#0C4044', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = ₹{parseFloat(rateForm.diamond_22k).toFixed(2)}
+                      1gm = â‚¹{parseFloat(rateForm.diamond_22k).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -2988,7 +3159,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E7EDEC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#53615F"/>
                     </svg>
-                    Platinum 92 (₹)
+                    Platinum 92 (â‚¹)
                   </label>
                   <input
                     type="number"
@@ -3001,7 +3172,7 @@ setOrderPopupState({
                   />
                   {rateForm.platinum_92 && (
                     <div style={{ color: '#E7EDEC', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = ₹{parseFloat(rateForm.platinum_92).toFixed(2)}
+                      1gm = â‚¹{parseFloat(rateForm.platinum_92).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -3013,7 +3184,7 @@ setOrderPopupState({
                 disabled={rateSaving}
                 onClick={async () => {
                   if (!rateForm.date || !rateForm.gold_22k || !rateForm.gold_24k || !rateForm.silver_999) {
-                    setRateMsg('❌ Gold and Silver fields are required.')
+                    setRateMsg('âŒ Gold and Silver fields are required.')
                     return
                   }
                   setRateSaving(true)
@@ -3027,11 +3198,11 @@ setOrderPopupState({
                       diamond_22k: rateForm.diamond_22k || 0,
                       platinum_92: rateForm.platinum_92 || 0,
                     })
-                    setRateMsg('✅ Rate saved successfully!')
+                    setRateMsg('âœ… Rate saved successfully!')
                     fetchMetalPrices()
                     setTimeout(() => setShowRatePopup(false), 1400)
                   } catch (err) {
-                    setRateMsg('❌ Failed: ' + JSON.stringify(err.response?.data))
+                    setRateMsg('âŒ Failed: ' + JSON.stringify(err.response?.data))
                   }
                   setRateSaving(false)
                 }}
@@ -3065,7 +3236,7 @@ setOrderPopupState({
         )}
 
 
-{/* ── ADD PRODUCT POPUP ── */}
+{/* â”€â”€ ADD PRODUCT POPUP â”€â”€ */}
 {showAddProduct && (
   <div onClick={() => setShowAddProduct(false)} style={{ position:'fixed', inset:0, background:'rgba(17,24,23,0.88)', backdropFilter:'blur(12px)', zIndex:1400, display:'flex', alignItems:'center', justifyContent:'center' }}>
     <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border:'1px solid rgba(204,168,129,0.35)', borderRadius:'24px', width:'96%', maxWidth:'620px', maxHeight:'92vh', overflowY:'auto', padding:'32px', boxShadow:'0 32px 90px rgba(17,24,23,0.8)', animation:'fadeIn 0.25s ease' }}>
@@ -3073,17 +3244,17 @@ setOrderPopupState({
       {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-          <div style={{ width:'42px', height:'42px', borderRadius:'12px', background:'rgba(204,168,129,0.15)', border:'1px solid rgba(204,168,129,0.4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'20px' }}>🛍️</div>
+          <div style={{ width:'42px', height:'42px', borderRadius:'12px', background:'rgba(204,168,129,0.15)', border:'1px solid rgba(204,168,129,0.4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'20px' }}>ðŸ›ï¸</div>
           <div>
             <div style={{ color:'#CCA881', fontWeight:800, fontSize:'15px' }}>ADD JEWELRY PRODUCT</div>
             <div style={{ color:subtext, fontSize:'11px', marginTop:'2px' }}>Fill all details and upload images</div>
           </div>
         </div>
-        <button onClick={() => setShowAddProduct(false)} style={{ background:'rgba(201,32,53,0.1)', border:'1px solid rgba(201,32,53,0.3)', color:'#C92035', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'12px' }}>✕ Close</button>
+        <button onClick={() => setShowAddProduct(false)} style={{ background:'rgba(201,32,53,0.1)', border:'1px solid rgba(201,32,53,0.3)', color:'#C92035', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'12px' }}>âœ• Close</button>
       </div>
 
       {productMsg && (
-        <div style={{ background: productMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border:`1px solid ${productMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: productMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius:'12px', padding:'13px 16px', fontSize:'13px', marginBottom:'18px' }}>
+        <div style={{ background: productMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border:`1px solid ${productMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: productMsg.includes('âœ…') ? '#0C4044' : '#C92035', borderRadius:'12px', padding:'13px 16px', fontSize:'13px', marginBottom:'18px' }}>
           {productMsg}
         </div>
       )}
@@ -3091,7 +3262,7 @@ setOrderPopupState({
       {/* STEP 1: Category */}
       <div style={{ marginBottom:'20px' }}>
         <label style={{ display:'block', color:'#CCA881', fontSize:'11px', fontWeight:800, letterSpacing:'1px', textTransform:'uppercase', marginBottom:'10px' }}>
-          Step 1 — Select Category
+          Step 1 â€” Select Category
         </label>
         <div style={{ display:'flex', flexWrap:'wrap', gap:'8px' }}>
           {['rings','necklaces','bangles','earrings','chains','coins'].map(cat => (
@@ -3101,7 +3272,7 @@ setOrderPopupState({
                 border: `1.5px solid ${productForm.category === cat ? 'rgba(204,168,129,0.7)' : 'rgba(204,168,129,0.2)'}`,
                 color: productForm.category === cat ? '#CCA881' : subtext,
               }}>
-              { {rings:'💍',necklaces:'📿',bangles:'⭕',earrings:'✨',chains:'⛓️',coins:'🪙'}[cat] } {cat}
+              { {rings:'ðŸ’',necklaces:'ðŸ“¿',bangles:'â­•',earrings:'âœ¨',chains:'â›“ï¸',coins:'ðŸª™'}[cat] } {cat}
             </div>
           ))}
         </div>
@@ -3111,7 +3282,7 @@ setOrderPopupState({
       {productForm.category && (
         <div style={{ marginBottom:'20px' }}>
           <label style={{ display:'block', color:'#CCA881', fontSize:'11px', fontWeight:800, letterSpacing:'1px', textTransform:'uppercase', marginBottom:'10px' }}>
-            Step 2 — Select Metal
+            Step 2 â€” Select Metal
           </label>
           <div style={{ display:'flex', gap:'10px' }}>
             {['gold','silver'].map(m => (
@@ -3121,7 +3292,7 @@ setOrderPopupState({
                   border: `1.5px solid ${productForm.metal === m ? (m==='gold' ? 'rgba(204,168,129,0.7)' : 'rgba(192,192,192,0.6)') : border}`,
                   color: productForm.metal === m ? (m==='gold' ? '#CCA881' : '#BDCFCE') : subtext,
                 }}>
-                {m === 'gold' ? '🏅 Gold' : '🥈 Silver'}
+                {m === 'gold' ? 'ðŸ… Gold' : 'ðŸ¥ˆ Silver'}
               </div>
             ))}
           </div>
@@ -3132,7 +3303,7 @@ setOrderPopupState({
       {productForm.metal && (
         <div style={{ marginBottom:'20px' }}>
           <label style={{ display:'block', color:'#BDCFCE', fontSize:'11px', fontWeight:800, letterSpacing:'1px', textTransform:'uppercase', marginBottom:'10px' }}>
-            Step 3 — Select Grade
+            Step 3 â€” Select Grade
           </label>
           <div style={{ display:'flex', gap:'10px' }}>
             {(productForm.metal === 'gold' ? ['22k','24k'] : ['999']).map(g => (
@@ -3223,7 +3394,7 @@ setOrderPopupState({
                 Live Rate Price
               </label>
               <div style={{ background:inpBg, border:`1px solid ${livePrice ? 'rgba(12,64,68,0.5)' : inpBorder}`, borderRadius:'12px', padding:'13px 16px', fontFamily:'monospace', fontWeight:800, fontSize:'16px', color: livePrice ? '#0C4044' : subtext, display:'flex', alignItems:'center', minHeight:'46px' }}>
-                {livePrice ? `₹ ${livePrice}` : '—'}
+                {livePrice ? `â‚¹ ${livePrice}` : 'â€”'}
               </div>
             </div>
           </div>
@@ -3237,7 +3408,7 @@ setOrderPopupState({
               onMouseEnter={e => e.currentTarget.style.background='rgba(204,168,129,0.15)'}
               onMouseLeave={e => e.currentTarget.style.background='rgba(204,168,129,0.08)'}
             >
-              📷 Add Image
+              ðŸ“· Add Image
             </label>
             <input
               id="product-img-upload"
@@ -3265,7 +3436,7 @@ setOrderPopupState({
                       onClick={() => setPreviewImageIdx(idx)}
                       style={{ position:'absolute', bottom:0, left:0, right:0, background:'rgba(17,24,23,0.6)', color:'#FDFDFC', fontSize:'10px', fontWeight:700, padding:'4px 0', border:'none', cursor:'pointer', backdropFilter:'blur(4px)' }}
                     >
-                      👁 View
+                      ðŸ‘ View
                     </button>
                     {/* Remove button */}
                     <button
@@ -3275,7 +3446,7 @@ setOrderPopupState({
                       }}
                       style={{ position:'absolute', top:'4px', right:'4px', background:'rgba(201,32,53,0.85)', color:'#FDFDFC', fontSize:'10px', fontWeight:900, width:'18px', height:'18px', borderRadius:'50%', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
                     >
-                      ✕
+                      âœ•
                     </button>
                   </div>
                 ))}
@@ -3287,8 +3458,8 @@ setOrderPopupState({
           <button
             disabled={productSaving || !productForm.name || !productForm.weight_grams}
             onClick={async () => {
-              if (!productForm.name.trim()) { setProductMsg('❌ Product name required'); return }
-              if (!productForm.weight_grams) { setProductMsg('❌ Weight required'); return }
+              if (!productForm.name.trim()) { setProductMsg('âŒ Product name required'); return }
+              if (!productForm.weight_grams) { setProductMsg('âŒ Weight required'); return }
               setProductSaving(true)
               try {
                 const fd = new FormData()
@@ -3302,18 +3473,18 @@ setOrderPopupState({
                 if (livePrice) fd.append('price', livePrice)
                 productImages.forEach(img => fd.append('uploaded_images', img))
                 await api.post('/jewelry-products/', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-                setProductMsg('✅ Product added successfully!')
+                setProductMsg('âœ… Product added successfully!')
                 setProductForm({ category:'', metal:'', grade:'', name:'', description:'', weight_grams:'', tag:'' })
                 setProductImages([])
                 setProductPreviewUrls([])
                 setLivePrice(null)
               } catch (err) {
-                setProductMsg('❌ Failed: ' + JSON.stringify(err.response?.data || err.message))
+                setProductMsg('âŒ Failed: ' + JSON.stringify(err.response?.data || err.message))
               }
               setProductSaving(false)
             }}
             style={{ width:'100%', padding:'14px', background: productSaving ? 'rgba(204,168,129,0.3)' : 'linear-gradient(90deg,#CCA881,#BDCFCE)', border:'none', borderRadius:'12px', fontWeight:900, fontSize:'15px', color: productSaving ? '#CCA881' : '#FDFDFC', cursor: productSaving ? 'not-allowed' : 'pointer', transition:'all 0.3s ease' }}>
-            {productSaving ? '⏳ Saving...' : '✅ Add Product'}
+            {productSaving ? 'â³ Saving...' : 'âœ… Add Product'}
           </button>
         </>
       )}
@@ -3331,14 +3502,14 @@ setOrderPopupState({
       {previewImageIdx > 0 && (
         <button onClick={() => setPreviewImageIdx(i => i - 1)}
           style={{ position:'absolute', left:'-50px', top:'50%', transform:'translateY(-50%)', background:'rgba(204,168,129,0.2)', border:'1px solid rgba(204,168,129,0.4)', color:'#CCA881', width:'40px', height:'40px', borderRadius:'50%', fontSize:'18px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          ‹
+          â€¹
         </button>
       )}
       {/* Right Arrow */}
       {previewImageIdx < productPreviewUrls.length - 1 && (
         <button onClick={() => setPreviewImageIdx(i => i + 1)}
           style={{ position:'absolute', right:'-50px', top:'50%', transform:'translateY(-50%)', background:'rgba(204,168,129,0.2)', border:'1px solid rgba(204,168,129,0.4)', color:'#CCA881', width:'40px', height:'40px', borderRadius:'50%', fontSize:'18px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          ›
+          â€º
         </button>
       )}
 
@@ -3349,13 +3520,13 @@ setOrderPopupState({
 
       <button onClick={() => setPreviewImageIdx(null)}
         style={{ position:'absolute', top:'-16px', right:'-16px', background:'rgba(201,32,53,0.85)', border:'none', color:'#FDFDFC', width:'32px', height:'32px', borderRadius:'50%', fontSize:'14px', cursor:'pointer', fontWeight:900 }}>
-        ✕
+        âœ•
       </button>
     </div>
   </div>
 )}
 
-        {/* ── BIRTHDAY LIST MODAL ── */}
+        {/* â”€â”€ BIRTHDAY LIST MODAL â”€â”€ */}
         {showBirthdayList && (
           <div onClick={() => setShowBirthdayList(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(201,32,53,0.3)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.6)' }}>
@@ -3398,8 +3569,8 @@ setOrderPopupState({
                     key={i}
                     onClick={() => {
                       setSpecialAnnForm({
-                        title: `🎂 Happy Birthday ${m.first_name} ${m.last_name || ''} (${m._id})`,
-                        message: `By BitByte Technologies — Wishing you a wonderful birthday! May this special day bring you joy, happiness, and all the success you deserve. Here's to another amazing year! 🎉🎂`,
+                        title: `ðŸŽ‚ Happy Birthday ${m.first_name} ${m.last_name || ''} (${m._id})`,
+                        message: `By BitByte Technologies â€” Wishing you a wonderful birthday! May this special day bring you joy, happiness, and all the success you deserve. Here's to another amazing year! ðŸŽ‰ðŸŽ‚`,
                         roles: ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
                       })
                       setShowBirthdayList(false)
@@ -3424,7 +3595,7 @@ setOrderPopupState({
                           {new Date(m._dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long' })}
                         </div>
                       </div>
-                      <div style={{ color: '#C92035', fontSize: '11px', fontWeight: 700 }}>Click to Wish →</div>
+                      <div style={{ color: '#C92035', fontSize: '11px', fontWeight: 700 }}>Click to Wish â†’</div>
                     </div>
                   </div>
                 ))}
@@ -3433,7 +3604,7 @@ setOrderPopupState({
           </div>
         )}
 
- {/* ── ANNIVERSARY LIST MODAL ── */}
+ {/* â”€â”€ ANNIVERSARY LIST MODAL â”€â”€ */}
         {showAnniversaryList && (
           <div onClick={() => setShowAnniversaryList(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.6)' }}>
@@ -3473,8 +3644,8 @@ setOrderPopupState({
                     key={i}
                     onClick={() => {
                       setSpecialAnnForm({
-                        title: `💍 Happy Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
-                        message: `By BitByte Technologies — Wishing you a beautiful anniversary! May your bond grow stronger with each passing year. Here's to celebrating love and togetherness! 💕💍`,
+                        title: `ðŸ’ Happy Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
+                        message: `By BitByte Technologies â€” Wishing you a beautiful anniversary! May your bond grow stronger with each passing year. Here's to celebrating love and togetherness! ðŸ’•ðŸ’`,
                         roles: ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
                       })
                       setShowAnniversaryList(false)
@@ -3499,7 +3670,7 @@ setOrderPopupState({
                           {new Date(m._ann).toLocaleDateString('en-IN', { day: '2-digit', month: 'long' })}
                         </div>
                       </div>
-                      <div style={{ color: '#CCA881', fontSize: '11px', fontWeight: 700 }}>Click to Wish →</div>
+                      <div style={{ color: '#CCA881', fontSize: '11px', fontWeight: 700 }}>Click to Wish â†’</div>
                     </div>
                   </div>
                 ))}
@@ -3508,7 +3679,7 @@ setOrderPopupState({
           </div>
         )}
 
-{/* ── JOIN DATE LIST MODAL ── */}
+{/* â”€â”€ JOIN DATE LIST MODAL â”€â”€ */}
         {showJoinDateList && (
           <div onClick={() => setShowJoinDateList(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(187,137,88,0.3)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.6)' }}>
@@ -3552,8 +3723,8 @@ setOrderPopupState({
                       const yrs = m._yearsCompleted
                       const ordinal = yrs === 1 ? '1st' : yrs === 2 ? '2nd' : yrs === 3 ? '3rd' : `${yrs}th`
                       setSpecialAnnForm({
-                        title: `🏆 Happy ${ordinal} Work Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
-                        message: `By BitByte Technologies — Congratulations on completing ${yrs} amazing year${yrs > 1 ? 's' : ''} with us! Your dedication and hard work are truly valued. Here's to many more years of success together! 🌟🏆`,
+                        title: `ðŸ† Happy ${ordinal} Work Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
+                        message: `By BitByte Technologies â€” Congratulations on completing ${yrs} amazing year${yrs > 1 ? 's' : ''} with us! Your dedication and hard work are truly valued. Here's to many more years of success together! ðŸŒŸðŸ†`,
                         roles: ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
                       })
                       setShowJoinDateList(false)
@@ -3579,7 +3750,7 @@ setOrderPopupState({
                         </div>
                         <div style={{ color: subtext, fontSize: '11px' }}>Joined: {new Date(m._joined).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
                       </div>
-                      <div style={{ color: '#BB8958', fontSize: '11px', fontWeight: 700 }}>Click to Wish →</div>
+                      <div style={{ color: '#BB8958', fontSize: '11px', fontWeight: 700 }}>Click to Wish â†’</div>
                     </div>
                   </div>
                 ))}
@@ -3588,23 +3759,23 @@ setOrderPopupState({
           </div>
         )}
 
-        {/* ── SPECIAL ANNOUNCEMENT MODAL (Birthday/Anniversary/JoinDate) ── */}
+        {/* â”€â”€ SPECIAL ANNOUNCEMENT MODAL (Birthday/Anniversary/JoinDate) â”€â”€ */}
         {showSpecialAnn && (
           <div onClick={() => setShowSpecialAnn(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.85)', backdropFilter: 'blur(12px)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(187,137,88,0.3)', borderRadius: '24px', width: '95%', maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(187,137,88,0.15)', border: '1px solid rgba(187,137,88,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📢</div>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(187,137,88,0.15)', border: '1px solid rgba(187,137,88,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>ðŸ“¢</div>
                   <div>
                     <div style={{ color: '#BB8958', fontWeight: 800, fontSize: '15px' }}>SEND ANNOUNCEMENT</div>
                     <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>Review & send the wish</div>
                   </div>
                 </div>
-                <button onClick={() => setShowSpecialAnn(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>✕ Close</button>
+                <button onClick={() => setShowSpecialAnn(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>âœ• Close</button>
               </div>
 
               {specialAnnMsg && (
-                <div style={{ background: specialAnnMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${specialAnnMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: specialAnnMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '13px 16px', fontSize: '13px', marginBottom: '18px' }}>
+                <div style={{ background: specialAnnMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${specialAnnMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: specialAnnMsg.includes('âœ…') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '13px 16px', fontSize: '13px', marginBottom: '18px' }}>
                   {specialAnnMsg}
                 </div>
               )}
@@ -3639,11 +3810,11 @@ setOrderPopupState({
                 <label style={{ display: 'block', color: subtext, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' }}>Send To</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                   {[
-                    { key: 'admin', label: '🛡️ Admin', color: '#53615F' },
-                    { key: 'dealer', label: '🏪 Dealer', color: '#0C4044' },
-                    { key: 'sub_dealer', label: '🔗 Sub Dealer', color: '#BB8958' },
-                    { key: 'promotor', label: '🌟 Promotor', color: '#CCA881' },
-                    { key: 'customer', label: '👤 Customer', color: '#C92035' },
+                    { key: 'admin', label: 'ðŸ›¡ï¸ Admin', color: '#53615F' },
+                    { key: 'dealer', label: 'ðŸª Dealer', color: '#0C4044' },
+                    { key: 'sub_dealer', label: 'ðŸ”— Sub Dealer', color: '#BB8958' },
+                    { key: 'promotor', label: 'ðŸŒŸ Promotor', color: '#CCA881' },
+                    { key: 'customer', label: 'ðŸ‘¤ Customer', color: '#C92035' },
                   ].map(role => {
                     const checked = specialAnnForm.roles.includes(role.key)
                     const rgb = { '#BDCFCE': '34,211,238', '#0C4044': '74,222,128', '#BB8958': '245,158,11', '#CCA881': '167,139,250', '#C92035': '244,114,182' }[role.color]
@@ -3656,7 +3827,7 @@ setOrderPopupState({
                         style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', background: checked ? `rgba(${rgb},0.14)` : `rgba(${rgb},0.04)`, border: `1.5px solid ${checked ? `rgba(${rgb},0.6)` : `rgba(${rgb},0.18)`}`, transition: 'all 0.2s ease', userSelect: 'none' }}
                       >
                         <div style={{ width: '14px', height: '14px', borderRadius: '4px', border: `2px solid ${checked ? role.color : `rgba(${rgb},0.35)`}`, background: checked ? role.color : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {checked && <span style={{ color: '#FDFDFC', fontSize: '9px', fontWeight: 900 }}>✓</span>}
+                          {checked && <span style={{ color: '#FDFDFC', fontSize: '9px', fontWeight: 900 }}>âœ“</span>}
                         </div>
                         <span style={{ color: checked ? role.color : subtext, fontSize: '12px', fontWeight: checked ? 700 : 500 }}>{role.label}</span>
                       </div>
@@ -3669,31 +3840,31 @@ setOrderPopupState({
               <button
                 disabled={specialAnnSending}
                 onClick={async () => {
-                  if (!specialAnnForm.title.trim() || !specialAnnForm.message.trim()) { setSpecialAnnMsg('❌ Title and Message required.'); return }
-                  if (specialAnnForm.roles.length === 0) { setSpecialAnnMsg('❌ Select at least one role.'); return }
+                  if (!specialAnnForm.title.trim() || !specialAnnForm.message.trim()) { setSpecialAnnMsg('âŒ Title and Message required.'); return }
+                  if (specialAnnForm.roles.length === 0) { setSpecialAnnMsg('âŒ Select at least one role.'); return }
                   setSpecialAnnSending(true)
                   // AFTER
 try {
   await api.post('/announcements/', { title: specialAnnForm.title, message: specialAnnForm.message, target_roles: specialAnnForm.roles })
-  setSpecialAnnMsg('✅ Announcement sent successfully!')
+  setSpecialAnnMsg('âœ… Announcement sent successfully!')
   const annData = await fetchMyAnnouncements()
   fetchAnnouncementCount(annData)
   setTimeout(() => setShowSpecialAnn(false), 1500)
 } catch (err) {
-  setSpecialAnnMsg('❌ Failed: ' + JSON.stringify(err.response?.data))
+  setSpecialAnnMsg('âŒ Failed: ' + JSON.stringify(err.response?.data))
 }
                   setSpecialAnnSending(false)
                 }}
                 style={{ width: '100%', padding: '14px', background: specialAnnSending ? 'rgba(187,137,88,0.3)' : 'linear-gradient(90deg,#BB8958,#BB8958)', border: 'none', borderRadius: '12px', fontWeight: 800, color: specialAnnSending ? '#BB8958' : '#111817', fontSize: '15px', cursor: specialAnnSending ? 'not-allowed' : 'pointer', letterSpacing: '0.5px' }}
               >
-                {specialAnnSending ? '⏳ Sending...' : '📢 Send Announcement'}
+                {specialAnnSending ? 'â³ Sending...' : 'ðŸ“¢ Send Announcement'}
               </button>
             </div>
           </div>
         )}
 
 
-        {/* ── FULL HIERARCHY MODAL ── */}
+        {/* â”€â”€ FULL HIERARCHY MODAL â”€â”€ */}
         {/* {showHierarchy && (
           <div
             onClick={() => { setShowHierarchy(false); setActiveAdmin(null); removeAdminPopup() }}
@@ -3707,7 +3878,7 @@ try {
 
               <div style={{ flexShrink: 0, padding: '20px 28px', borderBottom: '1px solid rgba(103,232,249,0.1)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
                 <div>
-                  <span style={{ color: '#0C4044', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>🏢 Full Organization Hierarchy</span>
+                  <span style={{ color: '#0C4044', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>ðŸ¢ Full Organization Hierarchy</span>
                  {totalStats && (
   <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
     {[
@@ -3744,7 +3915,7 @@ try {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                   {(
   <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: subtext, pointerEvents: 'none' }}>🔍</span>
+                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: subtext, pointerEvents: 'none' }}>ðŸ”</span>
                       <input
                         value={hierarchySearch}
                         onChange={e => setHierarchySearch(e.target.value)}
@@ -3761,14 +3932,14 @@ try {
                         <button
                           onClick={() => setHierarchySearch('')}
                           style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: subtext, cursor: 'pointer', fontSize: '12px', padding: '2px' }}
-                        >✕</button>
+                        >âœ•</button>
                       )}
                     </div>
                   )}
                   <button
                     onClick={() => { setShowHierarchy(false); setActiveAdmin(null); removeAdminPopup() }}
                     style={{ background: 'transparent', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
-                  >✕ Close</button>
+                  >âœ• Close</button>
                 </div>
               </div>
 
@@ -3796,7 +3967,7 @@ try {
   if (debouncedSearch !== hierarchySearch.trim()) {
     return (
       <div style={{ color: subtext, padding: '60px', textAlign: 'center', fontSize: '15px' }}>
-        🔍 Searching...
+        ðŸ” Searching...
       </div>
     )
   }
@@ -3834,7 +4005,7 @@ try {
             onClick={() => { setHierarchyFilter(null); setHierarchySearch('') }}
             style={{ marginBottom: '20px', padding: '8px 18px', background: 'rgba(189,207,206,0.1)', border: '1px solid rgba(189,207,206,0.35)', borderRadius: '10px', color: '#53615F', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
           >
-            ← Back to Full Tree
+            â† Back to Full Tree
           </button>
         )}
 
@@ -3842,7 +4013,7 @@ try {
     {(!hierarchyFilter || hierarchyFilter === 'super_admin') && (
       <>
         <div style={{ background: 'linear-gradient(135deg,rgba(204,168,129,0.12),rgba(204,168,129,0.05))', border: '1px solid rgba(204,168,129,0.5)', borderRadius: '20px', padding: '24px 64px', fontWeight: 800, fontSize: '20px', color: '#CCA881', animation: 'pulseGlow 3s ease-in-out infinite', boxShadow: '0 0 24px rgba(204,168,129,0.1)', textAlign: 'center' }}>
-          🛡️ Super Admin
+          ðŸ›¡ï¸ Super Admin
           <div style={{ fontSize: '13px', color: '#7A8987', fontWeight: 400, marginTop: '6px' }}>
             {localStorage.getItem('email')}
           </div>
@@ -3939,12 +4110,12 @@ try {
               {!hierarchyLoading && (
                 <div style={{ flexShrink: 0, padding: '14px 28px', borderTop: '1px solid rgba(103,232,249,0.08)', display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
                   {[
-                    { role: 'Super Admin', color: '#CCA881', emoji: '🛡️' },
-                    { role: 'Admin', color: '#53615F', emoji: '🛡️' },
-                    { role: 'Dealer', color: '#0C4044', emoji: '🏪' },
-                    { role: 'Sub Dealer', color: '#BB8958', emoji: '🔗' },
-                    { role: 'Promotor', color: '#CCA881', emoji: '🌟' },
-                    { role: 'Customer', color: '#C92035', emoji: '👤' },
+                    { role: 'Super Admin', color: '#CCA881', emoji: 'ðŸ›¡ï¸' },
+                    { role: 'Admin', color: '#53615F', emoji: 'ðŸ›¡ï¸' },
+                    { role: 'Dealer', color: '#0C4044', emoji: 'ðŸª' },
+                    { role: 'Sub Dealer', color: '#BB8958', emoji: 'ðŸ”—' },
+                    { role: 'Promotor', color: '#CCA881', emoji: 'ðŸŒŸ' },
+                    { role: 'Customer', color: '#C92035', emoji: 'ðŸ‘¤' },
                   ].map(l => (
                     <div key={l.role} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <div style={{ width: 9, height: 9, borderRadius: '50%', background: l.color }} />
@@ -3952,7 +4123,7 @@ try {
                     </div>
                   ))}
                   <div style={{ color: subtext, fontSize: '11px', width: '100%', textAlign: 'center' }}>
-                    💡 Click any node to expand/collapse its children
+                    ðŸ’¡ Click any node to expand/collapse its children
                   </div>
                 </div>
               )}
@@ -3963,7 +4134,7 @@ try {
 
 
 
-        {/* ── TODAY RATES MODAL ── */}
+        {/* â”€â”€ TODAY RATES MODAL â”€â”€ */}
         {showTodayRates && (
           <div
             onClick={() => setShowTodayRates(false)}
@@ -4027,7 +4198,7 @@ try {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ color: item.color, fontWeight: 900, fontSize: '20px', fontFamily: 'monospace' }}>
-                      {item.value ? `₹${item.value.toFixed(2)}` : <span style={{ color: subtext, fontSize: '13px' }}>Not set</span>}
+                      {item.value ? `â‚¹${item.value.toFixed(2)}` : <span style={{ color: subtext, fontSize: '13px' }}>Not set</span>}
                     </div>
                   </div>
                 </div>
@@ -4049,7 +4220,7 @@ try {
 
 
 
-{/* ── ORDER HIERARCHY POPUP ─────────────────────────────────────────── */}
+{/* â”€â”€ ORDER HIERARCHY POPUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 {orderPopupState.visible && orderPopupState.period && orderPopupState.metalKey && (() => {
   if (!hierarchyData) return null
 
@@ -4130,7 +4301,7 @@ try {
               color: `rgba(${rgb},0.7)`,
               marginTop: '3px',
             }}>
-              📞 {node.mobile_number}
+              ðŸ“ž {node.mobile_number}
             </div>
           )}
 
@@ -4238,7 +4409,7 @@ try {
             >
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(189,207,206,0.12)' }}>
-                <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'rgba(189,207,206,0.15)', border: '1px solid rgba(189,207,206,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}>📊</div>
+                <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'rgba(189,207,206,0.15)', border: '1px solid rgba(189,207,206,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}>ðŸ“Š</div>
                 <div>
                   <div style={{ fontSize: '10px', fontWeight: 800, color: '#53615F', letterSpacing: '1.5px' }}>{periodLabel} ORDER CHAIN</div>
                   <div style={{ fontSize: '9px', color: dark ? '#7A8987' : '#7A8987', marginTop: '2px' }}>Full hierarchy breakdown</div>
@@ -4258,11 +4429,11 @@ try {
 
               {hData && (hData.admins.length > 0 || hData.unlinked.length > 0) && (
                 <div>
-                  {/* ── Super Admin ── */}
+                  {/* â”€â”€ Super Admin â”€â”€ */}
                   <div style={{ background: 'rgba(204,168,129,0.08)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '10px', padding: '9px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '8px', color: '#CCA881', fontWeight: 800, letterSpacing: '1px' }}>🛡️ SUPER ADMIN</div>
+                        <div style={{ fontSize: '8px', color: '#CCA881', fontWeight: 800, letterSpacing: '1px' }}>ðŸ›¡ï¸ SUPER ADMIN</div>
                         <div style={{ fontSize: '10px', color: dark ? '#111817' : '#7A8987', marginTop: '3px', wordBreak: 'break-all' }}>{hData.superAdminEmail}</div>
                       </div>
                       <div style={{ textAlign: 'right', marginLeft: '8px', flexShrink: 0 }}>
@@ -4272,8 +4443,8 @@ try {
                     </div>
                   </div>
 
-{/* ── Hierarchy chain tree style ── */}
-{/* ── Hierarchy chain tree style ── */}
+{/* â”€â”€ Hierarchy chain tree style â”€â”€ */}
+{/* â”€â”€ Hierarchy chain tree style â”€â”€ */}
 {hData.admins.length > 0 && (
   <div>
     <div style={{
@@ -4310,16 +4481,16 @@ try {
   </div>
 )}
 
-                  {/* ── Unlinked customers (no assigned promotor in hierarchy) ── */}
+                  {/* â”€â”€ Unlinked customers (no assigned promotor in hierarchy) â”€â”€ */}
                   {hData.unlinked && hData.unlinked.length > 0 && (
                     <div>
                       <Arrow rgb="244,114,182" />
                       <div style={{ background: 'rgba(201,32,53,0.06)', border: '1px dashed rgba(201,32,53,0.4)', borderRadius: '10px', padding: '9px 12px' }}>
                         <div style={{ fontSize: '8px', color: '#C92035', fontWeight: 800, letterSpacing: '1px', marginBottom: '6px' }}>
-                          👤 DIRECT CUSTOMERS — {hData.unlinked.length} customer{hData.unlinked.length > 1 ? 's' : ''}
+                          ðŸ‘¤ DIRECT CUSTOMERS â€” {hData.unlinked.length} customer{hData.unlinked.length > 1 ? 's' : ''}
                         </div>
                         <div style={{ fontSize: '8px', color: 'rgba(201,32,53,0.5)', marginBottom: '8px', fontStyle: 'italic' }}>
-                          ⚠️ Not linked to any promotor in hierarchy
+                          âš ï¸ Not linked to any promotor in hierarchy
                         </div>
                         {hData.unlinked.map(o => (
                           <div key={o.customer_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid rgba(201,32,53,0.1)' }}>
@@ -4344,7 +4515,7 @@ try {
         })()}
 
 
-        {/* ── PROFILE UPDATE REQUESTS MODAL ── */}
+        {/* â”€â”€ PROFILE UPDATE REQUESTS MODAL â”€â”€ */}
         {showRequests && (
           <div
             onClick={() => {
@@ -4427,9 +4598,9 @@ try {
               {requestMsg && (
                 <div style={{
                   margin: '14px 28px 0',
-                  background: requestMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)',
-                  border: `1px solid ${requestMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`,
-                  color: requestMsg.includes('✅') ? '#0C4044' : '#C92035',
+                  background: requestMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)',
+                  border: `1px solid ${requestMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`,
+                  color: requestMsg.includes('âœ…') ? '#0C4044' : '#C92035',
                   borderRadius: '10px',
                   padding: '10px 14px',
                   fontSize: '13px'
@@ -4475,7 +4646,7 @@ try {
 
                       {req.message && (
                         <div style={{ color: subtext, fontSize: '13px', marginTop: '10px', lineHeight: 1.5 }}>
-                          💬 {req.message}
+                          ðŸ’¬ {req.message}
                         </div>
                       )}
                     </div>
@@ -4496,7 +4667,7 @@ try {
                       fontSize: '12px'
                     }}
                   >
-                    ← Back to Requests
+                    â† Back to Requests
                   </button>
 
                   <div style={{ color: '#CCA881', fontWeight: 800, marginBottom: '14px' }}>
@@ -4514,7 +4685,7 @@ try {
                       marginBottom: '16px',
                       lineHeight: 1.6
                     }}>
-                      💬 {selectedRequest.message}
+                      ðŸ’¬ {selectedRequest.message}
                     </div>
                   )}
 
@@ -4542,14 +4713,14 @@ try {
                           const blob = await response.blob()
                           const objectUrl = URL.createObjectURL(blob)
 
-                          // PDF-க்கு type check
+                          // PDF-à®•à¯à®•à¯ type check
                           const isPdf = contentType.includes('pdf') ||
                             fullUrl.toLowerCase().includes('.pdf')
 
                           setProofType(isPdf ? 'pdf' : 'image')
                           setProofUrl(objectUrl)
                         } catch {
-                          // Fallback: direct URL try பண்ணு
+                          // Fallback: direct URL try à®ªà®£à¯à®£à¯
                           const isPdf = fullUrl.toLowerCase().includes('.pdf')
                           setProofType(isPdf ? 'pdf' : 'image')
                           setProofUrl(fullUrl)
@@ -4572,7 +4743,7 @@ try {
                         fontSize: '14px'
                       }}
                     >
-                      📎 View Proof Document
+                      ðŸ“Ž View Proof Document
                     </button>
                   )}
 
@@ -4631,7 +4802,7 @@ try {
                       cursor: 'pointer'
                     }}
                   >
-                    ✅ Approve Request
+                    âœ… Approve Request
                   </button>
                 </div>
               )}
@@ -4639,7 +4810,7 @@ try {
           </div>
         )}
 
-        {/* ── ANNOUNCEMENT SEND MODAL (Super Admin) ── */}
+        {/* â”€â”€ ANNOUNCEMENT SEND MODAL (Super Admin) â”€â”€ */}
         {showAnnouncement && (
           <div
             onClick={() => setShowAnnouncement(false)}
@@ -4677,7 +4848,7 @@ try {
               </div>
 
               {announcementMsg && (
-                <div style={{ background: announcementMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${announcementMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: announcementMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '13px 16px', fontSize: '13px', marginBottom: '18px' }}>
+                <div style={{ background: announcementMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${announcementMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: announcementMsg.includes('âœ…') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '13px 16px', fontSize: '13px', marginBottom: '18px' }}>
                   {announcementMsg}
                 </div>
               )}
@@ -4768,18 +4939,18 @@ try {
               <button
                 disabled={announcingSending}
                 onClick={async () => {
-                  if (!announcementForm.title.trim() || !announcementForm.message.trim()) { setAnnouncementMsg('❌ Title and Message are required.'); return }
-                  if (announcementForm.roles.length === 0) { setAnnouncementMsg('❌ Please select at least one role.'); return }
+                  if (!announcementForm.title.trim() || !announcementForm.message.trim()) { setAnnouncementMsg('âŒ Title and Message are required.'); return }
+                  if (announcementForm.roles.length === 0) { setAnnouncementMsg('âŒ Please select at least one role.'); return }
                   setAnnouncingSending(true)
                   try {
                     // AFTER
 await api.post('/announcements/', { title: announcementForm.title, message: announcementForm.message, target_roles: announcementForm.roles })
-setAnnouncementMsg('✅ Announcement sent successfully!')
+setAnnouncementMsg('âœ… Announcement sent successfully!')
 setAnnouncementForm({ title: '', message: '', roles: [] })
 const annData = await fetchMyAnnouncements()
 fetchAnnouncementCount(annData)
                   } catch (err) {
-                    setAnnouncementMsg('❌ Failed: ' + JSON.stringify(err.response?.data))
+                    setAnnouncementMsg('âŒ Failed: ' + JSON.stringify(err.response?.data))
                   }
                   setAnnouncingSending(false)
                 }}
@@ -4804,8 +4975,8 @@ fetchAnnouncementCount(annData)
           </div>
         )}
 
-        {/* ── SUPER ADMIN ANNOUNCEMENT VIEW MODAL ── */}
-        {/* ── SUPER ADMIN ANNOUNCEMENT VIEW MODAL ── */}
+        {/* â”€â”€ SUPER ADMIN ANNOUNCEMENT VIEW MODAL â”€â”€ */}
+        {/* â”€â”€ SUPER ADMIN ANNOUNCEMENT VIEW MODAL â”€â”€ */}
         {showMyAnnouncements && (
           <div
             onClick={() => setShowMyAnnouncements(false)}
@@ -4931,7 +5102,7 @@ fetchAnnouncementCount(annData)
                             color: '#53615F',
                             border: '1px solid rgba(189,207,206,0.3)'
                           }}>
-                            ● NEW
+                            â— NEW
                           </span>
                         )}
                         <span style={{ color: idx === 0 ? '#BDCFCE' : text, fontWeight: 700, fontSize: '14px' }}>
@@ -4958,7 +5129,7 @@ fetchAnnouncementCount(annData)
           </div>
         )}
 
-        {/* ── SUPER ADMIN: VIEW REPLIES MODAL ── */}
+        {/* â”€â”€ SUPER ADMIN: VIEW REPLIES MODAL â”€â”€ */}
         {replyAnn && (
           <div
             onClick={() => { setReplyAnn(null); setReplyMsg(''); setReplyText('') }}
@@ -4970,10 +5141,10 @@ fetchAnnouncementCount(annData)
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexShrink: 0 }}>
                 <div>
-                  <div style={{ color: '#53615F', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>💬 WISHES RECEIVED</div>
+                  <div style={{ color: '#53615F', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>ðŸ’¬ WISHES RECEIVED</div>
                   <div style={{ color: subtext, fontSize: '11px', marginTop: '4px' }}>{replyAnn.title}</div>
                 </div>
-                <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>✕</button>
+                <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>âœ•</button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(189,207,206,0.4) transparent' }}>
                 {(annReplies[replyAnn.id] || []).length === 0 ? (
@@ -4995,7 +5166,7 @@ fetchAnnouncementCount(annData)
 
 
 
-        {/* ── PROOF DOCUMENT PREVIEW MODAL ── */}
+        {/* â”€â”€ PROOF DOCUMENT PREVIEW MODAL â”€â”€ */}
         {proofModal && (
           <div
             onClick={() => {
@@ -5056,7 +5227,7 @@ fetchAnnouncementCount(annData)
                       fontSize: '18px'
                     }}
                   >
-                    📎
+                    ðŸ“Ž
                   </div>
 
                   <div>
@@ -5072,7 +5243,7 @@ fetchAnnouncementCount(annData)
                     </div>
 
                     <div style={{ color: subtext, fontSize: '10px', marginTop: '2px' }}>
-                      {selectedRequest?.first_name} {selectedRequest?.last_name} — {selectedRequest?.role?.toUpperCase()}
+                      {selectedRequest?.first_name} {selectedRequest?.last_name} â€” {selectedRequest?.role?.toUpperCase()}
                     </div>
                   </div>
                 </div>
@@ -5089,7 +5260,7 @@ fetchAnnouncementCount(annData)
                     fontSize: '12px'
                   }}
                 >
-                  ✕ Close
+                  âœ• Close
                 </button>
               </div>
 
@@ -5113,7 +5284,7 @@ fetchAnnouncementCount(annData)
                   </div>
                 )}
 
-                {/* ✅ IMAGE */}
+                {/* âœ… IMAGE */}
                 {!proofLoading && proofType === 'image' && proofUrl && (
                   <img
                     src={proofUrl}
@@ -5127,7 +5298,7 @@ fetchAnnouncementCount(annData)
                   />
                 )}
 
-                {/* ✅ PDF — blob: URL-க்கு iframe use பண்ணு */}
+                {/* âœ… PDF â€” blob: URL-à®•à¯à®•à¯ iframe use à®ªà®£à¯à®£à¯ */}
                 {!proofLoading && proofType === 'pdf' && proofUrl && (
                   <iframe
                     src={proofUrl}
@@ -5143,12 +5314,12 @@ fetchAnnouncementCount(annData)
                   />
                 )}
 
-                {/* ✅ Error fallback */}
+                {/* âœ… Error fallback */}
                 {!proofLoading && proofType === 'error' && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '40px' }}>
-                    <div style={{ fontSize: '40px' }}>⚠️</div>
+                    <div style={{ fontSize: '40px' }}>âš ï¸</div>
                     <div style={{ color: subtext, fontSize: '14px', textAlign: 'center' }}>
-                      Document load ஆகல
+                      Document load à®†à®•à®²
                     </div>
 
                     <a
@@ -5181,7 +5352,7 @@ fetchAnnouncementCount(annData)
           <div style={s.card}>
             <p style={s.secHead}>Create New Admin</p>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <p style={s.secSub}>👤 Personal Info</p>
+              <p style={s.secSub}>ðŸ‘¤ Personal Info</p>
               <div style={{ display: 'grid', gridTemplateColumns: '0.4fr 1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Initial</label>
                   <input name="initial" maxLength={5} value={form.initial} onChange={handleChange} className="sa-inp" style={s.inp} />
@@ -5290,7 +5461,7 @@ fetchAnnouncementCount(annData)
                 </div>
               </div>
 
-              <p style={s.secSub}>📍 Address</p>
+              <p style={s.secSub}>ðŸ“ Address</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
@@ -5299,12 +5470,12 @@ fetchAnnouncementCount(annData)
                 <div><label style={s.lbl}>District *</label><input name="district" value={form.district} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>State *</label><input name="state" value={form.state} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
               </div>
-              <p style={s.secSub}>🪪 Identity</p>
+              <p style={s.secSub}>ðŸªª Identity</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Aadhaar No *</label><input name="aadhaar_no" maxLength={12} value={form.aadhaar_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>PAN No *</label><input name="pan_no" maxLength={10} value={form.pan_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
               </div>
-              <p style={s.secSub}>💼 Occupation</p>
+              <p style={s.secSub}>ðŸ’¼ Occupation</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Occupation *</label>
                   <select name="occupation" value={form.occupation} onChange={handleChange} className="sa-inp" style={{ ...s.inp, cursor: 'pointer' }}>
@@ -5367,6 +5538,89 @@ fetchAnnouncementCount(annData)
           )}
         </div>
       </div>
+
+      {showAddCoin && (
+  <div onClick={() => setShowAddCoin(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 1400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div onClick={e => e.stopPropagation()} style={{ background: '#0a1628', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '24px', width: '95%', maxWidth: '560px', maxHeight: '88vh', overflowY: 'auto', padding: '28px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div>
+          <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: '16px' }}>Add Coins to Stock</div>
+          <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '3px' }}>Coins added here go directly into your stock â€” no approval needed</div>
+        </div>
+        <button onClick={() => setShowAddCoin(false)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        {['gold_22k', 'gold_24k', 'silver_999'].map(m => (
+          <div key={m} onClick={() => { setSelCoinMetal(m); setSelCoinWeight('') }}
+            style={{ flex: 1, textAlign: 'center', padding: '10px 0', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: '12px',
+              background: selCoinMetal === m ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.05)',
+              border: `1.5px solid ${selCoinMetal === m ? 'rgba(251,191,36,0.7)' : 'rgba(255,255,255,0.1)'}`,
+              color: selCoinMetal === m ? '#fbbf24' : '#94a3b8' }}>
+            {COIN_METAL_LABELS_TEXT[m]}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', marginBottom: '14px' }}>
+        <div>
+          <label style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, display: 'block', marginBottom: '6px' }}>WEIGHT</label>
+          <select value={selCoinWeight} onChange={e => setSelCoinWeight(e.target.value)}
+            style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '11px 12px', color: '#fff', fontSize: '13px', outline: 'none' }}>
+            <option value="" style={{ background: '#0a1628', color: '#fff' }}>-- Select --</option>
+            {(selCoinMetal === 'silver_999' ? COIN_WEIGHTS_SILVER : COIN_WEIGHTS_GOLD).map(w => (
+              <option key={w.label} value={w.label} style={{ background: '#0a1628', color: '#fff' }}>{w.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, display: 'block', marginBottom: '6px' }}>QTY</label>
+          <input type="number" min="1" value={selCoinQty} onChange={e => setSelCoinQty(e.target.value)}
+            style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '11px 12px', color: '#fff', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+          <button onClick={addToCoinCart}
+            style={{ padding: '11px 18px', background: 'linear-gradient(90deg,#f472b6,#a78bfa)', border: 'none', borderRadius: '10px', color: '#3b0024', fontWeight: 800, fontSize: '13px', cursor: 'pointer' }}>
+            + Add
+          </button>
+        </div>
+      </div>
+
+      {coinCart.length > 0 && (
+        <div style={{ marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {coinCart.map((item, idx) => (
+            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px' }}>
+              <span style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} â€” {item.weight_label} Ã— {item.qty}</span>
+              <button onClick={() => removeCoinCartItem(idx)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', fontSize: '11px' }}>âœ•</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {coinBuyMsg && (
+        <div style={{
+          background: coinBuyMsg.startsWith('success:') ? 'rgba(74,222,128,0.1)' : 'rgba(239,68,68,0.1)',
+          border: `1px solid ${coinBuyMsg.startsWith('success:') ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          color: coinBuyMsg.startsWith('success:') ? '#4ade80' : '#f87171',
+          borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px'
+        }}>
+          {coinBuyMsg.replace('success:', '').replace('error:', '')}
+        </div>
+      )}
+
+      <button
+        disabled={coinBuySubmitting || coinCart.length === 0}
+        onClick={submitAddCoins}
+        style={{ width: '100%', padding: '14px', background: coinBuySubmitting || coinCart.length === 0 ? 'rgba(244,114,182,0.2)' : 'linear-gradient(90deg,#f472b6,#a78bfa)', border: 'none', borderRadius: '12px', fontWeight: 900, fontSize: '14px', color: '#3b0024', cursor: coinBuySubmitting || coinCart.length === 0 ? 'not-allowed' : 'pointer' }}>
+        {coinBuySubmitting ? 'Adding...' : 'Confirm & Add to Stock'}
+      </button>
+    </div>
+  </div>
+)}
+
+
+
+
     </div>
   )
 }

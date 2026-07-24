@@ -1417,7 +1417,7 @@ def _build_customer(c, orders_by_user):
 def _build_promotor(p, orders_by_user):
     customers = [_build_customer(c, orders_by_user) for c in p.assigned_customers.all()]
     return {
-        'type': 'promotor', 'id': p.id, 'promotor_id': p.promotor_id,
+        'type': 'promotor', 'id': p.id, 'promotor_id': p.promotor_id, 'user_id': p.user_id,
         'first_name': p.first_name, 'last_name': p.last_name,
         'mobile_number': p.mobile_number, 'city_name': p.city_name,
         'customers': customers,
@@ -1428,7 +1428,7 @@ def _build_promotor(p, orders_by_user):
 def _build_sub_dealer(sd, orders_by_user):
     promotors = [_build_promotor(p, orders_by_user) for p in sd.assigned_promotors.all()]
     return {
-        'type': 'sub_dealer', 'id': sd.id, 'sub_dealer_id': sd.sub_dealer_id,
+        'type': 'sub_dealer', 'id': sd.id, 'sub_dealer_id': sd.sub_dealer_id, 'user_id': sd.user_id,
         'first_name': sd.first_name, 'last_name': sd.last_name,
         'mobile_number': sd.mobile_number, 'city_name': sd.city_name,
         'promotors': promotors,
@@ -1439,7 +1439,7 @@ def _build_sub_dealer(sd, orders_by_user):
 def _build_dealer(d, orders_by_user):
     sub_dealers = [_build_sub_dealer(sd, orders_by_user) for sd in d.assigned_sub_dealers.all()]
     return {
-        'type': 'dealer', 'id': d.id, 'dealer_id': d.dealer_id,
+        'type': 'dealer', 'id': d.id, 'dealer_id': d.dealer_id, 'user_id': d.user_id,
         'first_name': d.first_name, 'last_name': d.last_name,
         'mobile_number': d.mobile_number, 'city_name': d.city_name,
         'sub_dealers': sub_dealers,
@@ -1450,7 +1450,7 @@ def _build_dealer(d, orders_by_user):
 def _build_admin(a, orders_by_user):
     dealers = [_build_dealer(d, orders_by_user) for d in a.assigned_dealers.all()]
     return {
-        'type': 'admin', 'id': a.id, 'admin_id': a.admin_id,
+        'type': 'admin', 'id': a.id, 'admin_id': a.admin_id, 'user_id': a.user_id,
         'first_name': a.first_name, 'last_name': a.last_name,
         'mobile_number': a.mobile_number, 'city_name': a.city_name,
         'dealers': dealers,
@@ -1501,6 +1501,50 @@ class HierarchySubtreeOrdersView(APIView):
             return Response({'error': str(e)}, status=404)
 
         return Response({'root': root})
+
+# ── NEW: role-scoped hierarchy for Admin / Dealer / Sub Dealer / Promotor logins.
+# Ovvoruthar their own subtree mattum kaanpanum — SuperAdmin mari full tree venaam. ──
+class MyHierarchyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        role = user.role
+
+        if role not in ['admin', 'dealer', 'sub_dealer', 'promotor']:
+            return Response({'error': 'Use /hierarchy/full/ for your role'}, status=403)
+
+        try:
+            if role == 'admin':
+                node = AdminProfile.objects.prefetch_related(
+                    'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
+                ).get(user=user)
+                orders_by_user = _bulk_orders_for_admin(node)
+                root = _build_admin(node, orders_by_user)
+            elif role == 'dealer':
+                node = DealerProfile.objects.prefetch_related(
+                    'assigned_sub_dealers__assigned_promotors__assigned_customers'
+                ).get(user=user)
+                orders_by_user = _bulk_orders_for_dealer(node)
+                root = _build_dealer(node, orders_by_user)
+            elif role == 'sub_dealer':
+                node = SubDealerProfile.objects.prefetch_related(
+                    'assigned_promotors__assigned_customers'
+                ).get(user=user)
+                orders_by_user = _bulk_orders_for_sub_dealer(node)
+                root = _build_sub_dealer(node, orders_by_user)
+            elif role == 'promotor':
+                node = PromotorProfile.objects.prefetch_related('assigned_customers').get(user=user)
+                orders_by_user = _bulk_orders_for_promotor(node)
+                root = _build_promotor(node, orders_by_user)
+        except Exception as e:
+            return Response({'error': str(e)}, status=404)
+
+        return Response({
+            'super_admin_email': User.objects.filter(role='super_admin').first().email if User.objects.filter(role='super_admin').exists() else '',
+            'viewer_role': role,
+            'root': root,
+        })
 
 def get_report_ancestors(role, profile):
     """Build the chain from Super Admin down to (but not including) the logged-in user's own node."""
@@ -1739,15 +1783,35 @@ class OrderTimeSeriesView(APIView):
 class TodayLoginStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # ── NEW: period dropdown-ku evlo days count pannanumnu ──
+    PERIOD_DAYS = {
+        '3days': 3,
+        'week': 7,
+        'month': 30,
+        'year': 365,
+    }
+
     def get(self, request):
         if request.user.role != 'super_admin':
             return Response({'error': 'Permission denied'}, status=403)
 
+        period = request.query_params.get('period', 'today')   # ── NEW
         today = timezone.now().date()
 
         def build_entry(profile, id_field, role_label, level):
             u = profile.user
-            is_active = bool(u.last_login and u.last_login.date() == today)
+            last_login_date = u.last_login.date() if u.last_login else None
+
+            # ── NEW: never login pannalanna, account create panna date-la irundhu count ──
+            reference_date = last_login_date or (u.created_at.date() if u.created_at else today)
+            days_inactive = (today - reference_date).days
+
+            if period == 'today':
+                is_active = bool(last_login_date and last_login_date == today)
+            else:
+                days_needed = self.PERIOD_DAYS.get(period, 0)
+                is_active = bool(last_login_date and (today - last_login_date).days < days_needed)
+
             return {
                 'level': level,
                 'level_role': role_label,
@@ -1758,6 +1822,7 @@ class TodayLoginStatusView(APIView):
                 'location': profile.city_name,
                 'active': is_active,
                 'last_login': u.last_login.isoformat() if u.last_login else None,
+                'days_inactive': days_inactive,          # ── NEW
             }
 
         all_entries = []
@@ -1774,6 +1839,7 @@ class TodayLoginStatusView(APIView):
         inactive_list = [e for e in all_entries if not e['active']]
 
         return Response({
+            'period': period,          # ── NEW
             'active_count': len(active_list),
             'inactive_count': len(inactive_list),
             'active': active_list,
@@ -1851,13 +1917,16 @@ class CoinRequestView(APIView):
 
     def get(self, request):
         role = request.user.role
-        box = request.query_params.get('box')  # optional override: 'sent' or 'received'
+        box = request.query_params.get('box')  # optional override: 'sent', 'received', or 'history'
         receiver_roles = ['sub_dealer', 'dealer', 'admin', 'super_admin']
 
         if box == 'sent':
             reqs = CoinRequest.objects.filter(requested_by=request.user)
         elif box == 'received':
             reqs = CoinRequest.objects.filter(requested_to=request.user, status='pending')
+        elif box == 'history':
+            # Full transaction history: every request ever sent TO me, any status
+            reqs = CoinRequest.objects.filter(requested_to=request.user)
         elif role in receiver_roles:
             reqs = CoinRequest.objects.filter(requested_to=request.user, status='pending')
         else:
@@ -1869,7 +1938,8 @@ class CoinRequestView(APIView):
 
 
 class CoinRequestApproveView(APIView):
-    """Any role (Sub Dealer/Dealer/Admin/Super Admin) approves a pending request sent to them — moves coins into requester's stock."""
+    """Any role approves a pending request sent to them — deducts coins from
+    the approver's own stock and adds them into the requester's stock."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
@@ -1880,16 +1950,32 @@ class CoinRequestApproveView(APIView):
         except CoinRequest.DoesNotExist:
             return Response({'error': 'Request not found or already resolved'}, status=404)
 
-        # Add each item's qty into the promotor's (requested_by) stock
         for item in coin_request.items.all():
-            stock, created = CoinStock.objects.get_or_create(
+            approver_stock = CoinStock.objects.filter(
+                user=request.user, metal_type=item.metal_type, weight_label=item.weight_label
+            ).first()
+            available = approver_stock.qty if approver_stock else 0
+            if available < item.qty:
+                return Response({
+                    'error': f'Insufficient stock for {item.metal_type} {item.weight_label}. '
+                             f'Available: {available}, Requested: {item.qty}'
+                }, status=400)
+
+        for item in coin_request.items.all():
+            approver_stock = CoinStock.objects.get(
+                user=request.user, metal_type=item.metal_type, weight_label=item.weight_label
+            )
+            approver_stock.qty -= item.qty
+            approver_stock.save()
+
+            requester_stock, created = CoinStock.objects.get_or_create(
                 user=coin_request.requested_by,
                 metal_type=item.metal_type,
                 weight_label=item.weight_label,
                 defaults={'weight_grams': item.weight_grams, 'qty': 0}
             )
-            stock.qty += item.qty
-            stock.save()
+            requester_stock.qty += item.qty
+            requester_stock.save()
 
         coin_request.status = 'sent'
         coin_request.sent_at = timezone.now()
@@ -1923,22 +2009,47 @@ class CoinRequestRejectView(APIView):
 
 
 class CoinRequestApproveAllView(APIView):
-    """Any role approves ALL pending requests sent to them in one click."""
+    """Any role approves ALL pending requests sent to them in one click.
+    Deducts from approver's stock and adds to each requester's stock."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         pending = CoinRequest.objects.filter(requested_to=request.user, status='pending').prefetch_related('items')
+
+        needed = {}
+        for coin_request in pending:
+            for item in coin_request.items.all():
+                key = (item.metal_type, item.weight_label)
+                needed[key] = needed.get(key, 0) + item.qty
+        for (metal_type, weight_label), qty_needed in needed.items():
+            approver_stock = CoinStock.objects.filter(
+                user=request.user, metal_type=metal_type, weight_label=weight_label
+            ).first()
+            available = approver_stock.qty if approver_stock else 0
+            if available < qty_needed:
+                return Response({
+                    'error': f'Insufficient stock for {metal_type} {weight_label}. '
+                             f'Available: {available}, Needed: {qty_needed}'
+                }, status=400)
+
         count = 0
         for coin_request in pending:
             for item in coin_request.items.all():
-                stock, created = CoinStock.objects.get_or_create(
+                approver_stock = CoinStock.objects.get(
+                    user=request.user, metal_type=item.metal_type, weight_label=item.weight_label
+                )
+                approver_stock.qty -= item.qty
+                approver_stock.save()
+
+                requester_stock, created = CoinStock.objects.get_or_create(
                     user=coin_request.requested_by,
                     metal_type=item.metal_type,
                     weight_label=item.weight_label,
                     defaults={'weight_grams': item.weight_grams, 'qty': 0}
                 )
-                stock.qty += item.qty
-                stock.save()
+                requester_stock.qty += item.qty
+                requester_stock.save()
+
             coin_request.status = 'sent'
             coin_request.sent_at = timezone.now()
             coin_request.save()
@@ -1977,6 +2088,29 @@ class CoinStockView(APIView):
 
     def get(self, request):
         stock = CoinStock.objects.filter(user=request.user, qty__gt=0).order_by('metal_type', 'weight_grams')
+        serializer = CoinStockSerializer(stock, many=True)
+        return Response(serializer.data)
+
+
+class CoinStockForUserView(APIView):
+    """View any user's (admin/dealer/sub_dealer/promotor) coin stock by user_id —
+    used by the Sales Report page's coin distribution pie chart."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role == 'customer':
+            return Response({'error': 'Permission denied'}, status=403)
+
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({'error': 'user_id required'}, status=400)
+
+        try:
+            target_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
+        stock = CoinStock.objects.filter(user=target_user, qty__gt=0).order_by('metal_type', 'weight_grams')
         serializer = CoinStockSerializer(stock, many=True)
         return Response(serializer.data)
 

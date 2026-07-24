@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo, startTransition } from 'react'
+﻿import { useState, useEffect, useMemo, startTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 import logo from '../assets/logo.png'
 import * as XLSX from 'xlsx'
 
-// ── Role display config ──
+// â”€â”€ Role display config â”€â”€
 const ROLE_ICONS = {
   super_admin: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -47,11 +47,11 @@ const ROLE_CFG = {
   promotor:    { label: 'Promotor',    color: '#7BA7A3' },
 }
 
-// ── NEW: same status colors as the hierarchy grid — customer order_count base
-// panni backend calculate pannina cascading status (red/orange/yellow/green) ──
+// â”€â”€ NEW: same status colors as the hierarchy grid â€” customer order_count base
+// panni backend calculate pannina cascading status (red/orange/yellow/green) â”€â”€
 const STATUS_COLOR = { red: '#B86F74', orange: '#C99A3A', yellow: '#D6B45F', green: '#0E5A57' }
 
-// ── Column labels shown in the breakdown table, based on root type ──
+// â”€â”€ Column labels shown in the breakdown table, based on root type â”€â”€
 const COLUMN_MAP = {
   super_admin_view: ['Admin', 'Dealer', 'Sub Dealer', 'Promotor', 'Customer'],
   admin:      ['Dealer', 'Sub Dealer', 'Promotor', 'Customer'],
@@ -60,7 +60,7 @@ const COLUMN_MAP = {
   promotor:   ['Customer'],
 }
 
-// ── Drill-down levels available per login role ──
+// â”€â”€ Drill-down levels available per login role â”€â”€
 const DRILL_LEVELS = {
   super_admin: ['own', 'admin', 'dealer', 'sub_dealer', 'promotor', 'customer'],
   admin:       ['own', 'dealer', 'sub_dealer', 'promotor', 'customer'],
@@ -80,7 +80,7 @@ const LEVEL_LABELS = {
 
 const TIME_RANGES = ['Today', 'Week', 'Month', 'Year']
 
-// ── children key per node type ──
+// â”€â”€ children key per node type â”€â”€
 function getChildren(node) {
   if (node.type === 'admin') return { key: 'dealers', childType: 'dealer' }
   if (node.type === 'dealer') return { key: 'sub_dealers', childType: 'sub_dealer' }
@@ -89,8 +89,8 @@ function getChildren(node) {
   return { key: null, childType: null }
 }
 
-// ── NEW: node oda subtree la irukka ella admin/dealer/sub_dealer/promotor
-// IDs-um collect pannu (customer login status track pannathu, so skip) ──
+// â”€â”€ NEW: node oda subtree la irukka ella admin/dealer/sub_dealer/promotor
+// IDs-um collect pannu (customer login status track pannathu, so skip) â”€â”€
 function collectSubtreeRoleIds(node) {
   const ids = new Set()
   function addId(n) {
@@ -109,16 +109,16 @@ function collectSubtreeRoleIds(node) {
   return ids
 }
 
-// ── Flatten a tree (rooted at admin/dealer/sub_dealer/promotor) into leaf rows ──
+// â”€â”€ Flatten a tree (rooted at admin/dealer/sub_dealer/promotor) into leaf rows â”€â”€
 function flattenToRows(root) {
   const rows = []
 
   function getIdName(node, type) {
-    const idVal = node[`${type}_id`] || node.id || '—'
+    const idVal = node[`${type}_id`] || node.id || 'â€”'
     const name = `${node.first_name || ''} ${node.last_name || ''}`.trim() || node.dealer_name || node.promotor_name || idVal
-    // ── NEW: customer eppayume fixed GREEN. Vera ella roles-um (admin/dealer/
+    // â”€â”€ NEW: customer eppayume fixed GREEN. Vera ella roles-um (admin/dealer/
     // sub_dealer/promotor) andha node's own status field (backend cascade
-    // pannina, customer order_count base panni) follow pannும். ──
+    // pannina, customer order_count base panni) follow pannà¯à®®à¯. â”€â”€
     const color = type === 'customer' ? STATUS_COLOR.green : (node.status ? STATUS_COLOR[node.status] : null)
     return { id: idVal, name, color }
   }
@@ -149,8 +149,8 @@ function flattenToRows(root) {
   return rows
 }
 
-// ── Collect every node of a given type inside a tree, keeping its own subtree ──
-// ── Collect every node of a given type inside a tree, keeping its own subtree ──
+// â”€â”€ Collect every node of a given type inside a tree, keeping its own subtree â”€â”€
+// â”€â”€ Collect every node of a given type inside a tree, keeping its own subtree â”€â”€
 function collectNodesOfType(root, targetType) {
   const found = []
   function walk(node) {
@@ -169,7 +169,7 @@ function collectNodesOfType(root, targetType) {
   return found
 }
 
-// ── Find full ancestor chain for a selected node of any type ──
+// â”€â”€ Find full ancestor chain for a selected node of any type â”€â”€
 function findAncestorChain(treeData, targetType, targetId) {
   function walk(node, chain) {
     const idVal = (node.customer_id || node[`${node.type}_id`] || node.id)?.toString()
@@ -195,7 +195,7 @@ function findAncestorChain(treeData, targetType, targetId) {
   return null
 }
 
-// ── Build a fake date for an order so we can bucket it (fallback = today) ──
+// â”€â”€ Build a fake date for an order so we can bucket it (fallback = today) â”€â”€
 function orderDate(o) {
   const d = o.created_at || o.order_date || o.date
   return d ? new Date(d) : new Date()
@@ -224,7 +224,7 @@ function isInRange(date, range) {
   return true
 }
 
-// ── Group rows' orders into buckets (labels + totals) for the trend chart ──
+// â”€â”€ Group rows' orders into buckets (labels + totals) for the trend chart â”€â”€
 function buildTrendBuckets(rows, range) {
   const now = new Date()
   let buckets = []
@@ -263,7 +263,7 @@ rows.forEach(r => r.rawOrders.forEach(o => {
   buckets[3 - idx].count += 1
 }))
   } else {
-    // Year — 12 monthly buckets
+    // Year â€” 12 monthly buckets
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     buckets = Array.from({ length: 12 }, (_, i) => {
   const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1)
@@ -281,9 +281,9 @@ rows.forEach(r => r.rawOrders.forEach(o => {
   return buckets
 }
 
-// ── Simple inline SVG line chart (no external library needed) ──
+// â”€â”€ Simple inline SVG line chart (no external library needed) â”€â”€
 function TrendLineChart({ buckets, color }) {
-  const [hoverIdx, setHoverIdx] = useState(null)   // ── NEW
+  const [hoverIdx, setHoverIdx] = useState(null)   // â”€â”€ NEW
   const width = 700, height = 220, padding = 36
   const max = Math.max(1, ...buckets.map(b => b.total))
   const stepX = (width - padding * 2) / Math.max(1, buckets.length - 1)
@@ -296,7 +296,7 @@ function TrendLineChart({ buckets, color }) {
 
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
   const areaD = `${pathD} L ${points[points.length - 1].x} ${height - padding} L ${points[0].x} ${height - padding} Z`
-  const hp = hoverIdx !== null ? points[hoverIdx] : null   // ── NEW
+  const hp = hoverIdx !== null ? points[hoverIdx] : null   // â”€â”€ NEW
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '220px', overflow: 'visible' }}>
@@ -316,7 +316,7 @@ function TrendLineChart({ buckets, color }) {
       <path d={areaD} fill="url(#trendFill)" />
       <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" />
 
-      {/* ── NEW: wide invisible hover zones ── */}
+      {/* â”€â”€ NEW: wide invisible hover zones â”€â”€ */}
       {points.map((p, i) => (
         <rect key={`hz-${i}`} x={p.x - stepX / 2} y={0} width={stepX} height={height}
           fill="transparent"
@@ -331,12 +331,12 @@ function TrendLineChart({ buckets, color }) {
         <text key={i} x={p.x} y={height - 10} fontSize="11" fill="#6B6B6B" textAnchor="middle">{p.label}</text>
       ))}
 
-      {/* ── NEW: hover tooltip — amount + order count ── */}
+      {/* â”€â”€ NEW: hover tooltip â€” amount + order count â”€â”€ */}
       {hp && (
         <g style={{ pointerEvents: 'none' }}>
           <line x1={hp.x} x2={hp.x} y1={padding} y2={height - padding} stroke={color} strokeOpacity="0.3" strokeDasharray="3 3" />
           <rect x={Math.min(Math.max(hp.x - 55, 4), width - 114)} y={Math.max(hp.y - 46, 4)} width="110" height="38" rx="8" fill="#FFFCF8" stroke={color} strokeOpacity="0.5" />
-          <text x={Math.min(Math.max(hp.x - 55, 4), width - 114) + 10} y={Math.max(hp.y - 46, 4) + 16} fontSize="11" fontWeight="700" fill={color}>₹{hp.total.toLocaleString('en-IN')}</text>
+          <text x={Math.min(Math.max(hp.x - 55, 4), width - 114) + 10} y={Math.max(hp.y - 46, 4) + 16} fontSize="11" fontWeight="700" fill={color}>â‚¹{hp.total.toLocaleString('en-IN')}</text>
           <text x={Math.min(Math.max(hp.x - 55, 4), width - 114) + 10} y={Math.max(hp.y - 46, 4) + 30} fontSize="10" fill="#6B6B6B">{hp.count || 0} orders</text>
         </g>
       )}
@@ -346,9 +346,9 @@ function TrendLineChart({ buckets, color }) {
 
 
 
-// ── NEW: small helpers to read id / name / color off any node in the tree ──
+// â”€â”€ NEW: small helpers to read id / name / color off any node in the tree â”€â”€
 function nodeIdVal(node) {
-  return node.customer_id || node[`${node.type}_id`] || node.id || '—'
+  return node.customer_id || node[`${node.type}_id`] || node.id || 'â€”'
 }
 function nodeName(node) {
   return `${node.first_name || ''} ${node.last_name || ''}`.trim() || node.dealer_name || node.promotor_name || nodeIdVal(node)
@@ -360,10 +360,10 @@ function nodeColor(node) {
   return node.status ? STATUS_COLOR[node.status] : (ROLE_CFG[node.type]?.color || '#6B6B6B')
 }
 
-// ── NEW: Hierarchy Grid — same lane-row style as SuperadminHierarchyGrid.
+// â”€â”€ NEW: Hierarchy Grid â€” same lane-row style as SuperadminHierarchyGrid.
 // roots = top-level nodes (admin list, or single dealer/sub_dealer/promotor
 // depending on login role / selected drill-down node). Click a card to open
-// its children lane below, exactly like the main hierarchy grid page. ──
+// its children lane below, exactly like the main hierarchy grid page. â”€â”€
 function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selectedNode, onSelectNode }) {
   const [selChain, setSelChain] = useState([])
 
@@ -401,13 +401,13 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {levels.map((nodes, depthIdx) => {
-        // ── NEW: lane divider color — role fixed color base (like glane-divider
-        // in the hierarchy grid page), na status color illa, role color base ──
+        // â”€â”€ NEW: lane divider color â€” role fixed color base (like glane-divider
+        // in the hierarchy grid page), na status color illa, role color base â”€â”€
         const laneColor = nodes[0] ? (ROLE_CFG[nodes[0].type]?.color || subtext) : subtext
         return (
         <div key={depthIdx}>
           <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', color: subtext, marginBottom: '10px', textTransform: 'uppercase' }}>
-            {nodes[0] ? `${LEVEL_LABELS[nodes[0].type] || nodes[0].type} · ${nodes.length}` : 'No matches'}
+            {nodes[0] ? `${LEVEL_LABELS[nodes[0].type] || nodes[0].type} Â· ${nodes.length}` : 'No matches'}
           </div>
           <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '14px' }}>
             {nodes.map(node => {
@@ -417,7 +417,7 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
   const childCount = key ? (node[key] || []).length : null
   const active = selChain[depthIdx] === idVal.toString()
   const isDim = selChain[depthIdx] && !active
-  // ── NEW: intha card ippo stats-ku select pannirukka nu check ──
+  // â”€â”€ NEW: intha card ippo stats-ku select pannirukka nu check â”€â”€
   const isStatsSelected = selectedNode
     && selectedNode.type === node.type
     && nodeIdVal(selectedNode).toString() === idVal.toString()
@@ -426,7 +426,7 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
       className="report-lane-card"
       key={idVal}
       onClick={() => {
-        onSelectNode?.(node)                                 // ── NEW: stats filter
+        onSelectNode?.(node)                                 // â”€â”€ NEW: stats filter
         if (childCount !== null) selectAt(depthIdx, node)     // existing drill-down
       }}
       style={{
@@ -436,7 +436,7 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
         border: `1.5px solid ${c}`, borderRadius: '14px', padding: '13px 16px',
         opacity: isDim ? 0.45 : 1,
         boxShadow: isStatsSelected
-          ? `0 0 0 2px #C99A3A, 0 16px 32px rgba(14,90,87,0.16)`   // ── NEW: yellow ring for stats-selected
+          ? `0 0 0 2px #C99A3A, 0 16px 32px rgba(14,90,87,0.16)`   // â”€â”€ NEW: yellow ring for stats-selected
           : (active ? `0 0 0 1.5px ${c}, 0 14px 28px rgba(14,90,87,0.14)` : '0 10px 22px rgba(14,90,87,0.07)'),
         transition: 'opacity .15s ease, box-shadow .15s ease',
       }}
@@ -466,8 +466,8 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
               )
             })}
           </div>
-          {/* ── NEW: full-width horizontal divider bar under this lane —
-               same "glane-divider" style as SuperadminHierarchyGrid ── */}
+          {/* â”€â”€ NEW: full-width horizontal divider bar under this lane â€”
+               same "glane-divider" style as SuperadminHierarchyGrid â”€â”€ */}
           <div style={{ height: '3px', borderRadius: '3px', background: laneColor, opacity: 0.55, margin: '0 4px 22px 4px' }} />
         </div>
       )})}
@@ -520,6 +520,81 @@ function LoginStatusPie({ activeCount, inactiveCount, scopeLabel, cardBg, border
     </div>
   )
 }
+
+const COIN_LABELS = { gold_22k: 'Gold 22K', gold_24k: 'Gold 24K', silver_999: 'Silver 999' }
+const COIN_COLORS = { gold_22k: '#fbbf24', gold_24k: '#ffd700', silver_999: '#c0c0c0' }
+
+function CoinStockPie({ stock, scopeLabel, cardBg, border, text, subtext }) {
+  const total = stock.reduce((s, item) => s + item.qty, 0)
+  const size = 170, stroke = 26, r = (size - stroke) / 2, c = 2 * Math.PI * r
+
+  const grouped = ['gold_22k', 'gold_24k', 'silver_999'].map(m => ({
+    metal: m,
+    qty: stock.filter(s => s.metal_type === m).reduce((sum, s) => sum + s.qty, 0),
+  })).filter(g => g.qty > 0)
+
+  let offset = 0
+  const segments = grouped.map(g => {
+    const frac = total > 0 ? g.qty / total : 0
+    const len = c * frac
+    const seg = { ...g, len, offset }
+    offset += len
+    return seg
+  })
+
+  return (
+    <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+      <div style={{ fontSize: '11px', fontWeight: 800, color: '#a78bfa', letterSpacing: '1px', alignSelf: 'flex-start' }}>
+        COIN STOCK
+      </div>
+      <div style={{ fontSize: '11px', color: subtext, alignSelf: 'flex-start', marginTop: '-8px' }}>
+        {scopeLabel}
+      </div>
+
+      {total === 0 ? (
+        <div style={{ color: subtext, fontSize: '13px', padding: '30px 0' }}>No stock</div>
+      ) : (
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {segments.map(seg => (
+            <circle
+              key={seg.metal}
+              cx={size / 2} cy={size / 2} r={r} fill="none"
+              stroke={COIN_COLORS[seg.metal]} strokeWidth={stroke}
+              strokeDasharray={`${seg.len} ${c - seg.len}`}
+              strokeDashoffset={-seg.offset + c / 4}
+              transform={`rotate(-90 ${size / 2} ${size / 2})`}
+              style={{ transition: 'stroke-dasharray 0.4s ease' }}
+            />
+          ))}
+          <text x={size / 2} y={size / 2 - 2} textAnchor="middle" fontSize="22" fontWeight="800" fill={text}>{total}</text>
+          <text x={size / 2} y={size / 2 + 16} textAnchor="middle" fontSize="10" fill={subtext}>total coins</text>
+        </svg>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+        {grouped.map(g => (
+          <div key={g.metal} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: 9, height: 9, borderRadius: '50%', background: COIN_COLORS[g.metal] }} />
+              <span style={{ color: COIN_COLORS[g.metal], fontWeight: 700, fontSize: '12px' }}>{COIN_LABELS[g.metal]}</span>
+            </div>
+            <span style={{ color: text, fontWeight: 700, fontSize: '12px' }}>{g.qty}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Weight-wise breakdown */}
+      <div style={{ width: '100%', borderTop: `1px solid ${border}`, paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {stock.map(item => (
+          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+            <span style={{ color: subtext }}>{COIN_LABELS[item.metal_type]} â€” {item.weight_label}</span>
+            <span style={{ color: COIN_COLORS[item.metal_type], fontWeight: 700 }}>{item.qty}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 export default function Report() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -532,11 +607,14 @@ export default function Report() {
 const [selectedNodeId, setSelectedNodeId] = useState('')
 const [timeRange, setTimeRange] = useState('Week')
 
-// ── NEW: Network breakdown grid la click pannina node ──
+// â”€â”€ NEW: Network breakdown grid la click pannina node â”€â”€
 const [gridSelectedNode, setGridSelectedNode] = useState(null)
 
-// ── NEW: full active/inactive login list (super_admin only) ──
+// â”€â”€ NEW: full active/inactive login list (super_admin only) â”€â”€
 const [loginStatusFull, setLoginStatusFull] = useState({ active: [], inactive: [] })
+
+// â”€â”€ NEW: coin stock for scoped node (or own account) â”€â”€
+const [coinStock, setCoinStock] = useState([])
 
 const [nodeSearch, setNodeSearch] = useState('')
 const [debouncedNodeSearch, setDebouncedNodeSearch] = useState('')
@@ -568,7 +646,7 @@ useEffect(() => {
     fetchReport()
   }, [])
 
-  // ── NEW: super_admin ku mattum login status fetch pannu ──
+// â”€â”€ NEW: super_admin ku mattum login status fetch pannu â”€â”€
   useEffect(() => {
     if (role !== 'super_admin') return
     api.get('/today-login-status/')
@@ -579,7 +657,7 @@ useEffect(() => {
   const cfg = ROLE_CFG[role] || { label: role, color: '#0E5A57' }
   const availableLevels = DRILL_LEVELS[role] || ['own']
 
-  // ── nodes available for the second dropdown (only when level !== 'own') ──
+  // â”€â”€ nodes available for the second dropdown (only when level !== 'own') â”€â”€
 const nodesForSelectedLevel = useMemo(() => {
   if (selectedLevel === 'own' || !treeData.length) return []
   let all = []
@@ -593,7 +671,7 @@ useEffect(() => {
   setNodeSearch('')
 }, [selectedLevel])
 
-// ── filtered nodes based on search (id / name / phone) ──
+// â”€â”€ filtered nodes based on search (id / name / phone) â”€â”€
 const filteredNodes = useMemo(() => {
   if (!debouncedNodeSearch.trim()) return nodesForSelectedLevel.slice(0, 50)
   const q = debouncedNodeSearch.trim().toLowerCase()
@@ -611,7 +689,7 @@ const filteredNodes = useMemo(() => {
   return results
 }, [debouncedNodeSearch, nodesForSelectedLevel])
 
-  // ── the actual tree we render: full network OR a single selected node's subtree ──
+  // â”€â”€ the actual tree we render: full network OR a single selected node's subtree â”€â”€
   const activeTree = useMemo(() => {
     if (selectedLevel === 'own' || !selectedNodeId) return treeData
     const node = nodesForSelectedLevel.find(n =>
@@ -622,16 +700,28 @@ const filteredNodes = useMemo(() => {
 
   const isMultiAdminView = role === 'super_admin' && selectedLevel === 'own' && activeTree.length > 1
 
-// ── NEW: top dropdown maathaanum grid selection clear pannidanum ──
+// â”€â”€ NEW: top dropdown maathaanum grid selection clear pannidanum â”€â”€
 useEffect(() => { setGridSelectedNode(null) }, [activeTree])
 
-// ── NEW: card click pannirundha andha node mattum, illana existing activeTree ──
+// â”€â”€ NEW: card click pannirundha andha node mattum, illana existing activeTree â”€â”€
 const statsTree = gridSelectedNode ? [gridSelectedNode] : activeTree
 const isMultiAdminViewStats = !gridSelectedNode && isMultiAdminView
 
-// ── NEW: pie chart ku scoped node — grid click OR dropdown single-node select ──
 const scopedNode = gridSelectedNode || (selectedLevel !== 'own' && activeTree.length === 1 ? activeTree[0] : null)
-const scopedLoginLabel = scopedNode ? `${LEVEL_LABELS[scopedNode.type] || scopedNode.type} · ${nodeName(scopedNode)}` : 'Full Network'
+const scopedLoginLabel = scopedNode ? `${LEVEL_LABELS[scopedNode.type] || scopedNode.type} Â· ${nodeName(scopedNode)}` : 'Full Network'
+
+useEffect(() => {
+  const targetUserId = scopedNode?.user_id
+  if (targetUserId) {
+    api.get('/coin-stock/for-user/', { params: { user_id: targetUserId } })
+      .then(res => setCoinStock(res.data || []))
+      .catch(() => setCoinStock([]))
+  } else {
+    api.get('/coin-stock/')
+      .then(res => setCoinStock(res.data || []))
+      .catch(() => setCoinStock([]))
+  }
+}, [scopedNode])
 
 const scopedLoginStats = useMemo(() => {
   if (!scopedNode) return loginStatusFull
@@ -650,7 +740,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
   statsTree.forEach(root => {
     const rootRows = flattenToRows(root)
     if (isMultiAdminViewStats) {
-      const adminId = root.admin_id || root.id || '—'
+      const adminId = root.admin_id || root.id || 'â€”'
       const adminName = `${root.first_name || ''} ${root.last_name || ''}`.trim() || adminId
       const adminColor = root.status ? STATUS_COLOR[root.status] : null
       rootRows.forEach(r => { r.chain = [{ id: adminId, name: adminName, color: adminColor }, ...r.chain] })
@@ -936,7 +1026,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
           <button
             onClick={() => navigate(-1)}
             style={{ background: 'transparent', border: `1px solid ${border}`, color: subtext, borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '13px' }}
-          >← Back</button>
+          >â† Back</button>
         </div>
       </div>
 
@@ -944,12 +1034,12 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 
         <div style={{ flex: '1 1 0%', minWidth: 0 }}>
 
-          {/* ── NEW: selected node indicator ── */}
+          {/* â”€â”€ NEW: selected node indicator â”€â”€ */}
 {gridSelectedNode && (
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', background: cardBg, border: `1px solid ${border}`, borderRadius: '10px', padding: '10px 16px' }}>
     <span style={{ color: subtext, fontSize: '12px' }}>Showing data for</span>
     <span style={{ color: nodeColor(gridSelectedNode), fontWeight: 700, fontSize: '13px' }}>
-      {(LEVEL_LABELS[gridSelectedNode.type] || gridSelectedNode.type)} · {nodeName(gridSelectedNode)}
+      {(LEVEL_LABELS[gridSelectedNode.type] || gridSelectedNode.type)} Â· {nodeName(gridSelectedNode)}
     </span>
     <button onClick={() => setGridSelectedNode(null)}
       style={{ marginLeft: 'auto', background: 'transparent', border: `1px solid ${border}`, color: subtext, borderRadius: '8px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}>
@@ -962,7 +1052,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '28px' }}>
            <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
     <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total sales</div>
-    <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900, lineHeight: 1.2, letterSpacing: 'normal', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>₹{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+    <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900, lineHeight: 1.2, letterSpacing: 'normal', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>â‚¹{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
   </div>
             <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
               <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total orders</div>
@@ -997,7 +1087,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
             <TrendLineChart buckets={trendBuckets} color={cfg.color} />
           </div>
 
-          {/* Breakdown grid — same lane style as the hierarchy grid page */}
+          {/* Breakdown grid â€” same lane style as the hierarchy grid page */}
           <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '24px 28px' }}>
             <div className="report-section-title" style={{ fontSize: '13px', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '18px' }}>
               Network breakdown
@@ -1012,9 +1102,9 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 
         </div>
 
-        {/* ── RIGHT: Login Status Pie panel ── */}
-        {role === 'super_admin' && (
-          <div style={{ width: '320px', flexShrink: 0, position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+       {/* â”€â”€ RIGHT: Login Status + Coin Stock Pie panels â”€â”€ */}
+        <div style={{ width: '320px', flexShrink: 0, position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {role === 'super_admin' && (
             <LoginStatusPie
               activeCount={scopedLoginStats.active.length}
               inactiveCount={scopedLoginStats.inactive.length}
@@ -1026,11 +1116,20 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
               onClickActive={goToActiveLogin}
               onClickInactive={goToInactiveLogin}
             />
-          </div>
-        )}
+          )}
+          <CoinStockPie
+            stock={coinStock}
+            scopeLabel={scopedNode ? scopedLoginLabel : 'My own stock'}
+            cardBg={cardBg}
+            border={border}
+            text={text}
+            subtext={subtext}
+          />
+        </div>
 
       </div>
     </div>
   )
 }
+
 
