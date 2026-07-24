@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
 import goldCoin from '../assets/gold-coin-transparent.png'
 import silverCoin from '../assets/silver-coin-transparent.png'
-import CustomerNavbar from './CustomerNavbar'
 import CustomerFooter from '../collection/CustomerFooter'
 
 const API_ORIGIN = (api.defaults.baseURL || '').replace(/\/api\/?$/, '')
@@ -700,8 +699,6 @@ export default function CoinsCollection() {
         }
       `}</style>
 
-      <CustomerNavbar />
-
       <main className="coins-shell">
         <section className="coins-hero">
           <div className="coins-title-panel">
@@ -802,3 +799,4 @@ export default function CoinsCollection() {
     </div>
   )
 }
+

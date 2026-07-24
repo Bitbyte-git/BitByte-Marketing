@@ -120,8 +120,8 @@ export default function App() {
           <Route path="/subdealer-hierarchy" element={<SubdealerHierarchy />} />
           <Route path="/promotor" element={<ProtectedRoute role="promotor"><PromotorDashboard /></ProtectedRoute>} />
           <Route path="/promotor-hierarchy" element={<PromotorHierarchy />} />
-          <Route path="/customer" element={<ProtectedRoute role="customer"><CustomerDashboard /></ProtectedRoute>} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/customer" element={<ProtectedRoute role="customer"><WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar></ProtectedRoute>} />
+          <Route path="/profile" element={<WithCustomerNavbar><Profile /></WithCustomerNavbar>} />
 
           <Route path="/collection/rings" element={<Navigate to={collectionPath('rings')} replace />} />
           <Route path="/gold-rings" element={<Navigate to={collectionPath('rings', 'gold')} replace />} />
@@ -173,19 +173,19 @@ export default function App() {
           <Route path="/collection/gifting" element={<Navigate to="/collection/all?occasion=Birthday" replace />} />
           <Route path="/collection/new-arrivals" element={<Navigate to="/collection/all?new=true" replace />} />
 
-          <Route path="/cart" element={<CardSection />} />
-          <Route path="/product-display" element={<ProductDisplay />} />
+          <Route path="/cart" element={<WithCustomerNavbar><CardSection /></WithCustomerNavbar>} />
+          <Route path="/product-display" element={<WithCustomerNavbar><ProductDisplay /></WithCustomerNavbar>} />
           <Route path="/add-product" element={<ProtectedRoute role="super_admin"><AddProduct /></ProtectedRoute>} />
           <Route path="/add-banners" element={<ProtectedRoute role="super_admin"><AddBanners /></ProtectedRoute>} />
           <Route path="/home-banner" element={<ProtectedRoute role="super_admin"><HomeBanner /></ProtectedRoute>} />
-          <Route path="/collection/all" element={<AllCollection />} />
-          <Route path="/collection/coins" element={<CoinsCollection />} />
+          <Route path="/collection/all" element={<WithCustomerNavbar><AllCollection /></WithCustomerNavbar>} />
+          <Route path="/collection/coins" element={<WithCustomerNavbar><CoinsCollection /></WithCustomerNavbar>} />
           <Route path="/gold-coins" element={<Navigate to={coinsPath('gold')} replace />} />
           <Route path="/silver-coins" element={<Navigate to={coinsPath('silver')} replace />} />
-          <Route path="/wishlist" element={<ProtectedRoute role="customer"><WishlistPage /></ProtectedRoute>} />
-          <Route path="/order-confirm" element={<OrderConfirm />} />
-          <Route path="/bj-live" element={<BBLive />} />
-          <Route path="/order-summary" element={<ProtectedRoute role="customer"><OrderSummary /></ProtectedRoute>} />
+          <Route path="/wishlist" element={<ProtectedRoute role="customer"><WithCustomerNavbar><WishlistPage /></WithCustomerNavbar></ProtectedRoute>} />
+          <Route path="/order-confirm" element={<WithCustomerNavbar><OrderConfirm /></WithCustomerNavbar>} />
+          <Route path="/bj-live" element={<WithCustomerNavbar><BBLive /></WithCustomerNavbar>} />
+          <Route path="/order-summary" element={<ProtectedRoute role="customer"><WithCustomerNavbar><OrderSummary /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/admin-orders" element={<ProtectedRoute role="super_admin"><AdminOrdersPage /></ProtectedRoute>} />
           <Route path="/sales-report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
           <Route path="/hierarchy-sales-count" element={<SuperAdminHierarchySalesCount />} />
@@ -196,3 +196,6 @@ export default function App() {
     </BrowserRouter>
   )
 }
+
+
+

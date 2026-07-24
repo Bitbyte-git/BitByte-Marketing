@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
-import CustomerNavbar from './CustomerNavbar'
 import CustomerFooter from './CustomerFooter'
 
 const API_ORIGIN = (api.defaults.baseURL || '').replace(/\/api\/?$/, '')
@@ -1039,8 +1038,6 @@ export default function AllCollection() {
         }
       `}</style>
 
-      <CustomerNavbar />
-
       <main className="an-shell">
         <section className="an-layout">
           <FilterPanel activeRoute={activeRoute} navigate={navigate} metalFilter={metalFilter} />
@@ -1130,4 +1127,5 @@ export default function AllCollection() {
     </div>
   )
 }
+
 

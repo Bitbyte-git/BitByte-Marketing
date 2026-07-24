@@ -9,16 +9,12 @@ import silverCoin from '../assets/silver-coin-transparent.png'
 
 const OCCUPATION_OPTIONS = ['employee', 'business', 'others']
 
-const PARTICLES = Array.from({ length: 15 }, (_, i) => ({
-  id: i, size: Math.random() * 60 + 10, x: Math.random() * 100,
-  delay: Math.random() * 8, duration: Math.random() * 12 + 15, opacity: Math.random() * 0.2 + 0.05,
-}))
 
 const COLORS = ['#BDCFCE', '#CCA881', '#0C4044', '#C92035', '#BB8958', '#D1DFDE']
 
 // ─── ROLE CONFIG ───────────────────────────────────────────────────────────────
 const ROLE_CFG = {
-  admin: { color: '#BDCFCE', label: '🛡️ ADMIN', idKey: 'admin_id' },
+  admin: { color: '#53615F', label: '🛡️ ADMIN', idKey: 'admin_id' },
   dealer: { color: '#0C4044', label: '🏪 DEALER', idKey: 'dealer_id' },
   sub_dealer: { color: '#BB8958', label: '🔗 SUB DEALER', idKey: 'sub_dealer_id' },
   promotor: { color: '#CCA881', label: '🌟 PROMOTOR', idKey: 'promotor_id' },
@@ -250,7 +246,7 @@ let _hideTimer = null
 
 // ─── CHAIN POPUP (hover on any tree node) ──────────────────────────────────
 const ROLE_LABELS = {
-  admin: { emoji: '🛡️', label: 'ADMIN', color: '#BDCFCE', idKey: 'admin_id' },
+  admin: { emoji: '🛡️', label: 'ADMIN', color: '#53615F', idKey: 'admin_id' },
   dealer: { emoji: '🏪', label: 'DEALER', color: '#0C4044', idKey: 'dealer_id' },
   sub_dealer: { emoji: '🔗', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
   promotor: { emoji: '🌟', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
@@ -765,14 +761,14 @@ function OrderTrendChart({ dark }) {
     if (!active || !payload?.length) return null
     const p = payload[0].payload
     return (
-      <div style={{
-        background: '#FDFDFC', border: '1px solid rgba(189,207,206,0.78)', borderRadius: 8,
-        padding: '14px 18px', boxShadow: '0 18px 40px rgba(7,59,63,0.14)',
-        minWidth: 220,
+      <div className="sa-order-tooltip" style={{
+        background: 'linear-gradient(145deg,rgba(253,253,252,0.98),rgba(243,243,240,0.96))', border: '1px solid rgba(189,207,206,0.95)', borderRadius: 14,
+        padding: '16px 20px', boxShadow: '0 22px 50px rgba(7,59,63,0.18)',
+        minWidth: 250, backdropFilter: 'blur(10px)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <span style={{ color: '#7A8987', fontSize: 13 }}>{p.full.datePart}</span>
-          <span style={{ color: '#0C4044', fontSize: 13, fontWeight: 600, background: 'rgba(231,237,236,0.9)', padding: '3px 10px', borderRadius: 5 }}>{p.full.timePart}</span>
+          <span style={{ color: '#0C4044', fontSize: 13, fontWeight: 800, background: 'linear-gradient(135deg,rgba(231,237,236,0.95),rgba(253,253,252,0.85))', padding: '6px 13px', borderRadius: 9, border: '1px solid rgba(189,207,206,0.72)' }}>{p.full.timePart}</span>
         </div>
         <div style={{ color: '#111817', fontWeight: 800, fontSize: 20 }}>{p.count} orders</div>
       </div>
@@ -784,18 +780,38 @@ function OrderTrendChart({ dark }) {
     const { cx, cy, index } = props
     if (index !== peakIndex || cx == null || cy == null) return null
     return (
-      <circle cx={cx} cy={cy} r={5} fill="#0C4044" stroke="#F3F3F0" strokeWidth={2} />
+      <g>
+        <circle className="sa-peak-pulse" cx={cx} cy={cy} r={7} fill="#0C4044" opacity={0.22} />
+        <circle cx={cx} cy={cy} r={5} fill="#0C4044" stroke="#FDFDFC" strokeWidth={2.5} />
+      </g>
     )
   }
 
   return (
-    <div style={{ flex: '1 1 62%', minWidth: 0 }}>
-      <div style={{
-        background: 'linear-gradient(145deg,#FDFDFC 0%,#F3F3F0 56%,#E7EDEC 100%)',
+    <div className="sa-chart-wrap" style={{ flex: '1 1 62%', minWidth: 0 }}>
+      <div className="sa-order-chart-card" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: '#FDFDFC',
         border: '1px solid rgba(189,207,206,0.78)',
         borderRadius: 20, padding: '24px 28px',
-        boxShadow: '0 22px 58px rgba(7,59,63,0.08)',
+        boxShadow: '0 24px 64px rgba(7,59,63,0.12)',
       }}>
+        <style>{`
+          @keyframes saChartCardIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+          @keyframes saChartLineDraw { from { stroke-dashoffset: 900; } to { stroke-dashoffset: 0; } }
+          @keyframes saChartPulse { 0%,100% { transform: scale(1); opacity: .62; } 50% { transform: scale(1.75); opacity: .14; } }
+          @keyframes saTooltipIn { from { opacity: 0; transform: translateY(8px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+          .sa-order-chart-card { animation: saChartCardIn .55s cubic-bezier(.22,1,.36,1) both; }
+          .sa-order-chart-card::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 18% 8%, rgba(204,168,129,.18), transparent 30%), radial-gradient(circle at 94% 0%, rgba(12,64,68,.10), transparent 34%); }
+          .sa-order-chart-card::after { content: ''; position: absolute; left: 28px; right: 28px; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(12,64,68,.34), transparent); }
+          .sa-chart-refresh, .sa-period-tab { transition: transform .22s ease, box-shadow .22s ease, background .22s ease, border-color .22s ease; }
+          .sa-chart-refresh:hover, .sa-period-tab:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(7,59,63,.12); }
+          .sa-period-tab.is-active { box-shadow: 0 10px 22px rgba(12,64,68,.20), inset 0 1px 0 rgba(255,255,255,.18); }
+          .sa-order-chart-card .recharts-area-curve { stroke-dasharray: 900; animation: saChartLineDraw 1.2s cubic-bezier(.22,1,.36,1) both; filter: drop-shadow(0 7px 10px rgba(12,64,68,.18)); }
+          .sa-order-tooltip { animation: saTooltipIn .18s cubic-bezier(.22,1,.36,1) both; }
+          .sa-peak-pulse { transform-box: fill-box; transform-origin: center; animation: saChartPulse 1.6s ease-in-out infinite; }
+        `}</style>
         {/* Header row: title + % badge, period tabs, refresh */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4, flexWrap: 'wrap', gap: 10 }}>
           <div>
@@ -807,17 +823,17 @@ function OrderTrendChart({ dark }) {
             </div>
             <p style={{ fontSize: 22, fontWeight: 500, margin: '2px 0 0', color: '#111817' }}>{totalOrders} orders</p>
           </div>
-          <button onClick={() => fetchData(period)}
-            style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(12,64,68,0.35)', background: 'rgba(209,223,222,0.55)', color: '#0C4044', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-            🔄 Refresh
+          <button className="sa-chart-refresh" onClick={() => fetchData(period)}
+            style={{ padding: '9px 16px', borderRadius: 12, border: '1px solid rgba(12,64,68,0.32)', background: 'linear-gradient(135deg,rgba(253,253,252,0.9),rgba(209,223,222,0.72))', color: '#0C4044', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }}>
+            Refresh
           </button>
         </div>
 
         {/* Period tabs */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16, marginTop: 12 }}>
           {PERIODS.map(p => (
-            <button key={p.key} onClick={() => setPeriod(p.key)}
-              style={{ padding: '6px 14px', borderRadius: 20, border: period === p.key ? '1px solid #0C4044' : '1px solid rgba(189,207,206,0.7)', background: period === p.key ? '#0C4044' : 'transparent', color: period === p.key ? '#FDFDFC' : '#7A8987', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            <button className={`sa-period-tab ${period === p.key ? 'is-active' : ''}`} key={p.key} onClick={() => setPeriod(p.key)}
+              style={{ padding: '8px 18px', borderRadius: 999, border: period === p.key ? '1px solid #0C4044' : '1px solid rgba(189,207,206,0.82)', background: period === p.key ? 'linear-gradient(135deg,#0C4044,#073B3F)' : 'rgba(253,253,252,0.64)', color: period === p.key ? '#FDFDFC' : '#6F7F7D', fontSize: 13, fontWeight: 800, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
               {p.label}
             </button>
           ))}
@@ -833,11 +849,17 @@ function OrderTrendChart({ dark }) {
               <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="orderGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0C4044" stopOpacity={0.28} />
-                    <stop offset="95%" stopColor="#0C4044" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#0C4044" stopOpacity={0.24} />
+                    <stop offset="48%" stopColor="#CCA881" stopOpacity={0.12} />
+                    <stop offset="100%" stopColor="#0C4044" stopOpacity={0.01} />
+                  </linearGradient>
+                  <linearGradient id="orderStroke" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#0C4044" />
+                    <stop offset="52%" stopColor="#BB8958" />
+                    <stop offset="100%" stopColor="#0C4044" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(189,207,206,0.35)" vertical={false} />
+                <CartesianGrid strokeDasharray="4 10" stroke="rgba(189,207,206,0.45)" vertical={false} />
                 <XAxis
                   dataKey="label"
                   stroke="rgba(122,137,135,0.78)"
@@ -858,16 +880,19 @@ function OrderTrendChart({ dark }) {
                 />
                 <Tooltip
                   content={<CustomTooltip />}
-                  cursor={{ stroke: '#0C4044', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  cursor={{ stroke: 'rgba(12,64,68,0.74)', strokeWidth: 2, strokeDasharray: '5 7' }}
                 />
                 <Area
                   type="monotone"
                   dataKey="count"
-                  stroke="#0C4044"
-                  strokeWidth={2}
+                  stroke="url(#orderStroke)"
+                  strokeWidth={3}
                   fill="url(#orderGrad)"
                   dot={<PeakDot />}
-                  activeDot={{ r: 5, fill: '#0C4044', stroke: '#F3F3F0', strokeWidth: 2 }}
+                  activeDot={{ r: 7, fill: '#0C4044', stroke: '#FDFDFC', strokeWidth: 3 }}
+                  isAnimationActive={true}
+                  animationDuration={950}
+                  animationEasing="ease-out"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -1031,7 +1056,6 @@ const [showTodayRates, setShowTodayRates] = useState(false)
   return { left, top }
 }
 
-  const canvasRef = useRef(null)
   const bg = '#FDFDFC'
   const text = '#111817'
   const subtext = '#7A8987'
@@ -1044,176 +1068,6 @@ const [showTodayRates, setShowTodayRates] = useState(false)
   const inpBorder = '#BDCFCE'
   const optionBg = '#F3F3F0'
   const selectInput = { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '12px', padding: '13px 16px', color: text, fontSize: '14px', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }
-
-  // Particle canvas
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    let animationFrameId, particlesArray = []
-    const mouse = { x: null, y: null, radius: 150 }
-    const handleResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
-    const handleMouseMove = (e) => { mouse.x = e.x; mouse.y = e.y }
-    window.addEventListener('resize', handleResize)
-    window.addEventListener('mousemove', handleMouseMove)
-    handleResize()
-    class Particle {
-      constructor() {
-        this.x = Math.random() * canvas.width
-        this.y = Math.random() * canvas.height
-        this.size = Math.random() * 4 + 2
-        this.speedX = (Math.random() - 0.5) * 0.3
-        this.speedY = (Math.random() - 0.5) * 0.3
-      }
-
-      update() {
-        this.x += this.speedX
-        this.y += this.speedY
-        if (this.x > canvas.width || this.x < 0) this.speedX *= -1
-        if (this.y > canvas.height || this.y < 0) this.speedY *= -1
-
-        if (mouse.x !== null && mouse.y !== null) {
-          let dx = mouse.x - this.x
-          let dy = mouse.y - this.y
-          let distance = Math.sqrt(dx * dx + dy * dy)
-          if (distance < mouse.radius) {
-            const forceDirectionX = dx / distance
-            const forceDirectionY = dy / distance
-            const force = (mouse.radius - distance) / mouse.radius
-            this.x += forceDirectionX * force * 2
-            this.y += forceDirectionY * force * 2
-          }
-        }
-      }                          // ← update() ends here
-
-      draw() {
-        ctx.fillStyle = dark ? 'rgba(189, 207, 206, 0.9)' : 'rgba(12, 64, 68, 0.8)'
-        ctx.save()
-        ctx.translate(this.x, this.y)
-        ctx.beginPath()
-
-        const spikes = 5
-        const outerRadius = this.size * 1
-        const innerRadius = this.size * 0.4
-
-        for (let i = 0; i < spikes * 2; i++) {
-          const radius = i % 2 === 0 ? outerRadius : innerRadius
-          const angle = (i * Math.PI) / spikes - Math.PI / 2
-          if (i === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius)
-          else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius)
-        }
-
-        ctx.closePath()
-        ctx.fill()
-        ctx.restore()
-      }
-
-    }
-    function init() { particlesArray = []; for (let i = 0; i < 60; i++) particlesArray.push(new Particle()) }
-    function connect() {
-      for (let a = 0; a < particlesArray.length; a++) for (let b = a; b < particlesArray.length; b++) {
-        let dx = particlesArray[a].x - particlesArray[b].x, dy = particlesArray[a].y - particlesArray[b].y, d = Math.sqrt(dx * dx + dy * dy)
-        if (d < 150) { ctx.strokeStyle = dark ? `rgba(189,207,206,${1 - d / 150})` : `rgba(12,64,68,${0.5 - d / 300})`; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(particlesArray[a].x, particlesArray[a].y); ctx.lineTo(particlesArray[b].x, particlesArray[b].y); ctx.stroke() }
-      }
-    }
-    function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particlesArray.forEach(p => { p.update(); p.draw() }); connect(); animationFrameId = requestAnimationFrame(animate) }
-    init(); animate()
-
-    // ── PLANETS & COMETS ADD ──────────────────────────────────────────
-    let planets = [], comets2 = [], planetAnimId
-
-    class Planet {
-      constructor(index, total) {
-        this.distFactor = 0.12 + (index / total) * 0.75
-        this.radius = 12 + Math.random() * 25
-        this.speed = (0.003 / (index + 1)) * 0.35
-        this.angle = Math.random() * Math.PI * 2
-        const hues = [200, 30, 180, 5, 280, 150, 45, 210, 330, 20]
-        this.color = `hsl(${hues[index % hues.length]}, 70%, 60%)`
-      }
-      update(c2, x2) {
-        this.angle += this.speed
-        const centerX = c2.width / 2
-        const centerY = c2.height / 2
-        const maxDim = Math.max(c2.width, c2.height)
-        const orbitRadius = maxDim * this.distFactor
-        const x = centerX + Math.cos(this.angle) * orbitRadius
-        const y = centerY + Math.sin(this.angle) * orbitRadius
-        x2.strokeStyle = dark ? 'rgba(253,253,252,0.04)' : 'rgba(17,24,23,0.04)'
-        x2.lineWidth = 1
-        x2.beginPath()
-        x2.arc(centerX, centerY, orbitRadius, 0, Math.PI * 2)
-        x2.stroke()
-        x2.shadowBlur = dark ? 20 : 5
-        x2.shadowColor = this.color
-        x2.fillStyle = this.color
-        x2.beginPath()
-        x2.arc(x, y, this.radius, 0, Math.PI * 2)
-        x2.fill()
-        x2.shadowBlur = 0
-      }
-    }
-
-    function createComet2() {
-      const sides = ['top', 'bottom', 'left', 'right']
-      const side = sides[Math.floor(Math.random() * 4)]
-      let x, y, vx, vy
-      const speed = 0.4 + Math.random() * 0.3
-      if (side === 'top') { x = Math.random() * canvas2.width; y = -100; vx = 0.1; vy = speed }
-      else if (side === 'bottom') { x = Math.random() * canvas2.width; y = canvas2.height + 100; vx = -0.1; vy = -speed }
-      else if (side === 'left') { x = -100; y = Math.random() * canvas2.height; vx = speed; vy = 0.1 }
-      else { x = canvas2.width + 100; y = Math.random() * canvas2.height; vx = -speed; vy = -0.1 }
-      return { x, y, vx, vy, history: [], tailLength: 130 }
-    }
-
-    // Second canvas for planets/comets
-    const canvas2 = document.createElement('canvas')
-    canvas2.style.cssText = 'position:fixed;top:0;left:0;pointer-events:none;z-index:2;opacity:0.5;'
-    canvas2.width = window.innerWidth
-    canvas2.height = window.innerHeight
-    document.body.appendChild(canvas2)
-    const ctx2 = canvas2.getContext('2d')
-
-    planets = Array.from({ length: 10 }, (_, i) => new Planet(i, 10))
-    comets2 = Array.from({ length: 3 }, createComet2)
-
-    function drawPlanets() {
-      ctx2.clearRect(0, 0, canvas2.width, canvas2.height)
-      const colorAccent = dark ? '76, 201, 240' : '0, 95, 115'
-
-      planets.forEach(p => p.update(canvas2, ctx2))
-
-      comets2.forEach((c, i) => {
-        c.x += c.vx; c.y += c.vy
-        c.history.push({ x: c.x, y: c.y })
-        if (c.history.length > c.tailLength) c.history.shift()
-        if (c.x < -200 || c.x > canvas2.width + 200 || c.y < -200 || c.y > canvas2.height + 200)
-          comets2[i] = createComet2()
-        c.history.forEach((h, idx) => {
-          ctx2.fillStyle = `rgba(${colorAccent}, ${(idx / c.history.length) * 0.3})`
-          ctx2.beginPath()
-          ctx2.arc(h.x, h.y, (idx / c.history.length) * 3, 0, Math.PI * 2)
-          ctx2.fill()
-        })
-      })
-
-      planetAnimId = requestAnimationFrame(drawPlanets)
-    }
-
-    const handleResize2 = () => { canvas2.width = window.innerWidth; canvas2.height = window.innerHeight }
-    window.addEventListener('resize', handleResize2)
-    drawPlanets()
-    // ── END PLANETS & COMETS ──────────────────────────────────────────
-
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('resize', handleResize2)
-      cancelAnimationFrame(animationFrameId)
-      cancelAnimationFrame(planetAnimId)
-      canvas2.remove()
-    }
-  }, [dark])
-
 
 
   // AFTER
@@ -1628,29 +1482,29 @@ const buildHierarchyOrders = (period, metalKey) => {
 
           // ✅ FIX: Try all possible customer array keys
           const customerList = pr.customers || pr.customer || []
-          
+
           const customers = customerList.map(c => {
             // ✅ FIX: Try all possible id fields
             const custId = c.customer_id || c.id || c.pk
             const o = custOrders[custId] || { count: 0, amount: 0 }
-          
+
             if (o.count > 0) matchedIds.add(custId)
             prTotal += o.count
             return { ...c, orderCount: o.count, orderAmount: o.amount }
           }).filter(c => c.orderCount > 0)
-          
+
           sdTotal += prTotal
           return { ...pr, customers, orderCount: prTotal }
         }).filter(pr => pr.orderCount > 0)
-        
+
         dealerTotal += sdTotal
         return { ...sd, promotors, orderCount: sdTotal }
       }).filter(sd => sd.orderCount > 0)
-      
+
       adminTotal += dealerTotal
       return { ...dealer, subDealers, orderCount: dealerTotal }
     }).filter(d => d.orderCount > 0)
-    
+
     superTotal += adminTotal
     return { ...admin, dealers, orderCount: adminTotal }
   }).filter(a => a.orderCount > 0)
@@ -1689,8 +1543,6 @@ const buildHierarchyOrders = (period, metalKey) => {
         .lux-side-item:hover{background:#E7EDEC;transform:translateX(3px)}
         .lux-side-item.is-active{background:linear-gradient(135deg,#0C4044,#073B3F);color:#FDFDFC;box-shadow:0 14px 32px rgba(7,59,63,.18)}
         .lux-command{min-height:52px;border-radius:14px}
-        @keyframes float-orb{0%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-50px) scale(1.1)}66%{transform:translate(-20px,20px) scale(0.9)}100%{transform:translate(0,0) scale(1)}}
-        @keyframes antigravity{0%{transform:translateY(110vh) rotate(0deg);opacity:0}10%{opacity:var(--op)}90%{opacity:var(--op)}100%{transform:translateY(-20vh) rotate(360deg);opacity:0}}
         @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
         @keyframes pulseGlow{0%,100%{box-shadow:0 0 8px rgba(189,207,206,0.15);}50%{box-shadow:0 0 22px rgba(189,207,206,0.35);}}
         @keyframes dotPulse{0%,100%{transform:scale(1);opacity:0.7;}50%{transform:scale(1.6);opacity:1;}}
@@ -1711,18 +1563,127 @@ const buildHierarchyOrders = (period, metalKey) => {
         .h-card{background:rgba(253,253,252,0.03);border:1px solid rgba(165,243,252,0.18);border-radius:14px;padding:14px 18px;min-width:140px;cursor:pointer;position:relative;overflow:hidden;transition:background 0.35s ease,border-color 0.35s ease,transform 0.4s cubic-bezier(0.34,1.4,0.64,1),box-shadow 0.35s ease;}
         .h-card.h-active{background:rgba(189,207,206,0.07);border-color:rgba(189,207,206,0.65);transform:translateY(-6px) scale(1.02);box-shadow:0 12px 32px rgba(189,207,206,0.18);animation:pulseGlow 2.5s ease-in-out infinite;}
         .tree-node-enter{animation:fadeIn 0.4s ease both;}
+        .sa-sidebar{position:fixed;inset:0 auto 0 0;width:286px;z-index:25;background:rgba(253,253,252,0.96);border-right:1px solid rgba(189,207,206,0.72);box-shadow:22px 0 54px rgba(7,59,63,0.06);padding:28px 18px;display:flex;flex-direction:column;box-sizing:border-box}
+        .sa-main-offset{margin-left:286px;width:calc(100% - 286px)}
+        .sa-navbar{position:sticky;top:0;z-index:20;background:${glass};border-bottom:1px solid ${border};padding:18px 28px;display:flex;align-items:center;justify-content:space-between;gap:18px;backdrop-filter:blur(16px);transition:background .8s ease;box-shadow:0 16px 34px rgba(7,59,63,.04)}
+        .sa-search{flex:1 1 280px!important;max-width:440px!important;min-width:220px;height:52px!important;border-radius:16px;border:1px solid rgba(189,207,206,.82);background:#FDFDFC;display:flex;align-items:center;gap:12px;padding:0 18px;box-shadow:inset 0 1px 0 rgba(253,253,252,.9)}
+        .sa-search span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#7A8987;font-weight:600;font-size:14px}
+        .sa-navbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px!important;flex-wrap:wrap;min-width:0}
+        .sa-role-chip{min-height:52px;color:#0C4044;font-weight:900;font-size:14px;display:inline-flex!important;align-items:center;justify-content:center;gap:8px;background:#E7EDEC;border:1px solid #BDCFCE;border-radius:16px;padding:0 18px!important;white-space:nowrap}
+        .sa-command-btn{min-height:52px;min-width:116px;padding:0 16px!important;border-radius:14px!important;justify-content:center;white-space:nowrap}
+        .sa-command-btn span{line-height:1.15;text-align:left}
+        .sa-icon-action{min-width:40px;height:40px;padding:0 11px!important;border-radius:12px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px;flex:0 0 auto}
+        .sa-icon-action svg{flex:0 0 auto}
+        .sa-icon-action span{white-space:nowrap}
+        .sa-logout{height:40px;padding:0 16px!important;white-space:nowrap}
+        @media (max-width:1600px){.sa-navbar{align-items:flex-start!important;flex-wrap:wrap}.sa-search{max-width:none!important;flex:1 1 320px!important}.sa-navbar-actions{flex:1 1 100%;justify-content:flex-start!important}}
+        @media (max-width:1180px){.sa-navbar{padding:16px 20px!important;gap:14px!important}.sa-role-chip,.sa-command-btn{min-height:46px}.sa-command-btn{min-width:auto}.sa-main-offset{padding-left:20px!important;padding-right:20px!important}}
+        @media (max-width:920px){.sa-sidebar{position:relative!important;inset:auto!important;width:100%!important;min-height:0;padding:16px!important;border-right:0!important;border-bottom:1px solid rgba(189,207,206,.72);box-shadow:0 14px 34px rgba(7,59,63,.06)}.sa-sidebar nav{display:flex!important;flex-direction:row!important;gap:8px!important;margin-top:14px!important;overflow-x:auto;padding-bottom:4px}.sa-sidebar .lux-side-item{height:40px;flex:0 0 auto;padding:0 14px}.sa-sidebar > div:last-child{display:none!important}.sa-main-offset{width:100%!important;margin-left:0!important}.sa-navbar{position:sticky!important;margin-left:0!important;width:100%!important;padding:14px 16px!important}}
+        @media (max-width:640px){.sa-search{flex-basis:100%!important;min-width:0;height:46px!important}.sa-navbar-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px!important;width:100%}.sa-role-chip,.sa-command-btn,.sa-icon-action,.sa-logout{width:100%;min-width:0}.sa-role-chip{grid-column:span 2;font-size:12px!important;padding:0 10px!important}.sa-command-btn{grid-column:span 2}.sa-command-btn span{font-size:11px!important}.sa-icon-action span{display:none}.sa-logout{grid-column:span 2}}
+        .sa-rates-layout{display:grid!important;grid-template-columns:minmax(190px,240px) minmax(0,1fr) minmax(190px,240px);gap:0!important;overflow:visible!important;min-height:0!important}
+        .sa-order-summary-panel,.sa-today-orders-panel{width:auto!important;min-width:0!important}.sa-summary-card-title{font-size:12px!important;color:#0C4044!important;letter-spacing:.11em!important}.sa-summary-metal{font-size:12px!important;font-weight:900!important;margin-bottom:7px!important}.sa-summary-row{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:10px!important;padding:3px 0!important}.sa-summary-row span:first-child{font-size:12px!important;color:#53615F!important;font-weight:650!important}.sa-summary-row span:last-child{font-size:13px!important;font-weight:900!important;color:#0C4044!important;text-align:right!important}.sa-summary-block{border-radius:10px!important;padding:7px 8px!important;margin-left:-4px!important;margin-right:-4px!important;transition:background .2s ease,transform .2s ease}.sa-summary-block:hover{background:rgba(189,207,206,.18)!important;transform:translateX(2px)}
+        .sa-rates-center{width:auto!important;min-width:0!important;overflow:hidden!important}
+        .sa-rates-header{gap:12px;min-width:0;flex-wrap:wrap}
+        .sa-rates-header > div:first-child{min-width:0;flex:1 1 280px}
+        .sa-rates-meta{flex-wrap:wrap;line-height:1.5}
+        .sa-rate-card-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px!important;align-items:stretch}
+        .sa-rate-card{min-width:0!important;display:flex;flex-direction:column}
+        .sa-rate-card img{width:clamp(46px,4.8vw,64px)!important;height:clamp(46px,4.8vw,64px)!important}
+        .sa-rate-card > div:first-child{padding:10px 0 6px!important;min-height:74px}
+        .sa-rate-card > div:last-child{padding:6px 6px 4px!important;min-width:0}
+        .sa-rate-card > div:last-child > div:first-child{font-size:10px!important;padding:2px 7px!important;max-width:100%;white-space:normal}
+        .sa-rate-card > div:last-child > div:last-child{font-size:clamp(10px,.75vw,12px)!important;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
+        .sa-side-stat-row{gap:10px;align-items:center}
+        .sa-side-stat-row span:last-child{margin-left:auto;text-align:right;overflow-wrap:anywhere}
+        .sa-today-title{font-size:13px!important;color:#0C4044!important;letter-spacing:.13em!important}
+        .sa-today-card{min-width:0!important;border-radius:14px!important;padding:18px 16px!important;background:linear-gradient(145deg,rgba(253,253,252,.98),rgba(243,243,240,.78))!important;box-shadow:0 12px 28px rgba(7,59,63,.07);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+        .sa-today-card:hover{transform:translateY(-3px);box-shadow:0 18px 38px rgba(7,59,63,.11);border-color:rgba(12,64,68,.26)!important}
+        .sa-today-icon{font-size:19px!important;line-height:1;margin-bottom:10px!important}
+        .sa-today-metal{font-size:12px!important;font-weight:900!important;letter-spacing:.08em!important;color:#0C4044!important;margin-bottom:14px!important}
+        .sa-today-card .sa-side-stat-row{padding:5px 0!important;gap:16px!important}
+        .sa-today-card .sa-side-stat-row span:first-child{font-size:13px!important;color:#53615F!important;font-weight:650!important;white-space:nowrap}
+        .sa-today-card .sa-side-stat-row span:last-child{font-size:14px!important;color:#BB8958!important;font-weight:900!important;white-space:nowrap}
+        .sa-today-divider{height:1px!important;background:rgba(189,207,206,.72)!important;margin:11px 0!important}
+        .sa-network-label{font-size:11px!important;color:#53615F!important;font-weight:700!important;letter-spacing:.02em}
+        .sa-admin-tools-head{flex-wrap:wrap;gap:14px;filter:none!important;box-shadow:none!important;isolation:isolate}.sa-admin-tools-head > div{flex-wrap:wrap;filter:none!important;box-shadow:none!important}.sa-admin-tools-head button{flex:1 1 180px;justify-content:center;box-shadow:none!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.sa-admin-tools-head + .sa-grad-btn,.sa-admin-tools-head .sa-grad-btn::after{display:none!important}
+        @media (max-width:1340px){.sa-rates-layout{grid-template-columns:minmax(180px,220px) minmax(0,1fr)}.sa-today-orders-panel{grid-column:1/-1;border-left:0!important;border-top:1px solid ${border};display:grid!important;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));align-items:stretch;gap:14px!important}.sa-today-orders-panel > div:first-child,.sa-today-orders-panel > div:last-child{grid-column:1/-1}.sa-rate-card-grid{grid-template-columns:repeat(auto-fit,minmax(88px,1fr))}}
+        @media (max-width:980px){.sa-rates-layout{grid-template-columns:1fr}.sa-order-summary-panel,.sa-today-orders-panel{border-right:0!important;border-left:0!important}.sa-order-summary-panel{border-bottom:1px solid ${border};display:grid!important;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));align-items:start;gap:14px!important}.sa-order-summary-panel > div:first-child,.sa-order-summary-panel > div:last-child{grid-column:1/-1}.sa-today-orders-panel{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));border-top:1px solid ${border}}.sa-rates-center{padding:18px 14px!important}.sa-rate-card-grid{grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}}
+        @media (max-width:680px){.sa-main-offset{padding-left:12px!important;padding-right:12px!important}.sa-rates-layout{border-radius:16px!important}.sa-order-summary-panel,.sa-today-orders-panel{grid-template-columns:1fr!important;padding:16px 12px!important}.sa-rates-header{align-items:flex-start!important}.sa-rates-header > div:first-child{align-items:flex-start!important}.sa-rates-center{padding:16px 10px!important}.sa-rate-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important}.sa-rate-card img{width:56px!important;height:56px!important}.sa-admin-tools-head{align-items:stretch!important}.sa-admin-tools-head h2{font-size:19px!important}.sa-admin-tools-head > div{width:100%}.sa-admin-tools-head button{width:100%;padding:11px 14px!important}}
+        .sa-sidebar{width:220px!important;padding:28px 12px!important;background:#FFFFFF!important;border-right:1px solid #E4ECEB!important;box-shadow:10px 0 28px rgba(7,59,63,.04)!important}
+        .sa-main-offset{margin-left:220px!important;width:calc(100% - 220px)!important}
+        .sa-navbar{margin-left:220px!important;width:calc(100% - 220px)!important;padding:20px 26px 14px!important;background:#FFFFFF!important;box-shadow:none!important;border-bottom:0!important}
+        .lux-side-item{height:54px!important;border-radius:10px!important;padding:0 18px!important;font-size:13px!important}
+        .lux-side-item::before{content:"";width:18px;height:18px;display:inline-block;background:currentColor;mask-size:contain;mask-position:center;mask-repeat:no-repeat;-webkit-mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat}
+        .lux-side-item:nth-child(1)::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M3 11.5 12 4l9 7.5'/%3E%3Cpath d='M5 10.5V20h14v-9.5'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M3 11.5 12 4l9 7.5'/%3E%3Cpath d='M5 10.5V20h14v-9.5'/%3E%3C/svg%3E")}
+        .lux-side-item:nth-child(9){display:none!important}
+        .sa-sidebar{width:226px!important;padding:26px 10px 18px!important;overflow-y:auto!important;overflow-x:hidden!important;background:#FFFFFF!important;border-right:1px solid #E6EEEE!important;box-shadow:8px 0 24px rgba(7,59,63,.035)!important}
+        .sa-sidebar>div:first-child{gap:12px!important;padding:0 14px 25px!important;border-bottom:1px solid #E8EFEE!important}
+        .sa-sidebar>div:first-child img{width:48px!important;height:48px!important}
+        .sa-sidebar>div:first-child .lux-display{font-size:28px!important;line-height:.95!important;color:#073B3F!important}
+        .sa-sidebar>div:first-child .lux-display+div{font-size:10px!important;letter-spacing:.22em!important;margin-top:5px!important;color:#BB8958!important}
+        .sa-sidebar nav{gap:9px!important;margin-top:20px!important;padding:0 0 20px!important;border-bottom:1px solid #E8EFEE!important}
+        .lux-side-item{height:48px!important;border-radius:9px!important;padding:0 18px!important;font-size:13px!important;font-weight:900!important;color:#0C4044!important;gap:14px!important;text-shadow:0 8px 18px rgba(7,59,63,.08)!important}
+        .lux-side-item:hover{background:#F2F6F5!important;transform:none!important}
+        .lux-side-item.is-active{height:54px!important;background:linear-gradient(135deg,#004B55,#073B3F)!important;color:#FFFFFF!important;box-shadow:0 16px 30px rgba(0,75,85,.24)!important}
+        .lux-side-item::before{content:"";width:18px;height:18px;display:inline-block;background:currentColor;flex:0 0 auto;mask-size:contain;mask-position:center;mask-repeat:no-repeat;-webkit-mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat}
+        .lux-side-item:nth-child(1)::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M3 11.5 12 4l9 7.5'/%3E%3Cpath d='M5 10.5V20h14v-9.5'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M3 11.5 12 4l9 7.5'/%3E%3Cpath d='M5 10.5V20h14v-9.5'/%3E%3C/svg%3E")}
+        .lux-side-item:nth-child(2)::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M6 8h12l-1 12H7L6 8z'/%3E%3Cpath d='M9 8V6a3 3 0 016 0v2'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M6 8h12l-1 12H7L6 8z'/%3E%3Cpath d='M9 8V6a3 3 0 016 0v2'/%3E%3C/svg%3E")}
+        .lux-side-item:nth-child(3)::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Crect x='5' y='4' width='14' height='17' rx='2'/%3E%3Cpath d='M9 3h6v3H9zM8 11h8M8 15h5'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Crect x='5' y='4' width='14' height='17' rx='2'/%3E%3Cpath d='M9 3h6v3H9zM8 11h8M8 15h5'/%3E%3C/svg%3E")}
+        .lux-side-item:nth-child(4)::before,.lux-side-item:nth-child(5)::before,.lux-side-item:nth-child(6)::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75'/%3E%3C/svg%3E")}
+        .lux-side-item:nth-child(7)::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M4 7l4-3 4 3-4 3-4-3zM12 7l4-3 4 3-4 3-4-3zM8 10l4 3 4-3M4 14l4-3 4 3-4 3-4-3zM12 14l4-3 4 3-4 3-4-3z'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M4 7l4-3 4 3-4 3-4-3zM12 7l4-3 4 3-4 3-4-3zM8 10l4 3 4-3M4 14l4-3 4 3-4 3-4-3zM12 14l4-3 4 3-4 3-4-3z'/%3E%3C/svg%3E")}
+        .lux-side-item:nth-child(8)::before{mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M6 3l12 18M18 3L6 21M12 3v18M3 12h18'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' stroke-width='2.4'%3E%3Cpath d='M6 3l12 18M18 3L6 21M12 3v18M3 12h18'/%3E%3C/svg%3E")}
+        .lux-side-item:nth-child(9){display:none!important}
+        .sa-sidebar>div:nth-of-type(2){border-top:0!important;margin-top:0!important;padding:21px 16px 0!important}
+        .sa-sidebar>div:nth-of-type(2)>div:first-child{font-size:10px!important;letter-spacing:.04em!important;margin-bottom:18px!important;color:#071A2D!important}
+        .sa-sidebar>div:nth-of-type(2)>div:not(:first-child){grid-template-columns:30px 1fr auto!important;gap:10px!important;margin-bottom:17px!important}
+        .sa-sidebar>div:nth-of-type(2)>div:not(:first-child)>div:first-child{width:24px!important;height:24px!important;color:#0C4044!important}
+        .sa-sidebar>div:nth-of-type(2)>div:not(:first-child)>div:nth-child(2)>div:first-child{font-size:11px!important;color:#0C4044!important;font-weight:750!important;line-height:1.1!important}
+        .sa-sidebar>div:nth-of-type(2)>div:not(:first-child)>div:nth-child(2)>div:last-child{font-size:17px!important;color:#071A2D!important;font-weight:900!important;line-height:1.1!important;margin-top:3px!important}
+        .sa-sidebar>div:nth-of-type(2)>div:not(:first-child)>div:last-child{font-size:10px!important;color:#009957!important;font-weight:900!important;align-self:end!important;margin-bottom:3px!important}
+        .sa-sidebar>div:nth-of-type(3){margin-top:9px!important;border-radius:8px!important;padding:18px 18px!important;border:1px solid #E2EAE9!important;box-shadow:none!important;background:#FFFFFF!important}
+        .sa-sidebar>div:nth-of-type(3)>div:first-child{font-size:11px!important;margin-bottom:18px!important;color:#071A2D!important}
+        .sa-sidebar>div:nth-of-type(3)>div:nth-child(2){font-size:11px!important;margin-bottom:20px!important}
+        .sa-sidebar>div:nth-of-type(3)>div:nth-child(3){font-size:11px!important;margin-bottom:8px!important}
+        .sa-sidebar>div:nth-of-type(3)>div:nth-child(4){font-size:11px!important;line-height:1.45!important}
+        .sa-sidebar>div:nth-of-type(4){margin-top:auto!important;border-radius:8px!important;padding:28px 22px 24px!important;min-height:222px!important;background:radial-gradient(circle at 78% 18%,rgba(54,197,126,.34),transparent 24%),radial-gradient(circle at 20% 38%,rgba(107,255,184,.24),transparent 18%),linear-gradient(145deg,#004B55,#073B3F)!important;box-shadow:0 18px 32px rgba(0,75,85,.18)!important}
+        .sa-sidebar>div:nth-of-type(4)>div:first-child{width:78px!important;height:78px!important;margin:0 auto 20px!important;border-color:rgba(255,255,255,.22)!important;background:rgba(255,255,255,.06)!important}
+        .sa-sidebar>div:nth-of-type(4)>div:nth-child(2){font-size:15px!important;text-align:left!important;margin-bottom:10px!important}
+        .sa-sidebar>div:nth-of-type(4)>div:nth-child(3){font-size:12px!important;line-height:1.75!important}
+        .sa-search{height:44px!important;border-radius:10px!important;max-width:500px!important;box-shadow:none!important}
+        .sa-role-chip,.sa-command-btn{height:48px!important;min-height:48px!important;border-radius:9px!important}
+        .sa-icon-action,.sa-logout{height:40px!important;border-radius:9px!important;background:#FFFFFF!important;border-color:#E4ECEB!important;color:#0C4044!important}
+        .sa-dashboard-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;width:100%}
+        .sa-kpi-card{background:#FFFFFF;border:1px solid #E0E9E8;border-radius:10px;padding:22px 24px;min-height:150px;display:flex;gap:20px;align-items:flex-start;box-shadow:none}
+        .sa-kpi-icon{width:54px;height:54px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto}
+        .sa-kpi-label{font-size:11px;font-weight:900;text-transform:uppercase;color:#0C4044;margin-bottom:12px}
+        .sa-kpi-value{font-size:28px;font-weight:900;color:#071A2D;line-height:1}
+        .sa-kpi-note{font-size:13px;color:#6E7D7B;margin-top:12px;line-height:1.5}
+        .sa-dashboard-row{flex-direction:column!important;gap:14px!important;padding-top:14px!important}
+        .sa-pie-row{flex:1 1 auto!important;min-width:0!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:14px!important;width:100%}
+        .sa-pie-row>div{border-radius:10px!important;box-shadow:none!important;background:#FFFFFF!important}
+        .sa-rates-layout{min-height:auto!important;border-radius:10px!important;margin-bottom:14px!important;background:#FFFFFF!important;box-shadow:none!important}
+        .sa-order-summary-panel,.sa-rates-center{display:none!important}
+        .sa-today-orders-panel{width:100%!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:38px!important;border-left:0!important;padding:22px 22px 18px!important}
+        .sa-today-title{grid-column:1/-1;border-bottom:0!important;padding-bottom:0!important;margin-bottom:-10px!important}
+        .sa-today-card{border-radius:10px!important;padding:22px 28px!important;background:#FFFFFF!important;border-color:#E0E9E8!important;box-shadow:none!important}
+        .sa-network-label{grid-column:1/-1;border-top:1px solid #E0E9E8;padding-top:12px;margin-top:-8px}
+        .sa-admin-tools-head{background:#FFFFFF;border:1px solid #E0E9E8;border-radius:10px;padding:18px 18px 12px;margin-bottom:14px!important;display:block!important}
+        .sa-admin-tools-head h2{font-size:13px!important;text-transform:uppercase;color:#0C4044;margin:0 0 18px!important}
+        .sa-admin-tools-head>div{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:28px!important}
+        .sa-admin-tools-head button{height:68px!important;border-radius:10px!important;background:#FFFFFF!important;color:#0C4044!important;border:1px solid #E0E9E8!important;justify-content:flex-start!important;padding:0 26px!important}
+        .sa-admin-tools-head button:last-child{grid-column:1/-1;height:36px!important;justify-content:center!important;background:#004B55!important;color:#FFFFFF!important;border-color:#004B55!important}
+        .sa-admin-table-card{border-radius:10px!important;padding:18px 20px!important;background:#FFFFFF!important;box-shadow:none!important}
+        .sa-admin-table-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+        .sa-admin-search{height:42px;border:1px solid #E0E9E8;border-radius:8px;min-width:320px;display:flex;align-items:center;gap:10px;padding:0 14px;color:#6E7D7B;font-size:12px}
+        @media (max-width:1180px){.sa-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sa-pie-row,.sa-today-orders-panel,.sa-admin-tools-head>div{grid-template-columns:1fr!important}.sa-admin-search{min-width:0;width:100%}.sa-admin-table-top{align-items:stretch;flex-direction:column}}
+        @media (max-width:920px){.sa-main-offset,.sa-navbar{margin-left:0!important;width:100%!important}.sa-sidebar{width:100%!important}.sa-dashboard-grid{grid-template-columns:1fr}.sa-navbar{padding:14px 16px!important}}
+        @media (max-width:420px){.sa-rate-card-grid{grid-template-columns:1fr}.sa-rate-card{min-height:0}.sa-rate-card > div:first-child{min-height:68px}.sa-search span{font-size:12px!important}.sa-navbar-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.sa-role-chip,.sa-command-btn,.sa-logout{grid-column:span 2}.sa-icon-action{height:38px}}
+
+
       `}</style>
 
-      <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 1, opacity: 0.45 }} />
 
-      <div style={{ position: 'absolute', borderRadius: '50%', filter: 'blur(80px)', animation: 'float-orb 20s infinite ease-in-out', zIndex: 0, top: '8%', left: '8%', width: '380px', height: '380px', background: dark ? 'rgba(189,207,206,0.08)' : 'rgba(12,64,68,0.08)' }} />
-      <div style={{ position: 'absolute', borderRadius: '50%', filter: 'blur(80px)', animation: 'float-orb 20s infinite ease-in-out', zIndex: 0, bottom: '10%', right: '4%', width: '460px', height: '460px', background: dark ? 'rgba(201,32,53,0.05)' : 'rgba(201,32,53,0.05)', animationDelay: '-5s' }} />
-
-      {PARTICLES.map(p => (
-        <div key={p.id} style={{ position: 'absolute', left: `${p.x}%`, bottom: '-100px', width: p.size, height: p.size, borderRadius: '40% 60% 60% 40% / 40% 40% 60% 60%', border: `1px solid ${accent}44`, opacity: p.opacity, animation: `antigravity ${p.duration}s ${p.delay}s infinite linear`, '--op': p.opacity, pointerEvents: 'none', zIndex: 0 }} />
-      ))}
-
-      <aside style={{ position: 'fixed', inset: '0 auto 0 0', width: '286px', zIndex: 25, background: 'rgba(253,253,252,0.96)', borderRight: '1px solid rgba(189,207,206,0.72)', boxShadow: '22px 0 54px rgba(7,59,63,0.06)', padding: '28px 18px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+      <aside className="sa-sidebar" style={{ position: 'fixed', inset: '0 auto 0 0', width: '286px', zIndex: 25, background: 'rgba(253,253,252,0.96)', borderRight: '1px solid rgba(189,207,206,0.72)', boxShadow: '22px 0 54px rgba(7,59,63,0.06)', padding: '28px 18px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '0 8px 26px', borderBottom: '1px solid rgba(189,207,206,0.64)' }}>
           <img src={logo} alt="Luxiva" style={{ width: 54, height: 54, objectFit: 'contain' }} />
           <div>
@@ -1741,26 +1702,48 @@ const buildHierarchyOrders = (period, metalKey) => {
           <div className="lux-side-item" onClick={() => setShowTodayRates(true)}>Gold Rate</div>
           <div className="lux-side-item">Settings</div>
         </nav>
-        <div style={{ marginTop: 'auto', borderRadius: '18px', overflow: 'hidden', background: '#F3E8DE', border: '1px solid rgba(204,168,129,0.45)' }}>
-          <img src={goldCoin} alt="" style={{ width: '100%', height: 150, objectFit: 'contain', padding: '18px', boxSizing: 'border-box', background: 'linear-gradient(135deg,#F3E8DE,#FDFDFC)' }} />
-          <div style={{ padding: '0 18px 18px' }}>
-            <div className="lux-display" style={{ fontSize: 28, fontWeight: 800 }}>LUXIVA</div>
-            <div style={{ color: '#7A8987', fontSize: 11, fontWeight: 800, letterSpacing: '.16em' }}>WHERE FASHION MEETS LUXURY</div>
+        <div style={{ borderTop: '1px solid #E4ECEB', marginTop: '24px', padding: '22px 16px 0' }}>
+          <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', color: '#071A2D', marginBottom: 18 }}>Quick Summary</div>
+          {[
+            { label: 'Total Orders', value: orderStats.today.gold_22k.count + orderStats.today.gold_24k.count + orderStats.today.silver_999.count, growth: '+0%' },
+            { label: 'Total Customers', value: totalStats?.customers || 0, growth: '+12.5%' },
+            { label: 'Total Dealers', value: totalStats?.dealers || 0, growth: '+6.8%' },
+            { label: 'Total Products', value: 256, growth: '+5.2%' },
+            { label: 'Active Users', value: loginStatus.active_count, growth: '+8.3%' },
+          ].map(item => (
+            <div key={item.label} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+              <div style={{ width: 22, height: 22, color: '#0C4044' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></div>
+              <div><div style={{ fontSize: 12, color: '#0C4044', fontWeight: 700 }}>{item.label}</div><div style={{ fontSize: 18, color: '#071A2D', fontWeight: 900 }}>{item.value}</div></div>
+              <div style={{ fontSize: 11, color: '#009957', fontWeight: 900 }}>{item.growth}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 'auto', borderRadius: '8px', overflow: 'hidden', background: '#FFFFFF', border: '1px solid #E0E9E8', padding: '18px 16px' }}>
+          <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', color: '#071A2D', marginBottom: 14 }}>System Status</div>
+          <div style={{ color: '#009957', fontSize: 12, fontWeight: 900, marginBottom: 20 }}>Live <span style={{ color: '#6E7D7B', fontWeight: 700 }}>- Auto refresh</span></div>
+          <div style={{ fontSize: 11, color: '#6E7D7B', marginBottom: 8 }}>Last updated</div>
+          <div style={{ fontSize: 12, color: '#071A2D', fontWeight: 800 }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} | {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+        <div style={{ marginTop: 'auto', borderRadius: '8px', overflow: 'hidden', background: 'linear-gradient(145deg,#004B55,#072D34)', border: '1px solid #0C4044', padding: '28px 22px', color: '#FFFFFF' }}>
+          <div style={{ width: 76, height: 76, borderRadius: '50%', border: '1px solid rgba(255,255,255,.2)', display: 'grid', placeItems: 'center', marginBottom: 18 }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z"/><path d="M9 12h6v5H9z"/><path d="M10 12v-2a2 2 0 114 0v2"/></svg>
           </div>
+          <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 12 }}>Secure & Protected</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, color: '#E7EDEC' }}>Your system is secure and running smoothly.</div>
         </div>
       </aside>
 
       {/* Navbar */}
-      <div style={{ position: 'sticky', top: 0, marginLeft: 286, zIndex: 20, background: glass, borderBottom: `1px solid ${border}`, padding: '20px 34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, backdropFilter: 'blur(16px)', transition: 'background 0.8s ease', boxShadow: '0 16px 34px rgba(7,59,63,0.04)' }}>
-        <div style={{ flex: 1, maxWidth: 520, height: 56, borderRadius: 16, border: '1px solid rgba(189,207,206,0.82)', background: '#FDFDFC', display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px', boxShadow: 'inset 0 1px 0 rgba(253,253,252,0.9)' }}>
+      <div className="sa-navbar sa-main-offset" style={{ position: 'sticky', top: 0, marginLeft: 286, zIndex: 20, background: glass, borderBottom: `1px solid ${border}`, padding: '20px 34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, backdropFilter: 'blur(16px)', transition: 'background 0.8s ease', boxShadow: '0 16px 34px rgba(7,59,63,0.04)' }}>
+        <div className="sa-search" style={{ flex: 1, maxWidth: 520, height: 56, borderRadius: 16, border: '1px solid rgba(189,207,206,0.82)', background: '#FDFDFC', display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px', boxShadow: 'inset 0 1px 0 rgba(253,253,252,0.9)' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2">
             <circle cx="11" cy="11" r="7" />
             <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
           </svg>
           <span style={{ color: '#7A8987', fontWeight: 600, fontSize: '14px' }}>Search orders, products, users...</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <span style={{ color: '#0C4044', fontWeight: 800, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', background: '#E7EDEC', border: '1px solid #BDCFCE', borderRadius: 16, padding: '14px 18px' }}>
+        <div className="sa-navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <span className="sa-role-chip" style={{ color: '#0C4044', fontWeight: 800, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', background: '#E7EDEC', border: '1px solid #BDCFCE', borderRadius: 16, padding: '14px 18px' }}>
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2">
     <path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z" strokeLinejoin="round"/>
     <path d="M9.5 12l1.8 1.8L15 10" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1771,6 +1754,7 @@ const buildHierarchyOrders = (period, metalKey) => {
 
           {/* 💰 Rate Entry Button */}
           <div
+            className="sa-command-btn"
             onClick={() => {
               setShowRatePopup(true)
               setRateMsg('')
@@ -1801,58 +1785,62 @@ const buildHierarchyOrders = (period, metalKey) => {
               e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
-           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2">
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
   <circle cx="12" cy="12" r="9"/>
   <path d="M12 7v10M9.5 9.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1 2.5 2c0 2-5 1.5-5 4 0 1 1.1 2 2.5 2s2.5-1.1 2.5-2.5" strokeLinecap="round"/>
 </svg>
-            <span style={{ fontSize: '12px', fontWeight: 800, color: '#FDFDFC' }}>Gold Rate</span>
+            <span style={{ fontSize: '12px', fontWeight: 900, color: '#FFFFFF' }}>Gold Rate</span>
           </div>
 
 
 
             {/* 🛍️ Add Product Button */}
           <div
+            className="sa-command-btn"
             onClick={() => navigate('/add-product')}
             title="Add Jewelry Product"
             style={{
               cursor: 'pointer', padding: '13px 18px', borderRadius: '14px',
-              border: '1px solid #073B3F',
+              border: '1px solid rgba(255,255,255,0.18)',
               background: 'linear-gradient(135deg,#0C4044,#073B3F)',
-              display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+              display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.25s ease',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg,#073B3F,#0C4044)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg,#0C4044,#073B3F)'; e.currentTarget.style.transform = 'translateY(0)' }}
           >
-           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2">
+           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
   <path d="M6 8h12l-1 12H7L6 8z" strokeLinejoin="round"/>
   <path d="M9 8V6a3 3 0 016 0v2" strokeLinecap="round"/>
 </svg>
-            <span style={{ fontSize: '12px', fontWeight: 900, color: '#FDFDFC' }}>Add Product</span>
+            <span style={{ fontSize: '12px', fontWeight: 900, color: '#FFFFFF' }}>Add Product</span>
           </div>
 
           {/* 📋 Orders Button — NEW */}
 <div
+  className="sa-command-btn"
   onClick={() => navigate('/admin-orders')}
   title="View All Jewelry Orders"
   style={{
     cursor: 'pointer', padding: '13px 16px', borderRadius: '14px',
-    border: '1px solid rgba(12,64,68,0.45)',
-    background: 'rgba(12,64,68,0.1)',
+    border: '1px solid #073B3F',
+    background: 'linear-gradient(135deg,#0C4044,#073B3F)',
     display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease',
   }}
-  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
+  onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg,#073B3F,#0C4044)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+  onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg,#0C4044,#073B3F)'; e.currentTarget.style.transform = 'translateY(0)' }}
 >
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5">
   <rect x="5" y="4" width="14" height="17" rx="2"/>
   <path d="M9 3h6v3H9z"/>
   <path d="M8 11h8M8 15h5" strokeLinecap="round"/>
 </svg>
-  <span style={{ fontSize: '12px', fontWeight: 800, color: '#0C4044' }}>Orders</span>
+  <span style={{ fontSize: '12px', fontWeight: 900, color: '#FFFFFF' }}>Orders</span>
 </div>
 
 
           <div
+            className="sa-icon-action"
             onClick={() => { setShowRequests(true); setRequestMsg('') }}
             style={{
               position: 'relative',          // ← badge-ku base
@@ -1877,7 +1865,7 @@ const buildHierarchyOrders = (period, metalKey) => {
               e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4">
   <rect x="3" y="5" width="18" height="14" rx="2"/>
   <path d="M3 7l9 6 9-6" strokeLinecap="round" strokeLinejoin="round"/>
 </svg>
@@ -1898,6 +1886,7 @@ const buildHierarchyOrders = (period, metalKey) => {
 
           {/* 🎂 Birthday Icon */}
           <div
+            className="sa-icon-action"
             onClick={() => { setShowBirthdayList(true) }}
             title="Today's Birthdays"
             style={{ position: 'relative', cursor: 'pointer', padding: '6px', borderRadius: '10px', border: '1px solid rgba(201,32,53,0.35)', background: 'rgba(201,32,53,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s ease' }}
@@ -1918,13 +1907,14 @@ const buildHierarchyOrders = (period, metalKey) => {
 
           {/* 💍 Anniversary Icon */}
           <div
+            className="sa-icon-action"
             onClick={() => { setShowAnniversaryList(true) }}
             title="Today's Anniversaries"
             style={{ position: 'relative', cursor: 'pointer', padding: '6px', borderRadius: '10px', border: '1px solid rgba(204,168,129,0.35)', background: 'rgba(204,168,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s ease' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
           >
-            <span style={{ fontSize: '18px', lineHeight: 1 }}>💍</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4">
   <circle cx="12" cy="15" r="6"/>
   <path d="M9 9l3-6 3 6" strokeLinejoin="round"/>
 </svg>{anniversaryList.length > 0 && (
@@ -1936,6 +1926,7 @@ const buildHierarchyOrders = (period, metalKey) => {
 
           {/* 🏆 Join Date Icon */}
           <div
+            className="sa-icon-action"
             onClick={() => { setShowJoinDateList(true) }}
             title="Today's Work Anniversaries"
             style={{ position: 'relative', cursor: 'pointer', padding: '6px', borderRadius: '10px', border: '1px solid rgba(187,137,88,0.35)', background: 'rgba(187,137,88,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s ease' }}
@@ -1957,6 +1948,7 @@ const buildHierarchyOrders = (period, metalKey) => {
 
           {/* 📢 Announcement Icon */}
           <div
+            className="sa-icon-action"
             onClick={() => {
               setShowAnnouncement(true)  // keep existing behavior (send modal)
               localStorage.setItem('superAdminAnnouncementSeen', Date.now().toString())
@@ -1981,6 +1973,7 @@ const buildHierarchyOrders = (period, metalKey) => {
 
           {/* 📬 Super Admin View Announcements */}
           <div
+            className="sa-icon-action"
             onClick={() => {
               setShowMyAnnouncements(true)
               fetchMyAnnouncements()
@@ -2016,6 +2009,7 @@ const buildHierarchyOrders = (period, metalKey) => {
 
           {/* 📊 Today Rates Icon */}
           <div
+            className="sa-icon-action"
             onClick={() => setShowTodayRates(true)}
             title="Today's Metal Rates"
             style={{
@@ -2027,23 +2021,42 @@ const buildHierarchyOrders = (period, metalKey) => {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4">
   <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round"/>
 </svg>
             <span style={{ fontSize: '11px', fontWeight: 700, color: '#CCA881' }}>Today Rates</span>
           </div>
-          <button onClick={() => { localStorage.clear(); navigate('/login') }}
+          <button className="sa-logout" onClick={() => { localStorage.clear(); navigate('/login') }}
             style={{ padding: '8px 18px', background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}>
             Logout
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', width: 'calc(100% - 286px)', marginLeft: 286, gap: 22, padding: '24px 34px 0', boxSizing: 'border-box', alignItems: 'stretch' }}>
+            <div className="sa-main-offset sa-dashboard-row" style={{ display: 'flex', width: 'calc(100% - 286px)', marginLeft: 286, gap: 22, padding: '24px 34px 0', boxSizing: 'border-box', alignItems: 'stretch' }}>
+        <div className="sa-dashboard-grid">
+          {[
+            { label: 'Order Volume', value: orderStats.today.gold_22k.count + orderStats.today.gold_24k.count + orderStats.today.silver_999.count, sub: 'orders', note: '+0%\nvs yesterday', color: '#00A767', bg: '#EAF8F0', icon: 'cart' },
+            { label: 'Total Users', value: (totalStats ? totalStats.admins + totalStats.dealers + totalStats.subDealers + totalStats.promotors + totalStats.customers : 0), sub: '', note: `Active: ${loginStatus.active_count}    Inactive: ${loginStatus.inactive_count}`, color: '#2563EB', bg: '#EAF2FF', icon: 'users' },
+            { label: 'Total Customers', value: totalStats?.customers || 0, sub: '', note: '+12.5%\nvs last month', color: '#00A767', bg: '#EAF8F0', icon: 'users' },
+            { label: 'Total Dealers', value: totalStats?.dealers || 0, sub: '', note: '+6.8%\nvs last month', color: '#9B31FF', bg: '#F5EAFF', icon: 'store' },
+          ].map(kpi => (
+            <div className="sa-kpi-card" key={kpi.label}>
+              <div className="sa-kpi-icon" style={{ background: kpi.bg, color: kpi.color }}>
+                {kpi.icon === 'cart' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6h15l-2 9H8L6 3H3"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg> : kpi.icon === 'store' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h16l-1-5H5l-1 5z"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>}
+              </div>
+              <div>
+                <div className="sa-kpi-label">{kpi.label}</div>
+                <div><span className="sa-kpi-value">{kpi.value}</span>{kpi.sub && <span style={{ marginLeft: 8, color: '#071A2D', fontSize: 16 }}>{kpi.sub}</span>}</div>
+                <div className="sa-kpi-note" style={{ whiteSpace: 'pre-line', color: kpi.note.includes('Inactive') ? '#071A2D' : '#009957' }}>{kpi.note}</div>
+              </div>
+            </div>
+          ))}
+        </div>
         <OrderTrendChart dark={dark} />
 
         {/* ── RIGHT SIDE: Role Distribution + Login Status Pies ── */}
-        <div style={{ flex: '0 0 38%', minWidth: 360, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="sa-pie-row" style={{ flex: '0 0 38%', minWidth: 360, display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
           {/* Role Distribution Pie */}
           <div style={{ background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 20, padding: '24px 26px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
@@ -2082,7 +2095,7 @@ const buildHierarchyOrders = (period, metalKey) => {
             )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
               {[
-                { label: 'Admin', color: '#BDCFCE', count: totalStats?.admins || 0 },
+                { label: 'Admin', color: '#53615F', count: totalStats?.admins || 0 },
                 { label: 'Dealer', color: '#0C4044', count: totalStats?.dealers || 0 },
                 { label: 'Sub Dealer', color: '#BB8958', count: totalStats?.subDealers || 0 },
                 { label: 'Promotor', color: '#CCA881', count: totalStats?.promotors || 0 },
@@ -2149,7 +2162,7 @@ const buildHierarchyOrders = (period, metalKey) => {
         </div>
       </div>
 
-      <div style={{ position: 'relative', zIndex: 10, padding: '28px 34px 48px', width: 'calc(100% - 286px)', marginLeft: 286, boxSizing: 'border-box' }}>
+      <div className="sa-main-offset" style={{ position: 'relative', padding: '28px 34px 48px', width: 'calc(100% - 286px)', marginLeft: 286, boxSizing: 'border-box' }}>
         {msg && (
           <div style={{ background: msg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${msg.includes('✅') ? 'rgba(12,64,68,0.25)' : 'rgba(201,32,53,0.3)'}`, color: msg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', marginBottom: '20px' }}>
             {msg}
@@ -2157,7 +2170,7 @@ const buildHierarchyOrders = (period, metalKey) => {
         )}
 
         {/* ── GOLD & SILVER PRICE TABLE — HORIZONTAL LAYOUT ── */}
-        <div style={{
+        <div className="sa-rates-layout" style={{
           display: 'flex',
           gap: '0',
           background: cardBg,
@@ -2169,11 +2182,11 @@ const buildHierarchyOrders = (period, metalKey) => {
         }}>
 
           {/* ── LEFT 20% : Sales Summary ── */}
-          <div style={{
+          <div className="sa-order-summary-panel" style={{
             width: '20%',
-            minWidth: '160px',
+            minWidth: '230px',
             borderRight: `1px solid ${border}`,
-            padding: '20px 14px',
+            padding: '22px 20px',
             display: 'flex',
             flexDirection: 'column',
             gap: '10px',
@@ -2187,7 +2200,7 @@ const buildHierarchyOrders = (period, metalKey) => {
             </div>
 
             {[
-              { label: 'Today Order', color: '#BDCFCE', data: orderStats.today, periodKey: 'today' },
+              { label: 'Today Order', color: '#0C4044', data: orderStats.today, periodKey: 'today' },
               { label: 'This Week Order', color: '#0C4044', data: orderStats.week, periodKey: 'week' },
               { label: 'This Month Order', color: '#CCA881', data: orderStats.month, periodKey: 'month' },
             ].map(s => {
@@ -2196,12 +2209,13 @@ const buildHierarchyOrders = (period, metalKey) => {
               const totalSilver = s.data.silver_999
               return (
                 <div key={s.label} style={{
-                  background: dark ? 'rgba(253,253,252,0.03)' : 'rgba(17,24,23,0.03)',
-                  border: cardBorder,
-                  borderRadius: '10px',
-                  padding: '10px',
+                  background: 'linear-gradient(145deg,rgba(253,253,252,0.98),rgba(243,243,240,0.76))',
+                  border: '1px solid rgba(189,207,206,0.88)',
+                  borderRadius: '14px',
+                  padding: '14px 15px',
+                  boxShadow: '0 10px 26px rgba(7,59,63,0.06)',
                 }}>
-                  <div style={{ fontSize: '9px', color: s.color, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  <div className="sa-summary-card-title" style={{ fontSize: '9px', color: s.color, fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>
                     {s.label}
                   </div>
 
@@ -2225,18 +2239,19 @@ const buildHierarchyOrders = (period, metalKey) => {
                         300
                       )
                     }}
-                    style={{ marginBottom: '6px', paddingBottom: '6px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
+                    className="sa-summary-block"
+                    style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
                   >
-                    <div style={{ fontSize: '8px', color: '#CCA881', fontWeight: 700, marginBottom: '3px' }}>🏅 22K</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>🏅 22K</div>
+                    <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>{total22k.count}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Grams</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>{formatWeight(total22k.grams)}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Value</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>₹{total22k.amount.toFixed(0)}</span>
                     </div>
@@ -2262,18 +2277,19 @@ setOrderPopupState({
                         300
                       )
                     }}
-                    style={{ marginBottom: '6px', paddingBottom: '6px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
+                    className="sa-summary-block"
+                    style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
                   >
-                    <div style={{ fontSize: '8px', color: '#CCA881', fontWeight: 700, marginBottom: '3px' }}>🥇 24K</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>🥇 24K</div>
+                    <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>{total24k.count}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Grams</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>{formatWeight(total24k.grams)}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Value</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>₹{total24k.amount.toFixed(0)}</span>
                     </div>
@@ -2299,20 +2315,21 @@ setOrderPopupState({
                         300
                       )
                     }}
+                    className="sa-summary-block"
                     style={{ cursor: 'pointer' }}
                   >
-                    <div style={{ fontSize: '8px', color: '#BDCFCE', fontWeight: 700, marginBottom: '3px' }}>🥈 Silver</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#53615F', fontWeight: 700, marginBottom: '3px' }}>🥈 Silver</div>
+                    <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#BDCFCE' }}>{totalSilver.count}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#53615F' }}>{totalSilver.count}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Grams</span>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#BDCFCE' }}>{formatWeight(totalSilver.grams)}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#53615F' }}>{formatWeight(totalSilver.grams)}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Value</span>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#BDCFCE' }}>₹{totalSilver.amount.toFixed(0)}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#53615F' }}>₹{totalSilver.amount.toFixed(0)}</span>
                     </div>
                   </div>
                 </div>
@@ -2326,16 +2343,16 @@ setOrderPopupState({
           </div>
 
           {/* ── CENTER 60% : Gold & Silver Table ── */}
-          <div style={{ width: '60%', padding: '20px 18px', overflowX: 'auto' }}>
+          <div className="sa-rates-center" style={{ width: '60%', padding: '20px 18px', overflowX: 'auto' }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div className="sa-rates-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '20px' }}>⚖️</span>
                 <div>
                   <div style={{ color: '#0C4044', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                     Today's Gold & Silver Rates
                   </div>
-                  <div style={{ color: subtext, fontSize: '10px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <div className="sa-rates-meta" style={{ color: subtext, fontSize: '10px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span>📍 Chennai, India</span>
                     <span style={{ opacity: 0.4 }}>•</span>
                     <span>₹ per gram</span>
@@ -2352,9 +2369,9 @@ setOrderPopupState({
               </div>
               {/* <button
         onClick={fetchMetalPrices}
-        style={{ padding: '6px 14px', background: 'rgba(189,207,206,0.1)', border: '1px solid rgba(189,207,206,0.3)', borderRadius: '8px', color: '#BDCFCE', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+        style={{ padding: '6px 14px', background: 'rgba(189,207,206,0.1)', border: '1px solid rgba(189,207,206,0.3)', borderRadius: '8px', color: '#53615F', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
       >
-        🔄 Refresh
+        Refresh
       </button> */}
             </div>
 
@@ -2388,9 +2405,9 @@ return (
           </span>
         )}
       </div>
-<div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
+<div className="sa-rate-card-grid" style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
         {WEIGHTS.map((w, i) => (
-          <div key={w.label} style={{
+          <div className="sa-rate-card" key={w.label} style={{
             flex: 1,
             minWidth: 0,
             background: dark ? 'rgba(204,168,129,0.05)' : 'rgba(204,168,129,0.07)',
@@ -2469,9 +2486,9 @@ return (
           </span>
         )}
       </div>
-<div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
+<div className="sa-rate-card-grid" style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
         {WEIGHTS.map((w, i) => (
-          <div key={w.label} style={{
+          <div className="sa-rate-card" key={w.label} style={{
             flex: 1,
             minWidth: 0,
             background: dark ? 'rgba(204,168,129,0.05)' : 'rgba(204,168,129,0.07)',
@@ -2538,7 +2555,7 @@ return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
         <span style={{ fontSize: '16px' }}>🥈</span>
-        <span style={{ color: '#BDCFCE', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>
+        <span style={{ color: '#53615F', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>
           SILVER 999
         </span>
         {metalPrices.silver && (
@@ -2547,9 +2564,9 @@ return (
           </span>
         )}
       </div>
-<div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
+<div className="sa-rate-card-grid" style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
         {WEIGHTS.map((w, i) => (
-          <div key={w.label} style={{
+          <div className="sa-rate-card" key={w.label} style={{
             flex: 1,
             minWidth: 0,
             background: dark ? 'rgba(192,192,192,0.04)' : 'rgba(192,192,192,0.07)',
@@ -2590,7 +2607,7 @@ return (
             <div style={{ padding: '8px 8px 4px', textAlign: 'center' }}>
               <div style={{
                 display: 'inline-block', fontSize: '10px', fontWeight: 800,
-                color: '#BDCFCE',
+                color: '#53615F',
                 background: 'rgba(192,192,192,0.1)',
                 border: '1px solid rgba(192,192,192,0.25)',
                 borderRadius: '20px', padding: '2px 8px',
@@ -2599,7 +2616,7 @@ return (
                 {w.label}
               </div>
               <div style={{
-                color: '#BDCFCE', fontWeight: 900, fontSize: '12px',
+                color: '#53615F', fontWeight: 900, fontSize: '12px',
                 fontFamily: 'monospace', paddingBottom: '8px'
               }}>
                 {metalPrices.silver != null
@@ -2619,16 +2636,16 @@ return (
           </div>
 
           {/* ── RIGHT 20% : Today's Sales Breakdown ── */}
-          <div style={{
+          <div className="sa-today-orders-panel" style={{
             width: '20%',
-            minWidth: '160px',
+            minWidth: '230px',
             borderLeft: `1px solid ${border}`,
-            padding: '20px 14px',
+            padding: '22px 20px',
             display: 'flex',
             flexDirection: 'column',
             gap: '10px',
           }}>
-            <div style={{
+            <div className="sa-today-title" style={{
               color: '#0C4044', fontSize: '10px', fontWeight: 800,
               letterSpacing: '1.5px', textTransform: 'uppercase',
               paddingBottom: '10px', borderBottom: `1px solid ${border}`,
@@ -2650,13 +2667,14 @@ return (
                 metalKey: 'gold_24k'
               },
               {
-                icon: '🥈', label: 'Silver 999', color: '#BDCFCE',
+                icon: '🥈', label: 'Silver 999', color: '#53615F',
                 bg: 'rgba(192,192,192,0.05)', bd: 'rgba(192,192,192,0.2)',
                 data: orderStats.today.silver_999,
                 metalKey: 'silver_999',
               },
             ].map(s => (
               <div
+                className="sa-today-card"
                 key={s.label}
                 style={{
                   background: s.bg, border: `1px solid ${s.bd}`,
@@ -2683,40 +2701,40 @@ setOrderPopupState({
                 }}
               >
 
-                <div style={{ fontSize: '14px', marginBottom: '5px' }}>{s.icon}</div>
-                <div style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: s.color, marginBottom: '8px' }}>
+                <div className="sa-today-icon" style={{ fontSize: '14px', marginBottom: '5px' }}>{s.icon}</div>
+                <div className="sa-today-metal" style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: s.color, marginBottom: '8px' }}>
                   {s.label}
                 </div>
                 {[
                   { key: 'Order', val: s.data.count },
                   { key: 'Grams', val: formatWeight(s.data.grams) },
                 ].map(r => (
-                  <div key={r.key} style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <div className="sa-side-stat-row" key={r.key} style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                     <span style={{ fontSize: '9px', color: subtext }}>{r.key}</span>
                     <span style={{ fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', color: s.color }}>{r.val}</span>
                   </div>
                 ))}
-                <div style={{ height: '1px', background: `rgba(253,253,252,0.05)`, margin: '6px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div className="sa-today-divider" style={{ height: '1px', background: `rgba(253,253,252,0.05)`, margin: '6px 0' }} />
+                <div className="sa-side-stat-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '9px', color: subtext }}>Total Amount</span>
                   <span style={{ fontSize: '12px', fontWeight: 800, fontFamily: 'monospace', color: s.color }}>₹{s.data.amount.toFixed(0)}</span>
                 </div>
               </div>
             ))}
             <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: `1px solid ${border}`, textAlign: 'center' }}>
-              <div style={{ fontSize: '9px', color: '#7A8987' }}>BitByte Network</div>
+              <div className="sa-network-label" style={{ fontSize: '9px', color: '#7A8987' }}>BitByte Network</div>
             </div>
           </div>
 
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="sa-admin-tools-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0 }}>Admin Management</h2>
           <div style={{ display: 'flex', gap: '12px' }}>
 
             <button onClick={() => navigate('/superadmin-hierarchy-grid')}
-  style={{ padding: '11px 28px', background: 'rgba(204,168,129,0.08)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '12px', fontWeight: 700, color: '#CCA881', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2">
+  style={{ padding: '11px 28px', background: '#FFFFFF', border: '1px solid rgba(204,168,129,0.35)', borderRadius: '12px', fontWeight: 800, color: '#BB8958', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: 'none' }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4">
     <rect x="3" y="3" width="7" height="7" rx="1"/>
     <rect x="14" y="3" width="7" height="7" rx="1"/>
     <rect x="3" y="14" width="7" height="7" rx="1"/>
@@ -2726,14 +2744,14 @@ setOrderPopupState({
 </button>
 
 <button onClick={() => navigate('/sales-report')}
-  style={{ padding: '11px 28px', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '12px', fontWeight: 700, color: '#0C4044', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+  style={{ padding: '11px 28px', background: '#FFFFFF', border: '1px solid rgba(12,64,68,0.28)', borderRadius: '12px', fontWeight: 800, color: '#0C4044', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: 'none' }}>
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2">
     <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
   Sales Report
 </button>
 <button onClick={() => navigate('/superadmin-hierarchy')}
-  style={{ padding: '11px 28px', background: 'rgba(165,243,252,0.08)', border: '1px solid rgba(103,232,249,0.3)', borderRadius: '12px', fontWeight: 700, color: '#0C4044', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+  style={{ padding: '11px 28px', background: '#FFFFFF', border: '1px solid rgba(12,64,68,0.22)', borderRadius: '12px', fontWeight: 800, color: '#0C4044', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: 'none' }}>
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2">
     <rect x="3" y="10" width="6" height="10" rx="1"/>
     <rect x="9" y="4" width="6" height="16" rx="1"/>
@@ -2742,7 +2760,7 @@ setOrderPopupState({
   Admin Hierarchy
 </button>
             <button onClick={() => setShowForm(!showForm)} className="sa-grad-btn"
-              style={{ padding: '11px 28px', background: 'linear-gradient(90deg,#BDCFCE,#0C4044)', border: 'none', borderRadius: '12px', fontWeight: 800, color: '#FDFDFC', fontSize: '14px', cursor: 'pointer' }}>
+              style={{ padding: '11px 28px', background: '#0C4044', border: '1px solid #0C4044', borderRadius: '12px', fontWeight: 800, color: '#FFFFFF', fontSize: '14px', cursor: 'pointer', boxShadow: 'none' }}>
               {showForm ? 'Cancel' : '+ Create Admin'}
             </button>
           </div>
@@ -2783,7 +2801,7 @@ setOrderPopupState({
                     background: 'rgba(204,168,129,0.15)', border: '1px solid rgba(204,168,129,0.4)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 2v4M8 6h8l3 5-3 9H8l-3-9 3-5z"/>
                       <path d="M9.5 12c0-1.1.9-2 2.5-2s2.5 1 2.5 2-1.5 1.5-2.5 2-2.5.9-2.5 2 1.1 2 2.5 2 2.5-.9 2.5-2"/>
                     </svg>
@@ -2826,7 +2844,7 @@ setOrderPopupState({
               {/* Date — full width */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: subtext, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={subtext} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                   </svg>
                   Date *
@@ -2847,7 +2865,7 @@ setOrderPopupState({
                 {/* 22K */}
                 <div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#CCA881', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/>
                     </svg>
                     Gold 22K (₹)
@@ -2871,7 +2889,7 @@ setOrderPopupState({
                 {/* 24K */}
                 <div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#CCA881', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/>
                     </svg>
                     Gold 24K (₹)
@@ -2894,8 +2912,8 @@ setOrderPopupState({
 
                 {/* Silver */}
                 <div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#BDCFCE', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#BDCFCE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#53615F', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/>
                     </svg>
                     Silver 999 (₹)
@@ -2905,12 +2923,12 @@ setOrderPopupState({
                     placeholder="e.g. 225"
                     value={rateForm.silver_999}
                     onChange={e => setRateForm({ ...rateForm, silver_999: e.target.value })}
-                    style={{ width: '100%', background: inpBg, border: `1px solid rgba(192,192,192,0.4)`, borderRadius: '12px', padding: '13px 16px', color: '#BDCFCE', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                    style={{ width: '100%', background: inpBg, border: `1px solid rgba(192,192,192,0.4)`, borderRadius: '12px', padding: '13px 16px', color: '#53615F', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
                     onFocus={e => e.target.style.borderColor = '#BDCFCE'}
                     onBlur={e => e.target.style.borderColor = 'rgba(192,192,192,0.4)'}
                   />
                   {rateForm.silver_999 && (
-                    <div style={{ color: '#BDCFCE', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
+                    <div style={{ color: '#53615F', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
                       1gm = ₹{parseFloat(rateForm.silver_999).toFixed(2)}
                     </div>
                   )}
@@ -2968,7 +2986,7 @@ setOrderPopupState({
                 <div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#E7EDEC', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E7EDEC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#E7EDEC"/>
+                      <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#53615F"/>
                     </svg>
                     Platinum 92 (₹)
                   </label>
@@ -3051,7 +3069,7 @@ setOrderPopupState({
 {showAddProduct && (
   <div onClick={() => setShowAddProduct(false)} style={{ position:'fixed', inset:0, background:'rgba(17,24,23,0.88)', backdropFilter:'blur(12px)', zIndex:1400, display:'flex', alignItems:'center', justifyContent:'center' }}>
     <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border:'1px solid rgba(204,168,129,0.35)', borderRadius:'24px', width:'96%', maxWidth:'620px', maxHeight:'92vh', overflowY:'auto', padding:'32px', boxShadow:'0 32px 90px rgba(17,24,23,0.8)', animation:'fadeIn 0.25s ease' }}>
-      
+
       {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
@@ -3308,7 +3326,7 @@ setOrderPopupState({
   <div onClick={() => setPreviewImageIdx(null)} style={{ position:'fixed', inset:0, background:'rgba(17,24,23,0.95)', backdropFilter:'blur(16px)', zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center' }}>
     <div onClick={e => e.stopPropagation()} style={{ position:'relative', maxWidth:'90vw', maxHeight:'90vh' }}>
       <img src={productPreviewUrls[previewImageIdx]} alt="preview" style={{ maxWidth:'100%', maxHeight:'85vh', objectFit:'contain', borderRadius:'16px', border:'1px solid rgba(204,168,129,0.3)' }} />
-      
+
       {/* Left Arrow */}
       {previewImageIdx > 0 && (
         <button onClick={() => setPreviewImageIdx(i => i - 1)}
@@ -3323,7 +3341,7 @@ setOrderPopupState({
           ›
         </button>
       )}
-      
+
       {/* Counter */}
       <div style={{ position:'absolute', bottom:'-36px', left:'50%', transform:'translateX(-50%)', color:'rgba(253,253,252,0.6)', fontSize:'12px', fontWeight:600 }}>
         {previewImageIdx + 1} / {productPreviewUrls.length}
@@ -3352,7 +3370,7 @@ setOrderPopupState({
                   </div>
                   <div>
                     <div style={{ color: '#C92035', fontWeight: 800, fontSize: '14px' }}>TODAY'S BIRTHDAYS</div>
-                    <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                    <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
                   </div>
                 </div>
                 <button
@@ -3369,7 +3387,7 @@ setOrderPopupState({
               <div className="modal-scroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {birthdayList.length === 0 ? (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: subtext, padding: '50px 0', fontSize: '14px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={subtext} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 21h16v-7a4 4 0 00-4-4H8a4 4 0 00-4 4v7z"/>
                       <path d="M12 10V6"/>
                     </svg>
@@ -3400,7 +3418,7 @@ setOrderPopupState({
                         </div>
                         <div style={{ color: text, fontWeight: 700, fontSize: '14px' }}>{m.first_name} {m.last_name || ''}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: subtext, fontSize: '11px', marginTop: '3px' }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={subtext} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M4 21h16v-7a4 4 0 00-4-4H8a4 4 0 00-4 4v7z"/><path d="M12 10V6"/>
                           </svg>
                           {new Date(m._dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long' })}
@@ -3422,13 +3440,13 @@ setOrderPopupState({
               <div style={{ flexShrink: 0, padding: '22px 28px', borderBottom: '1px solid rgba(204,168,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(204,168,129,0.15)', border: '1px solid rgba(204,168,129,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="15" r="6"/><path d="M9 9l3-6 3 6" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
                     <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '14px' }}>TODAY'S ANNIVERSARIES</div>
-                    <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                    <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
                   </div>
                 </div>
                 <button
@@ -3445,7 +3463,7 @@ setOrderPopupState({
               <div className="modal-scroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {anniversaryList.length === 0 ? (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: subtext, padding: '50px 0', fontSize: '14px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={subtext} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="15" r="6"/><path d="M9 9l3-6 3 6"/>
                     </svg>
                     No anniversaries today
@@ -3475,7 +3493,7 @@ setOrderPopupState({
                         </div>
                         <div style={{ color: text, fontWeight: 700, fontSize: '14px' }}>{m.first_name} {m.last_name || ''}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: subtext, fontSize: '11px', marginTop: '3px' }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={subtext} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="15" r="6"/><path d="M9 9l3-6 3 6"/>
                           </svg>
                           {new Date(m._ann).toLocaleDateString('en-IN', { day: '2-digit', month: 'long' })}
@@ -3505,7 +3523,7 @@ setOrderPopupState({
                   </div>
                   <div>
                     <div style={{ color: '#BB8958', fontWeight: 800, fontSize: '14px' }}>WORK ANNIVERSARIES</div>
-                    <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                    <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
                   </div>
                 </div>
                 <button
@@ -3522,7 +3540,7 @@ setOrderPopupState({
               <div className="modal-scroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {joinDateList.length === 0 ? (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: subtext, padding: '50px 0', fontSize: '14px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={subtext} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M8 4h8v6a4 4 0 01-8 0V4z"/><path d="M12 14v3"/>
                     </svg>
                     No work anniversaries today
@@ -3579,7 +3597,7 @@ setOrderPopupState({
                   <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(187,137,88,0.15)', border: '1px solid rgba(187,137,88,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>📢</div>
                   <div>
                     <div style={{ color: '#BB8958', fontWeight: 800, fontSize: '15px' }}>SEND ANNOUNCEMENT</div>
-                    <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>Review & send the wish</div>
+                    <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>Review & send the wish</div>
                   </div>
                 </div>
                 <button onClick={() => setShowSpecialAnn(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>✕ Close</button>
@@ -3621,7 +3639,7 @@ setOrderPopupState({
                 <label style={{ display: 'block', color: subtext, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' }}>Send To</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                   {[
-                    { key: 'admin', label: '🛡️ Admin', color: '#BDCFCE' },
+                    { key: 'admin', label: '🛡️ Admin', color: '#53615F' },
                     { key: 'dealer', label: '🏪 Dealer', color: '#0C4044' },
                     { key: 'sub_dealer', label: '🔗 Sub Dealer', color: '#BB8958' },
                     { key: 'promotor', label: '🌟 Promotor', color: '#CCA881' },
@@ -3686,7 +3704,7 @@ try {
   style={{ background: dark ? '#F3F3F0' : '#FDFDFC', border: '1px solid rgba(103,232,249,0.2)', borderRadius: '24px', width: '98%', maxWidth: '1400px', height: '90vh', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
 >
 
-          
+
               <div style={{ flexShrink: 0, padding: '20px 28px', borderBottom: '1px solid rgba(103,232,249,0.1)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
                 <div>
                   <span style={{ color: '#0C4044', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>🏢 Full Organization Hierarchy</span>
@@ -3694,7 +3712,7 @@ try {
   <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
     {[
       { label: 'Super Admin', roleKey: 'super_admin', count: 1, color: '#CCA881' },
-      { label: 'Admins', roleKey: 'admin', count: totalStats.admins, color: '#BDCFCE' },
+      { label: 'Admins', roleKey: 'admin', count: totalStats.admins, color: '#53615F' },
       { label: 'Dealers', roleKey: 'dealer', count: totalStats.dealers, color: '#0C4044' },
       { label: 'Sub Dealers', roleKey: 'sub_dealer', count: totalStats.subDealers, color: '#BB8958' },
       { label: 'Promotors', roleKey: 'promotor', count: totalStats.promotors, color: '#CCA881' },
@@ -3814,7 +3832,7 @@ try {
         {hierarchyFilter && (
           <button
             onClick={() => { setHierarchyFilter(null); setHierarchySearch('') }}
-            style={{ marginBottom: '20px', padding: '8px 18px', background: 'rgba(189,207,206,0.1)', border: '1px solid rgba(189,207,206,0.35)', borderRadius: '10px', color: '#BDCFCE', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+            style={{ marginBottom: '20px', padding: '8px 18px', background: 'rgba(189,207,206,0.1)', border: '1px solid rgba(189,207,206,0.35)', borderRadius: '10px', color: '#53615F', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
           >
             ← Back to Full Tree
           </button>
@@ -3922,7 +3940,7 @@ try {
                 <div style={{ flexShrink: 0, padding: '14px 28px', borderTop: '1px solid rgba(103,232,249,0.08)', display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
                   {[
                     { role: 'Super Admin', color: '#CCA881', emoji: '🛡️' },
-                    { role: 'Admin', color: '#BDCFCE', emoji: '🛡️' },
+                    { role: 'Admin', color: '#53615F', emoji: '🛡️' },
                     { role: 'Dealer', color: '#0C4044', emoji: '🏪' },
                     { role: 'Sub Dealer', color: '#BB8958', emoji: '🔗' },
                     { role: 'Promotor', color: '#CCA881', emoji: '🌟' },
@@ -3959,17 +3977,17 @@ try {
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(204,168,129,0.15)', border: '1px solid rgba(204,168,129,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '15px' }}>TODAY'S METAL RATES</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: subtext, fontSize: '11px', marginTop: '2px' }}>
+                    <div style={{ color: '#0C4044', fontWeight: 900, fontSize: '15px' }}>TODAY'S METAL RATES</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>
                       {dbRateDate ? (
                         <>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={subtext} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                           </svg>
                           {new Date(dbRateDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
@@ -3992,19 +4010,19 @@ try {
 
               {/* Rate Cards */}
               {[
-                { label: 'Gold 22K', color: '#CCA881', rgb: '204,168,129', value: metalPrices.gold22k, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/></svg> },
-                { label: 'Gold 24K', color: '#CCA881', rgb: '204,168,129', value: metalPrices.gold24k, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/></svg> },
-                { label: 'Silver 999', color: '#BDCFCE', rgb: '189,207,206', value: metalPrices.silver, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#BDCFCE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/></svg> },
-                { label: 'Diamond 18K', color: '#D1DFDE', rgb: '209,223,222', value: metalPrices.diamond18k, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#D1DFDE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg> },
+                { label: 'Gold 22K', color: '#8A5A25', rgb: '204,168,129', value: metalPrices.gold22k, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8A5A25" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/></svg> },
+                { label: 'Gold 24K', color: '#8A5A25', rgb: '204,168,129', value: metalPrices.gold24k, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8A5A25" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/></svg> },
+                { label: 'Silver 999', color: '#0C4044', rgb: '12,64,68', value: metalPrices.silver, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/></svg> },
+                { label: 'Diamond 18K', color: '#53615F', rgb: '209,223,222', value: metalPrices.diamond18k, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg> },
                 { label: 'Diamond 22K', color: '#0C4044', rgb: '12,64,68', value: metalPrices.diamond22k, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg> },
-                { label: 'Platinum 92', color: '#E7EDEC', rgb: '231,237,236', value: metalPrices.platinum92, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E7EDEC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#E7EDEC"/></svg> },
+                { label: 'Platinum 92', color: '#53615F', rgb: '231,237,236', value: metalPrices.platinum92, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#53615F"/></svg> },
               ].map(item => (
-                <div key={item.label} style={{ background: `rgba(${item.rgb},0.06)`, border: `1px solid rgba(${item.rgb},0.3)`, borderRadius: '14px', padding: '16px 20px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div key={item.label} style={{ background: '#FDFDFC', border: `1.5px solid rgba(${item.rgb},0.38)`, borderRadius: '14px', padding: '16px 20px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `rgba(${item.rgb},0.15)`, border: `1px solid rgba(${item.rgb},0.35)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</div>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `rgba(${item.rgb},0.10)`, border: `1px solid rgba(${item.rgb},0.42)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</div>
                     <div>
                       <div style={{ color: item.color, fontWeight: 800, fontSize: '13px' }}>{item.label}</div>
-                      <div style={{ color: subtext, fontSize: '10px', marginTop: '2px' }}>per gram</div>
+                      <div style={{ color: '#53615F', fontSize: '11px', fontWeight: 600, marginTop: '3px' }}>per gram</div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -4035,7 +4053,7 @@ try {
 {orderPopupState.visible && orderPopupState.period && orderPopupState.metalKey && (() => {
   if (!hierarchyData) return null
 
-  
+
   const hData = buildHierarchyOrders(orderPopupState.period, orderPopupState.metalKey)
   if (!hData) return null
 
@@ -4222,7 +4240,7 @@ try {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(189,207,206,0.12)' }}>
                 <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'rgba(189,207,206,0.15)', border: '1px solid rgba(189,207,206,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}>📊</div>
                 <div>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#BDCFCE', letterSpacing: '1.5px' }}>{periodLabel} ORDER CHAIN</div>
+                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#53615F', letterSpacing: '1.5px' }}>{periodLabel} ORDER CHAIN</div>
                   <div style={{ fontSize: '9px', color: dark ? '#7A8987' : '#7A8987', marginTop: '2px' }}>Full hierarchy breakdown</div>
                 </div>
               </div>
@@ -4274,7 +4292,7 @@ try {
       overflowX: 'auto',
       padding: '10px 0 14px',
     }}>
-    
+
       <div style={{
         display: 'flex',
         justifyContent: 'center',
@@ -4368,7 +4386,7 @@ try {
               }}>
                 <div>
                   <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '7px' }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
                     </svg>
                     PROFILE UPDATE REQUESTS
@@ -4643,7 +4661,7 @@ try {
                   </div>
                   <div>
                     <div style={{ color: '#BB8958', fontWeight: 800, fontSize: '15px', letterSpacing: '0.05em' }}>SEND ANNOUNCEMENT</div>
-                    <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>Notify selected roles instantly</div>
+                    <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>Notify selected roles instantly</div>
                   </div>
                 </div>
                 <button
@@ -4696,7 +4714,7 @@ try {
                 <label style={{ display: 'block', color: subtext, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' }}>Send To (Select Roles) *</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                   {[
-                    { key: 'admin', label: 'Admin', color: '#BDCFCE', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z"/></svg> },
+                    { key: 'admin', label: 'Admin', color: '#53615F', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z"/></svg> },
                     { key: 'dealer', label: 'Dealer', color: '#0C4044', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="10" width="6" height="10" rx="1"/><rect x="9" y="4" width="6" height="16" rx="1"/><rect x="15" y="13" width="6" height="7" rx="1"/></svg> },
                     { key: 'sub_dealer', label: 'Sub Dealer', color: '#BB8958', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.07 0l2.83-2.83a5 5 0 00-7.07-7.07L11.5 4.5"/><path d="M14 11a5 5 0 00-7.07 0l-2.83 2.83a5 5 0 007.07 7.07L12.5 19.5"/></svg> },
                     { key: 'promotor', label: 'Promotor', color: '#CCA881', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg> },
@@ -4820,7 +4838,7 @@ fetchAnnouncementCount(annData)
               <div style={{
                 flexShrink: 0,
                 padding: '24px 28px',
-                borderBottom: '1px solid rgba(189,207,206,0.15)',
+                borderBottom: '1px solid rgba(12,64,68,0.16)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between'
@@ -4830,23 +4848,23 @@ fetchAnnouncementCount(annData)
                     width: '38px',
                     height: '38px',
                     borderRadius: '10px',
-                    background: 'rgba(189,207,206,0.15)',
-                    border: '1px solid rgba(189,207,206,0.4)',
+                    background: 'rgba(12,64,68,0.08)',
+                    border: '1px solid rgba(12,64,68,0.24)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#BDCFCE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="7" width="20" height="13" rx="2"/>
                       <path d="M2 9l10 6 10-6"/>
                       <path d="M16 3l3 3-3 3"/>
                     </svg>
                   </div>
                   <div>
-                    <div style={{ color: '#BDCFCE', fontWeight: 800, fontSize: '14px' }}>
+                    <div style={{ color: '#0C4044', fontWeight: 900, fontSize: '14px' }}>
                       MY ANNOUNCEMENTS
                     </div>
-                    <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>
+                    <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>
                       {myAnnouncements.length} total sent by Super Admin
                     </div>
                   </div>
@@ -4910,7 +4928,7 @@ fetchAnnouncementCount(annData)
                             padding: '2px 8px',
                             borderRadius: '20px',
                             background: 'rgba(189,207,206,0.15)',
-                            color: '#BDCFCE',
+                            color: '#53615F',
                             border: '1px solid rgba(189,207,206,0.3)'
                           }}>
                             ● NEW
@@ -4952,7 +4970,7 @@ fetchAnnouncementCount(annData)
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexShrink: 0 }}>
                 <div>
-                  <div style={{ color: '#BDCFCE', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>💬 WISHES RECEIVED</div>
+                  <div style={{ color: '#53615F', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>💬 WISHES RECEIVED</div>
                   <div style={{ color: subtext, fontSize: '11px', marginTop: '4px' }}>{replyAnn.title}</div>
                 </div>
                 <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>✕</button>
@@ -4963,7 +4981,7 @@ fetchAnnouncementCount(annData)
                 ) : (annReplies[replyAnn.id] || []).map(r => (
                   <div key={r.id} style={{ background: 'rgba(253,253,252,0.03)', border: '1px solid rgba(189,207,206,0.15)', borderRadius: '12px', padding: '12px 14px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#BDCFCE' }}>{r.replied_by_name}</span>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#53615F' }}>{r.replied_by_name}</span>
                       <span style={{ fontSize: '10px', color: subtext }}>{new Date(r.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
                     </div>
                     <p style={{ margin: 0, fontSize: '13px', color: dark ? '#111817' : '#7A8987' }}>{r.message}</p>
@@ -5193,7 +5211,7 @@ fetchAnnouncementCount(annData)
                 <div>
                   <label style={s.lbl}>Admin ID</label>
                   <div style={{ ...s.inp, opacity: 0.55, cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: '#BDCFCE', fontFamily: 'monospace', fontSize: '13px' }}>
+                    <span style={{ color: '#53615F', fontFamily: 'monospace', fontSize: '13px' }}>
                       BBADM{new Date().getFullYear()}
                     </span>
                     <span style={{ color: '#7A8987', fontSize: '12px' }}>
@@ -5311,29 +5329,36 @@ fetchAnnouncementCount(annData)
         )}
 
         {/* Admins Table */}
-        <div style={s.card}>
-          <p style={s.secHead}>All Admins ({admins.length})</p>
+                <div className="sa-admin-table-card" style={s.card}>
+          <div className="sa-admin-table-top">
+            <p style={{ ...s.secHead, margin: 0, paddingBottom: 0, borderBottom: 0 }}>All Admins ({admins.length})</p>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div className="sa-admin-search">Search admin by name, email, ID...</div>
+              <button type="button" style={{ width: 42, height: 42, borderRadius: 8, border: '1px solid #E0E9E8', background: '#FFFFFF', display: 'grid', placeItems: 'center', cursor: 'pointer', color: '#0C4044', fontWeight: 900 }}>F</button>
+            </div>
+          </div>
           {admins.length === 0 ? (
             <p style={{ color: subtext, textAlign: 'center', padding: '60px 0', fontSize: '15px' }}>No admins yet!</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
                 <thead>
-                  <tr style={{ borderBottom: `1px solid ${inpBorder}` }}>
-                    {['First Name', 'Last Name', 'Email', 'Mobile', 'Admin ID', 'City'].map(h => (
-                      <th key={h} style={{ padding: '14px 16px', textAlign: 'left', color: subtext, fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+                  <tr style={{ borderBottom: '1.5px solid rgba(12,64,68,0.22)' }}>
+                    {['First Name', 'Last Name', 'Email', 'Mobile', 'Admin ID', 'City', 'Actions'].map(h => (
+                      <th key={h} style={{ padding: '14px 16px', textAlign: 'left', color: '#0C4044', fontSize: '13px', fontWeight: 900, whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {admins.map((a, i) => (
-                    <tr key={i} className="sa-tr" style={{ borderBottom: `1px solid ${border}` }}>
-                      <td style={{ padding: '14px 16px', color: text }}>{a.first_name}</td>
-                      <td style={{ padding: '14px 16px', color: text }}>{a.last_name}</td>
-                      <td style={{ padding: '14px 16px', color: subtext }}>{a.email}</td>
-                      <td style={{ padding: '14px 16px', color: subtext }}>{a.mobile_number}</td>
-                      <td style={{ padding: '14px 16px', color: '#BDCFCE', fontFamily: 'monospace' }}>{a.admin_id}</td>
-                      <td style={{ padding: '14px 16px', color: subtext }}>{a.city_name}</td>
+                    <tr key={i} className="sa-tr" style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
+                      <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 700 }}>{a.first_name}</td>
+                      <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 700 }}>{a.last_name}</td>
+                      <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 650 }}>{a.email}</td>
+                      <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 650 }}>{a.mobile_number}</td>
+                      <td style={{ padding: '14px 16px', color: '#111817', fontFamily: 'monospace', fontWeight: 800 }}>{a.admin_id}</td>
+                                            <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 650 }}>{a.city_name}</td>
+                      <td style={{ padding: '10px 16px' }}><button type="button" style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #E0E9E8', background: '#FFFFFF', color: '#0C4044', cursor: 'pointer', fontWeight: 900 }}>...</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -5345,4 +5370,13 @@ fetchAnnouncementCount(annData)
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
 

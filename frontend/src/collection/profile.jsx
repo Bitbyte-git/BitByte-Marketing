@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
-import CustomerNavbar from './CustomerNavbar'
 import CustomerFooter from './CustomerFooter'
 
 function formatDate(dateStr) {
@@ -188,7 +187,6 @@ export default function Profile() {
     return (
       <div className="profile-page">
         <style>{profileStyles}</style>
-        <CustomerNavbar />
         <main className="profile-center">
           <div className="profile-loader" />
           <h2>Loading profile</h2>
@@ -203,7 +201,6 @@ export default function Profile() {
     return (
       <div className="profile-page">
         <style>{profileStyles}</style>
-        <CustomerNavbar />
         <main className="profile-center">
           <h2>Profile Not Available</h2>
           <p>{error}</p>
@@ -254,7 +251,6 @@ export default function Profile() {
   return (
     <div className="profile-page">
       <style>{profileStyles}</style>
-      <CustomerNavbar />
 
       <main className="profile-shell">
         <section className="profile-hero">
@@ -918,3 +914,4 @@ const profileStyles = `
     .profile-actions { flex-direction: column; }
   }
 `
+

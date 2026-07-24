@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
-import CustomerNavbar from './CustomerNavbar'
 import CustomerFooter from '../collection/CustomerFooter'
 
 export async function getCartFromDB() {
@@ -155,7 +154,6 @@ export default function CardSection() {
   return (
     <div className="cart-page">
       <style>{cartStyles}</style>
-      <CustomerNavbar />
 
       <main className="cart-shell">
         <section className="cart-hero">
@@ -715,3 +713,4 @@ const cartStyles = `
     .cart-trust { grid-template-columns: 1fr; }
   }
 `
+

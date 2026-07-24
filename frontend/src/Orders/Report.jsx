@@ -40,16 +40,16 @@ const ROLE_ICONS = {
 }
 
 const ROLE_CFG = {
-  super_admin: { label: 'Super Admin', color: '#ffd700' },
-  admin:       { label: 'Admin',       color: '#22d3ee' },
-  dealer:      { label: 'Dealer',      color: '#4ade80' },
-  sub_dealer:  { label: 'Sub Dealer',  color: '#f59e0b' },
-  promotor:    { label: 'Promotor',    color: '#a78bfa' },
+  super_admin: { label: 'Super Admin', color: '#0E5A57' },
+  admin:       { label: 'Admin',       color: '#0E5A57' },
+  dealer:      { label: 'Dealer',      color: '#2C4D4B' },
+  sub_dealer:  { label: 'Sub Dealer',  color: '#C99A3A' },
+  promotor:    { label: 'Promotor',    color: '#7BA7A3' },
 }
 
 // ── NEW: same status colors as the hierarchy grid — customer order_count base
 // panni backend calculate pannina cascading status (red/orange/yellow/green) ──
-const STATUS_COLOR = { red: '#ef4444', orange: '#f97316', yellow: '#eab308', green: '#22c55e' }
+const STATUS_COLOR = { red: '#B86F74', orange: '#C99A3A', yellow: '#D6B45F', green: '#0E5A57' }
 
 // ── Column labels shown in the breakdown table, based on root type ──
 const COLUMN_MAP = {
@@ -311,7 +311,7 @@ function TrendLineChart({ buckets, color }) {
           x1={padding} x2={width - padding}
           y1={height - padding - f * (height - padding * 2)}
           y2={height - padding - f * (height - padding * 2)}
-          stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+          stroke="rgba(14,90,87,0.10)" strokeWidth="1" />
       ))}
       <path d={areaD} fill="url(#trendFill)" />
       <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" />
@@ -328,16 +328,16 @@ function TrendLineChart({ buckets, color }) {
         <circle key={i} cx={p.x} cy={p.y} r={hoverIdx === i ? 6 : 4} fill={color} style={{ pointerEvents: 'none' }} />
       ))}
       {points.map((p, i) => (
-        <text key={i} x={p.x} y={height - 10} fontSize="11" fill="#94a3b8" textAnchor="middle">{p.label}</text>
+        <text key={i} x={p.x} y={height - 10} fontSize="11" fill="#6B6B6B" textAnchor="middle">{p.label}</text>
       ))}
 
       {/* ── NEW: hover tooltip — amount + order count ── */}
       {hp && (
         <g style={{ pointerEvents: 'none' }}>
           <line x1={hp.x} x2={hp.x} y1={padding} y2={height - padding} stroke={color} strokeOpacity="0.3" strokeDasharray="3 3" />
-          <rect x={Math.min(Math.max(hp.x - 55, 4), width - 114)} y={Math.max(hp.y - 46, 4)} width="110" height="38" rx="8" fill="#0f172a" stroke={color} strokeOpacity="0.5" />
+          <rect x={Math.min(Math.max(hp.x - 55, 4), width - 114)} y={Math.max(hp.y - 46, 4)} width="110" height="38" rx="8" fill="#FFFCF8" stroke={color} strokeOpacity="0.5" />
           <text x={Math.min(Math.max(hp.x - 55, 4), width - 114) + 10} y={Math.max(hp.y - 46, 4) + 16} fontSize="11" fontWeight="700" fill={color}>₹{hp.total.toLocaleString('en-IN')}</text>
-          <text x={Math.min(Math.max(hp.x - 55, 4), width - 114) + 10} y={Math.max(hp.y - 46, 4) + 30} fontSize="10" fill="#94a3b8">{hp.count || 0} orders</text>
+          <text x={Math.min(Math.max(hp.x - 55, 4), width - 114) + 10} y={Math.max(hp.y - 46, 4) + 30} fontSize="10" fill="#6B6B6B">{hp.count || 0} orders</text>
         </g>
       )}
     </svg>
@@ -357,7 +357,7 @@ function nodeColor(node) {
   // customer eppayume fixed green (target illaya). Vera ella roles-um andha
   // node's own status field (backend cascade pannina, customer order_count base panni) follow pannum.
   if (node.type === 'customer') return STATUS_COLOR.green
-  return node.status ? STATUS_COLOR[node.status] : (ROLE_CFG[node.type]?.color || '#94a3b8')
+  return node.status ? STATUS_COLOR[node.status] : (ROLE_CFG[node.type]?.color || '#6B6B6B')
 }
 
 // ── NEW: Hierarchy Grid — same lane-row style as SuperadminHierarchyGrid.
@@ -423,6 +423,7 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
     && nodeIdVal(selectedNode).toString() === idVal.toString()
   return (
     <div
+      className="report-lane-card"
       key={idVal}
       onClick={() => {
         onSelectNode?.(node)                                 // ── NEW: stats filter
@@ -431,12 +432,12 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
       style={{
         minWidth: '176px', maxWidth: '210px', flexShrink: 0,
         cursor: childCount !== null ? 'pointer' : 'default',
-        background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))',
+        background: 'linear-gradient(145deg,#FFFFFF,#FFFCF8)',
         border: `1.5px solid ${c}`, borderRadius: '14px', padding: '13px 16px',
         opacity: isDim ? 0.45 : 1,
         boxShadow: isStatsSelected
-          ? `0 0 0 2px #facc15, 0 10px 22px rgba(0,0,0,0.4)`   // ── NEW: yellow ring for stats-selected
-          : (active ? `0 0 0 1.5px ${c}, 0 10px 22px rgba(0,0,0,0.4)` : 'none'),
+          ? `0 0 0 2px #C99A3A, 0 16px 32px rgba(14,90,87,0.16)`   // ── NEW: yellow ring for stats-selected
+          : (active ? `0 0 0 1.5px ${c}, 0 14px 28px rgba(14,90,87,0.14)` : '0 10px 22px rgba(14,90,87,0.07)'),
         transition: 'opacity .15s ease, box-shadow .15s ease',
       }}
     >
@@ -481,8 +482,8 @@ function LoginStatusPie({ activeCount, inactiveCount, scopeLabel, cardBg, border
   const activeLen = c * activeFrac
 
   return (
-    <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-      <div style={{ fontSize: '11px', fontWeight: 800, color: '#22d3ee', letterSpacing: '1px', alignSelf: 'flex-start' }}>
+    <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+      <div className="report-section-title" style={{ fontSize: '11px', fontWeight: 800, color: '#0E5A57', letterSpacing: '1px', alignSelf: 'flex-start' }}>
         LOGIN STATUS TODAY
       </div>
       <div style={{ fontSize: '11px', color: subtext, alignSelf: 'flex-start', marginTop: '-8px' }}>
@@ -493,9 +494,9 @@ function LoginStatusPie({ activeCount, inactiveCount, scopeLabel, cardBg, border
         <div style={{ color: subtext, fontSize: '13px', padding: '30px 0' }}>No data</div>
       ) : (
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f87171" strokeWidth={stroke} />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#B86F74" strokeWidth={stroke} />
           <circle
-            cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#4ade80" strokeWidth={stroke}
+            cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#0E5A57" strokeWidth={stroke}
             strokeDasharray={`${activeLen} ${c - activeLen}`}
             strokeDashoffset={c / 4}
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
@@ -508,12 +509,12 @@ function LoginStatusPie({ activeCount, inactiveCount, scopeLabel, cardBg, border
 
       <div style={{ display: 'flex', gap: '18px' }}>
         <div onClick={onClickActive} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-          <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#4ade80' }} />
-          <span style={{ color: '#4ade80', fontWeight: 700, fontSize: '12px' }}>Active {activeCount}</span>
+          <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#0E5A57' }} />
+          <span style={{ color: '#0E5A57', fontWeight: 700, fontSize: '12px' }}>Active {activeCount}</span>
         </div>
         <div onClick={onClickInactive} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-          <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#f87171' }} />
-          <span style={{ color: '#f87171', fontWeight: 700, fontSize: '12px' }}>Inactive {inactiveCount}</span>
+          <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#B86F74' }} />
+          <span style={{ color: '#B86F74', fontWeight: 700, fontSize: '12px' }}>Inactive {inactiveCount}</span>
         </div>
       </div>
     </div>
@@ -546,11 +547,11 @@ useEffect(() => {
   return () => clearTimeout(t)
 }, [nodeSearch])
 
-  const bg = '#020617'
-  const text = '#f8fafc'
-  const subtext = '#94a3b8'
-  const border = 'rgba(255,255,255,0.1)'
-  const cardBg = 'rgba(255,255,255,0.03)'
+  const bg = 'linear-gradient(180deg,#E6F1EF 0%,#FFFCF8 38%,#FFFFFF 100%)'
+  const text = '#1F1F1F'
+  const subtext = '#5F6464'
+  const border = 'rgba(14,90,87,0.16)'
+  const cardBg = 'linear-gradient(145deg,rgba(255,255,255,0.96),rgba(255,252,248,0.90))'
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -575,7 +576,7 @@ useEffect(() => {
       .catch(() => {})
   }, [role])
 
-  const cfg = ROLE_CFG[role] || { label: role, color: '#a5f3fc' }
+  const cfg = ROLE_CFG[role] || { label: role, color: '#0E5A57' }
   const availableLevels = DRILL_LEVELS[role] || ['own']
 
   // ── nodes available for the second dropdown (only when level !== 'own') ──
@@ -735,7 +736,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 
   if (loading) {
   return (
-    <div style={{ minHeight: '100vh', background: bg, color: text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', gap: '18px' }}>
+    <div style={{ minHeight: '100vh', background: bg, color: text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Manrope, Segoe UI, system-ui, sans-serif', gap: '18px' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulseText { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
@@ -743,13 +744,13 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
       <div style={{
         width: '46px', height: '46px',
         border: '3px solid rgba(34,211,238,0.15)',
-        borderTop: '3px solid #22d3ee',
+        borderTop: '3px solid #0E5A57',
         borderRadius: '50%',
         animation: 'spin 0.9s linear infinite',
       }} />
       <div style={{
         fontSize: '14px',
-        color: '#94a3b8',
+        color: '#6B6B6B',
         letterSpacing: '0.05em',
         animation: 'pulseText 1.6s ease-in-out infinite',
       }}>
@@ -761,22 +762,37 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 
   if (error) {
     return (
-      <div style={{ minHeight: '100vh', background: bg, color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div style={{ minHeight: '100vh', background: bg, color: '#B86F74', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Manrope, Segoe UI, system-ui, sans-serif' }}>
         {error}
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: bg, color: text, fontFamily: '"Inter",system-ui,sans-serif' }}>
+    <div className="sales-report-page" style={{ minHeight: '100vh', background: bg, color: text, fontFamily: '"Manrope", "Segoe UI", system-ui, sans-serif' }}>
       <style>{`
+        .sales-report-page{position:relative;overflow-x:hidden;}
+        .sales-report-page::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 8% 0%,rgba(230,241,239,.95),transparent 34%),radial-gradient(circle at 92% 8%,rgba(201,154,58,.10),transparent 26%);pointer-events:none;z-index:0;}
+        .sales-report-page > *{position:relative;z-index:1;}
+        .report-topbar{background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(230,241,239,.86),rgba(255,252,248,.96)) !important;border-bottom:1px solid rgba(14,90,87,.14) !important;box-shadow:0 18px 42px rgba(14,90,87,.08);}
+        .report-brand-title{background:linear-gradient(90deg,#D71920,#F05C63,#C99A3A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .report-control,.report-action{min-height:44px !important;border-radius:14px !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 12px 24px rgba(14,90,87,.08) !important;}
+        .print-card{position:relative;overflow:hidden;background:linear-gradient(145deg,#FFFFFF 0%,#FFFCF8 56%,#F2FAF8 100%) !important;border:1px solid rgba(14,90,87,.15) !important;border-radius:22px !important;box-shadow:0 24px 58px rgba(14,90,87,.12),inset 0 1px 0 rgba(255,255,255,.98) !important;}
+        .print-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 8% 0%,rgba(230,241,239,.8),transparent 32%);pointer-events:none;}
+        .print-card > *{position:relative;z-index:1;}
+        .report-kpi-value{color:#1F1F1F;text-shadow:0 8px 20px rgba(14,90,87,.10);}
+        .report-section-title{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:rgba(230,241,239,.88);border:1px solid rgba(14,90,87,.08);color:#0E5A57 !important;font-size:13px !important;font-weight:900 !important;letter-spacing:.06em;text-transform:uppercase;}
+        .report-lane-card{background:linear-gradient(145deg,#FFFFFF,#FFFCF8) !important;border-radius:14px !important;box-shadow:0 14px 30px rgba(14,90,87,.08),inset 0 1px 0 rgba(255,255,255,.96) !important;}
+        .print-table-wrap table{background:rgba(255,255,255,.72);border-radius:14px;overflow:hidden;}
+        .print-table-wrap th{background:rgba(230,241,239,.88) !important;color:#2C4D4B !important;}
+        .print-table-wrap td{color:#1F1F1F !important;border-color:rgba(14,90,87,.10) !important;}
         @media print {
           .no-print { display: none !important; }
-          body { background: #020617 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .print-container { color: #f8fafc !important; background: #020617 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body { background: #FFFCF8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .print-container { color: #1F1F1F !important; background: #FFFCF8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .print-card {
-            background: rgba(255,255,255,0.03) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
+            background: #FFFFFF !important;
+            border: 1px solid rgba(14,90,87,0.16) !important;
             box-shadow: none !important;
             break-inside: avoid;
             page-break-inside: avoid;
@@ -799,7 +815,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
         }
       `}</style>
       {/* Navbar */}
-      <div className="no-print" style={{ padding: '18px 40px', borderBottom: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="no-print report-topbar" style={{ padding: '18px 40px', borderBottom: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={() => navigate(-1)}
@@ -815,7 +831,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
               background: 'linear-gradient(90deg, #dc2626, #ef4444, #fca5a5)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              fontFamily: '"Inter", sans-serif',
+              fontFamily: '"Manrope", "Segoe UI", system-ui, sans-serif',
             }}>
               TEAM369
             </div>
@@ -834,10 +850,10 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
     const val = e.target.value
     startTransition(() => setSelectedLevel(val))
   }}
-  style={{ background: cardBg, color: text, border: `1px solid ${border}`, borderRadius: '10px', padding: '8px 12px', fontSize: '13px', transition: 'border-color 0.15s ease', willChange: 'contents' }}
+  className="report-control" style={{ background: cardBg, color: text, border: `1px solid ${border}`, borderRadius: '10px', padding: '8px 12px', fontSize: '13px', transition: 'border-color 0.15s ease', willChange: 'contents' }}
 >
             {availableLevels.map(lvl => (
-              <option key={lvl} value={lvl} style={{ background: '#0f172a' }}>{LEVEL_LABELS[lvl]}</option>
+              <option key={lvl} value={lvl} style={{ background: '#FFFCF8' }}>{LEVEL_LABELS[lvl]}</option>
             ))}
           </select>
 
@@ -857,14 +873,14 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
       onFocus={() => { setShowNodeDropdown(true); setNodeSearch('') }}
       onBlur={() => setTimeout(() => setShowNodeDropdown(false), 150)}
       placeholder={`Search ${LEVEL_LABELS[selectedLevel]} by ID, name, phone...`}
-      style={{ background: cardBg, color: text, border: `1px solid ${border}`, borderRadius: '10px', padding: '8px 12px', fontSize: '13px', minWidth: '220px', outline: 'none', boxSizing: 'border-box' }}
+      className="report-control" style={{ background: cardBg, color: text, border: `1px solid ${border}`, borderRadius: '10px', padding: '8px 12px', fontSize: '13px', minWidth: '220px', outline: 'none', boxSizing: 'border-box' }}
       onFocusCapture={e => e.target.style.borderColor = cfg.color}
     />
     {showNodeDropdown && (
       <div style={{
         position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 50,
-        background: '#0f172a', border: `1px solid ${border}`, borderRadius: '10px',
-        maxHeight: '260px', overflowY: 'auto', boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+        background: '#FFFCF8', border: `1px solid ${border}`, borderRadius: '10px',
+        maxHeight: '260px', overflowY: 'auto', boxShadow: '0 18px 34px rgba(14,90,87,0.16)',
       }}>
         {filteredNodes.length === 0 ? (
           <div style={{ padding: '12px', color: subtext, fontSize: '13px', textAlign: 'center' }}>No matches found</div>
@@ -880,7 +896,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
                 setNodeSearch('')
               }}
               style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: `1px solid ${border}` }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,241,239,0.72)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               <div style={{ color: cfg.color, fontFamily: 'monospace', fontSize: '11px' }}>{id}</div>
@@ -902,15 +918,15 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 )}
 
          <button onClick={handleExportExcel}
-  style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', color: '#4ade80', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2">
+  style={{ background: 'linear-gradient(145deg,rgba(14,90,87,0.12),rgba(230,241,239,0.74))', border: '1px solid rgba(14,90,87,0.28)', color: '#0E5A57', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E5A57" strokeWidth="2">
     <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
   Export Excel
 </button>
           <button onClick={handleExportPDF}
-  style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2">
+  style={{ background: 'linear-gradient(145deg,rgba(184,111,116,0.12),rgba(255,252,248,0.88))', border: '1px solid rgba(184,111,116,0.28)', color: '#B86F74', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B86F74" strokeWidth="2">
     <path d="M6 3h9l5 5v13H6z" strokeLinejoin="round"/>
     <path d="M15 3v5h5" strokeLinejoin="round"/>
     <path d="M9 13h6M9 16h6M9 10h2" strokeLinecap="round"/>
@@ -946,22 +962,22 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '28px' }}>
            <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
     <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total sales</div>
-    <div style={{ fontSize: '24px', fontWeight: 800, lineHeight: 1.2, letterSpacing: 'normal', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>₹{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+    <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900, lineHeight: 1.2, letterSpacing: 'normal', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>₹{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
   </div>
             <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
               <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total orders</div>
-              <div style={{ fontSize: '24px', fontWeight: 800 }}>{totalOrders}</div>
+              <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900 }}>{totalOrders}</div>
             </div>
             <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
               <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Customers with orders</div>
-              <div style={{ fontSize: '24px', fontWeight: 800 }}>{totalCustomers}</div>
+              <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900 }}>{totalCustomers}</div>
             </div>
           </div>
 
           {/* Trend chart */}
           <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '20px 24px', marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              <div className="report-section-title" style={{ fontSize: '13px', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 Sales trend
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
@@ -969,7 +985,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
                   <button key={r} onClick={() => setTimeRange(r)}
                     style={{
                       background: timeRange === r ? cfg.color : 'transparent',
-                      color: timeRange === r ? '#020617' : subtext,
+                      color: timeRange === r ? '#FFFCF8' : subtext,
                       border: `1px solid ${timeRange === r ? cfg.color : border}`,
                       borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer'
                     }}>
@@ -983,7 +999,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 
           {/* Breakdown grid — same lane style as the hierarchy grid page */}
           <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '24px 28px' }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '18px' }}>
+            <div className="report-section-title" style={{ fontSize: '13px', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '18px' }}>
               Network breakdown
             </div>
             <HierarchyBreakdownGrid

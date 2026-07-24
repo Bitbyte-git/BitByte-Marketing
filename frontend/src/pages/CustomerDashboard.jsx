@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import CustomerFooter from "../collection/CustomerFooter";
-import CustomerNavbar from "../collection/CustomerNavbar";
 
 const API_ORIGIN = (api.defaults.baseURL || "").replace(/\/api\/?$/, "");
 
@@ -1959,8 +1958,6 @@ export default function CustomerDashboard() {
           }
         }
       `}</style>
-
-      <CustomerNavbar />
       <HomeBannerSlider />
       <div
         className="store-category-card"
@@ -2118,4 +2115,5 @@ export default function CustomerDashboard() {
     </div>
   );
 }
+
 

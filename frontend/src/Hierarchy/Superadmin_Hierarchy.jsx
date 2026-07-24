@@ -67,6 +67,23 @@ const IconBack = ({ color, size = 14 }) => (
     <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
   </svg>
 )
+const IconMinus = ({ color, size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12h14" />
+  </svg>
+)
+const IconPlus = ({ color, size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 5v14" /><path d="M5 12h14" />
+  </svg>
+)
+const IconFit = ({ color, size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M16 3h3a2 2 0 0 1 2 2v3" />
+    <path d="M8 21H5a2 2 0 0 1-2-2v-3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+    <path d="M9 12h6" />
+  </svg>
+)
 const IconBuilding = ({ color, size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="4" y="2" width="16" height="20"/><line x1="9" y1="6" x2="9" y2="6"/><line x1="15" y1="6" x2="15" y2="6"/>
@@ -83,12 +100,12 @@ const IconChevronDown = ({ color, size = 10 }) => (
 // ── ROLE CONFIG — every role has ONE fixed color. This color is used for the node's
 // border AND for the curvy connector line that leads INTO that role's nodes. ──
 const ROLE_CFG = {
-  super_admin: { color: '#a78bfa', Icon: IconShield, label: 'SUPER ADMIN' },
-  admin: { color: '#22c55e', Icon: IconShield, label: 'ADMIN', idKey: 'admin_id' },
-  dealer: { color: '#38bdf8', Icon: IconStore, label: 'DEALER', idKey: 'dealer_id' },
-  sub_dealer: { color: '#ef4444', Icon: IconLink, label: 'SUB DEALER', idKey: 'sub_dealer_id' },
-  promotor: { color: '#d4a017', Icon: IconStar, label: 'PROMOTOR', idKey: 'promotor_id' },
-  customer: { color: '#fb7185', Icon: IconUser, label: 'CUSTOMER', idKey: 'customer_id' },
+  super_admin: { color: '#7C3AED', Icon: IconShield, label: 'SUPER ADMIN' },
+  admin: { color: '#16A34A', Icon: IconShield, label: 'ADMIN', idKey: 'admin_id' },
+  dealer: { color: '#0284C7', Icon: IconStore, label: 'DEALER', idKey: 'dealer_id' },
+  sub_dealer: { color: '#DC2626', Icon: IconLink, label: 'SUB DEALER', idKey: 'sub_dealer_id' },
+  promotor: { color: '#CA8A04', Icon: IconStar, label: 'PROMOTOR', idKey: 'promotor_id' },
+  customer: { color: '#DB2777', Icon: IconUser, label: 'CUSTOMER', idKey: 'customer_id' },
 }
 const CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer' }
 const CHILD_KEY = { admin: 'dealers', dealer: 'sub_dealers', sub_dealer: 'promotors', promotor: 'customers' }
@@ -219,22 +236,20 @@ function showChainPopup(anchorEl, ancestors, current, dark, text, subtext, super
     document.head.appendChild(s)
   }
 
-  const isDark = dark
+  const isDark = false
   el.style.cssText = `
     position:fixed; z-index:9999;
-    background:${isDark ? 'rgba(5,10,20,0.97)' : 'rgba(248,250,252,0.98)'};
-    border:1px solid ${isDark ? 'rgba(34,197,94,0.22)' : 'rgba(37,99,235,0.18)'};
+    background:#FFFFFF;
+    border:1.5px solid rgba(12,64,68,0.18);
     border-radius:20px; padding:20px;
-    box-shadow:${isDark
-      ? '0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(34,197,94,0.06), inset 0 1px 0 rgba(255,255,255,0.04)'
-      : '0 32px 80px rgba(0,0,0,0.15), 0 0 0 1px rgba(37,99,235,0.05)'};
+    box-shadow:0 24px 60px rgba(7,59,63,0.16), 0 0 0 1px rgba(12,64,68,0.05);
     animation:acpSlideIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
     min-width:200px; max-width:260px;
     max-height:85vh; overflow-y:auto; overflow-x:hidden;
     scroll-behavior:smooth; scrollbar-width:thin;
     scroll-padding:8px;
     -webkit-overflow-scrolling:touch;
-    backdrop-filter:blur(28px);
+    backdrop-filter:none;
     font-family:'Inter',system-ui,sans-serif;
   `
 
@@ -259,11 +274,11 @@ function showChainPopup(anchorEl, ancestors, current, dark, text, subtext, super
         ${arrowHtml}
         <div style="
           border-radius:14px;padding:14px 16px;
-          background:${isDark ? `linear-gradient(135deg,rgba(${saRgb},0.09),rgba(${saRgb},0.04))` : `linear-gradient(135deg,rgba(${saRgb},0.14),rgba(${saRgb},0.06))`};
+          background:#FFFFFF;
           border:1px solid rgba(${saRgb},0.3);
           position:relative;overflow:hidden;
         ">
-          <div style="position:absolute;top:-10px;right:-10px;width:70px;height:70px;background:radial-gradient(circle,rgba(${saRgb},0.14),transparent 70%);pointer-events:none;"></div>
+          
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
             <div style="width:30px;height:30px;border-radius:9px;background:${saColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(${saRgb},0.35);">${iconSvg(ICON_PATHS.shield, '#1a1030', 15)}</div>
             <div>
@@ -294,16 +309,14 @@ function showChainPopup(anchorEl, ancestors, current, dark, text, subtext, super
       ${arrowHtml}
       <div style="
         border-radius:14px;padding:14px 16px;
-        background:${isLast
-        ? `linear-gradient(135deg,rgba(${rc},0.13),rgba(${rc},0.05))`
-        : `rgba(${rc},0.04)`};
+        background:#FFFFFF;
         border:${isLast
         ? `1.5px solid rgba(${rc},0.55)`
         : `1px solid rgba(${rc},0.16)`};
         position:relative;overflow:hidden;
         ${isLast ? `animation:acpGlow 3s ease-in-out infinite;` : ''}
       ">
-        ${isLast ? `<div style="position:absolute;top:-15px;right:-15px;width:80px;height:80px;background:radial-gradient(circle,rgba(${rc},0.18),transparent 70%);pointer-events:none;"></div>` : ''}
+        
 
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
           <div style="width:30px;height:30px;border-radius:9px;background:${cfg.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(${rc},0.3);">${iconSvg(ICON_PATHS[iconKey], '#020617', 15)}</div>
@@ -338,7 +351,7 @@ function showChainPopup(anchorEl, ancestors, current, dark, text, subtext, super
   }).join('')
 
   el.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid ${isDark ? 'rgba(34,197,94,0.1)' : 'rgba(37,99,235,0.08)'};">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(12,64,68,0.12);">
       <div style="display:flex;align-items:center;gap:9px;">
         <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#22c55e,#38bdf8);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(34,197,94,0.4);">${iconSvg(ICON_PATHS.link, '#020617', 13)}</div>
         <div>
@@ -358,7 +371,7 @@ function showChainPopup(anchorEl, ancestors, current, dark, text, subtext, super
 
     ${itemsHtml}
 
-    <div style="margin-top:14px;padding-top:12px;border-top:1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)'};">
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(12,64,68,0.10);">
       <div style="font-size:9px;color:${isDark ? '#334155' : '#cbd5e1'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network • Hierarchy View</div>
     </div>
   `
@@ -437,7 +450,7 @@ const isOpen = openMap[parentKey] === node.id
   }}
   className="otree-btn otree-btn-sales"
 >
-  <IconChart color="#22c56e" /> SALES ({node.order_count ?? 0})
+  <IconChart color="#0284C7" /> SALES ({node.order_count ?? 0})
 </button>
         </div>
 
@@ -476,7 +489,7 @@ const isOpen = openMap[parentKey] === node.id
 
 export default function SuperadminHierarchy() {
   const navigate = useNavigate()
-  const [dark] = useState(true)
+  const [dark] = useState(false)
   const [hierarchyData, setHierarchyData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState(null)
@@ -498,6 +511,15 @@ const scrollAreaRef = useRef(null)
 const [levelTops, setLevelTops] = useState({})
 const [adminAnchors, setAdminAnchors] = useState([])
 const [superAdminAnchor, setSuperAdminAnchor] = useState(null)
+const [treeZoom, setTreeZoom] = useState(0.72)
+const zoomPercent = Math.round(treeZoom * 100)
+const updateTreeZoom = (nextZoom) => {
+  setTreeZoom(Math.min(1.4, Math.max(0.4, Number(nextZoom.toFixed(2)))))
+}
+const zoomOut = () => updateTreeZoom(treeZoom - 0.1)
+const zoomIn = () => updateTreeZoom(treeZoom + 0.1)
+const resetZoom = () => updateTreeZoom(0.72)
+const fitHierarchy = () => updateTreeZoom(0.5)
 
 useLayoutEffect(() => {
   const wrapper = treeWrapperRef.current
@@ -553,13 +575,13 @@ useLayoutEffect(() => {
     scrollEl?.removeEventListener('scroll', measure)
     window.removeEventListener('resize', measure)
   }
-}, [hierarchyData, filter, debouncedSearch, openMap])
+}, [hierarchyData, filter, debouncedSearch, openMap, treeZoom])
 
-  const text = '#f8fafc'
-  const subtext = '#94a3b8'
-  const inpBg = 'rgba(255,255,255,0.05)'
-  const inpBorder = '#374151'
-  const border = 'rgba(255,255,255,0.1)'
+  const text = '#111817'
+  const subtext = '#53615F'
+  const inpBg = '#FFFFFF'
+  const inpBorder = '#BDCFCE'
+  const border = 'rgba(12,64,68,0.18)'
   const superAdminEmail = localStorage.getItem('email') || ''
 
   useEffect(() => {
@@ -656,25 +678,25 @@ useLayoutEffect(() => {
   ] : []
 
   return (
-    <div style={{ minHeight: '100vh', background: '#020617', color: text, fontFamily: '"Inter",system-ui,sans-serif', padding: '28px 32px' }}>
+    <div style={{ minHeight: '100vh', background: '#FFFFFF', color: text, fontFamily: '"Inter",system-ui,sans-serif', padding: '28px 32px' }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
         .otree-node-wrap{display:flex;flex-direction:column;align-items:center;}
         .otree-card{
-          background:rgba(255,255,255,0.03); border:1px solid var(--nc); border-radius:12px; padding:12px 16px;
+          background:#FFFFFF; border:2px solid var(--nc); border-radius:12px; padding:12px 16px;
           min-width:168px; max-width:210px; cursor:pointer; position:relative; transition:all .25s ease;
         }
-        .otree-card:hover{ transform:translateY(-3px); box-shadow:0 8px 22px rgba(0,0,0,0.35); }
-        .otree-badge{ display:inline-flex; align-items:center; gap:5px; font-size:9px; font-weight:700; padding:2px 8px; border-radius:20px; margin-bottom:8px; color:var(--nc); border:1px solid var(--nc); }
-        .otree-id{ font-family:monospace; font-size:10px; margin-bottom:4px; word-break:break-all; }
-        .otree-name{ font-weight:700; font-size:13px; margin-bottom:6px; }
-        .otree-sub{ display:flex; align-items:center; gap:4px; font-size:11px; margin-bottom:2px; }
+        .otree-card:hover{ transform:translateY(-3px); box-shadow:0 14px 30px rgba(7,59,63,0.16); }
+        .otree-badge{ display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:900; padding:2px 8px; border-radius:20px; margin-bottom:8px; color:var(--nc); background:#FFFFFF; border:1.5px solid var(--nc); }
+        .otree-id{ font-family:monospace; font-size:11px; font-weight:800; margin-bottom:6px; word-break:break-all; }
+        .otree-name{ font-weight:900; font-size:14px; margin-bottom:8px; line-height:1.35; }
+        .otree-sub{ display:flex; align-items:center; gap:4px; font-size:12px; font-weight:650; margin-bottom:4px; }
         .otree-actions{ margin-top:8px; display:flex; gap:6px; }
-        .otree-btn{ flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:3px 0; font-size:9px; font-weight:700; background:transparent; border:1px solid var(--nc); border-radius:6px; color:var(--nc); cursor:pointer; }
-        .otree-btn-sales{ border-color:#22c55e; color:#22c55e; }
+        .otree-btn{ flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:5px 0; font-size:10px; font-weight:800; background:#FFFFFF; border:1.5px solid var(--nc); border-radius:8px; color:var(--nc); cursor:pointer; }
+        .otree-btn-sales{ border-color:#0284C7; color:#0284C7; }
         .otree-toggle{ position:absolute; top:8px; right:10px; transition:transform .25s ease; }
-        .otree-count{ position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); color:#000; font-size:9px; font-weight:800; padding:1px 7px; border-radius:20px; white-space:nowrap; }
+        .otree-count{ position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); color:#FFFFFF; font-size:10px; font-weight:900; padding:2px 8px; border-radius:20px; white-space:nowrap; text-shadow:0 1px 1px rgba(0,0,0,0.18); }
 
         .otree-children{ display:flex; justify-content:center; align-items:flex-start; position:relative; padding-top:28px; }
         .otree-children::before{ content:''; position:absolute; top:0; left:50%; border-left:2px solid var(--lc); width:0; height:28px; }
@@ -689,14 +711,18 @@ useLayoutEffect(() => {
          .otree-children-root::before{ display:none; }
         .otree-children-root > .otree-item::before,
         .otree-children-root > .otree-item::after{ display:none; }
-
+        .hierarchy-zoom-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;min-width:34px;padding:0 10px;border-radius:10px;border:1px solid rgba(12,64,68,.24);background:rgba(255,255,255,.92);color:#0C4044;font-size:12px;font-weight:900;cursor:pointer;transition:all .2s ease;box-shadow:0 8px 18px rgba(7,59,63,.08);}
+        .hierarchy-zoom-btn:hover{background:#E6F1EF;border-color:rgba(12,64,68,.42);transform:translateY(-1px);}
+        .hierarchy-zoom-btn:disabled{opacity:.42;cursor:not-allowed;transform:none;}
+        .hierarchy-zoom-chip{height:34px;min-width:62px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:#0C4044;border:1px solid rgba(12,64,68,.24);color:#FFFFFF;font-size:12px;font-weight:900;}
+        .hierarchy-floating-zoom{position:absolute;top:16px;right:18px;z-index:80;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.94);border:1px solid rgba(12,64,68,.16);border-radius:16px;padding:8px;box-shadow:0 18px 40px rgba(7,59,63,.14);backdrop-filter:blur(14px);}
       `}</style>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <IconBuilding color="#a5f3fc" />
-            <span style={{ color: '#a5f3fc', fontSize: '16px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <IconBuilding color="#0C4044" />
+            <span style={{ color: '#0C4044', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Full Organization Hierarchy
             </span>
           </div>
@@ -704,7 +730,7 @@ useLayoutEffect(() => {
             <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: `${ROLE_CFG.super_admin.color}22`, border: `1px solid ${ROLE_CFG.super_admin.color}55`, borderRadius: '20px', padding: '4px 14px' }}>
                 <span style={{ color: ROLE_CFG.super_admin.color, fontWeight: 800, fontSize: '13px' }}>1</span>
-                <span style={{ color: subtext, fontSize: '11px' }}>Super Admin</span>
+                <span style={{ color: subtext, fontSize: '12px', fontWeight: 650 }}>Super Admin</span>
               </div>
               {statPills.map(s => {
                 const color = ROLE_CFG[s.roleKey].color
@@ -713,14 +739,14 @@ useLayoutEffect(() => {
                   <div key={s.label} onClick={() => setFilter(isActive ? null : s.roleKey)}
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', background: isActive ? `${color}33` : `${color}14`, border: `1px solid ${isActive ? color : color + '44'}`, borderRadius: '20px', padding: '4px 14px', cursor: 'pointer', transition: 'all 0.25s ease' }}>
                     <span style={{ color, fontWeight: 800, fontSize: '13px' }}>{s.count}</span>
-                    <span style={{ color: subtext, fontSize: '11px' }}>{s.label}</span>
+                    <span style={{ color: subtext, fontSize: '12px', fontWeight: 650 }}>{s.label}</span>
                   </div>
                 )
               })}
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
               <IconSearch color={subtext} />
@@ -733,15 +759,31 @@ useLayoutEffect(() => {
               </button>
             )}
           </div>
-          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '10px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
-            <IconBack color="#f87171" /> Back
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.94)', border: '1px solid rgba(12,64,68,0.16)', borderRadius: 14, padding: 6, boxShadow: '0 12px 28px rgba(7,59,63,0.12)' }}>
+            <button className="hierarchy-zoom-btn" onClick={zoomOut} disabled={treeZoom <= 0.4} title="Zoom out"><IconMinus color="currentColor" /></button>
+            <span className="hierarchy-zoom-chip">{zoomPercent}%</span>
+            <button className="hierarchy-zoom-btn" onClick={zoomIn} disabled={treeZoom >= 1.4} title="Zoom in"><IconPlus color="currentColor" /></button>
+            <button className="hierarchy-zoom-btn" onClick={fitHierarchy} title="Fit more hierarchy on screen"><IconFit color="currentColor" /> Fit</button>
+            <button className="hierarchy-zoom-btn" onClick={resetZoom} title="Reset hierarchy zoom">Reset</button>
+          </div>
+          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(220,38,38,0.35)', color: '#DC2626', borderRadius: '10px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
+            <IconBack color="#DC2626" /> Back
           </button>
         </div>
       </div>
 
-     <div ref={treeWrapperRef} style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${border}`, borderRadius: '20px', padding: '28px 0', overflow: 'hidden', minHeight: '100vh', position: 'relative' }}>
+     <div ref={treeWrapperRef} style={{ background: '#FFFFFF', border: `1.5px solid ${border}`, borderRadius: '20px', padding: '28px 0', overflow: 'hidden', minHeight: '100vh', position: 'relative', boxShadow: '0 18px 42px rgba(7,59,63,0.08)' }}>
+        {!loading && hierarchyData && !debouncedSearch && !filter && (
+          <div className="hierarchy-floating-zoom">
+            <button className="hierarchy-zoom-btn" onClick={zoomOut} disabled={treeZoom <= 0.4} title="Zoom out"><IconMinus color="currentColor" /></button>
+            <span className="hierarchy-zoom-chip">{zoomPercent}%</span>
+            <button className="hierarchy-zoom-btn" onClick={zoomIn} disabled={treeZoom >= 1.4} title="Zoom in"><IconPlus color="currentColor" /></button>
+            <button className="hierarchy-zoom-btn" onClick={fitHierarchy} title="Fit more hierarchy on screen"><IconFit color="currentColor" /> Fit</button>
+            <button className="hierarchy-zoom-btn" onClick={resetZoom} title="Reset hierarchy zoom">Reset</button>
+          </div>
+        )}
 
-        <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 200, zIndex: 40, background: '#020617', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 20 }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 200, zIndex: 40, background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 20 }}>
                     <div className="otree-card" data-role="super_admin" style={{ '--nc': ROLE_CFG.super_admin.color, minWidth: 150, cursor: 'default' }}>
 
             <div className="otree-badge" style={{ '--nc': ROLE_CFG.super_admin.color }}>
@@ -798,7 +840,7 @@ useLayoutEffect(() => {
 
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', gap: '16px' }}>
-            <div style={{ width: 32, height: 32, border: '3px solid rgba(34,197,94,0.2)', borderTop: '3px solid #22c55e', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            <div style={{ width: 32, height: 32, border: '3px solid rgba(124,58,237,0.18)', borderTop: '3px solid #0C4044', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
             <span style={{ color: subtext, fontSize: '14px' }}>Loading hierarchy...</span>
           </div>
         )}
@@ -839,7 +881,7 @@ useLayoutEffect(() => {
           ) : (
             // ── FULL TREE — super admin sticks to the left while you scroll right ──
                         <div ref={scrollAreaRef} style={{ overflowX: 'auto', overflowY: 'hidden', padding: '20px 32px 20px 220px' }}>
-<div className="otree-children otree-children-root" style={{ '--lc': ROLE_CFG.admin.color, minWidth: 'max-content' }}>
+<div className="otree-children otree-children-root" style={{ '--lc': ROLE_CFG.admin.color, minWidth: 'max-content', transform: `scale(${treeZoom})`, transformOrigin: 'top left', width: `${100 / treeZoom}%` }}>
 
 
                 {hierarchyData.admins.map(admin => (
@@ -872,7 +914,7 @@ useLayoutEffect(() => {
           {[{ role: 'Super Admin', key: 'super_admin' }, { role: 'Admin', key: 'admin' }, { role: 'Dealer', key: 'dealer' }, { role: 'Sub Dealer', key: 'sub_dealer' }, { role: 'Promotor', key: 'promotor' }, { role: 'Customer', key: 'customer' }].map(l => (
             <div key={l.role} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 9, height: 9, borderRadius: '50%', background: ROLE_CFG[l.key].color }} />
-              <span style={{ color: subtext, fontSize: '11px' }}>{l.role}</span>
+              <span style={{ color: subtext, fontSize: '12px', fontWeight: 650 }}>{l.role}</span>
             </div>
           ))}
         </div>

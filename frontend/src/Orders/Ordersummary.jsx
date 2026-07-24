@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import CustomerNavbar from '../collection/CustomerNavbar'
 import CustomerFooter from '../collection/CustomerFooter'
 
 const API_BASE = 'https://bitbyte-backend-f66f.onrender.com'
@@ -873,8 +872,6 @@ export default function OrderSummary() {
         }
       `}</style>
 
-      <CustomerNavbar />
-
       <main className="os-shell">
         <section className="os-hero">
           <div className="os-hero-card">
@@ -1043,3 +1040,4 @@ export default function OrderSummary() {
     </div>
   )
 }
+

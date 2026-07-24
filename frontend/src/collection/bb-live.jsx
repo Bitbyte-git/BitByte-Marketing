@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import CustomerNavbar from './CustomerNavbar'
 import CustomerFooter from './CustomerFooter'
 
 const TEAM369_SHOWCASE_URL = 'https://gold-showcase.vercel.app/'
@@ -202,7 +201,6 @@ export default function BBLive() {
   // ── Fetch from OpenStreetMap Overpass API (FREE) ──
   return (
     <div style={{ minHeight: '100vh', background: '#f8f6f1', fontFamily: '"Montserrat", Inter, system-ui, sans-serif' }}>
-      <CustomerNavbar />
 
       <main style={{ padding: '28px clamp(16px, 3vw, 40px) 44px' }}>
         <section style={{
@@ -408,8 +406,6 @@ export default function BBLive() {
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
         .shop-row { animation: fadeUp 0.5s ease both; }
       `}</style>
-
-      <CustomerNavbar />
 
       {/* ── HERO ── */}
       <div style={{
@@ -686,3 +682,4 @@ export default function BBLive() {
     </div>
   )
 }
+

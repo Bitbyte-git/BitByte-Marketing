@@ -92,12 +92,12 @@ const IconMessage = ({ color, size = 13 }) => (
 // so the whole app stays visually consistent (super friendly + readable)
 // ══════════════════════════════════════════════════════════════════
 const ROLE_CFG = {
-  super_admin: { color: '#a78bfa', Icon: IconShield, label: 'SUPER ADMIN' },
-  admin: { color: '#22c55e', Icon: IconShield, label: 'ADMIN', idKey: 'admin_id' },
-  dealer: { color: '#38bdf8', Icon: IconStore, label: 'DEALER', idKey: 'dealer_id' },
-  sub_dealer: { color: '#ef4444', Icon: IconLink, label: 'SUB DEALER', idKey: 'sub_dealer_id' },
-  promotor: { color: '#d4a017', Icon: IconStar, label: 'PROMOTOR', idKey: 'promotor_id' },
-  customer: { color: '#fb7185', Icon: IconUser, label: 'CUSTOMER', idKey: 'customer_id' },
+  super_admin: { color: '#7C3AED', Icon: IconShield, label: 'SUPER ADMIN' },
+  admin: { color: '#16A34A', Icon: IconShield, label: 'ADMIN', idKey: 'admin_id' },
+  dealer: { color: '#0284C7', Icon: IconStore, label: 'DEALER', idKey: 'dealer_id' },
+  sub_dealer: { color: '#DC2626', Icon: IconLink, label: 'SUB DEALER', idKey: 'sub_dealer_id' },
+  promotor: { color: '#CA8A04', Icon: IconStar, label: 'PROMOTOR', idKey: 'promotor_id' },
+  customer: { color: '#DB2777', Icon: IconUser, label: 'CUSTOMER', idKey: 'customer_id' },
 }
 const CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer' }
 const CHILD_KEY = { admin: 'dealers', dealer: 'sub_dealers', sub_dealer: 'promotors', promotor: 'customers' }
@@ -344,22 +344,20 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
     document.head.appendChild(s)
   }
 
-  const isDark = dark
+  const isDark = false
   el.style.cssText = `
     position:fixed; z-index:9999;
-    background:${isDark ? 'rgba(5,10,20,0.97)' : 'rgba(248,250,252,0.98)'};
-    border:1px solid ${isDark ? 'rgba(34,197,94,0.22)' : 'rgba(37,99,235,0.18)'};
+    background:#FFFFFF;
+    border:1.5px solid rgba(12,64,68,0.18);
     border-radius:20px; padding:20px;
-    box-shadow:${isDark
-      ? '0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(34,197,94,0.06), inset 0 1px 0 rgba(255,255,255,0.04)'
-      : '0 32px 80px rgba(0,0,0,0.15), 0 0 0 1px rgba(37,99,235,0.05)'};
+    box-shadow:0 24px 60px rgba(7,59,63,0.16), 0 0 0 1px rgba(12,64,68,0.05);
     animation:acpSlideIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
     min-width:200px; max-width:260px;
     max-height:85vh; overflow-y:auto; overflow-x:hidden;
     scroll-behavior:smooth; scrollbar-width:thin;
     scroll-padding:8px;
     -webkit-overflow-scrolling:touch;
-    backdrop-filter:blur(28px);
+    backdrop-filter:none;
     font-family:'Inter',system-ui,sans-serif;
   `
 
@@ -384,11 +382,11 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
         ${arrowHtml}
         <div style="
           border-radius:14px;padding:14px 16px;
-          background:${isDark ? `linear-gradient(135deg,rgba(${saRgb},0.09),rgba(${saRgb},0.04))` : `linear-gradient(135deg,rgba(${saRgb},0.14),rgba(${saRgb},0.06))`};
+          background:#FFFFFF;
           border:1px solid rgba(${saRgb},0.3);
           position:relative;overflow:hidden;
         ">
-          <div style="position:absolute;top:-10px;right:-10px;width:70px;height:70px;background:radial-gradient(circle,rgba(${saRgb},0.14),transparent 70%);pointer-events:none;"></div>
+          
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
             <div style="width:30px;height:30px;border-radius:9px;background:${saColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(${saRgb},0.35);">${iconSvg(ICON_PATHS.shield, '#1a1030', 15)}</div>
             <div>
@@ -419,16 +417,14 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
       ${arrowHtml}
       <div style="
         border-radius:14px;padding:14px 16px;
-        background:${isLast
-        ? `linear-gradient(135deg,rgba(${rc},0.13),rgba(${rc},0.05))`
-        : `rgba(${rc},0.04)`};
+        background:#FFFFFF;
         border:${isLast
         ? `1.5px solid rgba(${rc},0.55)`
         : `1px solid rgba(${rc},0.16)`};
         position:relative;overflow:hidden;
         ${isLast ? `animation:acpGlow 3s ease-in-out infinite;` : ''}
       ">
-        ${isLast ? `<div style="position:absolute;top:-15px;right:-15px;width:80px;height:80px;background:radial-gradient(circle,rgba(${rc},0.18),transparent 70%);pointer-events:none;"></div>` : ''}
+        
 
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
           <div style="width:30px;height:30px;border-radius:9px;background:${cfg.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(${rc},0.3);">${iconSvg(ICON_PATHS[iconKey], '#020617', 15)}</div>
@@ -463,7 +459,7 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
   }).join('')
 
   el.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid ${isDark ? 'rgba(34,197,94,0.1)' : 'rgba(37,99,235,0.08)'};">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(12,64,68,0.12);">
       <div style="display:flex;align-items:center;gap:9px;">
         <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#22c55e,#38bdf8);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(34,197,94,0.4);">${iconSvg(ICON_PATHS.link, '#020617', 13)}</div>
         <div>
@@ -483,7 +479,7 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
 
     ${itemsHtml}
 
-    <div style="margin-top:14px;padding-top:12px;border-top:1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)'};">
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(12,64,68,0.10);">
       <div style="font-size:9px;color:${isDark ? '#334155' : '#cbd5e1'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network • Hierarchy View</div>
     </div>
   `
@@ -513,19 +509,12 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
 // `active` = this is the currently selected one in its row (full bright).
 // not active = dimmed, but still clickable.
 // ══════════════════════════════════════════════════════════════════
-const STATUS_COLOR = { red: '#ef4444', orange: '#f97316', yellow: '#eab308', green: '#22c55e' }
+const STATUS_COLOR = { red: '#C92035', orange: '#BB8958', yellow: '#CCA881', green: '#0C4044' }
 
 function LaneCard({ node, role, active, onClick, ancestors, superAdminEmail, dark, text, subtext, showChildCount, onMessage, onPrint, activeStatusFilter, onToggleStatusFilter }) {
   const navigate = useNavigate()
   const cfg = ROLE_CFG[role]
-  // ── CHANGED: card color-ah role fixed color-ku badhila, target status color use pannuvom.
-  // super_admin-ku status field kidiyathu, so ana role color-ah fallback pannuvom.
-  // CUSTOMER-ku target illaya (avanga order_count base panni than MELE irukura
-  // promotor/sub_dealer/dealer/admin status calculate aagum), so customer card
-  // eppayume default GREEN-a fixed-a kaanpikkanum, own status-ah follow pannakutathu. ──
-  const c = role === 'customer'
-    ? STATUS_COLOR.green
-    : (role !== 'super_admin' && node.status) ? STATUS_COLOR[node.status] : cfg.color
+  const c = cfg.color
   const Icon = cfg.Icon
   const childRole = CHILD_ROLE[role]
   const childCount = childRole && showChildCount ? (node[CHILD_KEY[role]] || []).length : null
@@ -600,7 +589,7 @@ function LaneCard({ node, role, active, onClick, ancestors, superAdminEmail, dar
           }}
           className="gcard-btn gcard-btn-sales"
         >
-          <IconChart color="#22c55e" /> SALES ({node.order_count ?? 0})
+          <IconChart color="#0284C7" /> SALES ({node.order_count ?? 0})
         </button>
       </div>
 
@@ -621,9 +610,9 @@ function LaneCard({ node, role, active, onClick, ancestors, superAdminEmail, dar
                 style={{
                   background: STATUS_COLOR[s],
                   borderColor: STATUS_COLOR[s],
-                  color: '#020617',
+                  color: '#FDFDFC',
                   opacity: count > 0 ? 1 : 0.3,
-                  outline: isFilterActive ? '2px solid #f8fafc' : 'none',
+                  outline: isFilterActive ? '2px solid #FDFDFC' : 'none',
                   outlineOffset: '2px',
                   cursor: onToggleStatusFilter ? 'pointer' : 'default',
                 }}
@@ -657,7 +646,7 @@ function LaneRow({ role, items, activeId, onSelect, ancestors, superAdminEmail, 
         <span className="glane-role" style={{ color: cfg.color }}>{cfg.label}</span>
         <span className="glane-total" style={{ color: subtext }}>{items.length}</span>
       </div>
-      <div className="glane-track" style={{ '--nc': cfg.color, scrollbarColor: `${cfg.color} rgba(255,255,255,0.06)` }}>
+      <div className="glane-track" style={{ '--nc': cfg.color, scrollbarColor: `${cfg.color} rgba(231,237,236,0.62)` }}>
         {items.length === 0 ? (
           <div className="glane-empty" style={{ color: subtext }}>
             {emptyText}
@@ -692,7 +681,7 @@ function LaneRow({ role, items, activeId, onSelect, ancestors, superAdminEmail, 
 // ══════════════════════════════════════════════════════════════════
 export default function SuperadminHierarchyGrid() {
   const navigate = useNavigate()
-  const [dark] = useState(true)
+  const [dark] = useState(false)
   const [hierarchyData, setHierarchyData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -764,11 +753,11 @@ setMessageSending(false)
  
   
 
-  const text = '#f8fafc'
-  const subtext = '#94a3b8'
-  const inpBg = 'rgba(255,255,255,0.05)'
-  const inpBorder = '#374151'
-  const border = 'rgba(255,255,255,0.1)'
+  const text = '#111817'
+  const subtext = '#53615F'
+  const inpBg = '#FFFFFF'
+  const inpBorder = '#BDCFCE'
+  const border = 'rgba(12,64,68,0.22)'
   const superAdminEmail = localStorage.getItem('email') || ''
 
   useEffect(() => {
@@ -944,58 +933,58 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
 
   return (
     <>
-    <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 20% 0%, #0b1a2e 0%, #020617 55%)', color: text, fontFamily: '"Inter",system-ui,sans-serif', padding: '28px 32px' }}>
+    <div style={{ minHeight: '100vh', background: '#FFFFFF', color: text, fontFamily: '"Inter",system-ui,sans-serif', padding: '28px 32px' }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
         .gcard{
-          background:linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
-          border:1.5px solid var(--nc); border-radius:16px; padding:14px 18px;
+          background:#FFFFFF;
+          border:2.5px solid var(--nc); border-radius:16px; padding:14px 18px;
           min-width:172px; max-width:210px; cursor:pointer; position:relative;
           transition:opacity .2s ease, transform .2s cubic-bezier(0.22,1,0.36,1), box-shadow .2s ease;
           flex-shrink:0;
         }
-        .gcard:hover{ transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.35); }
+        .gcard:hover{ transform:translateY(-3px); box-shadow:0 16px 34px rgba(7,59,63,0.20); }
         .gcard-msg-btn{
           position:absolute; top:8px; right:8px; z-index:2;
           width:22px; height:22px; border-radius:6px;
-          background:rgba(255,255,255,0.06); border:1px solid var(--nc);
+          background:#FFFFFF; border:1.5px solid var(--nc);
           color:var(--nc); display:flex; align-items:center; justify-content:center;
           cursor:pointer; transition:background .2s ease, transform .2s ease;
         }
-        .gcard-msg-btn:hover{ background:rgba(255,255,255,0.18); transform:scale(1.08); }
-        .gcard-active{ opacity:1; transform:translateY(-3px); box-shadow:0 0 0 1.5px var(--nc), 0 14px 30px rgba(0,0,0,0.45); }
-        .gcard-dim{ opacity:0.45; }
-        .gcard-dim:hover{ opacity:0.85; }
-        .gcard-badge{ display:inline-flex; align-items:center; gap:5px; font-size:9px; font-weight:700; padding:2px 8px; border-radius:20px; margin-bottom:8px; color:var(--nc); border:1px solid var(--nc); }
-        .gcard-id{ font-family:monospace; font-size:10px; margin-bottom:4px; word-break:break-all; }
-        .gcard-name{ font-weight:700; font-size:13px; margin-bottom:6px; }
-        .gcard-sub{ display:flex; align-items:center; gap:4px; font-size:11px; margin-bottom:2px; }
+        .gcard-msg-btn:hover{ background:var(--nc); color:#FFFFFF; transform:scale(1.08); }
+        .gcard-active{ opacity:1; transform:translateY(-3px); box-shadow:0 0 0 2px var(--nc), 0 18px 36px rgba(7,59,63,0.20); }
+        .gcard-dim{ opacity:1; }
+        .gcard-dim:hover{ opacity:1; }
+        .gcard-badge{ display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:900; padding:2px 8px; border-radius:20px; margin-bottom:8px; color:var(--nc); background:#FFFFFF; border:1.5px solid var(--nc); }
+        .gcard-id{ font-family:monospace; font-size:11px; font-weight:800; margin-bottom:6px; word-break:break-all; }
+        .gcard-name{ font-weight:900; font-size:14px; margin-bottom:8px; line-height:1.35; }
+        .gcard-sub{ display:flex; align-items:center; gap:4px; font-size:12px; font-weight:650; margin-bottom:4px; }
         .gcard-actions{ margin-top:8px; display:flex; gap:6px; }
-        .gcard-btn{ flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:5px 0; font-size:9px; font-weight:700; background:rgba(255,255,255,0.03); border:1px solid var(--nc); border-radius:20px; color:var(--nc); cursor:pointer; transition:background .15s ease, transform .1s ease; }
-        .gcard-btn:hover{ background:var(--nc); color:#020617; transform:scale(1.03); }
-        .gcard-btn-sales{ border-color:#22c55e; color:#22c55e; }
-        .gcard-count{ position:absolute; bottom:-9px; left:50%; transform:translateX(-50%); color:#000; font-size:9px; font-weight:800; padding:1px 7px; border-radius:20px; white-space:nowrap; }
+        .gcard-btn{ flex:1; display:flex; align-items:center; justify-content:center; gap:4px; padding:5px 0; font-size:10px; font-weight:800; background:#FFFFFF; border:1.5px solid var(--nc); border-radius:20px; color:var(--nc); cursor:pointer; transition:background .15s ease, transform .1s ease; }
+        .gcard-btn:hover{ background:var(--nc); color:#FDFDFC; transform:scale(1.03); }
+        .gcard-btn-sales{ border-color:#0284C7; color:#0284C7; }
+        .gcard-count{ position:absolute; bottom:-9px; left:50%; transform:translateX(-50%); color:#FDFDFC; font-size:10px; font-weight:900; padding:2px 8px; border-radius:20px; white-space:nowrap; text-shadow:0 1px 1px rgba(0,0,0,0.18); }
         .gcard-status-dots{ display:flex; gap:6px; justify-content:center; margin-top:9px; }
         .gcard-dot{ width:20px; height:20px; border-radius:50%; border:1.5px solid; box-sizing:border-box; transition:all .15s ease; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:800; }
         .gcard-dot:hover{ transform:scale(1.15); }
 
         .glane{ margin-bottom:26px; }
         .glane-label{ display:flex; align-items:baseline; gap:10px; margin-bottom:10px; padding-left:2px; }
-        .glane-level{ font-size:10px; font-weight:800; letter-spacing:1.4px; color:var(--nc); opacity:0.7; }
-        .glane-role{ font-size:13px; font-weight:800; letter-spacing:0.6px; }
-        .glane-total{ font-size:11px; }
+        .glane-level{ font-size:11px; font-weight:900; letter-spacing:1.4px; color:var(--nc); opacity:1; }
+        .glane-role{ font-size:15px; font-weight:900; letter-spacing:0.6px; }
+        .glane-total{ font-size:13px; font-weight:700; }
         .glane-track{ display:flex; gap:14px; overflow-x:auto; overflow-y:visible; padding:6px 4px 14px 4px; scrollbar-width:thin; }
         .glane-track::-webkit-scrollbar{ height:7px; }
-        .glane-track::-webkit-scrollbar-track{ background:rgba(255,255,255,0.03); border-radius:10px; }
+        .glane-track::-webkit-scrollbar-track{ background:rgba(12,64,68,0.10); border-radius:10px; }
         .glane-track::-webkit-scrollbar-thumb{ background:var(--nc); border-radius:10px; opacity:0.7; }
         .glane-track::-webkit-scrollbar-thumb:hover{ background:var(--nc); opacity:1; }
         .glane-empty{ font-size:12px; padding:14px 4px; display:flex; align-items:center; gap:8px; opacity:0.75; }
-        .glane-divider{ height:3px; border-radius:3px; margin:0 4px 4px 4px; opacity:0.55; }
+        .glane-divider{ height:4px; border-radius:3px; margin:0 4px 4px 4px; opacity:0.9; }
 
         .gsa-card{
           display:inline-flex; align-items:center; gap:10px;
-          background:rgba(167,139,250,0.08); border:1.5px solid #a78bfa; border-radius:12px;
+          background:rgba(12,64,68,0.08); border:1.5px solid #0C4044; border-radius:12px;
           padding:10px 18px; margin-bottom:22px;
         }
       `}</style>
@@ -1004,8 +993,8 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <IconBuilding color="#a5f3fc" />
-            <span style={{ color: '#a5f3fc', fontSize: '16px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <IconBuilding color="#0C4044" />
+            <span style={{ color: '#0C4044', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Full Organization Hierarchy Grid
             </span>
           </div>
@@ -1013,14 +1002,14 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
             <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: `${ROLE_CFG.super_admin.color}22`, border: `1px solid ${ROLE_CFG.super_admin.color}55`, borderRadius: '20px', padding: '4px 14px' }}>
                 <span style={{ color: ROLE_CFG.super_admin.color, fontWeight: 800, fontSize: '13px' }}>1</span>
-                <span style={{ color: subtext, fontSize: '11px' }}>Super Admin</span>
+                <span style={{ color: subtext, fontSize: '12px', fontWeight: 650 }}>Super Admin</span>
               </div>
               {statPills.map(s => {
                 const color = ROLE_CFG[s.roleKey].color
                 return (
                   <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: `${color}14`, border: `1px solid ${color}44`, borderRadius: '20px', padding: '4px 14px' }}>
                     <span style={{ color, fontWeight: 800, fontSize: '13px' }}>{s.count}</span>
-                    <span style={{ color: subtext, fontSize: '11px' }}>{s.label}</span>
+                    <span style={{ color: subtext, fontSize: '12px', fontWeight: 650 }}>{s.label}</span>
                   </div>
                 )
               })}
@@ -1037,7 +1026,7 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
               onChange={e => setSearch(e.target.value)}
               placeholder="Search ID, Name, Phone..."
               style={{ width: '240px', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '20px', padding: '9px 14px 9px 34px', color: text, fontSize: '13px', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s ease, box-shadow .15s ease' }}
-              onFocus={e => { e.target.style.borderColor = '#22c55e'; e.target.style.boxShadow = '0 0 0 3px rgba(34,197,94,0.15)' }}
+              onFocus={e => { e.target.style.borderColor = '#0C4044'; e.target.style.boxShadow = '0 0 0 3px rgba(12,64,68,0.12)' }}
               onBlur={e => { e.target.style.borderColor = inpBorder; e.target.style.boxShadow = 'none' }}
             />
             {search && (
@@ -1046,17 +1035,17 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
               </button>
             )}
           </div>
-          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '10px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
-            <IconBack color="#f87171" /> Back
+          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '10px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
+            <IconBack color="#C92035" /> Back
           </button>
         </div>
       </div>
 
-      <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${border}`, borderRadius: '20px', padding: '24px 28px', minHeight: '70vh' }}>
+      <div style={{ background: '#FFFFFF', border: `1.5px solid ${border}`, borderRadius: '20px', padding: '24px 28px', minHeight: '70vh', boxShadow: '0 18px 42px rgba(7,59,63,0.08)' }}>
 
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', gap: '16px' }}>
-            <div style={{ width: 32, height: 32, border: '3px solid rgba(34,197,94,0.2)', borderTop: '3px solid #22c55e', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            <div style={{ width: 32, height: 32, border: '3px solid rgba(189,207,206,0.65)', borderTop: '3px solid #0C4044', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
             <span style={{ color: subtext, fontSize: '14px' }}>Hold on, pulling up your team tree...</span>
           </div>
         )}
@@ -1148,7 +1137,7 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
           {[{ role: 'Super Admin', key: 'super_admin' }, { role: 'Admin', key: 'admin' }, { role: 'Dealer', key: 'dealer' }, { role: 'Sub Dealer', key: 'sub_dealer' }, { role: 'Promotor', key: 'promotor' }, { role: 'Customer', key: 'customer' }].map(l => (
             <div key={l.role} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 9, height: 9, borderRadius: '50%', background: ROLE_CFG[l.key].color }} />
-              <span style={{ color: subtext, fontSize: '11px' }}>{l.role}</span>
+              <span style={{ color: subtext, fontSize: '12px', fontWeight: 650 }}>{l.role}</span>
             </div>
           ))}
         </div>
@@ -1167,8 +1156,8 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: 'linear-gradient(145deg,#0a1628,#060e1c)',
-              border: '1px solid rgba(34,197,94,0.3)',
+              background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)',
+              border: '1px solid rgba(189,207,206,0.72)',
               borderRadius: '20px', padding: '28px',
               width: '95%', maxWidth: '460px',
               boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
@@ -1176,8 +1165,8 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
              <div>
-                <div style={{ color: '#22c55e', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <IconMessage color="#22c55e" size={14} /> SEND DIRECT MESSAGE
+                <div style={{ color: '#0C4044', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <IconMessage color="#0C4044" size={14} /> SEND DIRECT MESSAGE
                 </div>
                 <div style={{ color: subtext, fontSize: '12px', marginTop: '4px' }}>
                   To: <span style={{ color: text, fontWeight: 700 }}>
@@ -1190,24 +1179,24 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
                 onClick={() => setMessageTarget(null)}
                 style={{
                   background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                  color: '#f87171', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px',
+                  color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}
-              ><IconX color="#f87171" size={12} /></button>
+              ><IconX color="#C92035" size={12} /></button>
             </div>
 
             {messageMsg && (
               <div style={{
                 background: messageMsg.includes('✅') ? 'rgba(74,222,128,0.1)' : 'rgba(239,68,68,0.1)',
                 border: `1px solid ${messageMsg.includes('✅') ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                color: messageMsg.includes('✅') ? '#4ade80' : '#f87171',
+                color: messageMsg.includes('✅') ? '#0C4044' : '#C92035',
                 borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '14px'
               }}>
                 {messageMsg}
               </div>
             )}
 
-            <label style={{ display: 'block', color: '#94a3b8', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+            <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
               Subject *
             </label>
             <input
@@ -1215,15 +1204,15 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
               onChange={e => setMessageTitle(e.target.value)}
               placeholder="e.g. Orders running slow"
               style={{
-                width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid #374151',
-                borderRadius: '10px', padding: '12px 14px', color: '#f8fafc', fontSize: '14px',
+                width: '100%', background: '#FDFDFC', border: '1px solid #BDCFCE',
+                borderRadius: '10px', padding: '12px 14px', color: '#111817', fontSize: '14px',
                 outline: 'none', marginBottom: '14px', boxSizing: 'border-box'
               }}
-              onFocus={e => e.target.style.borderColor = '#22c55e'}
-              onBlur={e => e.target.style.borderColor = '#374151'}
+              onFocus={e => e.target.style.borderColor = '#0C4044'}
+              onBlur={e => e.target.style.borderColor = '#BDCFCE'}
             />
 
-            <label style={{ display: 'block', color: '#94a3b8', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+            <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
               Message *
             </label>
             <textarea
@@ -1232,12 +1221,12 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
               rows={4}
               placeholder="Type your message..."
               style={{
-                width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid #374151',
-                borderRadius: '10px', padding: '12px 14px', color: '#f8fafc', fontSize: '14px',
+                width: '100%', background: '#FDFDFC', border: '1px solid #BDCFCE',
+                borderRadius: '10px', padding: '12px 14px', color: '#111817', fontSize: '14px',
                 outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box'
               }}
-              onFocus={e => e.target.style.borderColor = '#22c55e'}
-              onBlur={e => e.target.style.borderColor = '#374151'}
+              onFocus={e => e.target.style.borderColor = '#0C4044'}
+              onBlur={e => e.target.style.borderColor = '#BDCFCE'}
             />
 
             <button
@@ -1245,9 +1234,9 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
               onClick={sendDirectMessage}
               style={{
                 marginTop: '16px', width: '100%', padding: '13px',
-                background: messageSending ? 'rgba(34,197,94,0.25)' : 'linear-gradient(90deg,#22c55e,#38bdf8)',
+                background: messageSending ? 'rgba(12,64,68,0.16)' : 'linear-gradient(90deg,#0C4044,#073B3F)',
                 border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '14px',
-                color: messageSending ? '#22c55e' : '#02240f',
+                color: messageSending ? '#0C4044' : '#FDFDFC',
                 cursor: (messageSending || !messageTitle.trim() || !messageBody.trim()) ? 'not-allowed' : 'pointer',
                 transition: 'all 0.3s ease',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
@@ -1255,11 +1244,11 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
             >
               {messageSending ? (
                 <>
-                  <div style={{ width: 14, height: 14, border: '2px solid rgba(34,197,94,0.3)', borderTop: '2px solid #22c55e', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  <div style={{ width: 14, height: 14, border: '2px solid rgba(189,207,206,0.65)', borderTop: '2px solid #0C4044', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   Sending...
                 </>
               ) : (
-                <><IconMessage color={(messageSending || !messageTitle.trim() || !messageBody.trim()) ? '#22c55e' : '#02240f'} size={14} /> Send to this person only</>
+                <><IconMessage color={(messageSending || !messageTitle.trim() || !messageBody.trim()) ? '#0C4044' : '#FDFDFC'} size={14} /> Send to this person only</>
               )}
 </button>
           </div>
@@ -1278,7 +1267,7 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: 'linear-gradient(145deg,#0a1628,#060e1c)',
+              background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)',
               border: `1px solid ${printTarget.color}55`,
               borderRadius: '20px', padding: '26px',
               width: '95%', maxWidth: '380px',
@@ -1289,7 +1278,7 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
               <IconPrinter color={printTarget.color} size={22} />
             </div>
-            <div style={{ color: '#f8fafc', fontWeight: 800, fontSize: '15px', marginBottom: '4px' }}>
+            <div style={{ color: '#111817', fontWeight: 800, fontSize: '15px', marginBottom: '4px' }}>
               Print {printTarget.node.first_name}'s Profile
             </div>
             <div style={{ color: subtext, fontSize: '12px', marginBottom: '20px' }}>
@@ -1300,7 +1289,7 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
               onClick={handlePrintOnly}
               style={{
                 width: '100%', padding: '13px', marginBottom: '10px',
-                background: 'rgba(255,255,255,0.04)', border: `1.5px solid ${printTarget.color}`,
+                background: 'rgba(253,253,252,0.78)', border: `1.5px solid ${printTarget.color}`,
                 borderRadius: '12px', color: printTarget.color, fontWeight: 800, fontSize: '13px', cursor: 'pointer',
               }}
             >
@@ -1310,8 +1299,8 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
               onClick={handlePrintHierarchy}
               style={{
                 width: '100%', padding: '13px', marginBottom: '10px',
-                background: `linear-gradient(90deg, ${printTarget.color}, #38bdf8)`,
-                border: 'none', borderRadius: '12px', color: '#020617', fontWeight: 800, fontSize: '13px', cursor: 'pointer',
+                background: `linear-gradient(90deg, ${printTarget.color}, #0C4044)`,
+                border: 'none', borderRadius: '12px', color: '#FDFDFC', fontWeight: 800, fontSize: '13px', cursor: 'pointer',
               }}
             >
               {ROLE_CFG[printTarget.role]?.label} Hierarchy (Full Tree)

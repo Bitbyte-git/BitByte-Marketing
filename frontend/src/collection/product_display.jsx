@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import { addToCartDB } from '../collection/card_section'
-import CustomerNavbar from './CustomerNavbar'
 import CustomerFooter from '../collection/CustomerFooter'
 
 const API_BASE = 'https://bitbyte-backend-f66f.onrender.com'
@@ -992,8 +991,6 @@ const displayOriginalPrice = calcOriginalPriceMain()
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      <CustomerNavbar />
-
       <main className="pd-page-shell">
 
         {/* ── BREADCRUMB ── */}
@@ -1251,3 +1248,4 @@ const displayOriginalPrice = calcOriginalPriceMain()
     </div>
   )
 }
+

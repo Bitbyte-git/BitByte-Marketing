@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
-import CustomerNavbar from './CustomerNavbar'
 import CustomerFooter from '../collection/CustomerFooter'
 
 const API_BASE = 'https://bitbyte-backend-f66f.onrender.com'
@@ -369,8 +368,6 @@ export default function WishlistPage() {
         }
       `}</style>
 
-      <CustomerNavbar />
-
       <main className="wishlist-shell">
         <section className="wishlist-hero">
           <div>
@@ -451,3 +448,4 @@ export default function WishlistPage() {
     </div>
   )
 }
+

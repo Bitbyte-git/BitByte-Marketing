@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import CustomerNavbar from '../collection/CustomerNavbar'
 import CustomerFooter from '../collection/CustomerFooter'
 
 const API_BASE = 'https://bitbyte-backend-f66f.onrender.com'
@@ -651,7 +650,6 @@ export default function OrderConfirm() {
     return (
       <div className="oc-page">
         <style>{checkoutStyles}</style>
-        <CustomerNavbar />
         <main className="oc-main">
           <header className="oc-hero">
             <div>
@@ -801,7 +799,6 @@ export default function OrderConfirm() {
             .checkout-buy{min-width:0}
           }
         `}</style>
-        <CustomerNavbar />
 
         {/* ── ADDRESS POPUP ── */}
         {showAddressPopup && (
@@ -1054,7 +1051,6 @@ export default function OrderConfirm() {
           .bank-row:hover{background:#fdf8f6}
           input[type=radio]{accent-color:#7B1F2E}
         `}</style>
-        <CustomerNavbar />
         <main style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 24px 100px', animation: 'fadeUp 0.4s ease both' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 32, alignItems: 'start' }}>
 
@@ -1231,3 +1227,4 @@ export default function OrderConfirm() {
 
   return null
 }
+
