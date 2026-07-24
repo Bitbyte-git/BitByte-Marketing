@@ -1772,15 +1772,35 @@ class OrderTimeSeriesView(APIView):
 class TodayLoginStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # ── NEW: period dropdown-ku evlo days count pannanumnu ──
+    PERIOD_DAYS = {
+        '3days': 3,
+        'week': 7,
+        'month': 30,
+        'year': 365,
+    }
+
     def get(self, request):
         if request.user.role != 'super_admin':
             return Response({'error': 'Permission denied'}, status=403)
 
+        period = request.query_params.get('period', 'today')   # ── NEW
         today = timezone.now().date()
 
         def build_entry(profile, id_field, role_label, level):
             u = profile.user
-            is_active = bool(u.last_login and u.last_login.date() == today)
+            last_login_date = u.last_login.date() if u.last_login else None
+
+            # ── NEW: never login pannalanna, account create panna date-la irundhu count ──
+            reference_date = last_login_date or (u.created_at.date() if u.created_at else today)
+            days_inactive = (today - reference_date).days
+
+            if period == 'today':
+                is_active = bool(last_login_date and last_login_date == today)
+            else:
+                days_needed = self.PERIOD_DAYS.get(period, 0)
+                is_active = bool(last_login_date and (today - last_login_date).days < days_needed)
+
             return {
                 'level': level,
                 'level_role': role_label,
@@ -1791,6 +1811,7 @@ class TodayLoginStatusView(APIView):
                 'location': profile.city_name,
                 'active': is_active,
                 'last_login': u.last_login.isoformat() if u.last_login else None,
+                'days_inactive': days_inactive,          # ── NEW
             }
 
         all_entries = []
@@ -1807,6 +1828,7 @@ class TodayLoginStatusView(APIView):
         inactive_list = [e for e in all_entries if not e['active']]
 
         return Response({
+            'period': period,          # ── NEW
             'active_count': len(active_list),
             'inactive_count': len(inactive_list),
             'active': active_list,

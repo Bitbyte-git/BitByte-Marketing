@@ -2,6 +2,15 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../api'
 
+// ── NEW: period dropdown options ──
+const PERIOD_OPTIONS = [
+  { value: 'today', label: 'Today' },
+  { value: '3days', label: '3 Days' },
+  { value: 'week', label: 'Week' },
+  { value: 'month', label: 'Month' },
+  { value: 'year', label: 'Year' },
+]
+
 export default function LoginInactive() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -11,14 +20,15 @@ export default function LoginInactive() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
+  const [periodFilter, setPeriodFilter] = useState('today')   // ── NEW
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const res = await api.get('/today-login-status/')
+        const res = await api.get('/today-login-status/', { params: { period: periodFilter } })   // ── CHANGED
         let list = [...(res.data.inactive || [])]
-        if (scopeIds) list = list.filter(u => scopeIds.includes(u.id))   // ── NEW
+        if (scopeIds) list = list.filter(u => scopeIds.includes(u.id))
         const sorted = list.sort((a, b) => a.level - b.level)
         setData(sorted)
       } catch (err) {
@@ -27,13 +37,22 @@ export default function LoginInactive() {
       setLoading(false)
     }
     fetchData()
-  }, [])
+  }, [periodFilter])   
 
   const formatTime = (iso) => {
     if (!iso) return 'Never logged in'
     const d = new Date(iso)
     return d.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true })
   }
+
+  // ── NEW: "Day" column value ──
+  const formatDays = (days) => {
+    if (days === null || days === undefined) return '—'
+    if (days === 0) return 'Today'
+    return `${days} day${days === 1 ? '' : 's'}`
+  }
+
+  const periodLabel = PERIOD_OPTIONS.find(p => p.value === periodFilter)?.label || 'Today'
 
   return (
     <div style={{ minHeight: '100vh', background: '#020617', color: '#f8fafc', fontFamily: '"Inter",system-ui,sans-serif', padding: '32px 24px' }}>
@@ -46,7 +65,7 @@ export default function LoginInactive() {
               {data.length} users not logged in today{scopeLabel ? ` · ${scopeLabel}` : ''}
             </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <select
               value={roleFilter}
               onChange={e => setRoleFilter(e.target.value)}
@@ -58,6 +77,18 @@ export default function LoginInactive() {
               <option value="Sub Dealer" style={{ background: '#020617' }}>Sub Dealer</option>
               <option value="Promotor" style={{ background: '#020617' }}>Promotor</option>
             </select>
+
+            {/* ── NEW: All Levels-ku right side-la period dropdown ── */}
+            <select
+              value={periodFilter}
+              onChange={e => setPeriodFilter(e.target.value)}
+              style={{ padding: '10px 16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', color: '#f87171', fontSize: '13px', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+            >
+              {PERIOD_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value} style={{ background: '#020617' }}>{opt.label}</option>
+              ))}
+            </select>
+
             <button
               onClick={() => navigate(-1)}
               style={{ padding: '10px 20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f8fafc', fontSize: '13px', cursor: 'pointer' }}
@@ -94,6 +125,7 @@ export default function LoginInactive() {
                     <th style={{ padding: '14px 16px', textAlign: 'left', color: '#f87171', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase' }}>Name</th>
                     <th style={{ padding: '14px 16px', textAlign: 'left', color: '#f87171', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase' }}>Phone No</th>
                     <th style={{ padding: '14px 16px', textAlign: 'left', color: '#f87171', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase' }}>Last Inactive</th>
+                    <th style={{ padding: '14px 16px', textAlign: 'left', color: '#f87171', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase' }}>Day</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -105,6 +137,7 @@ export default function LoginInactive() {
                       <td style={{ padding: '14px 16px', color: '#f8fafc' }}>{u.name || 'Unknown'}</td>
                       <td style={{ padding: '14px 16px', color: '#94a3b8' }}>{u.phone || '—'}</td>
                       <td style={{ padding: '14px 16px', color: '#f87171', fontWeight: 700 }}>{formatTime(u.last_login)}</td>
+                      <td style={{ padding: '14px 16px', color: '#f87171', fontWeight: 700 }}>{formatDays(u.days_inactive)}</td>
                     </tr>
                   ))}
                 </tbody>
