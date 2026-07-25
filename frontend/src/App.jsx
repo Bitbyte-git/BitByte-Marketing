@@ -34,6 +34,9 @@ const AdminOrdersPage = lazy(() => import('./Orders/Adminorderspage'))
 const Report = lazy(() => import('./Orders/Report'))
 const LoginActive = lazy(() => import('./Orders/login_active'))
 const LoginInactive = lazy(() => import('./Orders/login_inactive'))
+const StoredCoins = lazy(() => import('./Coins_products/Stored_coins'))
+const CoinRequests = lazy(() => import('./Coins_products/Coin_Requests'))
+const TransactionHistory = lazy(() => import('./Coins_products/Transaction_History'))
 
 const collectionPath = (category, metal) => {
   const params = new URLSearchParams({ category })
@@ -191,8 +194,11 @@ export default function App() {
           <Route path="/sales-report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
           <Route path="/hierarchy-sales-count" element={<SuperAdminHierarchySalesCount />} />
           <Route path="/login-active" element={<LoginActive />} />
-          <Route path="/login-inactive" element={<LoginInactive />} />
-        </Routes>
+<Route path="/login-inactive" element={<LoginInactive />} />
+<Route path="/stored-coins" element={<ProtectedRoute role="super_admin"><StoredCoins /></ProtectedRoute>} />
+<Route path="/coin-requests-page" element={<ProtectedRoute role="super_admin"><CoinRequests /></ProtectedRoute>} />
+<Route path="/coin-transactions" element={<ProtectedRoute role="super_admin"><TransactionHistory /></ProtectedRoute>} />
+</Routes>
       </Suspense>
     </BrowserRouter>
   )
