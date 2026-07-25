@@ -726,7 +726,7 @@ class JewelryOrder(models.Model):
 
     def __str__(self):
         return f"{self.order_id} - {self.product_name}"
-<<<<<<< Updated upstream
+
 
 
 # ── COIN REQUEST SYSTEM (Promotor <-> SubDealer coin flow) ──
@@ -769,6 +769,6 @@ class CoinStock(models.Model):
     def __str__(self):
         return f"{self.user} — {self.metal_type} {self.weight_label}: {self.qty}"
         
-=======
+
         
->>>>>>> Stashed changes
+

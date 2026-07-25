@@ -1834,6 +1834,8 @@ class TodayLoginStatusView(APIView):
             all_entries.append(build_entry(p, 'sub_dealer_id', 'Sub Dealer', 4))
         for p in PromotorProfile.objects.select_related('user'):
             all_entries.append(build_entry(p, 'promotor_id', 'Promotor', 5))
+        for p in CustomerProfile.objects.select_related('user'):
+            all_entries.append(build_entry(p, 'customer_id', 'Customer', 6))
 
         active_list = [e for e in all_entries if e['active']]
         inactive_list = [e for e in all_entries if not e['active']]

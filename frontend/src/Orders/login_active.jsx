@@ -53,10 +53,11 @@ export default function LoginActive() {
               style={{ padding: '10px 16px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: '10px', color: '#4ade80', fontSize: '13px', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
             >
               <option value="all" style={{ background: '#020617' }}>All Levels</option>
-              <option value="Admin" style={{ background: '#020617' }}>Admin</option>
-              <option value="Dealer" style={{ background: '#020617' }}>Dealer</option>
-              <option value="Sub Dealer" style={{ background: '#020617' }}>Sub Dealer</option>
-              <option value="Promotor" style={{ background: '#020617' }}>Promotor</option>
+<option value="Admin" style={{ background: '#020617' }}>Admin</option>
+<option value="Dealer" style={{ background: '#020617' }}>Dealer</option>
+<option value="Sub Dealer" style={{ background: '#020617' }}>Sub Dealer</option>
+<option value="Promotor" style={{ background: '#020617' }}>Promotor</option>
+<option value="Customer" style={{ background: '#020617' }}>Customer</option>
             </select>
             <button
               onClick={() => navigate(-1)}

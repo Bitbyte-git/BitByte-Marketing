@@ -72,10 +72,11 @@ export default function LoginInactive() {
               style={{ padding: '10px 16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', color: '#f87171', fontSize: '13px', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
             >
               <option value="all" style={{ background: '#020617' }}>All Levels</option>
-              <option value="Admin" style={{ background: '#020617' }}>Admin</option>
-              <option value="Dealer" style={{ background: '#020617' }}>Dealer</option>
-              <option value="Sub Dealer" style={{ background: '#020617' }}>Sub Dealer</option>
-              <option value="Promotor" style={{ background: '#020617' }}>Promotor</option>
+<option value="Admin" style={{ background: '#020617' }}>Admin</option>
+<option value="Dealer" style={{ background: '#020617' }}>Dealer</option>
+<option value="Sub Dealer" style={{ background: '#020617' }}>Sub Dealer</option>
+<option value="Promotor" style={{ background: '#020617' }}>Promotor</option>
+<option value="Customer" style={{ background: '#020617' }}>Customer</option>
             </select>
 
             {/* ── NEW: All Levels-ku right side-la period dropdown ── */}
