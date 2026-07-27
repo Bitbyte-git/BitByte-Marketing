@@ -4,8 +4,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock 
-from django.db.models import Prefetch, Count, Q
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog 
+from django.db.models import Prefetch, Count, Q, Sum
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
 from .serializers import *
 from django.utils import timezone
@@ -39,6 +39,46 @@ def worst_status(statuses):
     if not statuses:
         return 'red'
     return min(statuses, key=lambda s: STATUS_SEVERITY[s])
+
+
+# ── NEW: Reward coin values ──
+REWARD_COINS = {
+    'first_login': 5,
+    'daily_login': 1,
+    'bonus_10': 3,
+    'bonus_20': 6,
+    'bonus_30': 10,
+}
+
+def get_login_streak(user, upto_date):
+    """upto_date-la irundhu backward-a consecutive days evlo login pannirukanga nu count pannum."""
+    streak = 0
+    day = upto_date
+    while DailyLoginLog.objects.filter(user=user, login_date=day).exists():
+        streak += 1
+        day -= timedelta(days=1)
+    return streak
+
+def get_user_display_info(user):
+    role_map = {
+        'admin': ('admin_profile', 'admin_id'),
+        'dealer': ('dealer_profile', 'dealer_id'),
+        'sub_dealer': ('sub_dealer_profile', 'sub_dealer_id'),
+        'promotor': ('promotor_profile', 'promotor_id'),
+        'customer': ('customer_profile', 'customer_id'),
+    }
+    if user.role in role_map:
+        attr, id_field = role_map[user.role]
+        try:
+            p = getattr(user, attr)
+            return {
+                'user_id_str': getattr(p, id_field, None),
+                'name': f"{p.first_name} {p.last_name or ''}".strip(),
+                'phone': p.mobile_number,
+            }
+        except Exception:
+            pass
+    return {'user_id_str': None, 'name': user.email, 'phone': None}
 
 
 def get_user_profile_id(user):
@@ -88,6 +128,32 @@ class LoginView(APIView):
         # Step 3: last_login update pannu (Active/Inactive pie chart-ku idhu than base)
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
+
+        # ── NEW: Reward logic ──
+        today = timezone.now().date()
+        is_first_ever_login = not DailyLoginLog.objects.filter(user=user).exists()
+        _, created_today_log = DailyLoginLog.objects.get_or_create(user=user, login_date=today)
+
+        if created_today_log:  # indha login already reward pottaachu-nu double pottadhu
+            if is_first_ever_login:
+                CoinRewardLog.objects.create(
+                    user=user, reward_type='first_login',
+                    coins=REWARD_COINS['first_login'], date=today
+                )
+            else:
+                CoinRewardLog.objects.create(
+                    user=user, reward_type='daily_login',
+                    coins=REWARD_COINS['daily_login'], date=today
+                )
+
+            streak = get_login_streak(user, today)
+            bonus_map = {10: 'bonus_10', 20: 'bonus_20', 30: 'bonus_30'}
+            if streak in bonus_map:
+                rtype = bonus_map[streak]
+                CoinRewardLog.objects.create(
+                    user=user, reward_type=rtype,
+                    coins=REWARD_COINS[rtype], date=today
+                )
 
         # Step 4: Success
         refresh = RefreshToken.for_user(user)
@@ -2129,6 +2195,62 @@ class CoinStockForUserView(APIView):
         stock = CoinStock.objects.filter(user=target_user, qty__gt=0).order_by('metal_type', 'weight_grams')
         serializer = CoinStockSerializer(stock, many=True)
         return Response(serializer.data)
+
+
+# ── NEW: Today's Rewards View ──
+class TodayRewardsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+
+        today = timezone.now().date()
+        qs_today = CoinRewardLog.objects.filter(date=today).select_related('user')
+        total_coins_today = qs_today.aggregate(t=Sum('coins'))['t'] or 0
+
+        summary = []
+        for rtype, label in CoinRewardLog.REWARD_TYPES:
+            rows = qs_today.filter(reward_type=rtype)
+            summary.append({
+                'reward_type': rtype,
+                'label': label,
+                'users': rows.values('user').distinct().count(),
+                'coins': rows.aggregate(c=Sum('coins'))['c'] or 0,
+            })
+
+        range_param = request.query_params.get('range', 'all')
+        list_qs = qs_today
+        if range_param == '1-10':
+            list_qs = list_qs.filter(coins__gte=1, coins__lte=10)
+        elif range_param == '11-50':
+            list_qs = list_qs.filter(coins__gte=11, coins__lte=50)
+        elif range_param == '51-100':
+            list_qs = list_qs.filter(coins__gte=51, coins__lte=100)
+        elif range_param == '100+':
+            list_qs = list_qs.filter(coins__gt=100)
+
+        list_qs = list_qs.order_by('-created_at')
+        rewards = []
+        for r in list_qs:
+            info = get_user_display_info(r.user)
+            rewards.append({
+                'id': r.id,
+                'user_id': info['user_id_str'],
+                'name': info['name'],
+                'phone': info['phone'],
+                'reward_type': r.reward_type,
+                'reward_label': dict(CoinRewardLog.REWARD_TYPES).get(r.reward_type),
+                'coins': r.coins,
+                'date': r.date.isoformat(),
+            })
+
+        return Response({
+            'date': today.isoformat(),
+            'total_coins_today': total_coins_today,
+            'summary': summary,
+            'rewards': rewards,
+        })
 
 
 @api_view(['GET'])

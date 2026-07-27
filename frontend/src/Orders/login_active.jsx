@@ -55,13 +55,15 @@ export default function LoginActive() {
   const goToOrders = (u) => {
     const slug = ROLE_SLUG[u.level_role]
     if (!slug) return
-    navigate(`/superadmin-hierarchy-salescount?role=${slug}&id=${u.db_id}&period=today`)
+    navigate(`/hierarchy-sales-count?role=${slug}&id=${u.db_id}&period=today`)
   }
 
   return (
     <div className="ls-page">
       <style>{`
         .ls-page{min-height:100vh;background:linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 48%,#E7EDEC 100%);color:#111817;font-family:"Manrope","Inter",system-ui,sans-serif;padding:32px 24px}.ls-wrap{max-width:1200px;margin:0 auto}.ls-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}.ls-kicker{font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#BB8958;margin-bottom:8px}.ls-title{margin:0;font-size:30px;line-height:1;color:#0C4044;font-weight:900}.ls-sub{color:#53615F;font-size:13px;margin:8px 0 0;font-weight:650}.ls-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ls-select{height:42px;padding:0 14px;background:#FFFFFF;border:1px solid #D1DFDE;border-radius:10px;color:#0C4044;font-size:13px;font-weight:850;outline:none}.ls-btn{height:42px;padding:0 18px;border-radius:10px;border:1px solid #073B3F;background:linear-gradient(135deg,#0C4044,#073B3F);color:#FDFDFC;font-size:13px;font-weight:900;cursor:pointer}.ls-card{background:#FFFFFF;border:1px solid #E0E9E8;border-radius:12px;box-shadow:0 16px 36px rgba(7,59,63,.06);overflow:hidden}.ls-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:18px 20px;border-bottom:1px solid #E0E9E8}.ls-count{font-size:34px;line-height:1;font-weight:900;color:#0C4044}.ls-label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#53615F;font-weight:900}.ls-status{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(12,64,68,.24);background:rgba(12,64,68,.08);color:#0C4044;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:900}.ls-dot{width:9px;height:9px;border-radius:50%;background:#0C4044;box-shadow:0 0 0 4px rgba(12,64,68,.12)}.ls-state{padding:56px 20px;text-align:center;color:#6E7D7B;font-size:14px;font-weight:700}.ls-error{margin-bottom:18px;background:rgba(201,32,53,.08);border:1px solid rgba(201,32,53,.28);color:#C92035;border-radius:10px;padding:12px 16px;font-weight:750}.ls-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.ls-table{width:100%;min-width:860px;border-collapse:collapse;font-size:14px}.ls-table thead tr{background:#F3F3F0;border-bottom:1px solid #D1DFDE}.ls-table th{padding:14px 16px;text-align:left;color:#0C4044;font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.ls-table td{padding:14px 16px;border-bottom:1px solid #E9EFEE;color:#111817}.ls-role{font-weight:900;color:#0C4044}.ls-id{font-family:monospace;color:#9F6130;font-weight:850}.ls-muted{color:#6E7D7B!important}.ls-time{color:#0C4044;font-weight:900}.ls-order-btn{background:#0C4044;color:#FDFDFC;border:none;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:900;cursor:pointer}.ls-order-btn:hover{background:#073B3F}@media(max-width:720px){.ls-page{padding:20px 12px}.ls-head{align-items:stretch;flex-direction:column}.ls-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.ls-select,.ls-btn{width:100%}.ls-summary{grid-template-columns:1fr}.ls-title{font-size:24px}.ls-count{font-size:28px}}@media(max-width:420px){.ls-actions{grid-template-columns:1fr}.ls-card{border-radius:10px}.ls-table{min-width:760px}}
+        .ls-reward-btn{background:linear-gradient(135deg,#BB8958,#9F6130);border-color:#9F6130}
+.ls-reward-btn:hover{background:#9F6130}
       `}</style>
       <div className="ls-wrap">
         <header className="ls-head">
@@ -89,6 +91,7 @@ export default function LoginActive() {
               <option value="21+">20+ Orders</option>
             </select>
             <button className="ls-btn" onClick={() => navigate(-1)}>Back</button>
+            <button className="ls-btn ls-reward-btn" onClick={() => navigate('/coins-reward')}>🪙 Reward</button>
           </div>
         </header>
 

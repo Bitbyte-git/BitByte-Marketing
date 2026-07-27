@@ -770,5 +770,33 @@ class CoinStock(models.Model):
         return f"{self.user} — {self.metal_type} {self.weight_label}: {self.qty}"
         
 
-        
+# ── COIN REWARDS SYSTEM ──
+class DailyLoginLog(models.Model):
+    """Every day user login pannumbodhu, oru entry create aagum. Streak calculate panna idhu than base."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_logins')
+    login_date = models.DateField()
+
+    class Meta:
+        unique_together = ('user', 'login_date')
+
+    def __str__(self):
+        return f"{self.user.email} - {self.login_date}"
+
+
+class CoinRewardLog(models.Model):
+    REWARD_TYPES = [
+        ('first_login', 'First Login'),
+        ('daily_login', 'Daily Login'),
+        ('bonus_10', '10 Days Bonus'),
+        ('bonus_20', '20 Days Bonus'),
+        ('bonus_30', '30 Days Bonus'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='coin_rewards')
+    reward_type = models.CharField(max_length=20, choices=REWARD_TYPES)
+    coins = models.PositiveIntegerField()
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.reward_type} - {self.coins} coins ({self.date})"        
 
