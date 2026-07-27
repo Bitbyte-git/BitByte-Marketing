@@ -1828,6 +1828,7 @@ class TodayLoginStatusView(APIView):
                 'level': level,
                 'level_role': role_label,
                 'id': getattr(profile, id_field, None),
+                'db_id': profile.id,   # ── NEW: actual database primary key (for SalesCount navigation)
                 'name': f"{profile.first_name} {profile.last_name or ''}".strip(),
                 'email': u.email,
                 'phone': profile.mobile_number,

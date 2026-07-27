@@ -14,7 +14,7 @@ export default function LoginActive() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
-  const [orderFilter, setOrderFilter] = useState('0')   // ── NEW: default = 0 Orders
+   const [orderFilter, setOrderFilter] = useState('all')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,6 +47,7 @@ export default function LoginActive() {
     if (orderFilter === '1-10' && !(oc >= 1 && oc <= 10)) return false
     if (orderFilter === '11-20' && !(oc >= 11 && oc <= 20)) return false
     if (orderFilter === '21+' && !(oc > 20)) return false
+    // 'all' → no filter, everyone passes
     return true
   })
 
@@ -54,7 +55,7 @@ export default function LoginActive() {
   const goToOrders = (u) => {
     const slug = ROLE_SLUG[u.level_role]
     if (!slug) return
-    navigate(`/superadmin-hierarchy-salescount?role=${slug}&id=${u.id}&period=today`)
+    navigate(`/superadmin-hierarchy-salescount?role=${slug}&id=${u.db_id}&period=today`)
   }
 
   return (
@@ -70,13 +71,7 @@ export default function LoginActive() {
             <p className="ls-sub">{data.length} users logged in today{scopeLabel ? ` - ${scopeLabel}` : ''}</p>
           </div>
           <div className="ls-actions">
-            {/* ── NEW: Orders range dropdown, All Levels-க்கு இடது பக்கம் ── */}
-            <select className="ls-select" value={orderFilter} onChange={e => setOrderFilter(e.target.value)}>
-              <option value="0">0 Orders</option>
-              <option value="1-10">0 - 10 Orders</option>
-              <option value="11-20">10 - 20 Orders</option>
-              <option value="21+">20+ Orders</option>
-            </select>
+            
             <select className="ls-select" value={roleFilter} onChange={e => setRoleFilter(e.target.value)}>
               <option value="all">All Levels</option>
               <option value="Admin">Admin</option>
@@ -84,6 +79,14 @@ export default function LoginActive() {
               <option value="Sub Dealer">Sub Dealer</option>
               <option value="Promotor">Promotor</option>
               <option value="Customer">Customer</option>
+            </select>
+            
+            <select className="ls-select" value={orderFilter} onChange={e => setOrderFilter(e.target.value)}>
+              <option value="all">All Orders</option>
+              <option value="0">0 Orders</option>
+              <option value="1-10">0 - 10 Orders</option>
+              <option value="11-20">10 - 20 Orders</option>
+              <option value="21+">20+ Orders</option>
             </select>
             <button className="ls-btn" onClick={() => navigate(-1)}>Back</button>
           </div>
