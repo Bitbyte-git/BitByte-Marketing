@@ -59,6 +59,10 @@ def get_login_streak(user, upto_date):
         day -= timedelta(days=1)
     return streak
 
+# ── NEW: level/position map — Admin=2 ... Customer=6 (super_admin=1 rewards-la varaadhu) ──
+ROLE_LEVEL = {'admin': 2, 'dealer': 3, 'sub_dealer': 4, 'promotor': 5, 'customer': 6}
+ROLE_LABEL = {'admin': 'Admin', 'dealer': 'Dealer', 'sub_dealer': 'Sub Dealer', 'promotor': 'Promotor', 'customer': 'Customer'}
+
 def get_user_display_info(user):
     role_map = {
         'admin': ('admin_profile', 'admin_id'),
@@ -75,10 +79,12 @@ def get_user_display_info(user):
                 'user_id_str': getattr(p, id_field, None),
                 'name': f"{p.first_name} {p.last_name or ''}".strip(),
                 'phone': p.mobile_number,
+                'level': ROLE_LEVEL.get(user.role),
+                'position': ROLE_LABEL.get(user.role),
             }
         except Exception:
             pass
-    return {'user_id_str': None, 'name': user.email, 'phone': None}
+    return {'user_id_str': None, 'name': user.email, 'phone': None, 'level': None, 'position': None}
 
 
 def get_user_profile_id(user):
@@ -129,31 +135,32 @@ class LoginView(APIView):
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
 
-        # ── NEW: Reward logic ──
-        today = timezone.now().date()
-        is_first_ever_login = not DailyLoginLog.objects.filter(user=user).exists()
-        _, created_today_log = DailyLoginLog.objects.get_or_create(user=user, login_date=today)
+        # ── NEW: Reward logic — super_admin ku reward venaam ──
+        if user.role != 'super_admin':
+            today = timezone.now().date()
+            is_first_ever_login = not DailyLoginLog.objects.filter(user=user).exists()
+            _, created_today_log = DailyLoginLog.objects.get_or_create(user=user, login_date=today)
 
-        if created_today_log:  # indha login already reward pottaachu-nu double pottadhu
-            if is_first_ever_login:
-                CoinRewardLog.objects.create(
-                    user=user, reward_type='first_login',
-                    coins=REWARD_COINS['first_login'], date=today
-                )
-            else:
-                CoinRewardLog.objects.create(
-                    user=user, reward_type='daily_login',
-                    coins=REWARD_COINS['daily_login'], date=today
-                )
+            if created_today_log:
+                if is_first_ever_login:
+                    CoinRewardLog.objects.create(
+                        user=user, reward_type='first_login',
+                        coins=REWARD_COINS['first_login'], date=today
+                    )
+                else:
+                    CoinRewardLog.objects.create(
+                        user=user, reward_type='daily_login',
+                        coins=REWARD_COINS['daily_login'], date=today
+                    )
 
-            streak = get_login_streak(user, today)
-            bonus_map = {10: 'bonus_10', 20: 'bonus_20', 30: 'bonus_30'}
-            if streak in bonus_map:
-                rtype = bonus_map[streak]
-                CoinRewardLog.objects.create(
-                    user=user, reward_type=rtype,
-                    coins=REWARD_COINS[rtype], date=today
-                )
+                streak = get_login_streak(user, today)
+                bonus_map = {10: 'bonus_10', 20: 'bonus_20', 30: 'bonus_30'}
+                if streak in bonus_map:
+                    rtype = bonus_map[streak]
+                    CoinRewardLog.objects.create(
+                        user=user, reward_type=rtype,
+                        coins=REWARD_COINS[rtype], date=today
+                    )
 
         # Step 4: Success
         refresh = RefreshToken.for_user(user)
@@ -2206,7 +2213,8 @@ class TodayRewardsView(APIView):
             return Response({'error': 'Permission denied'}, status=403)
 
         today = timezone.now().date()
-        qs_today = CoinRewardLog.objects.filter(date=today).select_related('user')
+        # ── NEW: super_admin ku reward kaanpikkathu — level 2 (admin) mudhal mattum ──
+        qs_today = CoinRewardLog.objects.filter(date=today).exclude(user__role='super_admin').select_related('user')
         total_coins_today = qs_today.aggregate(t=Sum('coins'))['t'] or 0
 
         summary = []
@@ -2236,6 +2244,8 @@ class TodayRewardsView(APIView):
             info = get_user_display_info(r.user)
             rewards.append({
                 'id': r.id,
+                'level': info['level'],
+                'position': info['position'],
                 'user_id': info['user_id_str'],
                 'name': info['name'],
                 'phone': info['phone'],

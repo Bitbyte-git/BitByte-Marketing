@@ -62,6 +62,7 @@ export default function CoinsReward() {
         .rw-table td{padding:14px 16px;border-bottom:1px solid #E9EFEE;color:#111817}
         .rw-id{font-family:monospace;color:#9F6130;font-weight:850}
         .rw-muted{color:#6E7D7B!important}
+        .rw-role{font-weight:900;color:#0C4044}
         .rw-badge{display:inline-block;background:rgba(12,64,68,.08);color:#0C4044;border:1px solid rgba(12,64,68,.2);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:900}
         @media(max-width:720px){.rw-page{padding:20px 12px}.rw-head{align-items:stretch;flex-direction:column}.rw-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.rw-select,.rw-btn{width:100%}.rw-title{font-size:24px}}
       `}</style>
@@ -115,10 +116,12 @@ export default function CoinsReward() {
               ) : (
                 <div className="rw-table-wrap">
                   <table className="rw-table">
-                    <thead><tr>{['User ID', 'Name', 'Phone No', 'Reward', 'Date'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+                    <thead><tr>{['Level', 'Position', 'User ID', 'Name', 'Phone No', 'Reward', 'Date'].map(h => <th key={h}>{h}</th>)}</tr></thead>
                     <tbody>
                       {data.rewards.map(r => (
                         <tr key={r.id}>
+                          <td className="rw-muted">{r.level || '—'}</td>
+                          <td className="rw-role">{r.position || '—'}</td>
                           <td className="rw-id">{r.user_id || '—'}</td>
                           <td>{r.name || 'Unknown'}</td>
                           <td className="rw-muted">{r.phone || '—'}</td>
