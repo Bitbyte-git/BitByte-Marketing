@@ -179,6 +179,15 @@ export default function SuperAdminHierarchySalesCount() {
   const navigate = useNavigate()
   const role = searchParams.get('role')
   const id = searchParams.get('id')
+  const period = searchParams.get('period')   // ── NEW: 'today' na Login page-la irundhu vandhurukom
+
+  // ── NEW: indha date "today"-va nu check pannurom ──
+  const isToday = (iso) => {
+    if (!iso) return false
+    const d = new Date(iso)
+    const now = new Date()
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
+  }
 
   const [root, setRoot] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -209,7 +218,8 @@ const [selected, setSelected] = useState(null)
     setTimeout(() => setPulseId(null), 1600)
   }
 
-  const orders = selected ? collectOrders(selected) : []
+   const allOrders = selected ? collectOrders(selected) : []
+  const orders = period === 'today' ? allOrders.filter(o => isToday(o.created_at)) : allOrders   // ── NEW
 
  
   const grouped = {}
@@ -371,7 +381,9 @@ const [selected, setSelected] = useState(null)
           </div>
           <div>
             <div style={{ fontSize: 17, fontWeight: 800, color: '#a5f3fc' }}>Sales Count — Hierarchy Breakdown</div>
-            <div style={{ fontSize: 12, color: subtext, marginTop: 2 }}>Left-la oru person click pannu, right-la avanga sales details varum</div>
+<div style={{ fontSize: 12, color: subtext, marginTop: 2 }}>
+  {period === 'today' ? "Showing TODAY's orders only" : 'Left-la oru person click pannu, right-la avanga sales details varum'}
+</div>
           </div>
         </div>
         <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
@@ -419,8 +431,8 @@ const [selected, setSelected] = useState(null)
                     <IconBox color="#4ade80" />
                   </div>
                   <div>
-                    <div style={{ color: subtext, fontSize: 11 }}>Total Orders</div>
-                    <div style={{ fontSize: 24, fontWeight: 900, color: '#4ade80' }}>{overallCount}</div>
+                    <div style={{ color: subtext, fontSize: 11 }}>{period === 'today' ? "Today's Orders" : 'Total Orders'}</div>
+<div style={{ fontSize: 24, fontWeight: 900, color: '#4ade80' }}>{overallCount}</div>
                   </div>
                 </div>
                 <div className="sstat-card sstat-glow" style={{ background: 'rgba(251,191,36,0.06)', borderColor: 'rgba(251,191,36,0.25)', '--glow': 'rgba(251,191,36,0.35)' }}>

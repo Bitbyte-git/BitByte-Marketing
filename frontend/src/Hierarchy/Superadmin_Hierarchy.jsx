@@ -91,6 +91,15 @@ const IconBuilding = ({ color, size = 18 }) => (
     <line x1="15" y1="14" x2="15" y2="14"/><line x1="9" y1="18" x2="15" y2="18"/>
   </svg>
 )
+const IconSwitchView = ({ color, size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 3l4 4-4 4"/>
+    <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+    <path d="M7 21l-4-4 4-4"/>
+    <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+  </svg>
+)
+
 const IconChevronDown = ({ color, size = 10 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="6 9 12 15 18 9"/>
@@ -720,12 +729,19 @@ useLayoutEffect(() => {
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <IconBuilding color="#0C4044" />
-            <span style={{ color: '#0C4044', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Full Organization Hierarchy
-            </span>
-          </div>
+          
+<div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+  <button
+    onClick={() => navigate('/superadmin-hierarchy-grid')}
+    title="Switch to Grid View"
+    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+  >
+    <IconSwitchView color="#0C4044" />
+  </button>
+  <span style={{ color: '#0C4044', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+    Full Organization Hierarchy
+  </span>
+</div>
           {totalStats && (
             <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: `${ROLE_CFG.super_admin.color}22`, border: `1px solid ${ROLE_CFG.super_admin.color}55`, borderRadius: '20px', padding: '4px 14px' }}>
@@ -766,9 +782,9 @@ useLayoutEffect(() => {
             <button className="hierarchy-zoom-btn" onClick={fitHierarchy} title="Fit more hierarchy on screen"><IconFit color="currentColor" /> Fit</button>
             <button className="hierarchy-zoom-btn" onClick={resetZoom} title="Reset hierarchy zoom">Reset</button>
           </div>
-          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(220,38,38,0.35)', color: '#DC2626', borderRadius: '10px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
-            <IconBack color="#DC2626" /> Back
-          </button>
+          <button onClick={() => navigate('/super-admin')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(220,38,38,0.35)', color: '#DC2626', borderRadius: '10px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
+  <IconBack color="#DC2626" /> Back
+</button>
         </div>
       </div>
 

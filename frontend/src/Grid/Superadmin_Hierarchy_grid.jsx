@@ -76,6 +76,14 @@ const IconBuilding = ({ color, size = 18 }) => (
     <line x1="15" y1="14" x2="15" y2="14"/><line x1="9" y1="18" x2="15" y2="18"/>
   </svg>
 )
+const IconSwitchView = ({ color, size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 3l4 4-4 4"/>
+    <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+    <path d="M7 21l-4-4 4-4"/>
+    <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+  </svg>
+)
 const IconChevronDown = ({ color, size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="6 9 12 15 18 9"/>
@@ -154,6 +162,33 @@ function getPrintStyles(accent) {
     .tree-id { font-family:monospace; font-size:10px; margin-bottom:3px; }
     .tree-name { font-size:13px; font-weight:700; color:#f8fafc; margin-bottom:2px; }
     .tree-info { font-size:11px; color:#94a3b8; }
+    /* ── org-chart tree — before/after pseudo elements use panni connector lines varaikurom ── */
+    .org-tree-wrapper { overflow:visible; padding:20px 10px; position:relative; text-align:center; width:100%; }
+    #org-scale-inner { display:inline-block; }
+    .org-tree, .org-tree ul, .org-tree li { margin:0; padding:0; list-style:none; }
+    .org-tree { display:flex; justify-content:center; min-width:max-content; }
+    .org-tree ul { display:flex; padding-top:34px; position:relative; }
+    .org-tree li { display:flex; flex-direction:column; align-items:center; padding:34px 14px 0 14px; position:relative; }
+    /* ::before = left half top line, ::after = right half top line — rendu serndhu oru node-oda parent-connector varaikum */
+    .org-tree li::before, .org-tree li::after {
+      content:''; position:absolute; top:0; right:50%; width:50%; height:34px; border-top:2px solid #475569;
+    }
+    .org-tree li::after { right:auto; left:50%; border-left:2px solid #475569; }
+    .org-tree li:only-child::before, .org-tree li:only-child::after { display:none; }
+    .org-tree li:only-child { padding-top:0; }
+    .org-tree li:first-child::before { border:none; }
+    .org-tree li:last-child::after { border:none; }
+    .org-tree li:last-child::before { border-right:2px solid #475569; border-radius:0 8px 0 0; }
+    .org-tree li:first-child::after { border-radius:8px 0 0 0; }
+    /* parent-la irundhu kீழ vertical line varra pseudo element */
+    .org-tree ul ul::before {
+      content:''; position:absolute; top:0; left:50%; border-left:2px solid #475569; width:0; height:34px;
+    }
+    .org-card { display:inline-block; background:linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)); border:1.5px solid; border-radius:12px; padding:10px 14px; min-width:150px; }
+    .org-role { font-size:9px; font-weight:800; letter-spacing:1.2px; margin-bottom:2px; }
+    .org-id { font-family:monospace; font-size:10px; margin-bottom:3px; }
+    .org-name { font-size:13px; font-weight:700; color:#f8fafc; margin-bottom:2px; }
+    .org-info { font-size:11px; color:#94a3b8; }
     @media print { body { padding:20px; } }
   `
 }
@@ -165,12 +200,23 @@ function renderTreeNodeCard(node, role, extraStyle = '') {
   const name = [node.first_name, node.last_name].filter(Boolean).join(' ') || '—'
   const phone = node.mobile_number || '—'
   const city = node.city_name || ''
-  return `<div class="tree-card" style="border-color:${cfg.color};${extraStyle}">
-    <div class="tree-role" style="color:${cfg.color}">${cfg.label}</div>
-    <div class="tree-id" style="color:${cfg.color}">${idVal}</div>
-    <div class="tree-name">${name}</div>
-    <div class="tree-info">Tel: ${phone}${city ? ' • ' + city : ''}</div>
+  return `<div class="org-card" style="border-color:${cfg.color};${extraStyle}">
+    <div class="org-role" style="color:${cfg.color}">${cfg.label}</div>
+    <div class="org-id" style="color:${cfg.color}">${idVal}</div>
+    <div class="org-name">${name}</div>
+    <div class="org-info">Tel: ${phone}${city ? ' • ' + city : ''}</div>
   </div>`
+}
+
+// ── NEW: real horizontal org-chart tree using nested <ul><li> + ::before/::after connectors ──
+function renderOrgTreeNode(node, role, extraStyle = '') {
+  const cardHtml = renderTreeNodeCard(node, role, extraStyle)
+  const childRole = CHILD_ROLE[role]
+  const children = childRole ? (node[CHILD_KEY[role]] || []) : []
+  const childrenHtml = children.length
+    ? `<ul>${children.map(ch => `<li>${renderOrgTreeNode(ch, childRole)}</li>`).join('')}</ul>`
+    : ''
+  return `${cardHtml}${childrenHtml}`
 }
 
 // ── NEW: recursively renders every child, grandchild... below a node ──
@@ -262,52 +308,41 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
 // ── NEW: prints the full downward hierarchy starting from this node ──
 function printHierarchyTree(node, role, ancestors, superAdminEmail) {
   const cfg = ROLE_CFG[role]
-  const chain = [
-    { type: 'super_admin', data: { email: superAdminEmail } },
-    ...ancestors.map(a => ({ type: a.role, data: a.node })),
-  ]
-  const chainHtml = chain.map(item => {
-    if (item.type === 'super_admin') {
-      return `<div class="chain-item">
-        <div class="chain-role">SUPER ADMIN</div>
-        <div class="chain-email">${item.data.email || '—'}</div>
-      </div><div class="chain-arrow">↓</div>`
-    }
-    const r = ROLE_CFG[item.type]
-    const d = item.data || {}
-    const idVal = d[r.idKey] || d.id || '—'
-    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || '—'
-    return `<div class="chain-item" style="border-color:${r.color}">
-      <div class="chain-role" style="color:${r.color}">${r.label}</div>
-      <div class="chain-id" style="color:${r.color}">${idVal}</div>
-      <div class="chain-name">${name}</div>
-    </div><div class="chain-arrow">↓</div>`
-  }).join('')
-
-  const counts = countDescendants(node, role)
-  const countPillsHtml = Object.keys(counts).length
-    ? Object.entries(counts).map(([r, c]) => {
-        const rc = ROLE_CFG[r]
-        return `<span class="count-pill" style="border-color:${rc.color}; color:${rc.color}">${c} ${rc.label}${c === 1 ? '' : 'S'}</span>`
-      }).join('')
-    : `<span class="count-pill" style="border-color:#475569;color:#94a3b8">No one under this ${cfg.label.toLowerCase()} yet</span>`
-
   const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || '—'
-  const treeHtml = renderDescendantsTree(node, role)
+  const orgTreeHtml = `<div class="org-tree"><ul><li>${renderOrgTreeNode(node, role, `box-shadow:0 0 22px ${cfg.color}33;`)}</li></ul></div>`
 
   const printWindow = window.open('', '_blank')
   printWindow.document.write(`
     <!DOCTYPE html><html><head><title>${cfg.label} Hierarchy — ${currentName}</title>
-    <style>${getPrintStyles(cfg.color)}</style></head>
-    <body><div class="wrapper">
+    <style>${getPrintStyles(cfg.color)}</style>
+    <style id="page-size-style">@page { margin: 10mm; }</style>
+    </head>
+    <body>
       <div class="header"><h1>BitByte — ${cfg.label} Hierarchy Report</h1><p>Full downward chain, every level</p></div>
-      ${chainHtml}
-      ${renderTreeNodeCard(node, role, `box-shadow:0 0 22px ${cfg.color}33;`)}
-      <div class="count-row">${countPillsHtml}</div>
-      ${treeHtml}
-      <div class="footer">Printed on ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
-    </div>
-    <script>window.onload = () => { window.print() }<\/script>
+      <div id="org-scale-outer" class="org-tree-wrapper">
+        <div id="org-scale-inner">${orgTreeHtml}</div>
+      </div>
+    <script>
+      window.onload = () => {
+        // ── NEW: scale panrathukku pathila, page size-ah tree size-ku exact-a match pannurom.
+        // Idhu na 100% natural size-la tree varum, edhuvume crop aagathu ──
+        const inner = document.getElementById('org-scale-inner')
+        const header = document.querySelector('.header')
+        const pxToMm = px => (px / 96) * 25.4
+
+        const treeWidthPx = inner.scrollWidth
+        const treeHeightPx = inner.scrollHeight
+        const headerHeightPx = header.offsetHeight
+
+        const pageWidthMm = Math.max(210, pxToMm(treeWidthPx) + 20)
+        const pageHeightMm = pxToMm(treeHeightPx + headerHeightPx) + 40
+
+        const styleTag = document.getElementById('page-size-style')
+        styleTag.textContent = '@page { size: ' + pageWidthMm.toFixed(0) + 'mm ' + pageHeightMm.toFixed(0) + 'mm; margin: 10mm; }'
+
+        setTimeout(() => window.print(), 200)
+      }
+    <\/script>
     </body></html>
   `)
   printWindow.document.close()
@@ -992,12 +1027,19 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <IconBuilding color="#0C4044" />
-            <span style={{ color: '#0C4044', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Full Organization Hierarchy Grid
-            </span>
-          </div>
+         
+<div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+  <button
+    onClick={() => navigate('/superadmin-hierarchy')}
+    title="Switch to Tree View"
+    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+  >
+   <IconSwitchView color="#0C4044" />
+  </button>
+  <span style={{ color: '#0C4044', fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+    Full Organization Hierarchy Grid
+  </span>
+</div>
           {totalStats && (
             <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: `${ROLE_CFG.super_admin.color}22`, border: `1px solid ${ROLE_CFG.super_admin.color}55`, borderRadius: '20px', padding: '4px 14px' }}>
@@ -1035,9 +1077,9 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
               </button>
             )}
           </div>
-          <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '10px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
-            <IconBack color="#C92035" /> Back
-          </button>
+          <button onClick={() => navigate('/super-admin')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '10px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
+  <IconBack color="#C92035" /> Back
+</button>
         </div>
       </div>
 

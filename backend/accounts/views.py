@@ -1780,6 +1780,17 @@ class OrderTimeSeriesView(APIView):
         return Response({'period': period, 'data': data})
 
 
+# ── NEW: today order count map — module level function (class-க்கு வெளிய) ──
+def _today_order_counts():
+    """user_id -> today order count map (JewelryOrder based)"""
+    today = timezone.localtime(timezone.now()).date()
+    counts = dict(
+        JewelryOrder.objects.filter(created_at__date=today)
+        .values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
+    )
+    return counts
+
+
 class TodayLoginStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1797,6 +1808,7 @@ class TodayLoginStatusView(APIView):
 
         period = request.query_params.get('period', 'today')   # ── NEW
         today = timezone.now().date()
+        today_order_counts = _today_order_counts() 
 
         def build_entry(profile, id_field, role_label, level):
             u = profile.user
@@ -1823,6 +1835,7 @@ class TodayLoginStatusView(APIView):
                 'active': is_active,
                 'last_login': u.last_login.isoformat() if u.last_login else None,
                 'days_inactive': days_inactive,          # ── NEW
+                'order_count': today_order_counts.get(u.id, 0),   # ── NEW: today's order count
             }
 
         all_entries = []
