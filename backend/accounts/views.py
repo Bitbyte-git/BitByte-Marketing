@@ -10,7 +10,6 @@ from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMon
 from .serializers import *
 from django.utils import timezone
 from datetime import timedelta
-from django.core.cache import cache 
 import razorpay
 import hmac
 import hashlib
@@ -1480,7 +1479,7 @@ def _monthly_order_counts_map(user_ids):
 
 def _build_customer(c, orders_by_user, monthly_counts):
     orders = orders_by_user.get(c.user_id, [])
-    monthly_count = monthly_counts.get(c.user_id, 0)   # ← O(1) dict lookup
+    monthly_count = monthly_counts.get(c.user_id, 0)   # ← O(1) dict lookup, loop illa
     return {
         'type': 'customer', 'id': c.id, 'customer_id': c.customer_id,
         'first_name': c.first_name, 'last_name': c.last_name,
@@ -1550,34 +1549,27 @@ class HierarchySubtreeOrdersView(APIView):
                     'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
                 ).get(id=node_id)
                 orders_by_user = _bulk_orders_for_admin(node)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_admin(node))   # ← NEW
-                root = _build_admin(node, orders_by_user, monthly_counts)                   # ← CHANGED
+                root = _build_admin(node, orders_by_user)
             elif role == 'dealer':
                 node = DealerProfile.objects.prefetch_related(
                     'assigned_sub_dealers__assigned_promotors__assigned_customers'
                 ).get(id=node_id)
                 orders_by_user = _bulk_orders_for_dealer(node)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_dealer(node))  # ← NEW
-                root = _build_dealer(node, orders_by_user, monthly_counts)                  # ← CHANGED
+                root = _build_dealer(node, orders_by_user)
             elif role == 'sub_dealer':
                 node = SubDealerProfile.objects.prefetch_related(
                     'assigned_promotors__assigned_customers'
                 ).get(id=node_id)
                 orders_by_user = _bulk_orders_for_sub_dealer(node)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_sub_dealer(node))  # ← NEW
-                root = _build_sub_dealer(node, orders_by_user, monthly_counts)                  # ← CHANGED
+                root = _build_sub_dealer(node, orders_by_user)
             elif role == 'promotor':
                 node = PromotorProfile.objects.prefetch_related('assigned_customers').get(id=node_id)
                 orders_by_user = _bulk_orders_for_promotor(node)
-                monthly_counts = _monthly_order_counts_map(
-                    [c.user_id for c in node.assigned_customers.all()]
-                )   # ← NEW
-                root = _build_promotor(node, orders_by_user, monthly_counts)   # ← CHANGED
+                root = _build_promotor(node, orders_by_user)
             elif role == 'customer':
                 node = CustomerProfile.objects.get(id=node_id)
                 orders_by_user = _orders_by_user_map([node.user_id])
-                monthly_counts = _monthly_order_counts_map([node.user_id])   # ← NEW
-                root = _build_customer(node, orders_by_user, monthly_counts)  # ← CHANGED
+                root = _build_customer(node, orders_by_user)
             else:
                 return Response({'error': 'invalid role'}, status=400)
         except Exception as e:
@@ -1603,29 +1595,29 @@ class MyHierarchyView(APIView):
                     'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_admin(node)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_admin(node))   # ← NEW
-                root = _build_admin(node, orders_by_user, monthly_counts)                   # ← CHANGED
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_admin(node))
+                root = _build_admin(node, orders_by_user, monthly_counts)
             elif role == 'dealer':
                 node = DealerProfile.objects.prefetch_related(
                     'assigned_sub_dealers__assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_dealer(node)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_dealer(node))  # ← NEW
-                root = _build_dealer(node, orders_by_user, monthly_counts)                  # ← CHANGED
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_dealer(node))
+                root = _build_dealer(node, orders_by_user, monthly_counts)
             elif role == 'sub_dealer':
                 node = SubDealerProfile.objects.prefetch_related(
                     'assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_sub_dealer(node)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_sub_dealer(node))  # ← NEW
-                root = _build_sub_dealer(node, orders_by_user, monthly_counts)                  # ← CHANGED
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_sub_dealer(node))
+                root = _build_sub_dealer(node, orders_by_user, monthly_counts)
             elif role == 'promotor':
                 node = PromotorProfile.objects.prefetch_related('assigned_customers').get(user=user)
                 orders_by_user = _bulk_orders_for_promotor(node)
                 monthly_counts = _monthly_order_counts_map(
                     [c.user_id for c in node.assigned_customers.all()]
-                )   # ← NEW
-                root = _build_promotor(node, orders_by_user, monthly_counts)   # ← CHANGED
+                )
+                root = _build_promotor(node, orders_by_user, monthly_counts)
         except Exception as e:
             return Response({'error': str(e)}, status=404)
 
@@ -1706,12 +1698,6 @@ class SalesReportView(APIView):
         if role == 'customer':
             return Response({'error': 'Report not available for customer'}, status=403)
 
-        # ── NEW: 2 min cache — same user repeat-a hit pannalum DB re-query aagathu ──
-        cache_key = f"sales_report_{user.id}"
-        cached = cache.get(cache_key)
-        if cached:
-            return Response(cached)
-
         if role == 'super_admin':
             admins = list(AdminProfile.objects.all().prefetch_related(
                 'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
@@ -1720,14 +1706,12 @@ class SalesReportView(APIView):
             for a in admins:
                 all_ids.extend(_collect_user_ids_admin(a))
             orders_by_user = _orders_by_user_map(all_ids)
-            monthly_counts = _monthly_order_counts_map(all_ids)   # ← NEW
-            result = {
+            monthly_counts = _monthly_order_counts_map(all_ids)
+            return Response({
                 'role': role,
                 'data': [_build_admin(a, orders_by_user, monthly_counts) for a in admins],
                 'ancestors': [],
-            }
-            cache.set(cache_key, result, timeout=120)
-            return Response(result)
+            })
 
         elif role == 'admin':
             try:
@@ -1735,14 +1719,12 @@ class SalesReportView(APIView):
                     'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_admin(admin)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_admin(admin))   # ← NEW
-                result = {
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_admin(admin))
+                return Response({
                     'role': role,
                     'data': [_build_admin(admin, orders_by_user, monthly_counts)],
                     'ancestors': get_report_ancestors(role, admin),
-                }
-                cache.set(cache_key, result, timeout=120)
-                return Response(result)
+                })
             except AdminProfile.DoesNotExist:
                 return Response({'role': role, 'data': [], 'ancestors': []})
 
@@ -1752,14 +1734,12 @@ class SalesReportView(APIView):
                     'assigned_sub_dealers__assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_dealer(dealer)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_dealer(dealer))   # ← NEW
-                result = {
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_dealer(dealer))
+                return Response({
                     'role': role,
                     'data': [_build_dealer(dealer, orders_by_user, monthly_counts)],
                     'ancestors': get_report_ancestors(role, dealer),
-                }
-                cache.set(cache_key, result, timeout=120)
-                return Response(result)
+                })
             except DealerProfile.DoesNotExist:
                 return Response({'role': role, 'data': [], 'ancestors': []})
 
@@ -1769,14 +1749,12 @@ class SalesReportView(APIView):
                     'assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_sub_dealer(sd)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_sub_dealer(sd))   # ← NEW
-                result = {
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_sub_dealer(sd))
+                return Response({
                     'role': role,
                     'data': [_build_sub_dealer(sd, orders_by_user, monthly_counts)],
                     'ancestors': get_report_ancestors(role, sd),
-                }
-                cache.set(cache_key, result, timeout=120)
-                return Response(result)
+                })
             except SubDealerProfile.DoesNotExist:
                 return Response({'role': role, 'data': [], 'ancestors': []})
 
@@ -1786,14 +1764,12 @@ class SalesReportView(APIView):
                     'assigned_sub_dealer__assigned_dealer__assigned_admin'
                 ).prefetch_related('assigned_customers').get(user=user)
                 orders_by_user = _bulk_orders_for_promotor(p)
-                monthly_counts = _monthly_order_counts_map([c.user_id for c in p.assigned_customers.all()])   # ← NEW
-                result = {
+                monthly_counts = _monthly_order_counts_map([c.user_id for c in p.assigned_customers.all()])
+                return Response({
                     'role': role,
                     'data': [_build_promotor(p, orders_by_user, monthly_counts)],
                     'ancestors': get_report_ancestors(role, p),
-                }
-                cache.set(cache_key, result, timeout=120)
-                return Response(result)
+                })
             except PromotorProfile.DoesNotExist:
                 return Response({'role': role, 'data': [], 'ancestors': []})
 
