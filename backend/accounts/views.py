@@ -1425,6 +1425,20 @@ def _orders_by_user_map(user_ids):
         orders_by_user.setdefault(o.user_id, []).append(_serialize_order(o))
     return orders_by_user
 
+def _report_orders_by_user_map(user_ids):
+    """Sales Report ku mattum — last 365 days orders mattum edukkum.
+    Trend chart max 'Year' view ku 365 days podhum, so full history
+    (2-3 varusham) venaam. Idhu than page slow-a irundhadhukku main reason."""
+    cutoff = timezone.now() - timedelta(days=365)
+    orders_by_user = {}
+    qs = JewelryOrder.objects.filter(
+        user_id__in=user_ids,
+        created_at__gte=cutoff,
+    ).select_related('product').order_by('-created_at')
+    for o in qs:
+        orders_by_user.setdefault(o.user_id, []).append(_serialize_order(o))
+    return orders_by_user    
+
 def _collect_user_ids_admin(a):
     ids = []
     for d in a.assigned_dealers.all():
@@ -1689,6 +1703,95 @@ def get_report_ancestors(role, profile):
 
 
 class SalesReportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        role = user.role
+
+        if role == 'customer':
+            return Response({'error': 'Report not available for customer'}, status=403)
+
+        if role == 'super_admin':
+            admins = list(AdminProfile.objects.all().prefetch_related(
+                'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
+            ))
+            all_ids = []
+            for a in admins:
+                all_ids.extend(_collect_user_ids_admin(a))
+            orders_by_user = _report_orders_by_user_map(all_ids)
+            monthly_counts = _monthly_order_counts_map(all_ids)
+            return Response({
+                'role': role,
+                'data': [_build_admin(a, orders_by_user, monthly_counts) for a in admins],
+                'ancestors': [],
+            })
+
+        elif role == 'admin':
+            try:
+                admin = AdminProfile.objects.prefetch_related(
+                    'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
+                ).get(user=user)
+                ids = _collect_user_ids_admin(admin)
+                orders_by_user = _report_orders_by_user_map(ids)
+                monthly_counts = _monthly_order_counts_map(ids)
+                return Response({
+                    'role': role,
+                    'data': [_build_admin(admin, orders_by_user, monthly_counts)],
+                    'ancestors': get_report_ancestors(role, admin),
+                })
+            except AdminProfile.DoesNotExist:
+                return Response({'role': role, 'data': [], 'ancestors': []})
+
+        elif role == 'dealer':
+            try:
+                dealer = DealerProfile.objects.select_related('assigned_admin').prefetch_related(
+                    'assigned_sub_dealers__assigned_promotors__assigned_customers'
+                ).get(user=user)
+                ids = _collect_user_ids_dealer(dealer)
+                orders_by_user = _report_orders_by_user_map(ids)
+                monthly_counts = _monthly_order_counts_map(ids)
+                return Response({
+                    'role': role,
+                    'data': [_build_dealer(dealer, orders_by_user, monthly_counts)],
+                    'ancestors': get_report_ancestors(role, dealer),
+                })
+            except DealerProfile.DoesNotExist:
+                return Response({'role': role, 'data': [], 'ancestors': []})
+
+        elif role == 'sub_dealer':
+            try:
+                sd = SubDealerProfile.objects.select_related('assigned_dealer__assigned_admin').prefetch_related(
+                    'assigned_promotors__assigned_customers'
+                ).get(user=user)
+                ids = _collect_user_ids_sub_dealer(sd)
+                orders_by_user = _report_orders_by_user_map(ids)
+                monthly_counts = _monthly_order_counts_map(ids)
+                return Response({
+                    'role': role,
+                    'data': [_build_sub_dealer(sd, orders_by_user, monthly_counts)],
+                    'ancestors': get_report_ancestors(role, sd),
+                })
+            except SubDealerProfile.DoesNotExist:
+                return Response({'role': role, 'data': [], 'ancestors': []})
+
+        elif role == 'promotor':
+            try:
+                p = PromotorProfile.objects.select_related(
+                    'assigned_sub_dealer__assigned_dealer__assigned_admin'
+                ).prefetch_related('assigned_customers').get(user=user)
+                ids = [c.user_id for c in p.assigned_customers.all()]
+                orders_by_user = _report_orders_by_user_map(ids)
+                monthly_counts = _monthly_order_counts_map(ids)
+                return Response({
+                    'role': role,
+                    'data': [_build_promotor(p, orders_by_user, monthly_counts)],
+                    'ancestors': get_report_ancestors(role, p),
+                })
+            except PromotorProfile.DoesNotExist:
+                return Response({'role': role, 'data': [], 'ancestors': []})
+
+        return Response({'error': 'Invalid role'}, status=400)
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
