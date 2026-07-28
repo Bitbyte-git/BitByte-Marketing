@@ -90,8 +90,8 @@ export default function LoginActive() {
               <option value="11-20">10 - 20 Orders</option>
               <option value="21+">20+ Orders</option>
             </select>
-            <button className="ls-btn" onClick={() => navigate(-1)}>Back</button>
             <button className="ls-btn ls-reward-btn" onClick={() => navigate('/coins-reward')}>🪙 Reward</button>
+            <button className="ls-btn" onClick={() => navigate(-1)}>Back</button>
           </div>
         </header>
 
