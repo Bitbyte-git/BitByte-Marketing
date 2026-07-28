@@ -12,16 +12,16 @@ const OCCUPATION_OPTIONS = ['employee', 'business', 'others']
 
 const COLORS = ['#BDCFCE', '#CCA881', '#0C4044', '#C92035', '#BB8958', '#D1DFDE']
 
-// â”€â”€â”€ ROLE CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€â”€ ROLE CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ROLE_CFG = {
-  admin: { color: '#53615F', label: 'ðŸ›¡ï¸ ADMIN', idKey: 'admin_id' },
-  dealer: { color: '#0C4044', label: 'ðŸª DEALER', idKey: 'dealer_id' },
-  sub_dealer: { color: '#BB8958', label: 'ðŸ”— SUB DEALER', idKey: 'sub_dealer_id' },
-  promotor: { color: '#CCA881', label: 'ðŸŒŸ PROMOTOR', idKey: 'promotor_id' },
-  customer: { color: '#C92035', label: 'ðŸ‘¤ CUSTOMER', idKey: 'customer_id' },
+  admin: { color: '#53615F', label: 'ADMIN', idKey: 'admin_id' },
+  dealer: { color: '#0C4044', label: 'DEALER', idKey: 'dealer_id' },
+  sub_dealer: { color: '#BB8958', label: 'SUB DEALER', idKey: 'sub_dealer_id' },
+  promotor: { color: '#CCA881', label: 'PROMOTOR', idKey: 'promotor_id' },
+  customer: { color: '#C92035', label: 'CUSTOMER', idKey: 'customer_id' },
 }
 
-// â”€â”€â”€ TREE NODE COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€â”€ TREE NODE COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, ancestors = [], superAdminEmail = '', flatMode = false }) {
   const [expanded, setExpanded] = useState(depth < 2)
   const cfg = ROLE_CFG[role]
@@ -95,12 +95,12 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
 
         {/* Phone */}
         <div style={{ color: subtext, fontSize: '11px', marginBottom: '2px' }}>
-          ðŸ“ž {node.mobile_number}
+        {node.mobile_number}
         </div>
 
         {/* City */}
         {node.city_name && (
-          <div style={{ color: subtext, fontSize: '11px' }}>ðŸ“ {node.city_name}</div>
+          <div style={{ color: subtext, fontSize: '11px' }}>{node.city_name}</div>
         )}
 
         {/* Gradient bar */}
@@ -127,7 +127,7 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
             onMouseEnter={e => { e.currentTarget.style.background = `rgba(${hexToRgb(c)},0.25)` }}
             onMouseLeave={e => { e.currentTarget.style.background = `rgba(${hexToRgb(c)},0.1)` }}
           >
-            ðŸ–¨ï¸ PRINT
+            🖨️ PRINT
           </button>
 
           <button
@@ -147,7 +147,7 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.25)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.1)' }}
           >
-            ðŸ“Š SALES
+            SALES
             <span style={{
               background: '#0C4044', color: '#FDFDFC', borderRadius: '10px',
               padding: '0 5px', fontSize: '9px', fontWeight: 900, minWidth: '14px',
@@ -246,11 +246,11 @@ let _hideTimer = null
 
 // â”€â”€â”€ CHAIN POPUP (hover on any tree node) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ROLE_LABELS = {
-  admin: { emoji: 'ðŸ›¡ï¸', label: 'ADMIN', color: '#53615F', idKey: 'admin_id' },
-  dealer: { emoji: 'ðŸª', label: 'DEALER', color: '#0C4044', idKey: 'dealer_id' },
-  sub_dealer: { emoji: 'ðŸ”—', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
-  promotor: { emoji: 'ðŸŒŸ', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
-  customer: { emoji: 'ðŸ‘¤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
+  admin: { emoji: '', label: 'ADMIN', color: '#53615F', idKey: 'admin_id' },
+  dealer: { emoji: ' dealers', label: 'DEALER', color: '#0C4044', idKey: 'dealer_id' },
+  sub_dealer: { emoji: ' sub_dealers', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
+  promotor: { emoji: ' promotor', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
+  customer: { emoji: ' customers', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
 }
 
 let _chainPopupEl = null
@@ -268,11 +268,11 @@ function scheduleHideChainPopup() {
 
 function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
   const ROLE_PRINT = {
-    admin: { label: 'ADMIN', emoji: 'ðŸ›¡ï¸', idKey: 'admin_id' },
-    dealer: { label: 'DEALER', emoji: 'ðŸª', idKey: 'dealer_id' },
-    sub_dealer: { label: 'SUB DEALER', emoji: 'ðŸ”—', idKey: 'sub_dealer_id' },
-    promotor: { label: 'PROMOTOR', emoji: 'ðŸŒŸ', idKey: 'promotor_id' },
-    customer: { label: 'CUSTOMER', emoji: 'ðŸ‘¤', idKey: 'customer_id' },
+    admin: { label: 'ADMIN', emoji: '_ADMIN', idKey: 'admin_id' },
+    dealer: { label: 'DEALER', emoji: '_DEALER', idKey: 'dealer_id' },
+    sub_dealer: { label: 'SUB DEALER', emoji: '_SUB_DEALER', idKey: 'sub_dealer_id' },
+    promotor: { label: 'PROMOTOR', emoji: '_PROMOTOR', idKey: 'promotor_id' },
+    customer: { label: 'CUSTOMER', emoji: '_CUSTOMER', idKey: 'customer_id' },
   }
 
   // Full chain: Super Admin + ancestors + current
@@ -1897,7 +1897,7 @@ const fetchCoinStock = async () => {
 </span>
 
 
-          {/* ðŸ’° Rate Entry Button */}
+          {/*Rate Entry Button */}
           <div
             className="sa-command-btn"
             onClick={() => {
@@ -1939,7 +1939,7 @@ const fetchCoinStock = async () => {
 
 
 
-            {/* ðŸ›ï¸ Add Product Button */}
+            {/*Add Product Button */}
           <div
             className="sa-command-btn"
             onClick={() => navigate('/add-product')}
@@ -1961,7 +1961,7 @@ const fetchCoinStock = async () => {
             <span style={{ fontSize: '12px', fontWeight: 900, color: '#FFFFFF' }}>Add Product</span>
           </div>
 
-          {/* ðŸ“‹ Orders Button â€” NEW */}
+          {/*Orders ButtonNEW */}
 <div
   className="sa-command-btn"
   onClick={() => navigate('/admin-orders')}
@@ -2029,7 +2029,7 @@ const fetchCoinStock = async () => {
             )}
           </div>
 
-          {/* ðŸŽ‚ Birthday Icon */}
+          {/*Birthday Icon */}
           <div
             className="sa-icon-action"
             onClick={() => { setShowBirthdayList(true) }}
@@ -2050,7 +2050,7 @@ const fetchCoinStock = async () => {
             )}
           </div>
 
-          {/* ðŸ’ Anniversary Icon */}
+          {/*Anniversary Icon */}
           <div
             className="sa-icon-action"
             onClick={() => { setShowAnniversaryList(true) }}
@@ -2069,7 +2069,7 @@ const fetchCoinStock = async () => {
             )}
           </div>
 
-          {/* ðŸ† Join Date Icon */}
+          {/*Join Date Icon */}
           <div
             className="sa-icon-action"
             onClick={() => { setShowJoinDateList(true) }}
@@ -2091,7 +2091,7 @@ const fetchCoinStock = async () => {
           </div>
 
 
-          {/* ðŸ“¢ Announcement Icon */}
+          {/* Announcement Icon */}
           <div
             className="sa-icon-action"
             onClick={() => {
@@ -2116,7 +2116,7 @@ const fetchCoinStock = async () => {
             )}
           </div>
 
-          {/* ðŸ“¬ Super Admin View Announcements */}
+          {/*Super Admin View Announcements */}
           <div
             className="sa-icon-action"
             onClick={() => {
@@ -2152,7 +2152,7 @@ const fetchCoinStock = async () => {
 </svg>
           </div>
 
-          {/* ðŸ“Š Today Rates Icon */}
+          {/*Today Rates Icon */}
           <div
             className="sa-icon-action"
             onClick={() => setShowTodayRates(true)}
@@ -2195,7 +2195,7 @@ const fetchCoinStock = async () => {
 
 
             style={{ padding: '8px 16px', borderRadius: '16px', border: `1px solid ${border}`, background: 'transparent', color: text, cursor: 'pointer', fontWeight: 600, fontSize: '13px', transition: 'all 0.3s ease' }}>
-            {dark ? 'â˜€ï¸ Light' : 'ðŸŒ™ Dark'}
+            {dark ? ' Light' : 'Dark'}
           </button>
           <button onClick={() => { localStorage.clear(); navigate('/login') }}
             style={{ padding: '8px 18px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}>
@@ -2367,7 +2367,7 @@ const fetchCoinStock = async () => {
               letterSpacing: '1.5px', textTransform: 'uppercase',
               paddingBottom: '10px', borderBottom: `1px solid ${border}`,
             }}>
-              ðŸ“Š Order Summary
+              Order Summary
             </div>
 
             {[
@@ -2413,7 +2413,7 @@ const fetchCoinStock = async () => {
                     className="sa-summary-block"
                     style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
                   >
-                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>ðŸ… 22K</div>
+                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>22K</div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>{total22k.count}</span>
@@ -2451,7 +2451,7 @@ setOrderPopupState({
                     className="sa-summary-block"
                     style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
                   >
-                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>ðŸ¥‡ 24K</div>
+                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>24K</div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#CCA881' }}>{total24k.count}</span>
@@ -2489,7 +2489,7 @@ setOrderPopupState({
                     className="sa-summary-block"
                     style={{ cursor: 'pointer' }}
                   >
-                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#53615F', fontWeight: 700, marginBottom: '3px' }}>ðŸ¥ˆ Silver</div>
+                    <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#53615F', fontWeight: 700, marginBottom: '3px' }}>Silver</div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#53615F' }}>{totalSilver.count}</span>
@@ -2524,13 +2524,14 @@ setOrderPopupState({
                     Today's Gold & Silver Rates
                   </div>
                   <div className="sa-rates-meta" style={{ color: subtext, fontSize: '10px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span>ðŸ“ Chennai, India</span>
+                    <span>
+                      Chennai, India</span>
                     <span style={{ opacity: 0.4 }}>â€¢</span>
                     <span>â‚¹ per gram</span>
                     <span style={{ opacity: 0.4 }}>â€¢</span>
                     {dbRateDate ? (
                       <span style={{ color: '#0C4044', fontSize: '9px', fontWeight: 700 }}>
-                        ðŸ“… {new Date(dbRateDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        {new Date(dbRateDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
                       </span>
                     ) : (
                       <span style={{ color: '#C92035', fontSize: '9px', fontWeight: 700 }}>No rate entered yet</span>
@@ -2566,7 +2567,7 @@ return (
     {/* â”€â”€ GOLD 22K CARDS â”€â”€ */}
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-        <span style={{ fontSize: '16px' }}>ðŸ…</span>
+        <span style={{ fontSize: '16px' }}></span>
         <span style={{ color: '#CCA881', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>
           GOLD 22K
         </span>
@@ -2647,7 +2648,7 @@ return (
     {/* â”€â”€ GOLD 24K CARDS â”€â”€ */}
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-        <span style={{ fontSize: '16px' }}>ðŸ¥‡</span>
+        <span style={{ fontSize: '16px' }}></span>
         <span style={{ color: '#CCA881', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>
           GOLD 24K
         </span>
@@ -2725,7 +2726,7 @@ return (
     {/* â”€â”€ SILVER 999 CARDS â”€â”€ */}
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-        <span style={{ fontSize: '16px' }}>ðŸ¥ˆ</span>
+        <span style={{ fontSize: '16px' }}></span>
         <span style={{ color: '#53615F', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>
           SILVER 999
         </span>
@@ -2821,24 +2822,24 @@ return (
               letterSpacing: '1.5px', textTransform: 'uppercase',
               paddingBottom: '10px', borderBottom: `1px solid ${border}`,
             }}>
-              ðŸ† Today Orders
+              Today Orders
             </div>
 
             {[
               {
-                icon: 'ðŸ…', label: 'Gold 22K', color: '#CCA881',
+                icon: '', label: 'Gold 22K', color: '#CCA881',
                 bg: 'rgba(204,168,129,0.06)', bd: 'rgba(204,168,129,0.25)',
                 data: orderStats.today.gold_22k,
                 metalKey: 'gold_22k'
               },
               {
-                icon: 'ðŸ¥‡', label: 'Gold 24K', color: '#CCA881',
+                icon: '', label: 'Gold 24K', color: '#CCA881',
                 bg: 'rgba(204,168,129,0.06)', bd: 'rgba(204,168,129,0.25)',
                 data: orderStats.today.gold_24k,
                 metalKey: 'gold_24k'
               },
               {
-                icon: 'ðŸ¥ˆ', label: 'Silver 999', color: '#53615F',
+                icon: '', label: 'Silver 999', color: '#53615F',
                 bg: 'rgba(192,192,192,0.05)', bd: 'rgba(192,192,192,0.2)',
                 data: orderStats.today.silver_999,
                 metalKey: 'silver_999',
@@ -2995,16 +2996,16 @@ setOrderPopupState({
 
               {rateMsg && (
                 <div style={{
-                  background: rateMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)',
+                  background: rateMsg.includes('') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)',
                   border: `1px solid ${rateMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`,
-                  color: rateMsg.includes('âœ…') ? '#0C4044' : '#C92035',
+                  color: rateMsg.includes('') ? '#0C4044' : '#C92035',
                   borderRadius: '12px', padding: '13px 16px', fontSize: '13px', marginBottom: '18px'
                 }}>
                   {rateMsg}
                 </div>
               )}
 
-              {/* Date â€” full width */}
+              {/* Date full width */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: subtext, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -3031,7 +3032,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/>
                     </svg>
-                    Gold 22K (â‚¹)
+                    Gold 22K
                   </label>
                   <input
                     type="number"
@@ -3044,7 +3045,7 @@ setOrderPopupState({
                   />
                   {rateForm.gold_22k && (
                     <div style={{ color: '#CCA881', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = â‚¹{parseFloat(rateForm.gold_22k).toFixed(2)}
+                      1gm ={parseFloat(rateForm.gold_22k).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -3055,7 +3056,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/>
                     </svg>
-                    Gold 24K (â‚¹)
+                    Gold 24K
                   </label>
                   <input
                     type="number"
@@ -3068,7 +3069,7 @@ setOrderPopupState({
                   />
                   {rateForm.gold_24k && (
                     <div style={{ color: '#CCA881', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = â‚¹{parseFloat(rateForm.gold_24k).toFixed(2)}
+                      1gm ={parseFloat(rateForm.gold_24k).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -3079,7 +3080,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><path d="M9 9h3.5a2 2 0 010 4H10M9 15h4M12 7v2M12 15v2"/>
                     </svg>
-                    Silver 999 (â‚¹)
+                    Silver 999
                   </label>
                   <input
                     type="number"
@@ -3092,7 +3093,7 @@ setOrderPopupState({
                   />
                   {rateForm.silver_999 && (
                     <div style={{ color: '#53615F', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = â‚¹{parseFloat(rateForm.silver_999).toFixed(2)}
+                      1gm ={parseFloat(rateForm.silver_999).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -3103,7 +3104,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D1DFDE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/>
                     </svg>
-                    Diamond 18K (â‚¹)
+                    Diamond 18K
                   </label>
                   <input
                     type="number"
@@ -3116,7 +3117,7 @@ setOrderPopupState({
                   />
                   {rateForm.diamond_18k && (
                     <div style={{ color: '#D1DFDE', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = â‚¹{parseFloat(rateForm.diamond_18k).toFixed(2)}
+                      1gm ={parseFloat(rateForm.diamond_18k).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -3127,7 +3128,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/>
                     </svg>
-                    Diamond 22K (â‚¹)
+                    Diamond 22K
                   </label>
                   <input
                     type="number"
@@ -3140,7 +3141,7 @@ setOrderPopupState({
                   />
                   {rateForm.diamond_22k && (
                     <div style={{ color: '#0C4044', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = â‚¹{parseFloat(rateForm.diamond_22k).toFixed(2)}
+                      1gm ={parseFloat(rateForm.diamond_22k).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -3151,7 +3152,7 @@ setOrderPopupState({
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E7EDEC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#53615F"/>
                     </svg>
-                    Platinum 92 (â‚¹)
+                    Platinum 92
                   </label>
                   <input
                     type="number"
@@ -3164,7 +3165,7 @@ setOrderPopupState({
                   />
                   {rateForm.platinum_92 && (
                     <div style={{ color: '#E7EDEC', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
-                      1gm = â‚¹{parseFloat(rateForm.platinum_92).toFixed(2)}
+                      1gm ={parseFloat(rateForm.platinum_92).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -3236,13 +3237,13 @@ setOrderPopupState({
       {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
-          <div style={{ width:'42px', height:'42px', borderRadius:'12px', background:'rgba(204,168,129,0.15)', border:'1px solid rgba(204,168,129,0.4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'20px' }}>ðŸ›ï¸</div>
+          <div style={{ width:'42px', height:'42px', borderRadius:'12px', background:'rgba(204,168,129,0.15)', border:'1px solid rgba(204,168,129,0.4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'20px' }}></div>
           <div>
             <div style={{ color:'#CCA881', fontWeight:800, fontSize:'15px' }}>ADD JEWELRY PRODUCT</div>
             <div style={{ color:subtext, fontSize:'11px', marginTop:'2px' }}>Fill all details and upload images</div>
           </div>
         </div>
-        <button onClick={() => setShowAddProduct(false)} style={{ background:'rgba(201,32,53,0.1)', border:'1px solid rgba(201,32,53,0.3)', color:'#C92035', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'12px' }}>âœ• Close</button>
+        <button onClick={() => setShowAddProduct(false)} style={{ background:'rgba(201,32,53,0.1)', border:'1px solid rgba(201,32,53,0.3)', color:'#C92035', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'12px' }}>Close</button>
       </div>
 
       {productMsg && (
@@ -3264,7 +3265,7 @@ setOrderPopupState({
                 border: `1.5px solid ${productForm.category === cat ? 'rgba(204,168,129,0.7)' : 'rgba(204,168,129,0.2)'}`,
                 color: productForm.category === cat ? '#CCA881' : subtext,
               }}>
-              { {rings:'ðŸ’',necklaces:'ðŸ“¿',bangles:'â­•',earrings:'âœ¨',chains:'â›“ï¸',coins:'ðŸª™'}[cat] } {cat}
+              { {rings:'💍',necklaces:' Necklace',bangles:' bracelet',earrings:' earrings',chains:' chain',coins:' coin'}[cat] } {cat}
             </div>
           ))}
         </div>
@@ -3284,7 +3285,7 @@ setOrderPopupState({
                   border: `1.5px solid ${productForm.metal === m ? (m==='gold' ? 'rgba(204,168,129,0.7)' : 'rgba(192,192,192,0.6)') : border}`,
                   color: productForm.metal === m ? (m==='gold' ? '#CCA881' : '#BDCFCE') : subtext,
                 }}>
-                {m === 'gold' ? 'ðŸ… Gold' : 'ðŸ¥ˆ Silver'}
+                {m === 'gold' ? 'Gold' : 'Silver'}
               </div>
             ))}
           </div>
@@ -3400,7 +3401,7 @@ setOrderPopupState({
               onMouseEnter={e => e.currentTarget.style.background='rgba(204,168,129,0.15)'}
               onMouseLeave={e => e.currentTarget.style.background='rgba(204,168,129,0.08)'}
             >
-              ðŸ“· Add Image
+              Add Image
             </label>
             <input
               id="product-img-upload"
@@ -3428,7 +3429,7 @@ setOrderPopupState({
                       onClick={() => setPreviewImageIdx(idx)}
                       style={{ position:'absolute', bottom:0, left:0, right:0, background:'rgba(17,24,23,0.6)', color:'#FDFDFC', fontSize:'10px', fontWeight:700, padding:'4px 0', border:'none', cursor:'pointer', backdropFilter:'blur(4px)' }}
                     >
-                      ðŸ‘ View
+                      View
                     </button>
                     {/* Remove button */}
                     <button
@@ -3561,8 +3562,8 @@ setOrderPopupState({
                     key={i}
                     onClick={() => {
                       setSpecialAnnForm({
-                        title: `ðŸŽ‚ Happy Birthday ${m.first_name} ${m.last_name || ''} (${m._id})`,
-                        message: `By BitByte Technologies â€” Wishing you a wonderful birthday! May this special day bring you joy, happiness, and all the success you deserve. Here's to another amazing year! ðŸŽ‰ðŸŽ‚`,
+                        title: `Happy Birthday ${m.first_name} ${m.last_name || ''} (${m._id})`,
+                        message: `By BitByte Technologies — Wishing you a wonderful birthday! May this special day bring you joy, happiness, and all the success you deserve. Here's to another amazing year! 🎉🎂`,
                         roles: ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
                       })
                       setShowBirthdayList(false)
@@ -3587,7 +3588,7 @@ setOrderPopupState({
                           {new Date(m._dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long' })}
                         </div>
                       </div>
-                      <div style={{ color: '#C92035', fontSize: '11px', fontWeight: 700 }}>Click to Wish â†’</div>
+                      <div style={{ color: '#C92035', fontSize: '11px', fontWeight: 700 }}>Click to Wish</div>
                     </div>
                   </div>
                 ))}
@@ -3636,8 +3637,8 @@ setOrderPopupState({
                     key={i}
                     onClick={() => {
                       setSpecialAnnForm({
-                        title: `ðŸ’ Happy Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
-                        message: `By BitByte Technologies â€” Wishing you a beautiful anniversary! May your bond grow stronger with each passing year. Here's to celebrating love and togetherness! ðŸ’•ðŸ’`,
+                        title: `🎉 Happy Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
+                        message: `By BitByte Technologies — Wishing you a beautiful anniversary! May your bond grow stronger with each passing year. Here's to celebrating love and togetherness!`,
                         roles: ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
                       })
                       setShowAnniversaryList(false)
@@ -3662,7 +3663,7 @@ setOrderPopupState({
                           {new Date(m._ann).toLocaleDateString('en-IN', { day: '2-digit', month: 'long' })}
                         </div>
                       </div>
-                      <div style={{ color: '#CCA881', fontSize: '11px', fontWeight: 700 }}>Click to Wish â†’</div>
+                      <div style={{ color: '#CCA881', fontSize: '11px', fontWeight: 700 }}>Click to Wish</div>
                     </div>
                   </div>
                 ))}
@@ -3715,8 +3716,8 @@ setOrderPopupState({
                       const yrs = m._yearsCompleted
                       const ordinal = yrs === 1 ? '1st' : yrs === 2 ? '2nd' : yrs === 3 ? '3rd' : `${yrs}th`
                       setSpecialAnnForm({
-                        title: `ðŸ† Happy ${ordinal} Work Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
-                        message: `By BitByte Technologies â€” Congratulations on completing ${yrs} amazing year${yrs > 1 ? 's' : ''} with us! Your dedication and hard work are truly valued. Here's to many more years of success together! ðŸŒŸðŸ†`,
+                        title: `🎉 Happy ${ordinal} Work Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
+                        message: `By BitByte Technologies — Congratulations on completing ${yrs} amazing year${yrs > 1 ? 's' : ''} with us! Your dedication and hard work are truly valued. Here's to many more years of success together!`,
                         roles: ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
                       })
                       setShowJoinDateList(false)
@@ -3742,7 +3743,7 @@ setOrderPopupState({
                         </div>
                         <div style={{ color: subtext, fontSize: '11px' }}>Joined: {new Date(m._joined).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
                       </div>
-                      <div style={{ color: '#BB8958', fontSize: '11px', fontWeight: 700 }}>Click to Wish â†’</div>
+                      <div style={{ color: '#BB8958', fontSize: '11px', fontWeight: 700 }}>Click to Wish</div>
                     </div>
                   </div>
                 ))}
@@ -3751,19 +3752,19 @@ setOrderPopupState({
           </div>
         )}
 
-        {/* â”€â”€ SPECIAL ANNOUNCEMENT MODAL (Birthday/Anniversary/JoinDate) â”€â”€ */}
+        {/* SPECIAL ANNOUNCEMENT MODAL (Birthday/Anniversary/JoinDate) â”€â”€ */}
         {showSpecialAnn && (
           <div onClick={() => setShowSpecialAnn(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.85)', backdropFilter: 'blur(12px)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(187,137,88,0.3)', borderRadius: '24px', width: '95%', maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(187,137,88,0.15)', border: '1px solid rgba(187,137,88,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>ðŸ“¢</div>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(187,137,88,0.15)', border: '1px solid rgba(187,137,88,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}></div>
                   <div>
                     <div style={{ color: '#BB8958', fontWeight: 800, fontSize: '15px' }}>SEND ANNOUNCEMENT</div>
                     <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>Review & send the wish</div>
                   </div>
                 </div>
-                <button onClick={() => setShowSpecialAnn(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>âœ• Close</button>
+                <button onClick={() => setShowSpecialAnn(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
               </div>
 
               {specialAnnMsg && (
@@ -3802,11 +3803,11 @@ setOrderPopupState({
                 <label style={{ display: 'block', color: subtext, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' }}>Send To</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                   {[
-                    { key: 'admin', label: 'ðŸ›¡ï¸ Admin', color: '#53615F' },
-                    { key: 'dealer', label: 'ðŸª Dealer', color: '#0C4044' },
-                    { key: 'sub_dealer', label: 'ðŸ”— Sub Dealer', color: '#BB8958' },
-                    { key: 'promotor', label: 'ðŸŒŸ Promotor', color: '#CCA881' },
-                    { key: 'customer', label: 'ðŸ‘¤ Customer', color: '#C92035' },
+                    { key: 'admin', label: 'Admin', color: '#53615F' },
+                    { key: 'dealer', label: 'Dealer', color: '#0C4044' },
+                    { key: 'sub_dealer', label: ' Subcommittee Dealer', color: '#BB8958' },
+                    { key: 'promotor', label: 'Promotor', color: '#CCA881' },
+                    { key: 'customer', label: 'Customer', color: '#C92035' },
                   ].map(role => {
                     const checked = specialAnnForm.roles.includes(role.key)
                     const rgb = { '#BDCFCE': '34,211,238', '#0C4044': '74,222,128', '#BB8958': '245,158,11', '#CCA881': '167,139,250', '#C92035': '244,114,182' }[role.color]
@@ -3819,7 +3820,7 @@ setOrderPopupState({
                         style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', background: checked ? `rgba(${rgb},0.14)` : `rgba(${rgb},0.04)`, border: `1.5px solid ${checked ? `rgba(${rgb},0.6)` : `rgba(${rgb},0.18)`}`, transition: 'all 0.2s ease', userSelect: 'none' }}
                       >
                         <div style={{ width: '14px', height: '14px', borderRadius: '4px', border: `2px solid ${checked ? role.color : `rgba(${rgb},0.35)`}`, background: checked ? role.color : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {checked && <span style={{ color: '#FDFDFC', fontSize: '9px', fontWeight: 900 }}>âœ“</span>}
+                          {checked && <span style={{ color: '#FDFDFC', fontSize: '9px', fontWeight: 900 }}></span>}
                         </div>
                         <span style={{ color: checked ? role.color : subtext, fontSize: '12px', fontWeight: checked ? 700 : 500 }}>{role.label}</span>
                       </div>
@@ -3832,24 +3833,24 @@ setOrderPopupState({
               <button
                 disabled={specialAnnSending}
                 onClick={async () => {
-                  if (!specialAnnForm.title.trim() || !specialAnnForm.message.trim()) { setSpecialAnnMsg('âŒ Title and Message required.'); return }
-                  if (specialAnnForm.roles.length === 0) { setSpecialAnnMsg('âŒ Select at least one role.'); return }
+                  if (!specialAnnForm.title.trim() || !specialAnnForm.message.trim()) { setSpecialAnnMsg(' Title and Message required.'); return }
+                  if (specialAnnForm.roles.length === 0) { setSpecialAnnMsg(' Select at least one role.'); return }
                   setSpecialAnnSending(true)
                   // AFTER
 try {
   await api.post('/announcements/', { title: specialAnnForm.title, message: specialAnnForm.message, target_roles: specialAnnForm.roles })
-  setSpecialAnnMsg('âœ… Announcement sent successfully!')
+  setSpecialAnnMsg(' Announcement sent successfully!')
   const annData = await fetchMyAnnouncements()
   fetchAnnouncementCount(annData)
   setTimeout(() => setShowSpecialAnn(false), 1500)
 } catch (err) {
-  setSpecialAnnMsg('âŒ Failed: ' + JSON.stringify(err.response?.data))
+  setSpecialAnnMsg(' Failed: ' + JSON.stringify(err.response?.data))
 }
                   setSpecialAnnSending(false)
                 }}
                 style={{ width: '100%', padding: '14px', background: specialAnnSending ? 'rgba(187,137,88,0.3)' : 'linear-gradient(90deg,#BB8958,#BB8958)', border: 'none', borderRadius: '12px', fontWeight: 800, color: specialAnnSending ? '#BB8958' : '#111817', fontSize: '15px', cursor: specialAnnSending ? 'not-allowed' : 'pointer', letterSpacing: '0.5px' }}
               >
-                {specialAnnSending ? 'â³ Sending...' : 'ðŸ“¢ Send Announcement'}
+                {specialAnnSending ? ' Sending...' : ' Send Announcement'}
               </button>
             </div>
           </div>
@@ -3924,14 +3925,14 @@ try {
                         <button
                           onClick={() => setHierarchySearch('')}
                           style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: subtext, cursor: 'pointer', fontSize: '12px', padding: '2px' }}
-                        >âœ•</button>
+                        >Close</button>
                       )}
                     </div>
                   )}
                   <button
                     onClick={() => { setShowHierarchy(false); setActiveAdmin(null); removeAdminPopup() }}
                     style={{ background: 'transparent', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
-                  >âœ• Close</button>
+                  >Close</button>
                 </div>
               </div>
 
@@ -4115,7 +4116,7 @@ try {
                     </div>
                   ))}
                   <div style={{ color: subtext, fontSize: '11px', width: '100%', textAlign: 'center' }}>
-                    ðŸ’¡ Click any node to expand/collapse its children
+                    ¡ Click any node to expand/collapse its children
                   </div>
                 </div>
               )}
@@ -4126,7 +4127,7 @@ try {
 
 
 
-        {/* â”€â”€ TODAY RATES MODAL â”€â”€ */}
+        {/*TODAY RATES MODAL â”€â”€ */}
         {showTodayRates && (
           <div
             onClick={() => setShowTodayRates(false)}
@@ -4293,7 +4294,7 @@ try {
               color: `rgba(${rgb},0.7)`,
               marginTop: '3px',
             }}>
-              ðŸ“ž {node.mobile_number}
+              {node.mobile_number}
             </div>
           )}
 
@@ -4401,7 +4402,7 @@ try {
             >
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(189,207,206,0.12)' }}>
-                <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'rgba(189,207,206,0.15)', border: '1px solid rgba(189,207,206,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}>ðŸ“Š</div>
+                <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'rgba(189,207,206,0.15)', border: '1px solid rgba(189,207,206,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}></div>
                 <div>
                   <div style={{ fontSize: '10px', fontWeight: 800, color: '#53615F', letterSpacing: '1.5px' }}>{periodLabel} ORDER CHAIN</div>
                   <div style={{ fontSize: '9px', color: dark ? '#7A8987' : '#7A8987', marginTop: '2px' }}>Full hierarchy breakdown</div>
@@ -4425,7 +4426,7 @@ try {
                   <div style={{ background: 'rgba(204,168,129,0.08)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '10px', padding: '9px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '8px', color: '#CCA881', fontWeight: 800, letterSpacing: '1px' }}>ðŸ›¡ï¸ SUPER ADMIN</div>
+                        <div style={{ fontSize: '8px', color: '#CCA881', fontWeight: 800, letterSpacing: '1px' }}>SUPER ADMIN</div>
                         <div style={{ fontSize: '10px', color: dark ? '#111817' : '#7A8987', marginTop: '3px', wordBreak: 'break-all' }}>{hData.superAdminEmail}</div>
                       </div>
                       <div style={{ textAlign: 'right', marginLeft: '8px', flexShrink: 0 }}>
@@ -4479,7 +4480,7 @@ try {
                       <Arrow rgb="244,114,182" />
                       <div style={{ background: 'rgba(201,32,53,0.06)', border: '1px dashed rgba(201,32,53,0.4)', borderRadius: '10px', padding: '9px 12px' }}>
                         <div style={{ fontSize: '8px', color: '#C92035', fontWeight: 800, letterSpacing: '1px', marginBottom: '6px' }}>
-                          ðŸ‘¤ DIRECT CUSTOMERS â€” {hData.unlinked.length} customer{hData.unlinked.length > 1 ? 's' : ''}
+                          DIRECT CUSTOMERS{hData.unlinked.length} customer{hData.unlinked.length > 1 ? 's' : ''}
                         </div>
                         <div style={{ fontSize: '8px', color: 'rgba(201,32,53,0.5)', marginBottom: '8px', fontStyle: 'italic' }}>
                           âš ï¸ Not linked to any promotor in hierarchy
@@ -4638,7 +4639,7 @@ try {
 
                       {req.message && (
                         <div style={{ color: subtext, fontSize: '13px', marginTop: '10px', lineHeight: 1.5 }}>
-                          ðŸ’¬ {req.message}
+                          📝 {req.message}
                         </div>
                       )}
                     </div>
@@ -4677,7 +4678,8 @@ try {
                       marginBottom: '16px',
                       lineHeight: 1.6
                     }}>
-                      ðŸ’¬ {selectedRequest.message}
+                      
+                      📝 {selectedRequest.message}
                     </div>
                   )}
 
@@ -4735,7 +4737,7 @@ try {
                         fontSize: '14px'
                       }}
                     >
-                      ðŸ“Ž View Proof Document
+                      📎 View Proof Document
                     </button>
                   )}
 
@@ -5133,7 +5135,7 @@ fetchAnnouncementCount(annData)
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexShrink: 0 }}>
                 <div>
-                  <div style={{ color: '#53615F', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>ðŸ’¬ WISHES RECEIVED</div>
+                  <div style={{ color: '#53615F', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>📝 WISHES RECEIVED</div>
                   <div style={{ color: subtext, fontSize: '11px', marginTop: '4px' }}>{replyAnn.title}</div>
                 </div>
                 <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>âœ•</button>
@@ -5219,7 +5221,7 @@ fetchAnnouncementCount(annData)
                       fontSize: '18px'
                     }}
                   >
-                    ðŸ“Ž
+              
                   </div>
 
                   <div>
@@ -5252,7 +5254,7 @@ fetchAnnouncementCount(annData)
                     fontSize: '12px'
                   }}
                 >
-                  âœ• Close
+                  Close
                 </button>
               </div>
 
@@ -5311,7 +5313,7 @@ fetchAnnouncementCount(annData)
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '40px' }}>
                     <div style={{ fontSize: '40px' }}>âš ï¸</div>
                     <div style={{ color: subtext, fontSize: '14px', textAlign: 'center' }}>
-                      Document load à®†à®•à®²
+                      Document load failed
                     </div>
 
                     <a
@@ -5344,7 +5346,7 @@ fetchAnnouncementCount(annData)
           <div style={s.card}>
             <p style={s.secHead}>Create New Admin</p>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <p style={s.secSub}>ðŸ‘¤ Personal Info</p>
+              <p style={s.secSub}>Personal Info</p>
               <div style={{ display: 'grid', gridTemplateColumns: '0.4fr 1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Initial</label>
                   <input name="initial" maxLength={5} value={form.initial} onChange={handleChange} className="sa-inp" style={s.inp} />
@@ -5453,7 +5455,7 @@ fetchAnnouncementCount(annData)
                 </div>
               </div>
 
-              <p style={s.secSub}>ðŸ“ Address</p>
+              <p style={s.secSub}>📝 Address</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
@@ -5462,12 +5464,12 @@ fetchAnnouncementCount(annData)
                 <div><label style={s.lbl}>District *</label><input name="district" value={form.district} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>State *</label><input name="state" value={form.state} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
               </div>
-              <p style={s.secSub}>ðŸªª Identity</p>
+              <p style={s.secSub}>Identity</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Aadhaar No *</label><input name="aadhaar_no" maxLength={12} value={form.aadhaar_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>PAN No *</label><input name="pan_no" maxLength={10} value={form.pan_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
               </div>
-              <p style={s.secSub}>ðŸ’¼ Occupation</p>
+              <p style={s.secSub}>📝 Occupation</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Occupation *</label>
                   <select name="occupation" value={form.occupation} onChange={handleChange} className="sa-inp" style={{ ...s.inp, cursor: 'pointer' }}>
