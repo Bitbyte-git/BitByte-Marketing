@@ -10,13 +10,17 @@ const SuperadminHierarchy = lazy(() => import('./Hierarchy/Superadmin_Hierarchy'
 const SuperadminHierarchyGrid = lazy(() => import('./Grid/Superadmin_Hierarchy_grid'))
 const SuperAdminHierarchySalesCount = lazy(() => import('./Hierarchy/superadmin_Hierarchy_SalesCount'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
-const AdminHierarchy = lazy(() => import('./Hierarchy/Admin_Hierarchy'))
+const AdminHierarchyGrid = lazy(() => import('./Grid/Admin_Hierarchy_grid'))
 const DealerDashboard = lazy(() => import('./pages/DealerDashboard'))
+const AdminHierarchy = lazy(() => import('./Hierarchy/Admin_Hierarchy'))
+const DealerHierarchyGrid = lazy(() => import('./Grid/Dealer_Hierarchy_grid'))
 const DealerHierarchy = lazy(() => import('./Hierarchy/Dealer_Hierarchy'))
 const SubDealerDashboard = lazy(() => import('./pages/SubDealerDashboard'))
 const SubdealerHierarchy = lazy(() => import('./Hierarchy/Subdealer_Hierarchy'))
+const SubdealerHierarchyGrid = lazy(() => import('./Grid/Subdealer_Hierarchy_grid'))
 const PromotorDashboard = lazy(() => import('./pages/PromotorDashboard'))
 const PromotorHierarchy = lazy(() => import('./Hierarchy/Promotor_Hierarchy'))
+const PromotorHierarchyGrid = lazy(() => import('./Grid/Promotor_Hierarchy_grid'))
 const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard'))
 const Profile = lazy(() => import('./collection/profile'))
 const CoinsCollection = lazy(() => import('./collection/coins_collection'))
@@ -120,12 +124,16 @@ export default function App() {
           <Route path="/superadmin-hierarchy-grid" element={<SuperadminHierarchyGrid />} />
           <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin-hierarchy" element={<AdminHierarchy />} />
+          <Route path="/admin-hierarchy-grid" element={<AdminHierarchyGrid />} />
           <Route path="/dealer" element={<ProtectedRoute role="dealer"><DealerDashboard /></ProtectedRoute>} />
+          <Route path="/dealer-hierarchy-grid" element={<DealerHierarchyGrid />} />
           <Route path="/dealer-hierarchy" element={<DealerHierarchy />} />
           <Route path="/sub-dealer" element={<ProtectedRoute role="sub_dealer"><SubDealerDashboard /></ProtectedRoute>} />
           <Route path="/subdealer-hierarchy" element={<SubdealerHierarchy />} />
+          <Route path="/subdealer-hierarchy-grid" element={<SubdealerHierarchyGrid />} />
           <Route path="/promotor" element={<ProtectedRoute role="promotor"><PromotorDashboard /></ProtectedRoute>} />
           <Route path="/promotor-hierarchy" element={<PromotorHierarchy />} />
+          <Route path="/promotor-hierarchy-grid" element={<PromotorHierarchyGrid />} />
           <Route path="/customer" element={<ProtectedRoute role="customer"><WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/profile" element={<WithCustomerNavbar><Profile /></WithCustomerNavbar>} />
 

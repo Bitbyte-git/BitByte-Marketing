@@ -1453,9 +1453,9 @@ const fetchCoinStock = async () => {
   style={{ padding: '11px 28px', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '12px', fontWeight: 700, color: '#0C4044', fontSize: '14px', cursor: 'pointer' }}>
   ðŸ“Š Sales Report
 </button>
-<button onClick={() => navigate('/dealer-hierarchy')}
-  style={{ padding: '11px 28px', background: 'rgba(187,137,88,0.08)', border: '1px solid rgba(187,137,88,0.3)', borderRadius: '12px', fontWeight: 700, color: '#fcd34d', fontSize: '14px', cursor: 'pointer' }}>
-  ðŸ¢ Sub Dealer Hierarchy
+<button onClick={() => navigate('/dealer-hierarchy-grid')}
+  style={{ padding: '11px 28px', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '12px', fontWeight: 700, color: '#fcd34d', fontSize: '14px', cursor: 'pointer' }}>
+  Hierarchy
 </button>
             <button onClick={() => setShowForm(!showForm)} className="dl-grad-btn"
               style={{ padding: '11px 28px', background: 'linear-gradient(90deg,#BB8958,#BDCFCE)', border: 'none', borderRadius: '12px', fontWeight: 800, color: '#FDFDFC', fontSize: '14px', cursor: 'pointer' }}>

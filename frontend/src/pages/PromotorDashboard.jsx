@@ -1140,9 +1140,9 @@ const handleSubmit = async e => {
   style={{ padding:'11px 28px', background:'rgba(12,64,68,0.08)', border:'1px solid rgba(12,64,68,0.3)', borderRadius:'12px', fontWeight:700, color:'#0C4044', fontSize:'14px', cursor:'pointer' }}>
   ðŸ“Š Sales Report
 </button>
-<button onClick={() => navigate('/promotor-hierarchy')}
+<button onClick={() => navigate('/promotor-hierarchy-grid')}
   style={{ padding:'11px 28px', background:'rgba(201,32,53,0.08)', border:'1px solid rgba(201,32,53,0.3)', borderRadius:'12px', fontWeight:700, color:'#F3E8DE', fontSize:'14px', cursor:'pointer' }}>
-  ðŸ¢ Customer Hierarchy
+  Hierarchy
 </button>
             <button onClick={() => setShowForm(!showForm)} className="pr-grad-btn"
               style={{ padding:'11px 28px', background:'#073B3F', border:'none', borderRadius:'12px', fontWeight:800, color:'#3b0024', fontSize:'14px', cursor:'pointer' }}>
