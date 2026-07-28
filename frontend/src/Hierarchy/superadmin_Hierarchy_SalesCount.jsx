@@ -74,15 +74,15 @@ const IconEmpty = ({ color, size = 40 }) => (
 )
 
 // ══════════════════════════════════════════════════════════════════
-// ROLE CONFIG — matches the exact same colors as the main hierarchy
-// grid page, so hovering the same person feels like the same app.
+// ROLE CONFIG — matches the exact same colors as SuperAdminDashboard
+// (Luxiva theme), so this page feels like the same product.
 // ══════════════════════════════════════════════════════════════════
 const ROLE_CFG = {
-  admin:      { color: '#22c55e', label: 'ADMIN',      Icon: IconShield, idKey: 'admin_id',      childKey: 'dealers' },
-  dealer:     { color: '#38bdf8', label: 'DEALER',      Icon: IconStore,  idKey: 'dealer_id',     childKey: 'sub_dealers' },
-  sub_dealer: { color: '#ef4444', label: 'SUB DEALER',  Icon: IconLink,   idKey: 'sub_dealer_id', childKey: 'promotors' },
-  promotor:   { color: '#d4a017', label: 'PROMOTOR',    Icon: IconStar,   idKey: 'promotor_id',   childKey: 'customers' },
-  customer:   { color: '#fb7185', label: 'CUSTOMER',    Icon: IconUser,   idKey: 'customer_id',   childKey: null },
+  admin:      { color: '#53615F', label: 'ADMIN',      Icon: IconShield, idKey: 'admin_id',      childKey: 'dealers' },
+  dealer:     { color: '#0C4044', label: 'DEALER',      Icon: IconStore,  idKey: 'dealer_id',     childKey: 'sub_dealers' },
+  sub_dealer: { color: '#BB8958', label: 'SUB DEALER',  Icon: IconLink,   idKey: 'sub_dealer_id', childKey: 'promotors' },
+  promotor:   { color: '#CCA881', label: 'PROMOTOR',    Icon: IconStar,   idKey: 'promotor_id',   childKey: 'customers' },
+  customer:   { color: '#C92035', label: 'CUSTOMER',    Icon: IconUser,   idKey: 'customer_id',   childKey: null },
 }
 
 function hexToRgb(hex) {
@@ -130,31 +130,31 @@ function TreeItem({ node, selectedId, onSelect, isLast = true, pulseId }) {
         className={`stree-item ${isPulsing ? 'stree-item-pulse' : ''}`}
         style={{
           '--nc': cfg.color,
-          background: isSelected ? `rgba(${rgb},0.14)` : 'rgba(255,255,255,0.02)',
-          borderColor: isSelected ? cfg.color : 'rgba(255,255,255,0.08)',
-          boxShadow: isSelected ? `0 0 0 1px ${cfg.color}, 0 8px 22px rgba(${rgb},0.22)` : 'none',
+          background: isSelected ? `rgba(${rgb},0.12)` : 'rgba(253,253,252,0.6)',
+          borderColor: isSelected ? cfg.color : 'rgba(189,207,206,0.55)',
+          boxShadow: isSelected ? `0 0 0 1px ${cfg.color}, 0 8px 22px rgba(${rgb},0.16)` : 'none',
         }}
       >
         {isSelected && <div className="stree-accent" style={{ background: cfg.color }} />}
         <div className="stree-badge" style={{ color: cfg.color, borderColor: cfg.color }}>
           <Icon color={cfg.color} size={11} /> {cfg.label}
         </div>
-        <div style={{ fontSize: 10, color: cfg.color, fontFamily: 'monospace', opacity: 0.75, marginTop: 3 }}>{node[cfg.idKey]}</div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginTop: 2 }}>{node.first_name} {node.last_name || ''}</div>
+        <div style={{ fontSize: 10, color: cfg.color, fontFamily: 'monospace', opacity: 0.85, marginTop: 3 }}>{node[cfg.idKey]}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#111817', marginTop: 2 }}>{node.first_name} {node.last_name || ''}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
           {node.mobile_number && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, color: '#94a3b8' }}>
-              <IconPhone color="#94a3b8" size={10} /> {node.mobile_number}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, color: '#7A8987' }}>
+              <IconPhone color="#7A8987" size={10} /> {node.mobile_number}
             </span>
           )}
           {node.city_name && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, color: '#94a3b8' }}>
-              <IconMapPin color="#94a3b8" size={10} /> {node.city_name}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, color: '#7A8987' }}>
+              <IconMapPin color="#7A8987" size={10} /> {node.city_name}
             </span>
           )}
         </div>
         <div className="stree-ordercount">
-          <IconChart color="#4ade80" size={11} /> {orderCount} order{orderCount !== 1 ? 's' : ''}
+          <IconChart color="#0C4044" size={11} /> {orderCount} order{orderCount !== 1 ? 's' : ''}
         </div>
       </div>
 
@@ -250,13 +250,13 @@ const [selected, setSelected] = useState(null)
   const overallCount = orders.length
   const overallAmount = orders.reduce((s, o) => s + o.total_price, 0)
 
-  const text = '#f8fafc'
-  const subtext = '#94a3b8'
+  const text = '#111817'
+  const subtext = '#7A8987'
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-        <div style={{ width: 34, height: 34, border: '3px solid rgba(34,197,94,0.2)', borderTop: '3px solid #22c55e', borderRadius: '50%', animation: 'ssc-spin 1s linear infinite' }} />
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        <div style={{ width: 34, height: 34, border: '3px solid rgba(12,64,68,0.15)', borderTop: '3px solid #0C4044', borderRadius: '50%', animation: 'ssc-spin 1s linear infinite' }} />
         <span style={{ color: subtext, fontSize: 14 }}>Loading sales data...</span>
         <style>{`@keyframes ssc-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
       </div>
@@ -265,10 +265,10 @@ const [selected, setSelected] = useState(null)
 
   if (!root) {
     return (
-      <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-        <IconEmpty color="#f87171" />
-        <span style={{ color: '#f87171', fontSize: 14 }}>No data found.</span>
-        <button onClick={() => navigate(-1)} style={{ marginTop: 8, padding: '8px 18px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+        <IconEmpty color="#C92035" />
+        <span style={{ color: '#C92035', fontSize: 14 }}>No data found.</span>
+        <button onClick={() => navigate(-1)} style={{ marginTop: 8, padding: '8px 18px', background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
           ← Back
         </button>
       </div>
@@ -278,25 +278,25 @@ const [selected, setSelected] = useState(null)
   const selCfg = selected ? ROLE_CFG[selected.type] : null
 
   return (
-    <div style={{ minHeight: '100vh', background: '#020617', color: text, fontFamily: '"Inter",system-ui,sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
       <style>{`
         @keyframes sheaderShimmer{ 0%{ background-position:-200% center; } 100%{ background-position:200% center; } }
         .sheader-shimmer{
           position:absolute; left:0; right:0; bottom:-1px; height:2px;
-          background: linear-gradient(90deg, transparent, #4ade80, #38bdf8, #fbbf24, transparent);
+          background: linear-gradient(90deg, transparent, #0C4044, #CCA881, #BB8958, transparent);
           background-size: 200% auto; animation: sheaderShimmer 5s linear infinite;
         }
 
         .stree-node{ position:relative; }
         .stree-children{
           margin-left:18px; padding-left:16px; margin-top:8px;
-          border-left:2px solid rgba(255,255,255,0.1); border-radius:0 0 0 10px;
+          border-left:2px solid rgba(189,207,206,0.55); border-radius:0 0 0 10px;
         }
         .stree-branch{ position:relative; margin-bottom:8px; }
         .stree-branch:last-child{ margin-bottom:0; }
         .stree-branch::before{
           content:''; position:absolute; left:-16px; top:24px; width:14px; height:2px;
-          background:rgba(255,255,255,0.1);
+          background:rgba(189,207,206,0.55);
         }
 
         .stree-item{
@@ -305,9 +305,9 @@ const [selected, setSelected] = useState(null)
         }
         .stree-item:hover{ transform: translateX(2px); }
         @keyframes streePulseFlash{
-          0%{ box-shadow: 0 0 0 0 rgba(251,113,133,0.6); }
-          50%{ box-shadow: 0 0 0 8px rgba(251,113,133,0); }
-          100%{ box-shadow: 0 0 0 0 rgba(251,113,133,0); }
+          0%{ box-shadow: 0 0 0 0 rgba(201,32,53,0.5); }
+          50%{ box-shadow: 0 0 0 8px rgba(201,32,53,0); }
+          100%{ box-shadow: 0 0 0 0 rgba(201,32,53,0); }
         }
         .stree-item-pulse{ animation: streePulseFlash 0.8s ease-out 2; }
         .stree-accent{
@@ -320,12 +320,12 @@ const [selected, setSelected] = useState(null)
         }
         .stree-ordercount{
           display:inline-flex; align-items:center; gap:5px; margin-top:8px;
-          font-size:10px; font-weight:800; color:#4ade80; background:rgba(74,222,128,0.1);
-          border:1px solid rgba(74,222,128,0.25); padding:2px 9px; border-radius:20px;
+          font-size:10px; font-weight:800; color:#0C4044; background:rgba(12,64,68,0.08);
+          border:1px solid rgba(12,64,68,0.22); padding:2px 9px; border-radius:20px;
         }
         .stree-panel::-webkit-scrollbar{ width:6px; }
-        .stree-panel::-webkit-scrollbar-track{ background:rgba(255,255,255,0.03); border-radius:10px; }
-        .stree-panel::-webkit-scrollbar-thumb{ background:rgba(34,197,94,0.4); border-radius:10px; }
+        .stree-panel::-webkit-scrollbar-track{ background:rgba(189,207,206,0.12); border-radius:10px; }
+        .stree-panel::-webkit-scrollbar-thumb{ background:rgba(12,64,68,0.4); border-radius:10px; }
 
         @keyframes sfadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
         .sfade-in{ animation: sfadeIn 0.35s cubic-bezier(0.22,1,0.36,1) both; }
@@ -349,21 +349,22 @@ const [selected, setSelected] = useState(null)
         @keyframes sprodIn{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
         .sprod-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:16px; }
         .sprod-card{
-          background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px;
+          background:rgba(253,253,252,0.85); border:1px solid rgba(189,207,206,0.6); border-radius:14px;
           padding:16px; transition: all .2s ease; animation: sprodIn 0.4s cubic-bezier(0.22,1,0.36,1) both;
+          box-shadow: 0 10px 26px rgba(7,59,63,0.05);
         }
-        .sprod-card:hover{ border-color:rgba(251,191,36,0.45); transform:translateY(-4px); box-shadow:0 12px 28px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.2); }
+        .sprod-card:hover{ border-color:rgba(204,168,129,0.55); transform:translateY(-4px); box-shadow:0 16px 32px rgba(7,59,63,0.12), 0 0 0 1px rgba(204,168,129,0.2); }
         .sprod-img{
-          width:100%; height:130px; border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.05);
-          border:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; margin-bottom:12px;
+          width:100%; height:130px; border-radius:10px; overflow:hidden; background:rgba(189,207,206,0.14);
+          border:1px solid rgba(189,207,206,0.55); display:flex; align-items:center; justify-content:center; margin-bottom:12px;
           transition: border-color .2s ease;
         }
-        .sprod-card:hover .sprod-img{ border-color:rgba(251,191,36,0.35); }
+        .sprod-card:hover .sprod-img{ border-color:rgba(204,168,129,0.45); }
         .sprod-img img{ width:100%; height:100%; object-fit:cover; transition: transform .3s ease; }
         .sprod-card:hover .sprod-img img{ transform: scale(1.05); }
         .sprod-row{ display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:4px 0; }
-        .sprod-row + .sprod-row{ border-top:1px solid rgba(255,255,255,0.05); }
-        .sprod-label{ color:#64748b; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; }
+        .sprod-row + .sprod-row{ border-top:1px solid rgba(189,207,206,0.4); }
+        .sprod-label{ color:#7A8987; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; }
       `}</style>
 
       {/* ── FIXED HEADER ── */}
@@ -371,23 +372,24 @@ const [selected, setSelected] = useState(null)
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexWrap: 'wrap', gap: 12, padding: '18px 32px',
-        background: 'rgba(2,6,23,0.92)', backdropFilter: 'blur(14px)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(253,253,252,0.94)', backdropFilter: 'blur(14px)',
+        borderBottom: '1px solid rgba(189,207,206,0.72)',
+        boxShadow: '0 16px 34px rgba(7,59,63,0.04)',
       }}>
         <div className="sheader-shimmer" />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <IconChart color="#4ade80" size={20} />
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconChart color="#0C4044" size={20} />
           </div>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#a5f3fc' }}>Sales Count — Hierarchy Breakdown</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: '#0C4044' }}>Sales Count — Hierarchy Breakdown</div>
 <div style={{ fontSize: 12, color: subtext, marginTop: 2 }}>
   {period === 'today' ? "Showing TODAY's orders only" : 'Left-la oru person click pannu, right-la avanga sales details varum'}
 </div>
           </div>
         </div>
-        <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
-          <IconBack color="#f87171" /> Back
+        <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+          <IconBack color="#C92035" /> Back
         </button>
       </div>
 
@@ -398,19 +400,19 @@ const [selected, setSelected] = useState(null)
 
 
         {/* ── LEFT: HIERARCHY TREE ── */}
-        <div className="stree-panel" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 14, maxHeight: 'calc(100vh - 128px)', overflowY: 'auto', position: 'sticky', top: 108 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 4px 12px 4px', marginBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <IconLink color="#4ade80" size={14} />
-            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#4ade80' }}>HIERARCHY TREE</span>
+        <div className="stree-panel" style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 14, maxHeight: 'calc(100vh - 128px)', overflowY: 'auto', position: 'sticky', top: 108, boxShadow: '0 22px 58px rgba(7,59,63,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 4px 12px 4px', marginBottom: 10, borderBottom: '1px solid rgba(189,207,206,0.5)' }}>
+            <IconLink color="#0C4044" size={14} />
+            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#0C4044' }}>HIERARCHY TREE</span>
           </div>
           <TreeItem node={root} selectedId={selected ? `${selected.type}-${selected.id}` : null} onSelect={setSelected} pulseId={pulseId} />
-          <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
-            <span style={{ fontSize: 9.5, color: '#334155', letterSpacing: 0.5 }}>BitByte Network • Live Tree</span>
+          <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(189,207,206,0.5)', textAlign: 'center' }}>
+            <span style={{ fontSize: 9.5, color: '#7A8987', letterSpacing: 0.5 }}>BitByte Network • Live Tree</span>
           </div>
         </div>
 
         {/* ── RIGHT: SELECTED PERSON DETAILS ── */}
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24 }}>
+        <div style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 24, boxShadow: '0 22px 58px rgba(7,59,63,0.06)' }}>
           {selected && (
             <div key={`${selected.type}-${selected.id}`} className="sfade-in">
               {/* person header */}
@@ -426,22 +428,22 @@ const [selected, setSelected] = useState(null)
 
               {/* stat cards */}
               <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-                <div className="sstat-card sstat-glow" style={{ background: 'rgba(74,222,128,0.06)', borderColor: 'rgba(74,222,128,0.25)', '--glow': 'rgba(74,222,128,0.35)' }}>
-                  <div className="sstat-icon" style={{ background: 'rgba(74,222,128,0.15)' }}>
-                    <IconBox color="#4ade80" />
+                <div className="sstat-card sstat-glow" style={{ background: 'rgba(12,64,68,0.05)', borderColor: 'rgba(12,64,68,0.22)', '--glow': 'rgba(12,64,68,0.3)' }}>
+                  <div className="sstat-icon" style={{ background: 'rgba(12,64,68,0.12)' }}>
+                    <IconBox color="#0C4044" />
                   </div>
                   <div>
                     <div style={{ color: subtext, fontSize: 11 }}>{period === 'today' ? "Today's Orders" : 'Total Orders'}</div>
-<div style={{ fontSize: 24, fontWeight: 900, color: '#4ade80' }}>{overallCount}</div>
+<div style={{ fontSize: 24, fontWeight: 900, color: '#0C4044' }}>{overallCount}</div>
                   </div>
                 </div>
-                <div className="sstat-card sstat-glow" style={{ background: 'rgba(251,191,36,0.06)', borderColor: 'rgba(251,191,36,0.25)', '--glow': 'rgba(251,191,36,0.35)' }}>
-                  <div className="sstat-icon" style={{ background: 'rgba(251,191,36,0.15)' }}>
-                    <IconRupee color="#fbbf24" />
+                <div className="sstat-card sstat-glow" style={{ background: 'rgba(204,168,129,0.08)', borderColor: 'rgba(204,168,129,0.3)', '--glow': 'rgba(204,168,129,0.35)' }}>
+                  <div className="sstat-icon" style={{ background: 'rgba(204,168,129,0.16)' }}>
+                    <IconRupee color="#BB8958" />
                   </div>
                   <div>
                     <div style={{ color: subtext, fontSize: 11 }}>Total Amount</div>
-                    <div style={{ fontSize: 24, fontWeight: 900, color: '#fbbf24' }}>₹{overallAmount.toLocaleString('en-IN')}</div>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: '#BB8958' }}>₹{overallAmount.toLocaleString('en-IN')}</div>
                   </div>
                 </div>
               </div>
@@ -470,7 +472,7 @@ const [selected, setSelected] = useState(null)
                           {imgUrl ? (
                             <img src={imgUrl} alt={g.product_name} onError={e => { e.currentTarget.style.display = 'none' }} />
                           ) : (
-                            <IconBox color="#475569" size={32} />
+                            <IconBox color="#7A8987" size={32} />
                           )}
                         </div>
 
@@ -479,19 +481,19 @@ const [selected, setSelected] = useState(null)
                         {g.owner && (
                           <div style={{
                             display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 8,
-                            background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.3)',
+                            background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.28)',
                             borderRadius: 20, padding: '3px 10px',
                           }}>
-                            <IconUser color="#fb7185" size={10} />
-                            <span style={{ fontSize: 10.5, fontWeight: 800, color: '#fb7185' }}>{g.owner.first_name} {g.owner.last_name || ''}</span>
+                            <IconUser color="#C92035" size={10} />
+                            <span style={{ fontSize: 10.5, fontWeight: 800, color: '#C92035' }}>{g.owner.first_name} {g.owner.last_name || ''}</span>
                           </div>
                         )}
 
                         <div style={{ fontSize: 14, fontWeight: 800, color: text, marginBottom: 2 }}>{g.product_name}</div>
                         <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'capitalize', color: '#38bdf8', background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.25)', borderRadius: 20, padding: '2px 9px' }}>{g.metal}</span>
+                          <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'capitalize', color: '#0C4044', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.24)', borderRadius: 20, padding: '2px 9px' }}>{g.metal}</span>
                           {(g.grade || g.category) && (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: '#d4a017', background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.25)', borderRadius: 20, padding: '2px 9px' }}>{g.grade || g.category}</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: '#CCA881', background: 'rgba(204,168,129,0.12)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: 20, padding: '2px 9px' }}>{g.grade || g.category}</span>
                           )}
                         </div>
 
@@ -509,7 +511,7 @@ const [selected, setSelected] = useState(null)
                         </div>
                         <div className="sprod-row">
                           <span className="sprod-label">Total</span>
-                          <span style={{ fontWeight: 800, color: '#fbbf24' }}>₹{g.totalAmount.toLocaleString('en-IN')}</span>
+                          <span style={{ fontWeight: 800, color: '#BB8958' }}>₹{g.totalAmount.toLocaleString('en-IN')}</span>
                         </div>
                       </div>
                     )

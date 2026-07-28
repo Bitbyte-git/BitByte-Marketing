@@ -336,7 +336,7 @@ function TrendLineChart({ buckets, color }) {
         <g style={{ pointerEvents: 'none' }}>
           <line x1={hp.x} x2={hp.x} y1={padding} y2={height - padding} stroke={color} strokeOpacity="0.3" strokeDasharray="3 3" />
           <rect x={Math.min(Math.max(hp.x - 55, 4), width - 114)} y={Math.max(hp.y - 46, 4)} width="110" height="38" rx="8" fill="#FFFCF8" stroke={color} strokeOpacity="0.5" />
-          <text x={Math.min(Math.max(hp.x - 55, 4), width - 114) + 10} y={Math.max(hp.y - 46, 4) + 16} fontSize="11" fontWeight="700" fill={color}>â‚¹{hp.total.toLocaleString('en-IN')}</text>
+          <text x={Math.min(Math.max(hp.x - 55, 4), width - 114) + 10} y={Math.max(hp.y - 46, 4) + 16} fontSize="11" fontWeight="700" fill={color}>{hp.total.toLocaleString('en-IN')}</text>
           <text x={Math.min(Math.max(hp.x - 55, 4), width - 114) + 10} y={Math.max(hp.y - 46, 4) + 30} fontSize="10" fill="#6B6B6B">{hp.count || 0} orders</text>
         </g>
       )}
@@ -401,13 +401,12 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {levels.map((nodes, depthIdx) => {
-        // â”€â”€ NEW: lane divider color â€” role fixed color base (like glane-divider
-        // in the hierarchy grid page), na status color illa, role color base â”€â”€
+       
         const laneColor = nodes[0] ? (ROLE_CFG[nodes[0].type]?.color || subtext) : subtext
         return (
         <div key={depthIdx}>
           <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', color: subtext, marginBottom: '10px', textTransform: 'uppercase' }}>
-            {nodes[0] ? `${LEVEL_LABELS[nodes[0].type] || nodes[0].type} Â· ${nodes.length}` : 'No matches'}
+            {nodes[0] ? `${LEVEL_LABELS[nodes[0].type] || nodes[0].type}${nodes.length}` : 'No matches'}
           </div>
           <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '14px' }}>
             {nodes.map(node => {
@@ -417,7 +416,7 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
   const childCount = key ? (node[key] || []).length : null
   const active = selChain[depthIdx] === idVal.toString()
   const isDim = selChain[depthIdx] && !active
-  // â”€â”€ NEW: intha card ippo stats-ku select pannirukka nu check â”€â”€
+  
   const isStatsSelected = selectedNode
     && selectedNode.type === node.type
     && nodeIdVal(selectedNode).toString() === idVal.toString()
@@ -426,7 +425,7 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
       className="report-lane-card"
       key={idVal}
       onClick={() => {
-        onSelectNode?.(node)                                 // â”€â”€ NEW: stats filter
+        onSelectNode?.(node)                                 
         if (childCount !== null) selectAt(depthIdx, node)     // existing drill-down
       }}
       style={{
@@ -466,8 +465,7 @@ function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selected
               )
             })}
           </div>
-          {/* â”€â”€ NEW: full-width horizontal divider bar under this lane â€”
-               same "glane-divider" style as SuperadminHierarchyGrid â”€â”€ */}
+          
           <div style={{ height: '3px', borderRadius: '3px', background: laneColor, opacity: 0.55, margin: '0 4px 22px 4px' }} />
         </div>
       )})}
@@ -587,7 +585,7 @@ function CoinStockPie({ stock, scopeLabel, cardBg, border, text, subtext }) {
       <div style={{ width: '100%', borderTop: `1px solid ${border}`, paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {stock.map(item => (
           <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-            <span style={{ color: subtext }}>{COIN_LABELS[item.metal_type]} â€” {item.weight_label}</span>
+            <span style={{ color: subtext }}>{COIN_LABELS[item.metal_type]} = {item.weight_label}</span>
             <span style={{ color: COIN_COLORS[item.metal_type], fontWeight: 700 }}>{item.qty}</span>
           </div>
         ))}
@@ -671,7 +669,7 @@ useEffect(() => {
   setNodeSearch('')
 }, [selectedLevel])
 
-// â”€â”€ filtered nodes based on search (id / name / phone) â”€â”€
+//filtered nodes based on search (id / name / phone)
 const filteredNodes = useMemo(() => {
   if (!debouncedNodeSearch.trim()) return nodesForSelectedLevel.slice(0, 50)
   const q = debouncedNodeSearch.trim().toLowerCase()
@@ -708,7 +706,7 @@ const statsTree = gridSelectedNode ? [gridSelectedNode] : activeTree
 const isMultiAdminViewStats = !gridSelectedNode && isMultiAdminView
 
 const scopedNode = gridSelectedNode || (selectedLevel !== 'own' && activeTree.length === 1 ? activeTree[0] : null)
-const scopedLoginLabel = scopedNode ? `${LEVEL_LABELS[scopedNode.type] || scopedNode.type} Â· ${nodeName(scopedNode)}` : 'Full Network'
+const scopedLoginLabel = scopedNode ? `${LEVEL_LABELS[scopedNode.type] || scopedNode.type}${nodeName(scopedNode)}` : 'Full Network'
 
 useEffect(() => {
   const targetUserId = scopedNode?.user_id
@@ -864,7 +862,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
         .sales-report-page{position:relative;overflow-x:hidden;}
         .sales-report-page::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 8% 0%,rgba(230,241,239,.95),transparent 34%),radial-gradient(circle at 92% 8%,rgba(201,154,58,.10),transparent 26%);pointer-events:none;z-index:0;}
         .sales-report-page > *{position:relative;z-index:1;}
-        .report-topbar{background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(230,241,239,.86),rgba(255,252,248,.96)) !important;border-bottom:1px solid rgba(14,90,87,.14) !important;box-shadow:0 18px 42px rgba(14,90,87,.08);}
+        .report-topbar{position:relative;z-index:100;background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(230,241,239,.86),rgba(255,252,248,.96)) !important;border-bottom:1px solid rgba(14,90,87,.14) !important;box-shadow:0 18px 42px rgba(14,90,87,.08);}
         .report-brand-title{background:linear-gradient(90deg,#D71920,#F05C63,#C99A3A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
         .report-control,.report-action{min-height:44px !important;border-radius:14px !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 12px 24px rgba(14,90,87,.08) !important;}
         .print-card{position:relative;overflow:hidden;background:linear-gradient(145deg,#FFFFFF 0%,#FFFCF8 56%,#F2FAF8 100%) !important;border:1px solid rgba(14,90,87,.15) !important;border-radius:22px !important;box-shadow:0 24px 58px rgba(14,90,87,.12),inset 0 1px 0 rgba(255,255,255,.98) !important;}
@@ -907,10 +905,8 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
       {/* Navbar */}
       <div className="no-print report-topbar" style={{ padding: '18px 40px', borderBottom: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{ background: 'transparent', border: `1px solid ${border}`, color: subtext, borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '13px' }}
-          >Back</button>
+          
+        
           <img src={logo} alt="Team 369" style={{ width: '54px', height: '54px', borderRadius: '50%', flexShrink: 0 }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
@@ -1026,7 +1022,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
           <button
             onClick={() => navigate(-1)}
             style={{ background: 'transparent', border: `1px solid ${border}`, color: subtext, borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '13px' }}
-          >â† Back</button>
+          >Back</button>
         </div>
       </div>
 
@@ -1034,12 +1030,12 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 
         <div style={{ flex: '1 1 0%', minWidth: 0 }}>
 
-          {/* â”€â”€ NEW: selected node indicator â”€â”€ */}
+        
 {gridSelectedNode && (
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', background: cardBg, border: `1px solid ${border}`, borderRadius: '10px', padding: '10px 16px' }}>
     <span style={{ color: subtext, fontSize: '12px' }}>Showing data for</span>
     <span style={{ color: nodeColor(gridSelectedNode), fontWeight: 700, fontSize: '13px' }}>
-      {(LEVEL_LABELS[gridSelectedNode.type] || gridSelectedNode.type)} Â· {nodeName(gridSelectedNode)}
+      {(LEVEL_LABELS[gridSelectedNode.type] || gridSelectedNode.type)}{nodeName(gridSelectedNode)}
     </span>
     <button onClick={() => setGridSelectedNode(null)}
       style={{ marginLeft: 'auto', background: 'transparent', border: `1px solid ${border}`, color: subtext, borderRadius: '8px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}>
@@ -1052,7 +1048,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '28px' }}>
            <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
     <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total sales</div>
-    <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900, lineHeight: 1.2, letterSpacing: 'normal', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>â‚¹{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+    <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900, lineHeight: 1.2, letterSpacing: 'normal', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
   </div>
             <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
               <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total orders</div>
