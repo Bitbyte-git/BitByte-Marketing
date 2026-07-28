@@ -12,7 +12,7 @@ const OCCUPATION_OPTIONS = ['employee', 'business', 'others']
 
 const COLORS = ['#BDCFCE', '#CCA881', '#0C4044', '#C92035', '#BB8958', '#D1DFDE']
 
-// â”€â”€â”€ ROLE CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 const ROLE_CFG = {
   admin: { color: '#53615F', label: 'ADMIN', idKey: 'admin_id' },
   dealer: { color: '#0C4044', label: 'DEALER', idKey: 'dealer_id' },
@@ -21,7 +21,38 @@ const ROLE_CFG = {
   customer: { color: '#C92035', label: 'CUSTOMER', idKey: 'customer_id' },
 }
 
-// â”€â”€â”€ TREE NODE COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function SvgIcon({ name, size = 16, stroke = 'currentColor' }) {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
+  const paths = {
+    print: <><path d="M6 9V3h12v6" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 14h12v7H6z" /></>,
+    close: <><path d="m6 6 12 12M18 6 6 18" /></>,
+    chevronLeft: <path d="m15 18-6-6 6-6" />,
+    chevronRight: <path d="m9 18 6-6-6-6" />,
+    document: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M8 13h8M8 17h6" /></>,
+    warning: <><path d="M10.3 2.9 1.9 17a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 2.9a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4M12 17h.01" /></>,
+    note: <><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path d="M8 8h8M8 12h8M8 16h5" /></>,
+    paperclip: <path d="m21.4 11.6-8.5 8.5a6 6 0 0 1-8.5-8.5l8.5-8.5a4 4 0 0 1 5.7 5.7l-8.5 8.5a2 2 0 1 1-2.8-2.8l7.8-7.8" />,
+    ring: <><circle cx="12" cy="14" r="6" /><path d="m9 8 3-5 3 5" /></>,
+    necklace: <path d="M5 4c0 9 3 15 7 17 4-2 7-8 7-17M9 4h6" />,
+    bracelet: <circle cx="12" cy="12" r="8" />,
+    earring: <><path d="M12 3a4 4 0 1 1-4 4" /><circle cx="9" cy="17" r="3" /></>,
+    chain: <><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" /><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1" /></>,
+    coin: <><circle cx="12" cy="12" r="9" /><path d="M9 9h3a2 2 0 0 1 0 4H10M9 15h5M12 7v2m0 6v2" /></>,
+  }
+  return <svg {...common}>{paths[name] || paths.document}</svg>
+}
+
+function svgIconMarkup(name, color = 'currentColor', size = 15) {
+  const paths = {
+    shield: '<path d="M12 3 4 6v5c0 5 3.4 8.8 8 10 4.6-1.2 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>',
+    phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>',
+    pin: '<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.1.1l2-2A5 5 0 0 0 12 4l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/>',
+  }
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0">${paths[name] || paths.link}</svg>`
+}
+
+
 function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, ancestors = [], superAdminEmail = '', flatMode = false }) {
   const [expanded, setExpanded] = useState(depth < 2)
   const cfg = ROLE_CFG[role]
@@ -127,7 +158,7 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
             onMouseEnter={e => { e.currentTarget.style.background = `rgba(${hexToRgb(c)},0.25)` }}
             onMouseLeave={e => { e.currentTarget.style.background = `rgba(${hexToRgb(c)},0.1)` }}
           >
-            🖨️ PRINT
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><SvgIcon name="print" size={12} /> PRINT</span>
           </button>
 
           <button
@@ -165,7 +196,6 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
             transition: 'transform 0.3s ease',
             transform: expanded ? 'rotate(0deg)' : 'rotate(180deg)',
           }}>
-            â–²
           </div>
         )}
 
@@ -185,13 +215,13 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, an
       {hasChildren && expanded && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
 
-          {/* â”€â”€ Vertical stem down from parent â”€â”€ */}
+          {/*Vertical stem down from parent */}
           <div style={{ width: 2, height: 28, background: `linear-gradient(180deg,${c},rgba(${hexToRgb(c)},0.3))`, marginTop: '10px' }} />
 
-          {/* â”€â”€ Horizontal line + children â”€â”€ */}
+          {/* Horizontal line + children */}
           <div style={{ position: 'relative', width: '100%' }}>
 
-            {/* Horizontal connector line â€” spans full width */}
+            {/* Horizontal connector line spans full width */}
             {children.length > 1 && (
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0, height: 2,
@@ -288,8 +318,8 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
     if (item.type === 'super_admin') {
       return `
         <div class="chain-item ${isLast ? 'current' : ''}">
-          <div class="chain-role">ðŸ›¡ï¸ SUPER ADMIN</div>
-          <div class="chain-email">${item.data.email || 'â€”'}</div>
+          <div class="chain-role" style="display:flex;align-items:center;gap:5px;">${svgIconMarkup('shield', '#CCA881', 13)} SUPER ADMIN</div>
+          <div class="chain-email">${item.data.email || ''}</div>
         </div>
         ${idx < chain.length - 1 ? `<div class="chain-arrow"><div style="display:flex;flex-direction:column;align-items:center;gap:0px;"><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid #7A8987;"></div><div style="width:2px;height:12px;background:linear-gradient(180deg,#7A8987,rgba(122,137,135,0.2));"></div></div></div>` : ''}      `
     }
@@ -297,24 +327,24 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
     const r = ROLE_PRINT[item.type]
     if (!r) return ''
     const d = item.data || {}
-    const idVal = d[r.idKey] || d.id || 'â€”'
-    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || 'â€”'
-    const phone = d.mobile_number || 'â€”'
-    const city = d.city_name || 'â€”'
+    const idVal = d[r.idKey] || d.id || ''
+    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || ''
+    const phone = d.mobile_number || ''
+    const city = d.city_name || ''
 
     return `
       <div class="chain-item ${isLast ? 'current' : ''}">
         <div class="chain-role">${r.emoji} ${r.label}</div>
         <div class="chain-id">${idVal}</div>
         <div class="chain-name">${name}</div>
-        <div class="chain-info">ðŸ“ž ${phone}</div>
-        <div class="chain-info">ðŸ“ ${city}</div>
+        <div class="chain-info" style="display:flex;align-items:center;gap:5px;">${svgIconMarkup('phone', '#7A8987', 12)} ${phone}</div>
+        <div class="chain-info" style="display:flex;align-items:center;gap:5px;">${svgIconMarkup('pin', '#7A8987', 12)} ${city}</div>
       </div>
       ${idx < chain.length - 1 ? `<div class="chain-arrow"><div style="display:flex;flex-direction:column;align-items:center;gap:0px;"><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid #7A8987;"></div><div style="width:2px;height:12px;background:linear-gradient(180deg,#7A8987,rgba(122,137,135,0.2));"></div></div></div>` : ''}
     `
   }).join('')
 
-  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || 'â€”'
+  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || ''
   const roleLabel = ROLE_PRINT[role]?.label || role.toUpperCase()
 
   const printWindow = window.open('', '_blank')
@@ -322,7 +352,7 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${roleLabel} â€” ${currentName}</title>
+      <title>${roleLabel} ${currentName}</title>
       <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
@@ -404,7 +434,7 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
     <body>
       <div class="wrapper">
         <div class="header">
-          <h1>BitByte â€” ${roleLabel} Profile</h1>
+          <h1>BitByte ${roleLabel} Profile</h1>
           <p>Hierarchy Chain Report</p>
         </div>
         ${chainHtml}
@@ -490,7 +520,7 @@ const arrowHtml = idx > 0 ? `
         ">
           <div style="position:absolute;top:-10px;right:-10px;width:70px;height:70px;background:radial-gradient(circle,rgba(204,168,129,0.14),transparent 70%);pointer-events:none;"></div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">ðŸ›¡ï¸</div>
+            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">${svgIconMarkup('shield', '#FDFDFC', 15)}</div>
             <div>
               <div style="font-size:9px;color:#CCA881;font-weight:800;letter-spacing:1.8px;">SUPER ADMIN</div>
               <div style="font-size:8px;color:rgba(204,168,129,0.45);margin-top:2px;letter-spacing:0.5px;">ROOT â€¢ FULL ACCESS</div>
@@ -500,7 +530,7 @@ const arrowHtml = idx > 0 ? `
               <span style="font-size:9px;color:#0C4044;font-weight:700;">LIVE</span>
             </div>
           </div>
-          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || 'â€”'}</div>
+          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || ''}</div>
         </div>
       `
     }
@@ -508,9 +538,9 @@ const arrowHtml = idx > 0 ? `
     const cfg = ROLE_LABELS[item.type]
     if (!cfg) return ''
     const d = item.data || {}
-    const idVal = d[cfg.idKey] || d.id || 'â€”'
-    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || 'â€”'
-    const phone = d.mobile_number || 'â€”'
+    const idVal = d[cfg.idKey] || d.id || ''
+    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || ''
+    const phone = d.mobile_number || ''
     const city = d.city_name || ''
     const rc = hexToRgb(cfg.color)
 
@@ -546,14 +576,14 @@ const arrowHtml = idx > 0 ? `
         <div style="font-size:14px;color:${isDark ? '#E7EDEC' : '#111817'};font-weight:700;margin-bottom:9px;letter-spacing:-0.3px;">${name}</div>
 
         <div style="display:flex;flex-direction:column;gap:6px;">
-          ${phone !== 'â€”' ? `
+          ${phone ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“ž</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgIconMarkup('phone', cfg.color, 11)}</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${phone}</span>
           </div>` : ''}
           ${city ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${svgIconMarkup('pin', cfg.color, 11)}</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${city}</span>
           </div>` : ''}
         </div>
@@ -564,7 +594,7 @@ const arrowHtml = idx > 0 ? `
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid ${isDark ? 'rgba(189,207,206,0.1)' : 'rgba(12,64,68,0.08)'};">
       <div style="display:flex;align-items:center;gap:9px;">
-        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#BDCFCE,#0C4044);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(189,207,206,0.4);">ðŸ”—</div>
+        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#BDCFCE,#0C4044);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(189,207,206,0.4);">${svgIconMarkup('link', '#FDFDFC', 13)}</div>
         <div>
           <div style="font-size:11px;color:${isDark ? '#BDCFCE' : '#0C4044'};font-weight:800;letter-spacing:1.8px;">HIERARCHY CHAIN</div>
           <div style="font-size:9px;color:${isDark ? '#7A8987' : '#7A8987'};margin-top:2px;">${totalNodes} level${totalNodes !== 1 ? 's' : ''} deep</div>
@@ -651,7 +681,7 @@ function createAdminPopup(a, i, anchorEl, dark, subtext, text) {
       CREATED BY
     </div>
     <div style="border-radius:9px;padding:11px;margin-bottom:10px;background:${saBoxBg};border:1px solid ${saBoxBorder};">
-      <div style="font-size:9px;color:#CCA881;font-weight:700;margin-bottom:5px;">ðŸ›¡ï¸ SUPER ADMIN</div>
+      <div style="font-size:9px;color:#CCA881;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px;">${svgIconMarkup('shield', '#CCA881', 12)} SUPER ADMIN</div>
       <div style="font-size:11px;color:${subtext};word-break:break-all;">${localStorage.getItem('email')}</div>
       <div style="margin-top:6px;font-size:9px;padding:2px 8px;background:rgba(204,168,129,0.1);border:1px solid rgba(204,168,129,0.25);border-radius:20px;color:#CCA881;display:inline-block;">â— ONLINE</div>
     </div>
@@ -665,8 +695,8 @@ function createAdminPopup(a, i, anchorEl, dark, subtext, text) {
       <div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(189,207,206,0.12);color:#BDCFCE;border:1px solid rgba(189,207,206,0.25);margin-bottom:6px;">ADMIN</div>
       <div style="font-size:10px;color:${c};font-family:monospace;margin-bottom:3px;">${a.admin_id}</div>
       <div style="font-size:13px;color:${text};font-weight:700;margin-bottom:6px;">${a.first_name}</div>
-      <div style="font-size:11px;color:${subtext};margin-bottom:3px;">ðŸ“ž ${a.mobile_number}</div>
-      <div style="font-size:11px;color:${subtext};">ðŸ“ ${a.city_name}</div>
+      <div style="font-size:11px;color:${subtext};margin-bottom:3px;display:flex;align-items:center;gap:5px;">${svgIconMarkup('phone', '${subtext}', 12)} ${a.mobile_number}</div>
+      <div style="font-size:11px;color:${subtext};display:flex;align-items:center;gap:5px;">${svgIconMarkup('pin', '${subtext}', 12)} ${a.city_name}</div>
     </div>
   `
   document.body.appendChild(el)
@@ -688,7 +718,7 @@ function createAdminPopup(a, i, anchorEl, dark, subtext, text) {
 }
 
 
-// â”€â”€â”€ ORDER TREND CHART â€” clean area chart, peak marker, no duplicate axis â”€â”€
+// â”€â”€â”€ ORDER TREND CHART clean area chart, peak marker, no duplicate axis â”€â”€
 function OrderTrendChart({ dark }) {
   const [period, setPeriod] = useState('today')
   const [data, setData] = useState([])
@@ -748,7 +778,7 @@ function OrderTrendChart({ dark }) {
   const trendPercent = firstAvg > 0 ? (((secondAvg - firstAvg) / firstAvg) * 100).toFixed(1) : (secondAvg > 0 ? 100 : 0)
   const isUp = trendPercent >= 0
 
-  // â”€â”€ Peak point index â€” used to show a highlighted dot on the busiest bucket â”€â”€
+  // â”€â”€ Peak point index used to show a highlighted dot on the busiest bucket â”€â”€
   const peakIndex = data.length
     ? data.reduce((maxIdx, d, i, arr) => (d.count > arr[maxIdx].count ? i : maxIdx), 0)
     : -1
@@ -775,7 +805,7 @@ function OrderTrendChart({ dark }) {
     )
   }
 
-  // â”€â”€ Custom dot: only render a visible marker on the peak bucket â”€â”€
+  
   const PeakDot = (props) => {
     const { cx, cy, index } = props
     if (index !== peakIndex || cx == null || cy == null) return null
@@ -914,7 +944,7 @@ export default function SuperAdminDashboard() {
  const [hierarchySearch, setHierarchySearch] = useState('')
 const [debouncedSearch, setDebouncedSearch] = useState('')
 
-// Debounce â€” typing niruthi 300ms aana appuram than search run aagum
+// Debounce typing niruthi 300ms aana appuram than search run aagum
 useEffect(() => {
   const t = setTimeout(() => setDebouncedSearch(hierarchySearch.trim()), 120)
   return () => clearTimeout(t)
@@ -976,7 +1006,7 @@ const [showTodayRates, setShowTodayRates] = useState(false)
 
 
 
-  // NEW â€” Rate entry popup
+  // NEW Rate entry popup
   const [showRatePopup, setShowRatePopup] = useState(false)
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [productForm, setProductForm] = useState({
@@ -1484,7 +1514,7 @@ const searchAllHierarchy = (query) => {
   return result
 }
 
-// âœ… NEW â€” idha inga add pannunga (function-ku keezha)
+// âœ… NEW idha inga add pannunga (function-ku keezha)
 const searchResults = useMemo(() => {
   if (!debouncedSearch) return []
   return searchAllHierarchy(debouncedSearch)
@@ -2340,7 +2370,7 @@ const fetchCoinStock = async () => {
           </div>
         )}
 
-        {/* â”€â”€ GOLD & SILVER PRICE TABLE â€” HORIZONTAL LAYOUT â”€â”€ */}
+        {/* â”€â”€ GOLD & SILVER PRICE TABLE HORIZONTAL LAYOUT â”€â”€ */}
         <div className="sa-rates-layout" style={{
           display: 'flex',
           gap: '0',
@@ -2637,7 +2667,7 @@ return (
               }}>
                 {metalPrices.gold22k != null
                   ? `â‚¹${(w.grams * metalPrices.gold22k).toFixed(2)}`
-                  : 'â€”'}
+                  : ''}
               </div>
             </div>
           </div>
@@ -2715,7 +2745,7 @@ return (
               }}>
                 {metalPrices.gold24k != null
                   ? `â‚¹${(w.grams * metalPrices.gold24k).toFixed(2)}`
-                  : 'â€”'}
+                  : ''}
               </div>
             </div>
           </div>
@@ -2793,7 +2823,7 @@ return (
               }}>
                 {metalPrices.silver != null
                   ? `â‚¹${(w.grams * metalPrices.silver).toFixed(2)}`
-                  : 'â€”'}
+                  : ''}
               </div>
             </div>
           </div>
@@ -3255,7 +3285,7 @@ setOrderPopupState({
       {/* STEP 1: Category */}
       <div style={{ marginBottom:'20px' }}>
         <label style={{ display:'block', color:'#CCA881', fontSize:'11px', fontWeight:800, letterSpacing:'1px', textTransform:'uppercase', marginBottom:'10px' }}>
-          Step 1 â€” Select Category
+          Step 1 Select Category
         </label>
         <div style={{ display:'flex', flexWrap:'wrap', gap:'8px' }}>
           {['rings','necklaces','bangles','earrings','chains','coins'].map(cat => (
@@ -3265,7 +3295,7 @@ setOrderPopupState({
                 border: `1.5px solid ${productForm.category === cat ? 'rgba(204,168,129,0.7)' : 'rgba(204,168,129,0.2)'}`,
                 color: productForm.category === cat ? '#CCA881' : subtext,
               }}>
-              { {rings:'💍',necklaces:' Necklace',bangles:' bracelet',earrings:' earrings',chains:' chain',coins:' coin'}[cat] } {cat}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><SvgIcon name={{ rings: 'ring', necklaces: 'necklace', bangles: 'bracelet', earrings: 'earring', chains: 'chain', coins: 'coin' }[cat]} size={14} />{cat}</span>
             </div>
           ))}
         </div>
@@ -3275,7 +3305,7 @@ setOrderPopupState({
       {productForm.category && (
         <div style={{ marginBottom:'20px' }}>
           <label style={{ display:'block', color:'#CCA881', fontSize:'11px', fontWeight:800, letterSpacing:'1px', textTransform:'uppercase', marginBottom:'10px' }}>
-            Step 2 â€” Select Metal
+            Step 2 Select Metal
           </label>
           <div style={{ display:'flex', gap:'10px' }}>
             {['gold','silver'].map(m => (
@@ -3296,7 +3326,7 @@ setOrderPopupState({
       {productForm.metal && (
         <div style={{ marginBottom:'20px' }}>
           <label style={{ display:'block', color:'#BDCFCE', fontSize:'11px', fontWeight:800, letterSpacing:'1px', textTransform:'uppercase', marginBottom:'10px' }}>
-            Step 3 â€” Select Grade
+            Step 3 Select Grade
           </label>
           <div style={{ display:'flex', gap:'10px' }}>
             {(productForm.metal === 'gold' ? ['22k','24k'] : ['999']).map(g => (
@@ -3387,7 +3417,7 @@ setOrderPopupState({
                 Live Rate Price
               </label>
               <div style={{ background:inpBg, border:`1px solid ${livePrice ? 'rgba(12,64,68,0.5)' : inpBorder}`, borderRadius:'12px', padding:'13px 16px', fontFamily:'monospace', fontWeight:800, fontSize:'16px', color: livePrice ? '#0C4044' : subtext, display:'flex', alignItems:'center', minHeight:'46px' }}>
-                {livePrice ? `â‚¹ ${livePrice}` : 'â€”'}
+                {livePrice ? `â‚¹ ${livePrice}` : ''}
               </div>
             </div>
           </div>
@@ -3439,7 +3469,7 @@ setOrderPopupState({
                       }}
                       style={{ position:'absolute', top:'4px', right:'4px', background:'rgba(201,32,53,0.85)', color:'#FDFDFC', fontSize:'10px', fontWeight:900, width:'18px', height:'18px', borderRadius:'50%', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
                     >
-                      âœ•
+                      <SvgIcon name="close" size={12} stroke="#FDFDFC" />
                     </button>
                   </div>
                 ))}
@@ -3495,14 +3525,14 @@ setOrderPopupState({
       {previewImageIdx > 0 && (
         <button onClick={() => setPreviewImageIdx(i => i - 1)}
           style={{ position:'absolute', left:'-50px', top:'50%', transform:'translateY(-50%)', background:'rgba(204,168,129,0.2)', border:'1px solid rgba(204,168,129,0.4)', color:'#CCA881', width:'40px', height:'40px', borderRadius:'50%', fontSize:'18px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          â€¹
+          <SvgIcon name="chevronLeft" size={20} />
         </button>
       )}
       {/* Right Arrow */}
       {previewImageIdx < productPreviewUrls.length - 1 && (
         <button onClick={() => setPreviewImageIdx(i => i + 1)}
           style={{ position:'absolute', right:'-50px', top:'50%', transform:'translateY(-50%)', background:'rgba(204,168,129,0.2)', border:'1px solid rgba(204,168,129,0.4)', color:'#CCA881', width:'40px', height:'40px', borderRadius:'50%', fontSize:'18px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          â€º
+          <SvgIcon name="chevronRight" size={20} />
         </button>
       )}
 
@@ -3513,7 +3543,7 @@ setOrderPopupState({
 
       <button onClick={() => setPreviewImageIdx(null)}
         style={{ position:'absolute', top:'-16px', right:'-16px', background:'rgba(201,32,53,0.85)', border:'none', color:'#FDFDFC', width:'32px', height:'32px', borderRadius:'50%', fontSize:'14px', cursor:'pointer', fontWeight:900 }}>
-        âœ•
+        <SvgIcon name="close" size={16} stroke="#FDFDFC" />
       </button>
     </div>
   </div>
@@ -4191,7 +4221,7 @@ try {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ color: item.color, fontWeight: 900, fontSize: '20px', fontFamily: 'monospace' }}>
-                      {item.value ? `â‚¹${item.value.toFixed(2)}` : <span style={{ color: subtext, fontSize: '13px' }}>Not set</span>}
+                      {item.value ? item.value.toFixed(2) : <span style={{ color: subtext, fontSize: '13px' }}>Not set</span>}
                     </div>
                   </div>
                 </div>
@@ -4639,7 +4669,7 @@ try {
 
                       {req.message && (
                         <div style={{ color: subtext, fontSize: '13px', marginTop: '10px', lineHeight: 1.5 }}>
-                          📝 {req.message}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><SvgIcon name="note" size={14} />{req.message}</span>
                         </div>
                       )}
                     </div>
@@ -4679,7 +4709,7 @@ try {
                       lineHeight: 1.6
                     }}>
                       
-                      📝 {selectedRequest.message}
+                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><SvgIcon name="note" size={14} />{selectedRequest.message}</span>
                     </div>
                   )}
 
@@ -4737,7 +4767,7 @@ try {
                         fontSize: '14px'
                       }}
                     >
-                      📎 View Proof Document
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><SvgIcon name="paperclip" size={15} />View Proof Document</span>
                     </button>
                   )}
 
@@ -5135,10 +5165,10 @@ fetchAnnouncementCount(annData)
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexShrink: 0 }}>
                 <div>
-                  <div style={{ color: '#53615F', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>📝 WISHES RECEIVED</div>
+                  <div style={{ color: '#53615F', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '7px' }}><SvgIcon name="note" size={16} />WISHES RECEIVED</div>
                   <div style={{ color: subtext, fontSize: '11px', marginTop: '4px' }}>{replyAnn.title}</div>
                 </div>
-                <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>âœ•</button>
+                <button onClick={() => setReplyAnn(null)} aria-label="Close replies" style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}><SvgIcon name="close" size={15} /></button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(189,207,206,0.4) transparent' }}>
                 {(annReplies[replyAnn.id] || []).length === 0 ? (
@@ -5237,7 +5267,7 @@ fetchAnnouncementCount(annData)
                     </div>
 
                     <div style={{ color: subtext, fontSize: '10px', marginTop: '2px' }}>
-                      {selectedRequest?.first_name} {selectedRequest?.last_name} â€” {selectedRequest?.role?.toUpperCase()}
+                      {selectedRequest?.first_name} {selectedRequest?.last_name} {selectedRequest?.role?.toUpperCase()}
                     </div>
                   </div>
                 </div>
@@ -5292,7 +5322,7 @@ fetchAnnouncementCount(annData)
                   />
                 )}
 
-                {/* âœ… PDF â€” blob: URL-à®•à¯à®•à¯ iframe use à®ªà®£à¯à®£à¯ */}
+                {/* âœ… PDF blob: URL-à®•à¯à®•à¯ iframe use à®ªà®£à¯à®£à¯ */}
                 {!proofLoading && proofType === 'pdf' && proofUrl && (
                   <iframe
                     src={proofUrl}
@@ -5311,7 +5341,7 @@ fetchAnnouncementCount(annData)
                 {/* âœ… Error fallback */}
                 {!proofLoading && proofType === 'error' && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '40px' }}>
-                    <div style={{ fontSize: '40px' }}>âš ï¸</div>
+                    <SvgIcon name="warning" size={40} stroke="#BB8958" />
                     <div style={{ color: subtext, fontSize: '14px', textAlign: 'center' }}>
                       Document load failed
                     </div>
@@ -5455,7 +5485,7 @@ fetchAnnouncementCount(annData)
                 </div>
               </div>
 
-              <p style={s.secSub}>📝 Address</p>
+              <p style={{ ...s.secSub, display: 'flex', alignItems: 'center', gap: '6px' }}><SvgIcon name="note" size={15} />Address</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
@@ -5469,7 +5499,7 @@ fetchAnnouncementCount(annData)
                 <div><label style={s.lbl}>Aadhaar No *</label><input name="aadhaar_no" maxLength={12} value={form.aadhaar_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>PAN No *</label><input name="pan_no" maxLength={10} value={form.pan_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
               </div>
-              <p style={s.secSub}>📝 Occupation</p>
+              <p style={{ ...s.secSub, display: 'flex', alignItems: 'center', gap: '6px' }}><SvgIcon name="note" size={15} />Occupation</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                 <div><label style={s.lbl}>Occupation *</label>
                   <select name="occupation" value={form.occupation} onChange={handleChange} className="sa-inp" style={{ ...s.inp, cursor: 'pointer' }}>
@@ -5539,7 +5569,7 @@ fetchAnnouncementCount(annData)
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
           <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: '16px' }}>Add Coins to Stock</div>
-          <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '3px' }}>Coins added here go directly into your stock â€” no approval needed</div>
+          <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '3px' }}>Coins added here go directly into your stock no approval needed</div>
         </div>
         <button onClick={() => setShowAddCoin(false)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
       </div>
@@ -5584,8 +5614,8 @@ fetchAnnouncementCount(annData)
         <div style={{ marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {coinCart.map((item, idx) => (
             <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px' }}>
-              <span style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} â€” {item.weight_label} Ã— {item.qty}</span>
-              <button onClick={() => removeCoinCartItem(idx)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', fontSize: '11px' }}>âœ•</button>
+              <span style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} {item.weight_label} Ã— {item.qty}</span>
+              <button onClick={() => removeCoinCartItem(idx)} aria-label="Remove coin item" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}><SvgIcon name="close" size={13} /></button>
             </div>
           ))}
         </div>
