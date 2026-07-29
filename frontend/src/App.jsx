@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+﻿import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import CustomerNavbar from './collection/CustomerNavbar'
 import SuperAdminNavbar from './collection/SuperAdminNavbar'
@@ -45,6 +45,10 @@ const BuyCoin = lazy(() => import('./Coins_products/Buy_Coin'))
 const StoredCoins = lazy(() => import('./Coins_products/Stored_coins'))
 const CoinRequests = lazy(() => import('./Coins_products/Coin_Requests'))
 const TransactionHistory = lazy(() => import('./Coins_products/Transaction_History'))
+const RetailerPromotions = lazy(() => import('./Promotions/Retailer_Promotions'))
+const WholesaleDealerPromotions = lazy(() => import('./Promotions/WholesaleDealer_Promotions'))
+const DistributorPromotions = lazy(() => import('./Promotions/Distributor'))
+const SuperStokistPromotions = lazy(() => import('./Promotions/SuperStokist'))
 
 const collectionPath = (category, metal) => {
   const params = new URLSearchParams({ category })
@@ -212,6 +216,10 @@ export default function App() {
           <Route path="/admin-orders" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AdminOrdersPage /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/sales-report" element={<ProtectedRoute><WithInternalRoleNavbar><Report /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/hierarchy-sales-count" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperAdminHierarchySalesCount /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/promotions/retailer" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><RetailerPromotions /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/promotions/wholesale-dealer" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><WholesaleDealerPromotions /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/promotions/distributor" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><DistributorPromotions /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/promotions/super-stockist" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperStokistPromotions /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/login-active" element={<LoginActive />} />
           <Route path="/login-inactive" element={<LoginInactive />} />
           <Route path="/buy-coin" element={<ProtectedRoute role={INTERNAL_COIN_ROLES}><WithInternalRoleNavbar><BuyCoin /></WithInternalRoleNavbar></ProtectedRoute>} />

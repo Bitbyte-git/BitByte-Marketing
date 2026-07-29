@@ -2346,6 +2346,126 @@ class TodayRewardsView(APIView):
             'rewards': rewards,
         })
 
+# ── NEW: Retailer Promotion System ──
+class RetailerPromotionListView(APIView):
+    """
+    Customers who have created sub-customers, whose sub-customers' total
+    order value crossed ₹5L OR sub-customer count crossed 7 — eligible
+    for Retailer promotion.
+    """
+    permission_classes = [IsAuthenticated]
+
+    SALES_THRESHOLD = 500000          # ₹5 Lakh
+    CUSTOMER_COUNT_THRESHOLD = 7
+
+    def get(self, request):
+        if request.user.role not in ['super_admin', 'admin']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        today = timezone.now().date()
+
+        creators = User.objects.filter(
+            role='customer', created_customers__isnull=False
+        ).distinct()
+
+        results = []
+        for creator in creators:
+            try:
+                creator_profile = creator.customer_profile
+            except CustomerProfile.DoesNotExist:
+                continue
+
+            sub_customers = CustomerProfile.objects.filter(created_by=creator)
+            sub_user_ids = list(sub_customers.values_list('user_id', flat=True))
+
+            total_customers = sub_customers.count()
+            today_customers = sub_customers.filter(created_at__date=today).count()
+
+            total_value = JewelryOrder.objects.filter(
+                user_id__in=sub_user_ids
+            ).aggregate(total=Sum('total_price'))['total'] or 0
+
+            eligible = total_value >= self.SALES_THRESHOLD or total_customers >= self.CUSTOMER_COUNT_THRESHOLD
+            if not eligible and creator_profile.retailer_status == 'none':
+                continue
+
+            results.append({
+                'user_id': creator.id,
+                'customer_id': creator_profile.customer_id,
+                'first_name': creator_profile.first_name,
+                'last_name': creator_profile.last_name,
+                'mobile_number': creator_profile.mobile_number,
+                'email': creator.email,
+                'today_customers': today_customers,
+                'total_customers': total_customers,
+                'total_value': float(total_value),
+                'status': creator_profile.retailer_status,
+            })
+
+        results.sort(key=lambda r: r['total_value'], reverse=True)
+        return Response(results)
+
+
+class RetailerPromotionActionView(APIView):
+    """Approve converts the customer into a real Promotor; reject just marks it."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        if request.user.role not in ['super_admin', 'admin']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        action = request.data.get('action')
+        try:
+            target_user = User.objects.get(id=user_id, role='customer')
+            target_profile = target_user.customer_profile
+        except (User.DoesNotExist, CustomerProfile.DoesNotExist):
+            return Response({'error': 'Customer not found'}, status=404)
+
+        if action == 'reject':
+            target_profile.retailer_status = 'rejected'
+            target_profile.save(update_fields=['retailer_status'])
+            return Response({'message': 'Rejected'})
+
+        if action == 'approve':
+            if hasattr(target_user, 'promotor_profile'):
+                return Response({'error': 'Already a promotor'}, status=400)
+
+            promotor = PromotorProfile.objects.create(
+                user=target_user,
+                created_by=request.user,
+                initial=target_profile.initial,
+                first_name=target_profile.first_name,
+                last_name=target_profile.last_name,
+                mobile_number=target_profile.mobile_number,
+                gender=target_profile.gender,
+                dob=target_profile.dob,
+                married_status=target_profile.married_status,
+                anniversary_date=target_profile.anniversary_date,
+                door_no=target_profile.door_no,
+                street_name=target_profile.street_name,
+                town_name=target_profile.town_name,
+                city_name=target_profile.city_name,
+                district=target_profile.district,
+                state=target_profile.state,
+                aadhaar_no=target_profile.aadhaar_no,
+                pan_no=target_profile.pan_no,
+                occupation=target_profile.occupation,
+                occupation_detail=target_profile.occupation_detail,
+                annual_salary=target_profile.annual_salary,
+            )
+
+            # This customer's own created sub-customers now belong to their new Promotor profile
+            CustomerProfile.objects.filter(created_by=target_user).update(assigned_promotor=promotor)
+
+            target_profile.retailer_status = 'approved'
+            target_profile.save(update_fields=['retailer_status'])
+
+            target_user.role = 'promotor'
+            target_user.save(update_fields=['role'])
+
+            return Response({'message': 'Approved — customer promoted to Retailer'})
+
+        return Response({'error': 'Invalid action'}, status=400)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])

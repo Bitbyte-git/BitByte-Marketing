@@ -346,6 +346,15 @@ class CustomerProfile(models.Model):
     # Customer Info
     customer_id = models.CharField(max_length=20, unique=True, blank=True)
 
+    # ── NEW: Retailer promotion tracking ──
+    RETAILER_STATUS_CHOICES = [
+        ('none', 'Not Eligible'),
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    retailer_status = models.CharField(max_length=10, choices=RETAILER_STATUS_CHOICES, default='none')
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

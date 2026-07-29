@@ -70,6 +70,12 @@ export default function SuperAdminNavbar({
     ['Login Active', () => navigate('/login-active')],
     ['Login Inactive', () => navigate('/login-inactive')],
   ]
+   const promotion = [
+    ['Retailers', () => navigate('/promotions/retailer')],
+    ['Wholesale Dealer', () => navigate('/promotions/wholesale-dealer')],
+    ['Distributor', () => navigate('/promotions/distributor')],
+    ['Super Stockist', () => navigate('/promotions/super-stockist')],
+  ]
 
   const MenuGroup = ({ label, items, footer }) => (
     <div className="san-menu-group">
@@ -85,7 +91,67 @@ export default function SuperAdminNavbar({
   return (
     <>
       <style>{`
-        .san-shell *{box-sizing:border-box}.san-sidebar{position:fixed;inset:0 auto 0 0;width:286px;z-index:70;background:rgba(253,253,252,.98);border-right:1px solid rgba(189,207,206,.76);box-shadow:20px 0 48px rgba(7,59,63,.07);padding:28px 18px;display:flex;flex-direction:column}.san-brand{display:flex;align-items:center;gap:13px;padding:0 8px 26px;border-bottom:1px solid rgba(189,207,206,.66);cursor:pointer}.san-brand img{width:54px;height:54px;object-fit:contain}.san-brand-name{font-family:Georgia,'Times New Roman',serif;font-size:31px;line-height:.95;font-weight:800;color:#073B3F;letter-spacing:.03em}.san-role{margin-top:5px;color:#BB8958;font-size:11px;font-weight:900;letter-spacing:.24em;text-transform:uppercase}.san-side-nav{display:flex;flex-direction:column;gap:9px;margin-top:24px}.san-side-link{height:54px;border:0;border-radius:8px;background:transparent;color:#073B3F;display:flex;align-items:center;gap:14px;padding:0 18px;font-size:15px;font-weight:900;text-align:left;cursor:pointer}.san-side-link:hover,.san-side-link.is-active{background:linear-gradient(135deg,#073B3F,#0C575B);color:#FDFDFC;box-shadow:0 18px 34px rgba(7,59,63,.16)}.san-quick{border-top:1px solid #E4ECEB;margin-top:24px;padding:22px 16px 0}.san-quick-title{font-size:11px;font-weight:900;text-transform:uppercase;color:#111817;margin-bottom:18px}.san-quick-row{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;margin-bottom:18px;color:#0C4044}.san-quick-row strong{display:block;font-size:18px;line-height:1.1;color:#111817}.san-quick-row small{display:block;font-size:12px;color:#0C4044;font-weight:800}.san-quick-row b{font-size:11px;color:#009957}.san-secure{margin-top:auto;border-radius:8px;background:linear-gradient(145deg,#073B3F,#0C4044);border:1px solid rgba(204,168,129,.32);padding:24px 20px;color:#FDFDFC;box-shadow:0 18px 36px rgba(7,59,63,.14)}.san-secure strong{display:block;font-size:16px;margin-bottom:8px}.san-secure span{display:block;color:#D1DFDE;font-size:13px;line-height:1.6}.san-top-shell{position:sticky;top:0;z-index:65;background:rgba(253,253,252,.98);border-bottom:1px solid rgba(189,207,206,.74);box-shadow:0 16px 38px rgba(7,59,63,.055);backdrop-filter:blur(16px)}.san-top-inner{min-height:104px;display:flex;align-items:stretch;gap:18px;padding:0 28px}.san-navbar-brand{width:260px;border:0;background:transparent;display:flex;align-items:center;gap:14px;padding:0 30px;cursor:pointer}.san-navbar-brand img{width:54px;height:54px;object-fit:contain}.san-navbar-brand strong{display:block;font-family:Georgia,'Times New Roman',serif;font-size:31px;line-height:.95;font-weight:850;letter-spacing:.04em;color:#073B3F}.san-navbar-brand small{display:block;margin-top:5px;color:#BB8958;font-size:10px;font-weight:900;letter-spacing:.24em;text-transform:uppercase}.san-search-block{width:330px;display:flex;align-items:center;padding:0 26px}.san-search{height:48px;width:100%;border:1px solid rgba(189,207,206,.95);border-radius:10px;background:#FDFDFC;color:#073B3F;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:14px;font-weight:700}.san-menu-center{flex:1;display:flex;justify-content:center;align-items:stretch;gap:10px}.san-menu-group{position:relative;display:flex}.san-menu-trigger{border:0;background:transparent;min-width:176px;padding:0 22px;color:#073B3F;font-family:Georgia,'Times New Roman',serif;font-size:17px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer}.san-menu-trigger:hover{background:#F3F3F0;border-radius:999px}.san-menu-dropdown{position:absolute;top:100%;left:50%;transform:translateX(-50%) translateY(10px);min-width:286px;padding:24px 28px;background:rgba(253,253,252,.98);border:1px solid rgba(189,207,206,.8);box-shadow:0 26px 68px rgba(7,59,63,.14);border-radius:8px;opacity:0;visibility:hidden;pointer-events:none;transition:.18s ease;z-index:90}.san-menu-group:hover .san-menu-dropdown{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(-50%) translateY(0)}.san-menu-title{display:flex;align-items:center;gap:12px;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:900;color:#073B3F;margin-bottom:18px}.san-menu-title span{font-size:24px;color:#BB8958}.san-menu-link{width:100%;border:0;background:transparent;padding:10px 0;text-align:left;color:#111817;font-size:14px;font-weight:750;display:flex;align-items:center;justify-content:space-between;cursor:pointer}.san-menu-link:hover{color:#0C4044;transform:translateX(3px)}.san-menu-link b,.san-menu-foot{color:#0C4044}.san-menu-foot{margin-top:22px;border:0;background:transparent;font-size:13px;font-weight:900;letter-spacing:.02em;cursor:pointer}.san-actions{display:flex;align-items:center;border-left:0;gap:12px}.san-action{min-width:168px;border:0;background:transparent;color:#0C4044;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}.san-action:hover{background:#F3F3F0;box-shadow:0 12px 28px rgba(7,59,63,.08);transform:translateY(-1px)}.san-action.logout{color:#C92035}.san-mobile-logo{display:none}.san-mobile-logo img{width:46px;height:46px}.san-mobile-logo strong{font-family:Georgia,'Times New Roman',serif;color:#073B3F;font-size:25px;line-height:1}.san-mobile-logo small{display:block;color:#BB8958;font-size:9px;font-weight:900;letter-spacing:.2em}@media(max-width:1100px){.san-navbar-brand{width:100%;height:76px;border-right:0;justify-content:center}.san-sidebar{position:relative;width:100%;min-height:0;padding:16px;border-right:0;border-bottom:1px solid rgba(189,207,206,.72)}.san-side-nav{flex-direction:row;overflow:auto}.san-side-link{height:42px;flex:0 0 auto}.san-quick,.san-secure{display:none}.san-top-shell{margin-left:0!important}.san-top-inner{min-height:auto;display:block}.san-mobile-logo{display:none!important}.san-search-block{width:100%;border-right:0;padding:14px 18px}.san-menu-center{overflow-x:auto;justify-content:flex-start;border-top:0}.san-menu-trigger{min-width:160px;height:54px}.san-actions{border-left:0;overflow:auto}.san-action{height:52px;min-width:140px}}
+.san-shell * { box-sizing: border-box; }
+.san-sidebar { position: fixed; inset: 0 auto 0 0; width: 286px; z-index: 70; background: rgba(253,253,252,.98); border-right: 1px solid rgba(189,207,206,.76); box-shadow: 20px 0 48px rgba(7,59,63,.07); padding: 28px 18px; display: flex; flex-direction: column; }
+.san-brand { display: flex; align-items: center; gap: 13px; padding: 0 8px 26px; border-bottom: 1px solid rgba(189,207,206,.66); cursor: pointer; }
+.san-brand img { width: 54px; height: 54px; object-fit: contain; }
+.san-brand-name { font-family: Georgia, 'Times New Roman', serif; font-size: 31px; line-height: .95; font-weight: 800; color: #073B3F; letter-spacing: .03em; }
+.san-role { margin-top: 5px; color: #BB8958; font-size: 11px; font-weight: 900; letter-spacing: .24em; text-transform: uppercase; }
+.san-side-nav { display: flex; flex-direction: column; gap: 9px; margin-top: 24px; }
+.san-side-link { height: 54px; border: 0; border-radius: 8px; background: transparent; color: #073B3F; display: flex; align-items: center; gap: 14px; padding: 0 18px; font-size: 15px; font-weight: 900; text-align: left; cursor: pointer; }
+.san-side-link:hover, .san-side-link.is-active { background: linear-gradient(135deg, #073B3F, #0C575B); color: #FDFDFC; box-shadow: 0 18px 34px rgba(7,59,63,.16); }
+.san-quick { border-top: 1px solid #E4ECEB; margin-top: 24px; padding: 22px 16px 0; }
+.san-quick-title { font-size: 11px; font-weight: 900; text-transform: uppercase; color: #111817; margin-bottom: 18px; }
+.san-quick-row { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; margin-bottom: 18px; color: #0C4044; }
+.san-quick-row strong { display: block; font-size: 18px; line-height: 1.1; color: #111817; }
+.san-quick-row small { display: block; font-size: 12px; color: #0C4044; font-weight: 800; }
+.san-quick-row b { font-size: 11px; color: #009957; }
+.san-secure { margin-top: auto; border-radius: 8px; background: linear-gradient(145deg, #073B3F, #0C4044); border: 1px solid rgba(204,168,129,.32); padding: 24px 20px; color: #FDFDFC; box-shadow: 0 18px 36px rgba(7,59,63,.14); }
+.san-secure strong { display: block; font-size: 16px; margin-bottom: 8px; }
+.san-secure span { display: block; color: #D1DFDE; font-size: 13px; line-height: 1.6; }
+.san-top-shell { position: sticky; top: 0; z-index: 65; background: rgba(253,253,252,.98); border-bottom: 1px solid rgba(189,207,206,.74); box-shadow: 0 16px 38px rgba(7,59,63,.055); backdrop-filter: blur(16px); }
+.san-top-inner { min-height: 104px; display: flex; align-items: stretch; gap: 24px; padding: 0 32px; }
+.san-navbar-brand { width: 260px; border: 0; background: transparent; display: flex; align-items: center; gap: 14px; padding: 0 30px; cursor: pointer; }
+.san-navbar-brand img { width: 54px; height: 54px; object-fit: contain; }
+.san-navbar-brand strong { display: block; font-family: Georgia, 'Times New Roman', serif; font-size: 31px; line-height: .95; font-weight: 850; letter-spacing: .04em; color: #073B3F; }
+.san-navbar-brand small { display: block; margin-top: 5px; color: #BB8958; font-size: 10px; font-weight: 900; letter-spacing: .24em; text-transform: uppercase; }
+.san-search-block { width: 260px; display: flex; align-items: center; padding: 0 18px; }
+.san-search { height: 48px; width: 100%; border: 1px solid rgba(189,207,206,.95); border-radius: 10px; background: #FDFDFC; color: #073B3F; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 14px; font-weight: 700; }
+.san-menu-center { flex: 1; display: flex; justify-content: center; align-items: stretch; gap: 6px; min-width: 0; }
+.san-menu-group { position: relative; display: flex; }
+.san-menu-trigger { border: 0; background: transparent; min-width: auto; padding: 0 16px; color: #073B3F; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; white-space: nowrap; }
+.san-menu-trigger:hover { background: #F3F3F0; border-radius: 999px; }
+.san-menu-dropdown { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 0; padding: 32px 28px 24px; min-width: 286px; background: rgba(253,253,252,.98); border: 1px solid rgba(189,207,206,.8); box-shadow: 0 26px 68px rgba(7,59,63,.14); border-radius: 8px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .18s ease, visibility .18s ease; z-index: 90; }
+.san-menu-group:hover .san-menu-dropdown { opacity: 1; visibility: visible; pointer-events: auto; transform: translateX(-50%); }
+.san-menu-title { display: flex; align-items: center; gap: 12px; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 900; color: #073B3F; margin-bottom: 18px; }
+.san-menu-title span { font-size: 24px; color: #BB8958; }
+.san-menu-link { width: 100%; border: 0; background: transparent; padding: 10px 0; text-align: left; color: #111817; font-size: 14px; font-weight: 750; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.san-menu-link:hover { color: #0C4044; transform: translateX(3px); }
+.san-menu-link b, .san-menu-foot { color: #0C4044; }
+.san-menu-foot { margin-top: 22px; border: 0; background: transparent; font-size: 13px; font-weight: 900; letter-spacing: .02em; cursor: pointer; }
+.san-actions { display: flex; align-items: center; border-left: 0; gap: 18px; padding-left: 8px; }
+.san-action { min-width: auto; padding: 0 12px; border: 0; background: transparent; color: #0C4044; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+.san-action:hover { background: #F3F3F0; box-shadow: 0 12px 28px rgba(7,59,63,.08); transform: translateY(-1px); }
+.san-action.logout { color: #C92035; }
+.san-mobile-logo { display: none; }
+.san-mobile-logo img { width: 46px; height: 46px; }
+.san-mobile-logo strong { font-family: Georgia, 'Times New Roman', serif; color: #073B3F; font-size: 25px; line-height: 1; }
+.san-mobile-logo small { display: block; color: #BB8958; font-size: 9px; font-weight: 900; letter-spacing: .2em; }
+@media (max-width: 1100px) {
+  .san-navbar-brand { width: 100%; height: 76px; border-right: 0; justify-content: center; }
+  .san-sidebar { position: relative; width: 100%; min-height: 0; padding: 16px; border-right: 0; border-bottom: 1px solid rgba(189,207,206,.72); }
+  .san-side-nav { flex-direction: row; overflow: auto; }
+  .san-side-link { height: 42px; flex: 0 0 auto; }
+  .san-quick, .san-secure { display: none; }
+  .san-top-shell { margin-left: 0 !important; }
+  .san-top-inner { min-height: auto; display: block; }
+  .san-mobile-logo { display: none !important; }
+  .san-search-block { width: 100%; border-right: 0; padding: 14px 18px; }
+  .san-menu-center { overflow-x: auto; justify-content: flex-start; border-top: 0; }
+  .san-menu-trigger { min-width: 160px; height: 54px; }
+  .san-actions { border-left: 0; overflow: auto; }
+  .san-action { height: 52px; min-width: 140px; }
+}
       `}</style>
       <div className="san-shell">
         {showSidebar && (
@@ -103,7 +169,7 @@ export default function SuperAdminNavbar({
             </nav>
             <div className="san-quick">
               <div className="san-quick-title">Quick Summary</div>
-              {[['Total Orders','0','+0%'],['Total Customers','588','+12.5%'],['Total Dealers','41','+6.8%'],['Total Products','256','+5.2%'],['Active Users','7','+8.3%']].map(([label,value,growth]) => (
+              {[['Total Orders', '0', '+0%'], ['Total Customers', '588', '+12.5%'], ['Total Dealers', '41', '+6.8%'], ['Total Products', '256', '+5.2%'], ['Active Users', '7', '+8.3%']].map(([label, value, growth]) => (
                 <div className="san-quick-row" key={label}><Icon name="orders" size={19} /><div><small>{label}</small><strong>{value}</strong></div><b>{growth}</b></div>
               ))}
             </div>
@@ -120,6 +186,7 @@ export default function SuperAdminNavbar({
               <MenuGroup label="Announcements" items={announcements} footer={{ label: 'View All Announcements ->', action: () => run(onMyAnnouncements, '/super-admin') }} />
               <MenuGroup label="Coins" items={coins} footer={{ label: 'View All Coins ->', action: () => navigate('/stored-coins') }} />
               <MenuGroup label="Reports" items={reports} footer={{ label: 'View All Reports ->', action: () => navigate('/sales-report') }} />
+              <MenuGroup label="Promotion" items={promotion} footer={{ label: 'View All Promotion ->', action: () => navigate('/promotions/retailer') }} />
             </div>
             <div className="san-actions">
               <button className="san-action" type="button" onClick={() => run(onTodayRates, '/super-admin')}><Icon name="rate" />Today Rates</button>
