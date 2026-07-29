@@ -472,9 +472,14 @@ class CreateCustomerView(APIView):
     def get(self, request):
         if request.user.role not in ['promotor', 'sub_dealer', 'dealer', 'admin', 'super_admin', 'customer']:
             return Response({'error': 'Permission denied'}, status=403)
+
         customers = CustomerProfile.objects.select_related(
             'user', 'assigned_promotor'
-        ).all().order_by('-created_at')
+        ).order_by('-created_at')
+
+        if request.user.role in ['promotor', 'customer']:
+            customers = customers.filter(created_by=request.user)
+
         serializer = CustomerListSerializer(customers, many=True)
         return Response(serializer.data)
 
