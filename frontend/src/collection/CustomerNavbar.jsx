@@ -70,6 +70,14 @@ function Icon({ name, size = 20, filled = false }) {
         <circle cx="18" cy="20" r="1.6" />
       </>
     ),
+    userPlus: (
+      <>
+        <circle cx="9" cy="8" r="4" />
+        <path d="M2 21c1.3-4.4 3.7-6.4 7-6.4s5.7 2 7 6.4" />
+        <path d="M18 8v6" />
+        <path d="M15 11h6" />
+      </>
+    ),
     logout: (
       <>
         <path d="M10 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2" />
@@ -2436,6 +2444,18 @@ export default function CustomerNavbar() {
                   <span className="exact-badge">{cartCount}</span>
                 )}
               </button>
+
+              <button
+                className="exact-icon"
+                type="button"
+                onClick={() => navigate("/create-customer")}
+                aria-label="Create Customer"
+                title="Create Customer"
+              >
+                <Icon name="userPlus" />
+                {/* no text label, pure SVG icon like the rest */}
+              </button>
+
 
               <button
                 className="exact-icon"

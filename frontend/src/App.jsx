@@ -23,6 +23,7 @@ const PromotorHierarchy = lazy(() => import('./Hierarchy/Promotor_Hierarchy'))
 const PromotorHierarchyGrid = lazy(() => import('./Grid/Promotor_Hierarchy_grid'))
 const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard'))
 const Profile = lazy(() => import('./collection/profile'))
+const CreateCustomer = lazy(() => import('./collection/create_customer'))
 const CoinsCollection = lazy(() => import('./collection/coins_collection'))
 const AllCollection = lazy(() => import('./collection/all_collection'))
 const ProductDisplay = lazy(() => import('./collection/product_display'))
@@ -136,7 +137,7 @@ export default function App() {
           <Route path="/promotor-hierarchy-grid" element={<PromotorHierarchyGrid />} />
           <Route path="/customer" element={<ProtectedRoute role="customer"><WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/profile" element={<WithCustomerNavbar><Profile /></WithCustomerNavbar>} />
-
+          <Route path="/create-customer" element={<ProtectedRoute role="customer"><WithCustomerNavbar><CreateCustomer /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/collection/rings" element={<Navigate to={collectionPath('rings')} replace />} />
           <Route path="/gold-rings" element={<Navigate to={collectionPath('rings', 'gold')} replace />} />
           <Route path="/silver-rings" element={<Navigate to={collectionPath('rings', 'silver')} replace />} />

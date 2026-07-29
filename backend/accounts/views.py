@@ -424,6 +424,18 @@ class DashboardView(APIView):
 
         return Response(data)
 
+class MyBasicInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        info = get_user_display_info(user)   # already defined at the top of this file
+        return Response({
+            'role': user.role,
+            'id': info['user_id_str'],
+            'name': info['name'],
+            'phone': info['phone'],
+        })
 
 class CreatePromotorView(APIView):
     permission_classes = [IsAuthenticated]
