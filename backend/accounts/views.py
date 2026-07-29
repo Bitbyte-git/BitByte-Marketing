@@ -461,7 +461,7 @@ class CreateCustomerView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        if request.user.role != 'promotor':
+        if request.user.role not in ['promotor', 'customer']:
             return Response({'error': 'Permission denied'}, status=403)
         serializer = CustomerProfileSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
@@ -470,7 +470,7 @@ class CreateCustomerView(APIView):
         return Response(serializer.errors, status=400)
 
     def get(self, request):
-        if request.user.role not in ['promotor', 'sub_dealer', 'dealer', 'admin', 'super_admin']:
+        if request.user.role not in ['promotor', 'sub_dealer', 'dealer', 'admin', 'super_admin', 'customer']:
             return Response({'error': 'Permission denied'}, status=403)
         customers = CustomerProfile.objects.select_related(
             'user', 'assigned_promotor'

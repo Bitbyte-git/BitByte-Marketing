@@ -28,11 +28,6 @@ const emptyForm = {
   annual_salary: "",
 };
 
-// Fake id generator — UI only, no backend yet.
-function makeCustomerId() {
-  const rand = Math.floor(1000 + Math.random() * 9000);
-  return `BBCUS${rand}`;
-}
 
 export default function CreateCustomer() {
   const [form, setForm] = useState(emptyForm);
@@ -41,6 +36,20 @@ export default function CreateCustomer() {
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState("success");
   const [customers, setCustomers] = useState([]);
+const [customersLoading, setCustomersLoading] = useState(true);
+
+const fetchCustomers = () => {
+  setCustomersLoading(true);
+  api
+    .get("/customers/")
+    .then((res) => setCustomers(Array.isArray(res.data) ? res.data : []))
+    .catch(() => setCustomers([]))
+    .finally(() => setCustomersLoading(false));
+};
+
+useEffect(() => {
+  fetchCustomers();
+}, []);
 
   // Info of the customer who is currently logged in (creating this new customer)
   const [superCustomer, setSuperCustomer] = useState(null);
@@ -75,35 +84,38 @@ export default function CreateCustomer() {
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (form.married_status === "married" && !form.anniversary_date) {
-      setMsg("Please enter Anniversary Date!");
-      setMsgType("error");
-      return;
-    }
+  if (form.married_status === "married" && !form.anniversary_date) {
+    setMsg("Please enter Anniversary Date!");
+    setMsgType("error");
+    return;
+  }
 
-    if (form.password !== confirmPassword) {
-      setPasswordError("Passwords do not match");
-      return;
-    }
+  if (form.password !== confirmPassword) {
+    setPasswordError("Passwords do not match");
+    return;
+  }
 
-    // UI-only: no API call. Just push a row into the local table.
-    const newCustomer = {
-      ...form,
-      customer_id: makeCustomerId(),
-      created_at: new Date().toISOString(),
-      created_by: superCustomer?.id || "—",
-    };
+  try {
+    const payload = { ...form };
+    if (!payload.dob) delete payload.dob;
+    if (payload.married_status !== "married") delete payload.anniversary_date;
 
-    setCustomers((prev) => [newCustomer, ...prev]);
+    await api.post("/customers/", payload);
+
     setMsg("Customer created successfully!");
     setMsgType("success");
     setForm(emptyForm);
     setConfirmPassword("");
     setPasswordError("");
-  };
+    fetchCustomers(); // ← real list-ஐ refresh பண்ணு, DB-ல save ஆனது table-ல தெரியும்
+  } catch (err) {
+    setMsg("Error: " + JSON.stringify(err.response?.data || err.message));
+    setMsgType("error");
+  }
+};
 
   return (
     <div className="cc-page">
@@ -585,23 +597,24 @@ export default function CreateCustomer() {
         <div className="cc-card">
           <h2 className="cc-section-title">Created Customers ({customers.length})</h2>
 
-          {customers.length === 0 ? (
-            <div className="cc-empty">No customers created yet.</div>
-          ) : (
+          {customersLoading ? (
+  <div className="cc-empty">Loading...</div>
+) : customers.length === 0 ? (
+  <div className="cc-empty">No customers created yet.</div>
+) : (
             <div className="cc-table-wrap">
               <table className="cc-table">
                 <thead>
-                  <tr>
-                    <th>Customer ID</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Mobile</th>
-                    <th>City</th>
-                    <th>Created By</th>
-                    <th>Created</th>
-                  </tr>
-                </thead>
+  <tr>
+    <th>Customer ID</th>
+    <th>First Name</th>
+    <th>Last Name</th>
+    <th>Email</th>
+    <th>Mobile</th>
+    <th>City</th>
+    <th>Created</th>
+  </tr>
+</thead>
                 <tbody>
                   {customers.map((c, i) => (
                     <tr key={i}>
@@ -611,8 +624,7 @@ export default function CreateCustomer() {
                       <td>{c.email}</td>
                       <td>{c.mobile_number}</td>
                       <td>{c.city_name}</td>
-                      <td>{c.created_by}</td>
-                      <td>{new Date(c.created_at).toLocaleDateString("en-IN")}</td>
+<td>{new Date(c.created_at).toLocaleDateString("en-IN")}</td>
                     </tr>
                   ))}
                 </tbody>
