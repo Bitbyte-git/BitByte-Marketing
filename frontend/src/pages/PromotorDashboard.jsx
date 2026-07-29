@@ -979,7 +979,7 @@ const handleSubmit = async e => {
   style={{ padding:'11px 28px', background:'rgba(12,64,68,0.08)', border:'1px solid rgba(12,64,68,0.3)', borderRadius:'12px', fontWeight:700, color:'#0C4044', fontSize:'14px', cursor:'pointer' }}>
   📊 Sales Report
 </button>
-<button onClick={() => navigate('/promotor-hierarchy')}
+<button onClick={() => navigate('/promotor-hierarchy-grid')}
   style={{ padding:'11px 28px', background:'rgba(201,32,53,0.08)', border:'1px solid rgba(201,32,53,0.3)', borderRadius:'12px', fontWeight:700, color:'#F3E8DE', fontSize:'14px', cursor:'pointer' }}>
   🏢 Customer Hierarchy
 </button>
@@ -1917,6 +1917,7 @@ const handleSubmit = async e => {
     </div>
   )
 }
+
 
 
 

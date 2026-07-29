@@ -1228,10 +1228,10 @@ const handleSubmit = async e => {
               style={{ padding: '12px 24px', background: '#FDFDFC', border: '1px solid rgba(12,64,68,0.22)', borderRadius: '999px', fontWeight: 800, color: '#0C4044', fontSize: '14px', cursor: 'pointer', boxShadow: '0 12px 26px rgba(7,59,63,0.06)' }}>
               Sales Report
             </button>
-            <button onClick={() => navigate('/admin-hierarchy')}
-              style={{ padding: '12px 24px', background: '#F3F3F0', border: '1px solid rgba(12,64,68,0.22)', borderRadius: '999px', fontWeight: 800, color: '#073B3F', fontSize: '14px', cursor: 'pointer', boxShadow: '0 12px 26px rgba(7,59,63,0.06)' }}>
-              Dealer Hierarchy
-            </button>
+           <button onClick={() => navigate('/admin-hierarchy-grid')}
+  style={{ padding: '12px 24px', background: '#F3F3F0', border: '1px solid rgba(12,64,68,0.22)', borderRadius: '999px', fontWeight: 800, color: '#073B3F', fontSize: '14px', cursor: 'pointer', boxShadow: '0 12px 26px rgba(7,59,63,0.06)' }}>
+  Hierarchy
+</button>
             <button onClick={() => setShowForm(!showForm)} className="ad-grad-btn"
               style={{ padding: '12px 28px', background: '#073B3F', border: 'none', borderRadius: '999px', fontWeight: 900, color: '#FDFDFC', fontSize: '14px', cursor: 'pointer', boxShadow: '0 16px 34px rgba(7,59,63,0.18)' }}>
               {showForm ? 'Cancel' : '+ Create Dealer'}
@@ -2368,6 +2368,7 @@ const handleSubmit = async e => {
     </div>
   )
 }
+
 
 
 

@@ -2,12 +2,55 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 
+// ── SVG ICONS for reward types ──
+const IconSpark = ({ color = '#0C4044', size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+const IconCalendarCheck = ({ color = '#0C4044', size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    <path d="M9 16l2 2 4-4" />
+  </svg>
+)
+const IconMedal10 = ({ color = '#0C4044', size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="6" />
+    <path d="M9 13.5L7 22l5-3 5 3-2-8.5" />
+  </svg>
+)
+const IconMedal20 = ({ color = '#0C4044', size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="6" />
+    <path d="M15 6.5l-4 4-2-2" />
+    <path d="M9 13.5L7 22l5-3 5 3-2-8.5" />
+  </svg>
+)
+const IconTrophy30 = ({ color = '#0C4044', size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 21h8M12 17v4" />
+    <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+    <path d="M17 5h2a2 2 0 0 1 2 2 4 4 0 0 1-4 4M7 5H5a2 2 0 0 0-2 2 4 4 0 0 0 4 4" />
+  </svg>
+)
+const REWARD_ICONS = {
+  first_login: IconSpark,
+  daily_login: IconCalendarCheck,
+  bonus_10: IconMedal10,
+  bonus_20: IconMedal20,
+  bonus_30: IconTrophy30,
+}
+
 export default function CoinsReward() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [rangeFilter, setRangeFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,6 +66,16 @@ export default function CoinsReward() {
     }
     fetchData()
   }, [rangeFilter])
+
+  // ── NEW: card click handler — same card mela rendaam thadava click pannaa, filter clear aagum ──
+  const handleCardClick = (rewardType) => {
+    setTypeFilter(prev => (prev === rewardType ? null : rewardType))
+  }
+
+  // ── NEW: typeFilter set aagirundhaa, andha reward_type mattum table-la kaatanum ──
+  const displayedRewards = data
+    ? (typeFilter ? data.rewards.filter(r => r.reward_type === typeFilter) : data.rewards)
+    : []
 
   const formatDate = (iso) => {
     if (!iso) return '—'
@@ -43,7 +96,12 @@ export default function CoinsReward() {
         .rw-select{height:42px;padding:0 14px;background:#FFFFFF;border:1px solid #D1DFDE;border-radius:10px;color:#0C4044;font-size:13px;font-weight:850;outline:none}
         .rw-btn{height:42px;padding:0 18px;border-radius:10px;border:1px solid #073B3F;background:linear-gradient(135deg,#0C4044,#073B3F);color:#FDFDFC;font-size:13px;font-weight:900;cursor:pointer}
         .rw-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
-        .rw-summary-card{background:#FFFFFF;border:1px solid #E0E9E8;border-radius:12px;padding:18px;box-shadow:0 16px 36px rgba(7,59,63,.06)}
+        .rw-summary-card{background:#FFFFFF;border:1.5px solid #E0E9E8;border-radius:12px;padding:18px;box-shadow:0 16px 36px rgba(7,59,63,.06);cursor:pointer;transition:all .2s ease}
+        .rw-summary-card:hover{transform:translateY(-2px);box-shadow:0 20px 44px rgba(7,59,63,.12);border-color:#BB8958}
+        .rw-summary-card-active{background:linear-gradient(135deg,#0C4044,#073B3F);border-color:#073B3F}
+        .rw-summary-card-active .rw-summary-label,.rw-summary-card-active .rw-summary-coins{color:#FFFFFF}
+        .rw-summary-card-active .rw-summary-users{color:#F3C88A}
+        .rw-summary-icon{margin-bottom:10px}
         .rw-summary-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#53615F;font-weight:900;margin-bottom:8px}
         .rw-summary-users{font-size:12px;color:#9F6130;font-weight:800;margin-top:4px}
         .rw-summary-coins{font-size:28px;font-weight:900;color:#0C4044}
@@ -52,7 +110,9 @@ export default function CoinsReward() {
         .rw-total-num{font-size:38px;font-weight:900}
         .rw-card{background:#FFFFFF;border:1px solid #E0E9E8;border-radius:12px;box-shadow:0 16px 36px rgba(7,59,63,.06);overflow:hidden}
         .rw-card-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #E0E9E8}
-        .rw-card-title{font-size:15px;font-weight:900;color:#0C4044}
+        .rw-card-title{font-size:15px;font-weight:900;color:#0C4044;display:flex;align-items:center;gap:12px}
+        .rw-clear-filter{background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.3);color:#DC2626;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;cursor:pointer}
+        .rw-clear-filter:hover{background:rgba(220,38,38,0.15)}
         .rw-state{padding:56px 20px;text-align:center;color:#6E7D7B;font-size:14px;font-weight:700}
         .rw-error{margin-bottom:18px;background:rgba(201,32,53,.08);border:1px solid rgba(201,32,53,.28);color:#C92035;border-radius:10px;padding:12px 16px;font-weight:750}
         .rw-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -97,28 +157,42 @@ export default function CoinsReward() {
             </div>
 
             <div className="rw-summary-grid">
-              {data.summary.map(s => (
-                <div className="rw-summary-card" key={s.reward_type}>
-                  <div className="rw-summary-label">{s.label}</div>
-                  <div className="rw-summary-coins">{s.coins}</div>
-                  <div className="rw-summary-users">{s.users} users</div>
-                </div>
-              ))}
+              {data.summary.map(s => {
+                const Icon = REWARD_ICONS[s.reward_type]
+                const isActive = typeFilter === s.reward_type
+                return (
+                  <div
+                    className={`rw-summary-card${isActive ? ' rw-summary-card-active' : ''}`}
+                    key={s.reward_type}
+                    onClick={() => handleCardClick(s.reward_type)}
+                  >
+                    <div className="rw-summary-icon">{Icon && <Icon color={isActive ? '#FFFFFF' : '#0C4044'} />}</div>
+                    <div className="rw-summary-label">{s.label}</div>
+                    <div className="rw-summary-coins">{s.coins}</div>
+                    <div className="rw-summary-users">{s.users} users</div>
+                  </div>
+                )
+              })}
             </div>
 
             <section className="rw-card">
               <div className="rw-card-head">
-                <div className="rw-card-title">All Rewards</div>
-                <span className="rw-badge">{data.rewards.length} entries</span>
+                <div className="rw-card-title">
+                  {typeFilter ? (data.summary.find(s => s.reward_type === typeFilter)?.label || 'Rewards') : 'All Rewards'}
+                  {typeFilter && (
+                    <button className="rw-clear-filter" onClick={() => setTypeFilter(null)}>✕ Clear</button>
+                  )}
+                </div>
+                <span className="rw-badge">{displayedRewards.length} entries</span>
               </div>
-              {data.rewards.length === 0 ? (
-                <div className="rw-state">No rewards in this range today</div>
+              {displayedRewards.length === 0 ? (
+                <div className="rw-state">No rewards in this selection today</div>
               ) : (
                 <div className="rw-table-wrap">
                   <table className="rw-table">
                     <thead><tr>{['Level', 'Position', 'User ID', 'Name', 'Phone No', 'Reward', 'Date'].map(h => <th key={h}>{h}</th>)}</tr></thead>
                     <tbody>
-                      {data.rewards.map(r => (
+                      {displayedRewards.map(r => (
                         <tr key={r.id}>
                           <td className="rw-muted">{r.level || '—'}</td>
                           <td className="rw-role">{r.position || '—'}</td>

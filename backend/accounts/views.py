@@ -1872,7 +1872,7 @@ class OrderTimeSeriesView(APIView):
         return Response({'period': period, 'data': data})
 
 
-# ── NEW: today order count map — module level function (class-க்கு வெளிய) ──
+
 def _today_order_counts():
     """user_id -> today order count map (JewelryOrder based)"""
     today = timezone.localtime(timezone.now()).date()
@@ -1883,10 +1883,54 @@ def _today_order_counts():
     return counts
 
 
+
+def _today_rollup_counts():
+    """Returns dict: key = (role, profile_id) -> today's order count (rolled up).
+    role-kal: 'customer' (key=user_id), 'promotor', 'sub_dealer', 'dealer', 'admin' (key=profile.id)."""
+    today = timezone.localtime(timezone.now()).date()
+    orders = JewelryOrder.objects.filter(created_at__date=today).select_related(
+        'user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin'
+    )
+
+    counts = {}
+
+    def bump(key):
+        counts[key] = counts.get(key, 0) + 1
+
+    for o in orders:
+        u = o.user
+        cp = getattr(u, 'customer_profile', None)
+        if not cp:
+            continue  
+
+        bump(('customer', u.id))
+
+        pr = cp.assigned_promotor
+        if not pr:
+            continue
+        bump(('promotor', pr.id))
+
+        sd = pr.assigned_sub_dealer
+        if not sd:
+            continue
+        bump(('sub_dealer', sd.id))
+
+        d = sd.assigned_dealer
+        if not d:
+            continue
+        bump(('dealer', d.id))
+
+        a = d.assigned_admin
+        if not a:
+            continue
+        bump(('admin', a.id))
+
+    return counts
+
 class TodayLoginStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
-    # ── NEW: period dropdown-ku evlo days count pannanumnu ──
+   
     PERIOD_DAYS = {
         '3days': 3,
         'week': 7,
@@ -1900,9 +1944,10 @@ class TodayLoginStatusView(APIView):
 
         period = request.query_params.get('period', 'today')   # ── NEW
         today = timezone.now().date()
-        today_order_counts = _today_order_counts() 
+        rollup_counts = _today_rollup_counts()   # ← NEW: (role, profile_id) -> today's rolled-up count
 
-        def build_entry(profile, id_field, role_label, level):
+        # ── NEW: role_key add pannom — rollup dict-la correct key vachu lookup pannanum ──
+        def build_entry(profile, id_field, role_label, level, role_key):
             u = profile.user
             last_login_date = u.last_login.date() if u.last_login else None
 
@@ -1916,6 +1961,9 @@ class TodayLoginStatusView(APIView):
                 days_needed = self.PERIOD_DAYS.get(period, 0)
                 is_active = bool(last_login_date and (today - last_login_date).days < days_needed)
 
+            # ── NEW: customer ku key=user_id, meethi ellarukum key=profile.id ──
+            lookup_key = u.id if role_key == 'customer' else profile.id
+
             return {
                 'level': level,
                 'level_role': role_label,
@@ -1928,20 +1976,20 @@ class TodayLoginStatusView(APIView):
                 'active': is_active,
                 'last_login': u.last_login.isoformat() if u.last_login else None,
                 'days_inactive': days_inactive,          # ── NEW
-                'order_count': today_order_counts.get(u.id, 0),   # ── NEW: today's order count
+                'order_count': rollup_counts.get((role_key, lookup_key), 0),   # ← CHANGED: rolled-up today count
             }
 
         all_entries = []
         for p in AdminProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'admin_id', 'Admin', 2))
+            all_entries.append(build_entry(p, 'admin_id', 'Admin', 2, 'admin'))
         for p in DealerProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'dealer_id', 'Dealer', 3))
+            all_entries.append(build_entry(p, 'dealer_id', 'Dealer', 3, 'dealer'))
         for p in SubDealerProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'sub_dealer_id', 'Sub Dealer', 4))
+            all_entries.append(build_entry(p, 'sub_dealer_id', 'Sub Dealer', 4, 'sub_dealer'))
         for p in PromotorProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'promotor_id', 'Promotor', 5))
+            all_entries.append(build_entry(p, 'promotor_id', 'Promotor', 5, 'promotor'))
         for p in CustomerProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'customer_id', 'Customer', 6))
+            all_entries.append(build_entry(p, 'customer_id', 'Customer', 6, 'customer'))
 
         active_list = [e for e in all_entries if e['active']]
         inactive_list = [e for e in all_entries if not e['active']]

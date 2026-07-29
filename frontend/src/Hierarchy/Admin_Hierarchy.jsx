@@ -472,6 +472,25 @@ const isOpen = openMap[parentKey] === node.id
   )
 }
 
+const IconSwitchView = ({ color, size = 18 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M17 1l4 4-4 4" />
+    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+    <path d="M7 23l-4-4 4-4" />
+    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+  </svg>
+)
+
+
 export default function AdminHierarchy() {
   const navigate = useNavigate()
   const [dark] = useState(true)
@@ -694,11 +713,14 @@ const fetchHierarchy = async () => {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <IconBuilding color="#a5f3fc" />
-            <span style={{ color: '#a5f3fc', fontSize: '16px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Full Dealer Hierarchy
-            </span>
-          </div>
+  <button onClick={() => navigate('/admin-hierarchy-grid')} title="Switch to Grid View"
+    style={{ background: 'rgba(165,243,252,0.1)', border: '1px solid rgba(165,243,252,0.35)', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <IconSwitchView color="#a5f3fc" size={16} />
+  </button>
+  <span style={{ color: '#a5f3fc', fontSize: '16px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+    Full Dealer Hierarchy
+  </span>
+</div>
           {totalStats && (
             <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: `${ROLE_CFG.admin.color}22`, border: `1px solid ${ROLE_CFG.admin.color}55`, borderRadius: '20px', padding: '4px 14px' }}>

@@ -108,17 +108,42 @@ function collectOrders(node) {
   return children.flatMap(collectOrders)
 }
 
+function isSameDay(iso) {
+  if (!iso) return false
+  const d = new Date(iso)
+  const now = new Date()
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
+}
+
+// ── NEW: today order illatha branch-ah tree-la irundhu prune pannum ──
+function filterTreeForToday(node) {
+  if (!node) return null
+  if (node.type === 'customer') {
+    const hasToday = (node.orders || []).some(o => isSameDay(o.created_at))
+    return hasToday ? node : null
+  }
+  const cfg = ROLE_CFG[node.type]
+  const prunedChildren = (node[cfg.childKey] || [])
+    .map(filterTreeForToday)
+    .filter(Boolean)
+  if (prunedChildren.length === 0) return null
+  return { ...node, [cfg.childKey]: prunedChildren }
+}
+
 // ══════════════════════════════════════════════════════════════════
 // TREE ITEM — left panel, one node per row, indented by depth.
 // ══════════════════════════════════════════════════════════════════
-function TreeItem({ node, selectedId, onSelect, isLast = true, pulseId }) {
+function TreeItem({ node, selectedId, onSelect, isLast = true, pulseId, period }) {
   const cfg = ROLE_CFG[node.type]
   const Icon = cfg.Icon
   const isSelected = selectedId === `${node.type}-${node.id}`
   // ── NEW: product-la irundhu jump pannina, oru chinna neram glow flash aagum ──
   const isPulsing = pulseId === `${node.type}-${node.id}`
   const children = cfg.childKey ? (node[cfg.childKey] || []) : []
-  const orderCount = collectOrders(node).length
+  const nodeOrders = collectOrders(node)
+  const orderCount = period === 'today'
+    ? nodeOrders.filter(o => isSameDay(o.created_at)).length
+    : nodeOrders.length
   const rgb = hexToRgb(cfg.color)
   const childColor = children.length > 0 ? ROLE_CFG[children[0].type].color : null
 
@@ -162,7 +187,7 @@ function TreeItem({ node, selectedId, onSelect, isLast = true, pulseId }) {
         <div className="stree-children" style={{ '--cc': childColor }}>
           {children.map((child, idx) => (
             <div className="stree-branch" key={`${child.type}-${child.id}`} style={{ '--cc': childColor }}>
-              <TreeItem node={child} selectedId={selectedId} onSelect={onSelect} isLast={idx === children.length - 1} pulseId={pulseId} />
+              <TreeItem node={child} selectedId={selectedId} onSelect={onSelect} isLast={idx === children.length - 1} pulseId={pulseId} period={period} />
             </div>
           ))}
         </div>
@@ -276,6 +301,8 @@ const [selected, setSelected] = useState(null)
   }
 
   const selCfg = selected ? ROLE_CFG[selected.type] : null
+
+  const displayRoot = period === 'today' ? filterTreeForToday(root) : root
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
@@ -405,7 +432,19 @@ const [selected, setSelected] = useState(null)
             <IconLink color="#0C4044" size={14} />
             <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#0C4044' }}>HIERARCHY TREE</span>
           </div>
-          <TreeItem node={root} selectedId={selected ? `${selected.type}-${selected.id}` : null} onSelect={setSelected} pulseId={pulseId} />
+          {displayRoot ? (
+  <TreeItem
+    node={displayRoot}
+    selectedId={selected ? `${selected.type}-${selected.id}` : null}
+    onSelect={setSelected}
+    pulseId={pulseId}
+    period={period}
+  />
+) : (
+  <div style={{ padding: '24px 8px', textAlign: 'center', color: '#7A8987', fontSize: 12.5 }}>
+    Indha network-la today order edukave illa.
+  </div>
+)}
           <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(189,207,206,0.5)', textAlign: 'center' }}>
             <span style={{ fontSize: 9.5, color: '#7A8987', letterSpacing: 0.5 }}>BitByte Network • Live Tree</span>
           </div>
