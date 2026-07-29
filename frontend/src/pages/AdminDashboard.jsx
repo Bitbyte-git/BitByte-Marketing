@@ -1,25 +1,27 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 import logo from '../assets/logo.png'
+import InternalRoleNavbar from '../collection/InternalRoleNavbar'
+import InternalRoleDashboardFrame from '../collection/InternalRoleDashboardFrame'
 import goldCoin from '../assets/gold-coin-transparent.png'
 import silverCoin from '../assets/silver-coin.png'
 
 const COLORS = ['#0C4044', '#CCA881', '#BDCFCE', '#BB8958', '#7A8987', '#9F6130']
 
 const ROLE_CFG_ADMIN = {
-  dealer: { color: '#0C4044', label: 'ðŸª DEALER', idKey: 'dealer_id' },
-  sub_dealer: { color: '#BB8958', label: 'ðŸ”— SUB DEALER', idKey: 'sub_dealer_id' },
-  promotor: { color: '#CCA881', label: 'ðŸŒŸ PROMOTOR', idKey: 'promotor_id' },
-  customer: { color: '#C92035', label: 'ðŸ‘¤ CUSTOMER', idKey: 'customer_id' },
+  dealer: { color: '#0C4044', label: '🏪 DEALER', idKey: 'dealer_id' },
+  sub_dealer: { color: '#BB8958', label: '🔗 SUB DEALER', idKey: 'sub_dealer_id' },
+  promotor: { color: '#CCA881', label: '🌟 PROMOTOR', idKey: 'promotor_id' },
+  customer: { color: '#C92035', label: '👤 CUSTOMER', idKey: 'customer_id' },
 }
 
 const ROLE_LABELS_ADMIN = {
-  admin: { emoji: 'ðŸ›¡ï¸', label: 'ADMIN', color: '#0C4044', idKey: 'admin_id' },
-  dealer: { emoji: 'ðŸª', label: 'DEALER', color: '#0C4044', idKey: 'dealer_id' },
-  sub_dealer: { emoji: 'ðŸ”—', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
-  promotor: { emoji: 'ðŸŒŸ', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
-  customer: { emoji: 'ðŸ‘¤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
+  admin: { emoji: '🛡️', label: 'ADMIN', color: '#0C4044', idKey: 'admin_id' },
+  dealer: { emoji: '🏪', label: 'DEALER', color: '#0C4044', idKey: 'dealer_id' },
+  sub_dealer: { emoji: '🔗', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
+  promotor: { emoji: '🌟', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
+  customer: { emoji: '👤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
 }
 
 const OCCUPATIONS = ['employee', 'business', 'others']
@@ -42,7 +44,7 @@ const PARTICLES = Array.from({ length: 15 }, (_, i) => ({
 
 const DEALER_COLORS = ['#0C4044', '#BDCFCE', '#CCA881', '#C92035']
 
-// â”€â”€â”€ ADMIN CHAIN POPUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── ADMIN CHAIN POPUP ───────────────────────────────────────────────────────
 let _aChainPopupEl = null
 let _aChainHideTimer = null
 
@@ -141,17 +143,17 @@ function showAdminChainPopup(anchorEl, ancestors, current, dark, text, subtext, 
         ">
           <div style="position:absolute;top:-10px;right:-10px;width:70px;height:70px;background:radial-gradient(circle,rgba(204,168,129,0.14),transparent 70%);pointer-events:none;"></div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">ðŸ›¡ï¸</div>
+            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">🛡️</div>
             <div>
               <div style="font-size:9px;color:#CCA881;font-weight:800;letter-spacing:1.8px;">SUPER ADMIN</div>
-              <div style="font-size:8px;color:rgba(204,168,129,0.45);margin-top:2px;letter-spacing:0.5px;">ROOT â€¢ FULL ACCESS</div>
+              <div style="font-size:8px;color:rgba(204,168,129,0.45);margin-top:2px;letter-spacing:0.5px;">ROOT • FULL ACCESS</div>
             </div>
             <div style="margin-left:auto;display:flex;align-items:center;gap:5px;">
               <div style="width:7px;height:7px;border-radius:50%;background:#0C4044;animation:acpPulse 1.8s ease-in-out infinite;box-shadow:0 0 8px rgba(12,64,68,0.9);"></div>
               <span style="font-size:9px;color:#0C4044;font-weight:700;">LIVE</span>
             </div>
           </div>
-          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || 'â€”'}</div>
+          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || '—'}</div>
         </div>
       `
     }
@@ -159,9 +161,9 @@ function showAdminChainPopup(anchorEl, ancestors, current, dark, text, subtext, 
     const cfg = ROLE_LABELS_ADMIN[item.type]
     if (!cfg) return ''
     const d = item.data || {}
-    const idVal = d[cfg.idKey] || d.id || 'â€”'
-    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || 'â€”'
-    const phone = d.mobile_number || 'â€”'
+    const idVal = d[cfg.idKey] || d.id || '—'
+    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || '—'
+    const phone = d.mobile_number || '—'
     const city = d.city_name || ''
     const rc = hexToRgbA(cfg.color)
 
@@ -191,20 +193,20 @@ function showAdminChainPopup(anchorEl, ancestors, current, dark, text, subtext, 
             background:rgba(${rc},0.18);color:${cfg.color};
             border:1px solid rgba(${rc},0.4);
             animation:acpBadgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-            white-space:nowrap;letter-spacing:0.5px;">â— CURRENT</div>` : ''}
+            white-space:nowrap;letter-spacing:0.5px;">● CURRENT</div>` : ''}
         </div>
 
         <div style="font-size:14px;color:${isDark ? '#F3F3F0' : '#111817'};font-weight:700;margin-bottom:9px;letter-spacing:-0.3px;">${name}</div>
 
         <div style="display:flex;flex-direction:column;gap:6px;">
-          ${phone !== 'â€”' ? `
+          ${phone !== '—' ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“ž</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">📞</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${phone}</span>
           </div>` : ''}
           ${city ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">📍</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${city}</span>
           </div>` : ''}
         </div>
@@ -215,7 +217,7 @@ function showAdminChainPopup(anchorEl, ancestors, current, dark, text, subtext, 
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid ${isDark ? 'rgba(12,64,68,0.1)' : 'rgba(12,64,68,0.08)'};">
       <div style="display:flex;align-items:center;gap:9px;">
-        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#0C4044,#BDCFCE);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(12,64,68,0.4);">ðŸ”—</div>
+        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#0C4044,#BDCFCE);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(12,64,68,0.4);">🔗</div>
         <div>
           <div style="font-size:11px;color:${isDark ? '#0C4044' : '#0C4044'};font-weight:800;letter-spacing:1.8px;">HIERARCHY CHAIN</div>
           <div style="font-size:9px;color:${isDark ? '#7A8987' : '#7A8987'};margin-top:2px;">${totalNodes} level${totalNodes !== 1 ? 's' : ''} deep</div>
@@ -228,13 +230,13 @@ function showAdminChainPopup(anchorEl, ancestors, current, dark, text, subtext, 
         animation:acpShimmer 2.5s linear infinite;
         border:1px solid rgba(12,64,68,0.22);
         color:${isDark ? '#073B3F' : '#0C4044'};
-        letter-spacing:1px;">â— LIVE</div>
+        letter-spacing:1px;">● LIVE</div>
     </div>
 
     ${itemsHtml}
 
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid ${isDark ? 'rgba(253,253,252,0.04)' : 'rgba(17,24,23,0.05)'};">
-      <div style="font-size:9px;color:${isDark ? '#7A8987' : '#111817'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network â€¢ Hierarchy View</div>
+      <div style="font-size:9px;color:${isDark ? '#7A8987' : '#111817'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network • Hierarchy View</div>
     </div>
   `
 
@@ -258,11 +260,11 @@ function showAdminChainPopup(anchorEl, ancestors, current, dark, text, subtext, 
 
 function printAdminPersonCard(node, role, color, ancestors, superAdminEmail) {
   const ROLE_PRINT = {
-    admin: { label: 'ADMIN', emoji: 'ðŸ›¡ï¸', idKey: 'admin_id' },
-    dealer: { label: 'DEALER', emoji: 'ðŸª', idKey: 'dealer_id' },
-    sub_dealer: { label: 'SUB DEALER', emoji: 'ðŸ”—', idKey: 'sub_dealer_id' },
-    promotor: { label: 'PROMOTOR', emoji: 'ðŸŒŸ', idKey: 'promotor_id' },
-    customer: { label: 'CUSTOMER', emoji: 'ðŸ‘¤', idKey: 'customer_id' },
+    admin: { label: 'ADMIN', emoji: '🛡️', idKey: 'admin_id' },
+    dealer: { label: 'DEALER', emoji: '🏪', idKey: 'dealer_id' },
+    sub_dealer: { label: 'SUB DEALER', emoji: '🔗', idKey: 'sub_dealer_id' },
+    promotor: { label: 'PROMOTOR', emoji: '🌟', idKey: 'promotor_id' },
+    customer: { label: 'CUSTOMER', emoji: '👤', idKey: 'customer_id' },
   }
 
   const chain = [
@@ -280,36 +282,36 @@ function printAdminPersonCard(node, role, color, ancestors, superAdminEmail) {
     if (item.type === 'super_admin') {
       return `
         <div class="chain-item">
-          <div class="chain-role">ðŸ›¡ï¸ SUPER ADMIN</div>
-          <div class="chain-email">${item.data.email || 'â€”'}</div>
+          <div class="chain-role">🛡️ SUPER ADMIN</div>
+          <div class="chain-email">${item.data.email || '—'}</div>
         </div>${arrow}`
     }
 
     const r = ROLE_PRINT[item.type]
     if (!r) return ''
     const d = item.data || {}
-    const idVal = d[r.idKey] || d.id || 'â€”'
-    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || 'â€”'
-    const phone = d.mobile_number || 'â€”'
-    const city = d.city_name || 'â€”'
+    const idVal = d[r.idKey] || d.id || '—'
+    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || '—'
+    const phone = d.mobile_number || '—'
+    const city = d.city_name || '—'
 
     return `
       <div class="chain-item ${isLast ? 'current' : ''}">
         <div class="chain-role">${r.emoji} ${r.label}</div>
         <div class="chain-id">${idVal}</div>
         <div class="chain-name">${name}</div>
-        <div class="chain-info">ðŸ“ž ${phone}</div>
-        <div class="chain-info">ðŸ“ ${city}</div>
+        <div class="chain-info">📞 ${phone}</div>
+        <div class="chain-info">📍 ${city}</div>
       </div>${arrow}`
   }).join('')
 
   const roleLabel = ROLE_PRINT[role]?.label || role.toUpperCase()
-  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || 'â€”'
+  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || '—'
 
   const printWindow = window.open('', '_blank')
   printWindow.document.write(`
     <!DOCTYPE html><html><head>
-    <title>${roleLabel} â€” ${currentName}</title>
+    <title>${roleLabel} — ${currentName}</title>
     <style>
       *{margin:0;padding:0;box-sizing:border-box;}
       body{font-family:'Inter',system-ui,sans-serif;background:#FDFDFC;padding:40px;display:flex;justify-content:center;}
@@ -332,7 +334,7 @@ function printAdminPersonCard(node, role, color, ancestors, superAdminEmail) {
     </head><body>
     <div class="wrapper">
       <div class="header">
-        <h1>BitByte â€” ${roleLabel} Profile</h1>
+        <h1>BitByte — ${roleLabel} Profile</h1>
         <p>Hierarchy Chain Report</p>
       </div>
       ${chainHtml}
@@ -344,7 +346,7 @@ function printAdminPersonCard(node, role, color, ancestors, superAdminEmail) {
   printWindow.document.close()
 }
 
-// â”€â”€â”€ ADMIN TREE NODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── ADMIN TREE NODE ─────────────────────────────────────────────────────────
 function AdminTreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, ancestors = [], superAdminEmail = '', adminData = null }) {
   const [expanded, setExpanded] = useState(depth < 2)
 
@@ -398,10 +400,10 @@ function AdminTreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 
           {node[cfg.idKey]}
         </div>
         <div style={{ color: text, fontWeight: 700, fontSize: '13px', marginBottom: '6px' }}>
-          {node.first_name || node.dealer_name || node.promotor_name || 'â€”'} {node.last_name || ''}
+          {node.first_name || node.dealer_name || node.promotor_name || '—'} {node.last_name || ''}
         </div>
-        <div style={{ color: subtext, fontSize: '11px', marginBottom: '2px' }}>ðŸ“ž {node.mobile_number}</div>
-        {node.city_name && <div style={{ color: subtext, fontSize: '11px' }}>ðŸ“ {node.city_name}</div>}
+        <div style={{ color: subtext, fontSize: '11px', marginBottom: '2px' }}>📞 {node.mobile_number}</div>
+        {node.city_name && <div style={{ color: subtext, fontSize: '11px' }}>📍 {node.city_name}</div>}
 
         <div style={{ marginTop: '8px', width: '100%', height: 2, borderRadius: 2, background: `linear-gradient(90deg,rgba(${hexToRgbA(c)},0.2),${c})` }} />
 
@@ -410,10 +412,10 @@ function AdminTreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 
           style={{ marginTop: '8px', width: '100%', padding: '3px 0', fontSize: '9px', fontWeight: 700, background: `rgba(${hexToRgbA(c)},0.1)`, border: `1px solid rgba(${hexToRgbA(c)},0.35)`, borderRadius: '6px', color: c, cursor: 'pointer', letterSpacing: '0.8px', transition: 'all 0.2s ease' }}
           onMouseEnter={e => e.currentTarget.style.background = `rgba(${hexToRgbA(c)},0.25)`}
           onMouseLeave={e => e.currentTarget.style.background = `rgba(${hexToRgbA(c)},0.1)`}
-        >ðŸ–¨ï¸ PRINT</button>
+        >🖨️ PRINT</button>
 
         {hasChildren && (
-          <div style={{ position: 'absolute', top: '8px', right: '10px', color: c, fontSize: '10px', fontWeight: 700, transition: 'transform 0.3s ease', transform: expanded ? 'rotate(0deg)' : 'rotate(180deg)' }}>â–²</div>
+          <div style={{ position: 'absolute', top: '8px', right: '10px', color: c, fontSize: '10px', fontWeight: 700, transition: 'transform 0.3s ease', transform: expanded ? 'rotate(0deg)' : 'rotate(180deg)' }}>▲</div>
         )}
         {hasChildren && (
           <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: c, color: '#111817', fontSize: '9px', fontWeight: 800, padding: '1px 7px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
@@ -484,7 +486,7 @@ function createDealerPopup(d, i, anchorEl, dark, subtext, text, currentAdmin) {
   const dealerBoxBd = dark ? 'rgba(189,207,206,0.14)' : 'rgba(12,64,68,0.2)'
   const accentColor = dark ? '#0C4044' : '#0C4044'
 
-  const el = document.createElement('div')   // âœ… à®‡à®¤à¯ à®®à¯à®¤à®²à¯à®² à®µà®°à®£à¯à®®à¯
+  const el = document.createElement('div')   // ✅ இது முதல்ல வரணும்
   el.id = 'dealer-popup'
   el.style.cssText = `
     position:fixed; z-index:9999;
@@ -504,12 +506,12 @@ function createDealerPopup(d, i, anchorEl, dark, subtext, text, currentAdmin) {
 
     <!-- Super Admin -->
     <div style="border-radius:9px;padding:10px;margin-bottom:6px;background:${saBoxBg};border:1px solid ${saBoxBorder};">
-<div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(204,168,129,0.12);color:#CCA881;border:1px solid rgba(204,168,129,0.3);margin-bottom:6px;">ðŸ›¡ï¸ SUPER ADMIN</div>    
-<div style="font-size:11px;color:${subtext};word-break:break-all;">${localStorage.getItem('superAdminEmail') || localStorage.getItem('email') || 'â€”'}</div>
-      <div style="margin-top:5px;font-size:9px;padding:2px 7px;background:rgba(204,168,129,0.1);border:1px solid rgba(204,168,129,0.25);border-radius:20px;color:#CCA881;display:inline-block;">â— ONLINE</div>
+<div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(204,168,129,0.12);color:#CCA881;border:1px solid rgba(204,168,129,0.3);margin-bottom:6px;">🛡️ SUPER ADMIN</div>    
+<div style="font-size:11px;color:${subtext};word-break:break-all;">${localStorage.getItem('superAdminEmail') || localStorage.getItem('email') || '—'}</div>
+      <div style="margin-top:5px;font-size:9px;padding:2px 7px;background:rgba(204,168,129,0.1);border:1px solid rgba(204,168,129,0.25);border-radius:20px;color:#CCA881;display:inline-block;">● ONLINE</div>
     </div>
 
-    <!-- Arrow SA â†’ Admin -->
+    <!-- Arrow SA → Admin -->
     <div style="display:flex;justify-content:center;padding:3px 0;">
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid #CCA881;"></div>
@@ -519,14 +521,14 @@ function createDealerPopup(d, i, anchorEl, dark, subtext, text, currentAdmin) {
 
     <!-- Admin -->
     <div style="border-radius:9px;padding:10px;margin-bottom:6px;background:${adminBoxBg};border:1px solid ${adminBoxBd};">
-<div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(12,64,68,0.12);color:#0C4044;border:1px solid rgba(12,64,68,0.3);margin-bottom:6px;">ðŸ›¡ï¸ ADMIN</div>  
-    <div style="font-size:10px;color:#0C4044;font-family:monospace;margin-bottom:3px;">${currentAdmin?.admin_id || 'â€”'}</div>
-      <div style="font-size:13px;font-weight:700;color:${text};margin-bottom:5px;">${currentAdmin?.first_name || currentAdmin?.admin_name || 'â€”'}</div>
-      <div style="font-size:11px;color:${subtext};margin-bottom:2px;">ðŸ“ž ${currentAdmin?.mobile_number || currentAdmin?.admin_contact_no || 'â€”'}</div>
-      <div style="font-size:11px;color:${subtext};">ðŸ“ ${currentAdmin?.city_name || 'â€”'}</div>
+<div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(12,64,68,0.12);color:#0C4044;border:1px solid rgba(12,64,68,0.3);margin-bottom:6px;">🛡️ ADMIN</div>  
+    <div style="font-size:10px;color:#0C4044;font-family:monospace;margin-bottom:3px;">${currentAdmin?.admin_id || '—'}</div>
+      <div style="font-size:13px;font-weight:700;color:${text};margin-bottom:5px;">${currentAdmin?.first_name || currentAdmin?.admin_name || '—'}</div>
+      <div style="font-size:11px;color:${subtext};margin-bottom:2px;">📞 ${currentAdmin?.mobile_number || currentAdmin?.admin_contact_no || '—'}</div>
+      <div style="font-size:11px;color:${subtext};">📍 ${currentAdmin?.city_name || '—'}</div>
     </div>
 
-    <!-- Arrow Admin â†’ Dealer -->
+    <!-- Arrow Admin → Dealer -->
     <div style="display:flex;justify-content:center;padding:3px 0;">
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid ${accentColor};"></div>
@@ -539,8 +541,8 @@ function createDealerPopup(d, i, anchorEl, dark, subtext, text, currentAdmin) {
       <div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(189,207,206,0.12);color:#BDCFCE;border:1px solid rgba(189,207,206,0.25);margin-bottom:6px;">DEALER</div>
       <div style="font-size:10px;color:${c};font-family:monospace;margin-bottom:3px;">${d.dealer_id}</div>
       <div style="font-size:14px;font-weight:700;color:${text};margin-bottom:6px;">${d.first_name || ''}</div>
-      <div style="font-size:11px;color:${subtext};margin-bottom:2px;">ðŸ“ž ${d.mobile_number}</div>
-      <div style="font-size:11px;color:${subtext};">ðŸ“ ${d.city_name}</div>
+      <div style="font-size:11px;color:${subtext};margin-bottom:2px;">📞 ${d.mobile_number}</div>
+      <div style="font-size:11px;color:${subtext};">📍 ${d.city_name}</div>
     </div>
   `
   document.body.appendChild(el)
@@ -584,7 +586,7 @@ export default function AdminDashboard() {
   const [showProfileEdit, setShowProfileEdit] = useState(false)
   const [announcements, setAnnouncements] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
-  // â”€â”€ ADD after existing useState declarations â”€â”€
+  // ── ADD after existing useState declarations ──
   const [myAdminId, setMyAdminId] = useState(null)
   const [metalPrices, setMetalPrices] = useState({ gold24k: null, gold22k: null, silver: null })
   const [metalLoading, setMetalLoading] = useState(false)
@@ -681,7 +683,7 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
         }
       }
       
-      // â† update() ends here
+      // ← update() ends here
 
       draw() {
         ctx.fillStyle = dark ? 'rgba(189, 207, 206, 0.9)' : 'rgba(12, 64, 68, 0.8)'
@@ -718,7 +720,7 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
 
  init(); animate()
 
-    // â”€â”€ PLANETS & COMETS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── PLANETS & COMETS ──────────────────────────────────────────
     let planets = [], comets2 = [], planetAnimId
 
     class Planet {
@@ -798,7 +800,7 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
     const handleResize2 = () => { canvas2.width = window.innerWidth; canvas2.height = window.innerHeight }
     window.addEventListener('resize', handleResize2)
     drawPlanets()
-    // â”€â”€ END PLANETS & COMETS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── END PLANETS & COMETS ──────────────────────────────────────
 
     return () => {
       window.removeEventListener('resize', handleResize)
@@ -859,7 +861,7 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
           }
         })
       } else {
-        // Fallback â€” flat dealers only
+        // Fallback — flat dealers only
         dealerList = flatDealers
       }
 
@@ -967,13 +969,13 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 
-      setMsg('âœ… Profile update request submitted successfully!')
+      setMsg('✅ Profile update request submitted successfully!')
       setMsgType('success')
       setShowProfileEdit(false)
       setUpdateMessage('')
       setProofDocument(null)
     } catch (err) {
-      setMsg('âŒ Error: ' + JSON.stringify(err.response?.data || err.message))
+      setMsg('❌ Error: ' + JSON.stringify(err.response?.data || err.message))
       setMsgType('error')
     }
   }
@@ -982,10 +984,10 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
     try {
       const res = await api.get('/admins/list/')
       setAdmins(res.data)
-      // â”€â”€ ADD THIS LINE â”€â”€
+      // ── ADD THIS LINE ──
       const me = res.data.find(a => a.email === localStorage.getItem('email'))
       if (me) setMyAdminId(me.admin_id)
-      // â”€â”€ END ADD â”€â”€
+      // ── END ADD ──
     } catch (err) { console.error('admins error:', err.response?.status) }
   }
 
@@ -993,7 +995,7 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
 
 
 
-  // â”€â”€ ADD before return() â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── ADD before return() ──────────────────────────────────────────
 
   function extractIdsFromTitle(title) {
     return title.match(/BB[A-Z]+\d+/g) || []
@@ -1017,14 +1019,14 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
     try {
       await api.post(`/announcements/${replyAnn.id}/replies/`, { message: replyText })
       setRepliedIds(prev => new Set([...prev, replyAnn.id]))
-      setReplyMsg('âœ… Wish sent!')
+      setReplyMsg('✅ Wish sent!')
       setReplyText('')
     } catch (err) {
       if (err.response?.data?.error === 'Already replied') {
         setRepliedIds(prev => new Set([...prev, replyAnn.id]))
-        setReplyMsg('âš ï¸ Already sent!')
+        setReplyMsg('⚠️ Already sent!')
       } else {
-        setReplyMsg('âŒ Failed.')
+        setReplyMsg('❌ Failed.')
       }
     }
     setReplyLoading(false)
@@ -1090,12 +1092,12 @@ const handleSubmit = async e => {
 
   // Married na anniversary compulsory
   if (form.married_status === 'married' && !form.anniversary_date) {
-    setMsg('âŒ Please enter Anniversary Date!'); setMsgType('error')
+    setMsg('❌ Please enter Anniversary Date!'); setMsgType('error')
     return
   }
 
   if (form.password !== confirmPassword) {
-    setPasswordError('âŒ Passwords do not match')
+    setPasswordError('❌ Passwords do not match')
     return
   }
 
@@ -1104,12 +1106,12 @@ const handleSubmit = async e => {
     if (!payload.dob) delete payload.dob
     if (payload.married_status !== 'married') delete payload.anniversary_date
     await api.post('/dealers/', payload)
-    setMsg('âœ… Dealer created successfully!'); setMsgType('success')
+    setMsg('✅ Dealer created successfully!'); setMsgType('success')
     setShowForm(false); fetchDealers(); setForm(emptyForm); setSelectedAdmin(null)
     setConfirmPassword(''); setPasswordError('')
   } catch (err) {
     console.log('ERROR DETAILS:', JSON.stringify(err.response?.data))
-    setMsg('âŒ Error: ' + JSON.stringify(err.response?.data)); setMsgType('error')
+    setMsg('❌ Error: ' + JSON.stringify(err.response?.data)); setMsgType('error')
   }
 }
   const card = {
@@ -1157,226 +1159,64 @@ const handleSubmit = async e => {
         <div key={p.id} style={{ position: 'absolute', left: `${p.x}%`, bottom: '-100px', width: p.size, height: p.size, borderRadius: '40% 60% 60% 40% / 40% 40% 60% 60%', border: `1px solid ${accent}44`, opacity: p.opacity, animation: `antigravity ${p.duration}s ${p.delay}s infinite linear`, '--op': p.opacity, pointerEvents: 'none', zIndex: 0 }} />
       ))}
 
-      {/* Navbar */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: glass, borderBottom: `1px solid ${border}`, padding: '18px 44px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backdropFilter: 'blur(18px)', transition: 'background 0.8s ease', boxShadow: dark ? '0 12px 34px rgba(17,24,23,0.14)' : '0 10px 32px rgba(7,59,63,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '10px' }}>
-          <img
-            src={logo}
-            alt="BitByte Logo"
-            style={{ width: 60, height: 50, borderRadius: '10px', objectFit: 'contain' }}
-          />
-          <span style={{ color: accent, fontWeight: 900, fontSize: '14px', letterSpacing: '0.14em', textTransform: 'uppercase' }}>ðŸ›¡ï¸ Admin Dashboard</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-
-          {/* ðŸ“¢ Announcement Bell */}
-          <div
-            onClick={() => { setShowAnnouncements(true); localStorage.setItem('adminAnnouncementSeen', Date.now().toString()); setUnreadCount(0) }}
-            style={{ position: 'relative', cursor: 'pointer', width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(12,64,68,0.24)', background: 'rgba(231,237,236,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(209,223,222,0.95)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(231,237,236,0.88)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            <span style={{ fontSize: '18px', lineHeight: 1 }}>ðŸ“¢</span>
-            {unreadCount > 0 && (
-              <div style={{ position: 'absolute', top: '-7px', right: '-7px', background: '#C92035', color: '#FDFDFC', borderRadius: '50%', minWidth: '18px', height: '18px', fontSize: '9px', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', boxShadow: '0 2px 8px rgba(12,64,68,0.5)', border: '1.5px solid #FDFDFC' }}>
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </div>
-            )}
-          </div>
-
-          {/* ðŸ‘¤ Profile Icon */}
-          <div
-            onClick={() => { setShowProfile(true); fetchProfile() }}
-            style={{ cursor: 'pointer', width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg,#E7EDEC,#F3E8DE)', border: '1px solid rgba(12,64,68,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', transition: 'all 0.25s ease', boxShadow: '0 8px 20px rgba(7,59,63,0.08)' }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(12,64,68,0.3)'; e.currentTarget.style.borderColor = 'rgba(12,64,68,0.9)' }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 0 0 0 rgba(12,64,68,0.3)'; e.currentTarget.style.borderColor = 'rgba(12,64,68,0.5)' }}
-            title="View Profile"
-          >
-            ðŸ›¡ï¸
-          </div>
-
-          <div onClick={() => { setShowBuyCoin(true); setCoinCart([]); setCoinBuyMsg('') }}
-  style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(251,191,36,0.4)', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-  <span style={{ fontSize: '12px', fontWeight: 700, color: '#fbbf24' }}>Buy Coin</span>
-</div>
-
-<div onClick={() => navigate('/stored-coins')}
-  style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(74,222,128,0.4)', background: 'rgba(74,222,128,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-  <span style={{ fontSize: '12px', fontWeight: 700, color: '#4ade80' }}>Stored Coin</span>
-</div>
-
-<div onClick={() => navigate('/coin-requests-page')}
-  style={{ position: 'relative', cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-  <span style={{ fontSize: '12px', fontWeight: 700, color: '#38bdf8' }}>Coin Requests</span>
-  {coinRequests.filter(r => r.status === 'pending').length > 0 && (
-    <div style={{ position: 'absolute', top: '-7px', right: '-7px', background: '#fbbf24', color: '#000', borderRadius: '50%', minWidth: '18px', height: '18px', fontSize: '9px', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      {coinRequests.filter(r => r.status === 'pending').length}
-    </div>
-  )}
-</div>
-
-          {/* â”€â”€ DARK / LIGHT TOGGLE â”€â”€ */}
-          <button onClick={() => setDark(!dark)}
-            style={{ padding: '10px 18px', borderRadius: '999px', border: `1px solid ${border}`, background: dark ? 'rgba(253,253,252,0.08)' : '#FDFDFC', color: accent, cursor: 'pointer', fontWeight: 800, fontSize: '13px', transition: 'all 0.3s ease' }}>
-            {dark ? 'â˜€ï¸ Light' : 'ðŸŒ™ Dark'}
-          </button>
-
-
-
-          <button onClick={() => { localStorage.clear(); navigate('/login') }}
-            style={{ padding: '10px 18px', background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.22)', color: '#C92035', borderRadius: '999px', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>
-            Logout
-          </button>
-        </div>
-      </div>
-
-      <div style={{ position: 'relative', zIndex: 10, padding: '42px 46px 56px', maxWidth: '1500px', margin: '0 auto' }}>
+      <InternalRoleNavbar
+        roleTitle="ADMIN"
+        homePath="/admin"
+        managementItems={[
+          { label: 'Dashboard', path: '/admin' },
+          { label: 'Dealer Hierarchy', path: '/admin-hierarchy' },
+          { label: 'Create Dealer', action: () => setShowForm(true) },
+          { label: 'Requests', action: () => setShowRequests(true) },
+        ]}
+        celebrationItems={[
+          { label: "Today's Birthdays", action: () => navigate('/admin') },
+          { label: "Today's Anniversaries", action: () => navigate('/admin') },
+          { label: 'Work Anniversaries', action: () => navigate('/admin') },
+        ]}
+        announcementItems={[
+          { label: 'View Announcements', action: () => { setShowAnnouncements(true); localStorage.setItem('adminAnnouncementSeen', Date.now().toString()); setUnreadCount(0) }, badge: unreadCount },
+        ]}
+        coinItems={[
+          { label: 'Buy Coin', path: '/buy-coin' },
+          { label: 'Stored Coin', path: '/stored-coins' },
+          { label: 'Coin Requests', path: '/coin-requests-page', badge: coinRequests.filter(r => r.status === 'pending').length },
+          { label: 'Coin Transactions', path: '/coin-transactions' },
+        ]}
+        reportItems={[
+          { label: 'Dealer Hierarchy Tree', path: '/admin-hierarchy' },
+          { label: 'Dealer Hierarchy Grid', path: '/admin-hierarchy-grid' },
+          { label: 'Sales Report', path: '/sales-report' },
+        ]}
+        actionItems={[
+          { label: 'Profile', icon: 'user', action: () => { setShowProfile(true); fetchProfile() } },
+          { label: 'Announcements', icon: 'bell', action: () => { setShowAnnouncements(true); localStorage.setItem('adminAnnouncementSeen', Date.now().toString()); setUnreadCount(0) }, badge: unreadCount },
+          { label: 'Logout', icon: 'logout', variant: 'danger', action: () => { localStorage.clear(); navigate('/login') } },
+        ]}
+      />
+      <InternalRoleDashboardFrame
+        roleName="Admin"
+        focusLabel="Dealers"
+        focusCount={dealers.length}
+        roleDistribution={[
+          { name: 'Dealer', value: dealers.length, color: '#0C4044' },
+          { name: 'Sub Dealer', value: dealers.reduce((sum, dealer) => sum + (dealer.sub_dealers?.length || 0), 0), color: '#BB8958' },
+          { name: 'Promoter', value: dealers.reduce((sum, dealer) => sum + (dealer.sub_dealers || []).reduce((sdSum, sd) => sdSum + (sd.promotors?.length || 0), 0), 0), color: '#CCA881' },
+          { name: 'Customer', value: dealers.reduce((sum, dealer) => sum + (dealer.sub_dealers || []).reduce((sdSum, sd) => sdSum + (sd.promotors || []).reduce((pSum, p) => pSum + (p.customers?.length || 0), 0), 0), 0), color: '#C92035' },
+        ]}
+        quickActions={[
+          { label: 'Dealer Hierarchy Tree', icon: 'store', onClick: () => setShowHierarchy(true) },
+          { label: 'Dealer Hierarchy Grid', icon: 'store', onClick: () => navigate('/admin-hierarchy-grid') },
+          { label: 'Sales Report', icon: 'report', onClick: () => navigate('/sales-report') },
+          { label: 'Create Dealer', icon: 'users', onClick: () => setShowForm(true) },
+        ]}
+      />      <div style={{ position: 'relative', zIndex: 10, padding: '42px 46px 56px', maxWidth: '1500px', margin: '0 auto' }}>
         {msg && (
           <div style={{ background: msgType === 'success' ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${msgType === 'success' ? 'rgba(12,64,68,0.25)' : 'rgba(201,32,53,0.3)'}`, color: msgType === 'success' ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', marginBottom: '20px' }}>
             {msg}
           </div>
         )}
 
-{(() => {
-  const WEIGHTS = [
-    { label: '50 mg',  grams: 0.05 },
-    { label: '100 mg', grams: 0.10 },
-    { label: '150 mg', grams: 0.15 },
-    { label: '200 mg', grams: 0.20 },
-    { label: '500 mg', grams: 0.50 },
-    { label: '1 gm',   grams: 1 },
-    { label: '2 gm',   grams: 2 },
-    { label: '4 gm',   grams: 4 },
-    { label: '8 gm',   grams: 8 },
-  ]
-  return (
-    <div style={{ background: cardBg, border: cardBorder, borderRadius: '20px', padding: '28px 32px', marginBottom: '24px' }}>
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-        <span style={{ fontSize: '22px' }}>âš–ï¸</span>
-        <div>
-          <div style={{ color: '#0C4044', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            Today's Gold & Silver Rates
-          </div>
-          <div style={{ color: subtext, fontSize: '11px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>ðŸ“ Chennai, India</span>
-            <span style={{ opacity: 0.4 }}>â€¢</span>
-            <span>â‚¹ per gram</span>
-            <span style={{ opacity: 0.4 }}>â€¢</span>
-            {dbRateDate ? (
-              <span style={{ color: '#0C4044', fontSize: '10px', fontWeight: 700 }}>
-                ðŸ“… {new Date(dbRateDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
-              </span>
-            ) : (
-              <span style={{ color: '#C92035', fontSize: '9px', fontWeight: 700 }}>No rate entered yet</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-        {/* GOLD 22K */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px' }}>ðŸ…</span>
-            <span style={{ color: '#CCA881', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>GOLD 22K</span>
-            {metalPrices.gold22k && (
-              <span style={{ color: 'rgba(204,168,129,0.55)', fontSize: '11px' }}>â‚¹{metalPrices.gold22k.toFixed(2)}/gm</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
-            {WEIGHTS.map(w => (
-              <div key={w.label}
-                style={{ flex: 1, minWidth: 0, background: dark ? 'rgba(204,168,129,0.05)' : 'rgba(204,168,129,0.07)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '14px', overflow: 'hidden', transition: 'transform 0.2s ease, box-shadow 0.2s ease', cursor: 'default' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(204,168,129,0.2)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
-                  <img src={goldCoin} alt="Gold 22K" style={{ width: '48px', height: '48px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(204,168,129,0.4))' }} />
-                </div>
-                <div style={{ padding: '8px 8px 4px', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-block', fontSize: '10px', fontWeight: 800, color: '#CCA881', background: 'rgba(204,168,129,0.12)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '20px', padding: '2px 8px', marginBottom: '6px' }}>
-                    {w.label}
-                  </div>
-                  <div style={{ color: '#CCA881', fontWeight: 900, fontSize: '12px', fontFamily: 'monospace', paddingBottom: '8px' }}>
-                    {metalPrices.gold22k != null ? `â‚¹${(w.grams * metalPrices.gold22k).toFixed(2)}` : 'â€”'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* GOLD 24K */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px' }}>ðŸ¥‡</span>
-            <span style={{ color: '#CCA881', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>GOLD 24K</span>
-            {metalPrices.gold24k && (
-              <span style={{ color: 'rgba(204,168,129,0.55)', fontSize: '11px' }}>â‚¹{metalPrices.gold24k.toFixed(2)}/gm</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
-            {WEIGHTS.map(w => (
-              <div key={w.label}
-                style={{ flex: 1, minWidth: 0, background: dark ? 'rgba(204,168,129,0.05)' : 'rgba(204,168,129,0.07)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '14px', overflow: 'hidden', transition: 'transform 0.2s ease, box-shadow 0.2s ease', cursor: 'default' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(204,168,129,0.2)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
-                  <img src={goldCoin} alt="Gold 24K" style={{ width: '48px', height: '48px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(204,168,129,0.5))' }} />
-                </div>
-                <div style={{ padding: '8px 8px 4px', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-block', fontSize: '10px', fontWeight: 800, color: '#CCA881', background: 'rgba(204,168,129,0.12)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '20px', padding: '2px 8px', marginBottom: '6px' }}>
-                    {w.label}
-                  </div>
-                  <div style={{ color: '#CCA881', fontWeight: 900, fontSize: '12px', fontFamily: 'monospace', paddingBottom: '8px' }}>
-                    {metalPrices.gold24k != null ? `â‚¹${(w.grams * metalPrices.gold24k).toFixed(2)}` : 'â€”'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* SILVER 999 */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px' }}>ðŸ¥ˆ</span>
-            <span style={{ color: '#BDCFCE', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>SILVER 999</span>
-            {metalPrices.silver && (
-              <span style={{ color: 'rgba(192,192,192,0.55)', fontSize: '11px' }}>â‚¹{metalPrices.silver.toFixed(2)}/gm</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
-            {WEIGHTS.map(w => (
-              <div key={w.label}
-                style={{ flex: 1, minWidth: 0, background: dark ? 'rgba(192,192,192,0.04)' : 'rgba(192,192,192,0.07)', border: '1px solid rgba(192,192,192,0.25)', borderRadius: '14px', overflow: 'hidden', transition: 'transform 0.2s ease, box-shadow 0.2s ease', cursor: 'default' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(192,192,192,0.15)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
-                  <img src={silverCoin} alt="Silver 999" style={{ width: '48px', height: '48px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(192,192,192,0.4))' }} />
-                </div>
-                <div style={{ padding: '8px 8px 4px', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-block', fontSize: '10px', fontWeight: 800, color: '#BDCFCE', background: 'rgba(192,192,192,0.1)', border: '1px solid rgba(192,192,192,0.25)', borderRadius: '20px', padding: '2px 8px', marginBottom: '6px' }}>
-                    {w.label}
-                  </div>
-                  <div style={{ color: '#BDCFCE', fontWeight: 900, fontSize: '12px', fontFamily: 'monospace', paddingBottom: '8px' }}>
-                    {metalPrices.silver != null ? `â‚¹${(w.grams * metalPrices.silver).toFixed(2)}` : 'â€”'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  )
-})()}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '26px', gap: '20px', flexWrap: 'wrap' }}>
           <div>
@@ -1400,7 +1240,7 @@ const handleSubmit = async e => {
         </div>
 
         {/* DEALER HIERARCHY MODAL */}
-        {/* â”€â”€ DEALER HIERARCHY MODAL â”€â”€ */}
+        {/* ── DEALER HIERARCHY MODAL ── */}
         {showHierarchy && (
           <div
             onClick={() => { setShowHierarchy(false); setActiveDealer(null); removeDealerPopup() }}
@@ -1414,7 +1254,7 @@ const handleSubmit = async e => {
               {/* HEADER - fixed top */}
               <div style={{ padding: '20px 28px', borderBottom: '1px solid rgba(12,64,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
                 <div>
-                  <span style={{ color: '#073B3F', fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>ðŸ¢ Full Dealer Hierarchy</span>
+                  <span style={{ color: '#073B3F', fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>🏢 Full Dealer Hierarchy</span>
                   {(() => {
                     const totalSubDealers = dealers.reduce((a, d) => a + (d.sub_dealers?.length || 0), 0)
                     const totalPromotors = dealers.reduce((a, d) => a + (d.sub_dealers || []).reduce((b, sd) => b + (sd.promotors?.length || 0), 0), 0)
@@ -1439,16 +1279,16 @@ const handleSubmit = async e => {
                 <button
                   onClick={() => { setShowHierarchy(false); setActiveDealer(null); removeDealerPopup() }}
                   style={{ background: 'transparent', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
-                >âœ• Close</button>
+                >✕ Close</button>
               </div>
 
-              {/* SCROLL AREA - à®‡à®¤à¯à®¤à®¾à®©à¯ scroll à®†à®•à¯à®®à¯ */}
+              {/* SCROLL AREA - இதுதான் scroll ஆகும் */}
               <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', padding: '28px 32px', scrollBehavior: 'smooth', scrollbarWidth: 'thin', scrollbarColor: 'rgba(12,64,68,0.4) rgba(253,253,252,0.03)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 'max-content', margin: '0 auto' }}>
 
                   {/* Admin Root Node */}
                   <div style={{ background: 'linear-gradient(135deg,rgba(12,64,68,0.13),rgba(189,207,206,0.08))', border: '1px solid rgba(12,64,68,0.55)', borderRadius: '16px', padding: '16px 48px', fontWeight: 800, fontSize: '16px', color: '#0C4044', animation: 'dPulseGlow 3s ease-in-out infinite', boxShadow: '0 0 24px rgba(12,64,68,0.1)' }}>
-                    ðŸ›¡ï¸ Admin
+                    🛡️ Admin
                     <div style={{ fontSize: '11px', color: '#7A8987', fontWeight: 400, marginTop: '4px', textAlign: 'center' }}>
                       {localStorage.getItem('email')}
                     </div>
@@ -1492,11 +1332,11 @@ const handleSubmit = async e => {
               {/* LEGEND - fixed bottom */}
               <div style={{ flexShrink: 0, padding: '14px 28px', borderTop: '1px solid rgba(12,64,68,0.08)', display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
                 {[
-                  { role: 'Admin', color: '#0C4044', emoji: 'ðŸ›¡ï¸' },
-                  { role: 'Dealer', color: '#BDCFCE', emoji: 'ðŸª' },
-                  { role: 'Sub Dealer', color: '#BB8958', emoji: 'ðŸ”—' },
-                  { role: 'Promotor', color: '#CCA881', emoji: 'ðŸŒŸ' },
-                  { role: 'Customer', color: '#C92035', emoji: 'ðŸ‘¤' },
+                  { role: 'Admin', color: '#0C4044', emoji: '🛡️' },
+                  { role: 'Dealer', color: '#BDCFCE', emoji: '🏪' },
+                  { role: 'Sub Dealer', color: '#BB8958', emoji: '🔗' },
+                  { role: 'Promotor', color: '#CCA881', emoji: '🌟' },
+                  { role: 'Customer', color: '#C92035', emoji: '👤' },
                 ].map(l => (
                   <div key={l.role} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <div style={{ width: 9, height: 9, borderRadius: '50%', background: l.color }} />
@@ -1504,7 +1344,7 @@ const handleSubmit = async e => {
                   </div>
                 ))}
                 <div style={{ color: subtext, fontSize: '11px', width: '100%', textAlign: 'center' }}>
-                  ðŸ’¡ Click any node to expand/collapse
+                  💡 Click any node to expand/collapse
                 </div>
               </div>
 
@@ -1512,7 +1352,7 @@ const handleSubmit = async e => {
           </div>
         )}
 
-        {/* â”€â”€ ANNOUNCEMENT VIEW MODAL (Admin) â”€â”€ */}
+        {/* ── ANNOUNCEMENT VIEW MODAL (Admin) ── */}
         {showAnnouncements && (
           <div
             onClick={() => setShowAnnouncements(false)}
@@ -1526,7 +1366,7 @@ const handleSubmit = async e => {
               {/* Header */}
               <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: `1px solid rgba(12,64,68,0.15)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg,rgba(12,64,68,0.25),rgba(189,207,206,0.15))', border: '1px solid rgba(12,64,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>ðŸ“¢</div>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg,rgba(12,64,68,0.25),rgba(189,207,206,0.15))', border: '1px solid rgba(12,64,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>📢</div>
                   <div>
                     <div style={{ color: '#0C4044', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>ANNOUNCEMENTS</div>
                     <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>{announcements.length} total from Super Admin</div>
@@ -1537,11 +1377,11 @@ const handleSubmit = async e => {
                   onClick={() => setShowAnnouncements(false)}
                   style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}
                 >
-                  âœ• Close
+                  ✕ Close
                 </button>
               </div>
 
-              {/* EXISTING: List â€” REPLACE the .map() section with this: */}
+              {/* EXISTING: List — REPLACE the .map() section with this: */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: '12px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(12,64,68,0.4) transparent' }}>
                 {announcements.length === 0 ? (
                   <div style={{ textAlign: 'center', color: subtext, padding: '60px 0', fontSize: '15px' }}>No announcements yet.</div>
@@ -1557,7 +1397,7 @@ const handleSubmit = async e => {
                         {/* Title row */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {idx === 0 && <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: 'rgba(12,64,68,0.15)', color: '#0C4044', border: '1px solid rgba(12,64,68,0.3)' }}>â— NEW</span>}
+                            {idx === 0 && <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: 'rgba(12,64,68,0.15)', color: '#0C4044', border: '1px solid rgba(12,64,68,0.3)' }}>● NEW</span>}
                             <span style={{ color: idx === 0 ? '#0C4044' : text, fontWeight: 700, fontSize: '14px' }}>{ann.title}</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1577,7 +1417,7 @@ const handleSubmit = async e => {
                                 whiteSpace: 'nowrap', transition: 'all 0.2s ease',
                               }}
                             >
-                              {alreadyReplied ? 'âœ“ Wished' : 'ðŸ’¬ Reply'}
+                              {alreadyReplied ? '✓ Wished' : '💬 Reply'}
                             </button>
                           </div>
                         </div>
@@ -1585,7 +1425,7 @@ const handleSubmit = async e => {
                         {/* Message */}
                         <p style={{ color: dark ? '#111817' : '#7A8987', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>{ann.message}</p>
 
-                        {/* HOVER POPUP â€” only if this admin is mentioned */}
+                        {/* HOVER POPUP — only if this admin is mentioned */}
 {isMentioned && (
   <div
     onMouseEnter={e => {
@@ -1602,7 +1442,7 @@ const handleSubmit = async e => {
     style={{ marginTop: '10px', display: 'flex', justifyContent: 'center' }}
   >
     <div style={{ fontSize: '10px', color: '#0C4044', padding: '3px 14px', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '20px', cursor: 'default', background: 'rgba(12,64,68,0.06)', fontWeight: 600 }}>
-      ðŸŽ‚ You are mentioned Â· {replies.length} wish{replies.length !== 1 ? 'es' : ''} â€” hover to see
+      🎂 You are mentioned · {replies.length} wish{replies.length !== 1 ? 'es' : ''} — hover to see
     </div>
   </div>
 )}
@@ -1618,7 +1458,7 @@ const handleSubmit = async e => {
 
 
 
-        {/* â”€â”€ REPLY MODAL â€” AdminDashboard â”€â”€ */}
+        {/* ── REPLY MODAL — AdminDashboard ── */}
         {replyAnn && (
           <div
             onClick={() => { setReplyAnn(null); setReplyMsg(''); setReplyText('') }}
@@ -1630,14 +1470,14 @@ const handleSubmit = async e => {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                 <div>
-                  <div style={{ color: '#0C4044', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>ðŸ’¬ SEND YOUR WISH</div>
+                  <div style={{ color: '#0C4044', fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>💬 SEND YOUR WISH</div>
                   <div style={{ color: subtext, fontSize: '11px', marginTop: '4px' }}>Replying to: <span style={{ color: text, fontWeight: 600 }}>{replyAnn.title}</span></div>
                 </div>
-                <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>âœ•</button>
+                <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>✕</button>
               </div>
 
               {replyMsg && (
-                <div style={{ background: replyMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${replyMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: replyMsg.includes('âœ…') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>
+                <div style={{ background: replyMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${replyMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: replyMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>
                   {replyMsg}
                 </div>
               )}
@@ -1657,13 +1497,13 @@ const handleSubmit = async e => {
                 onClick={submitReply}
                 style={{ marginTop: '14px', width: '100%', padding: '13px', background: replyLoading || !replyText.trim() ? 'rgba(12,64,68,0.2)' : 'linear-gradient(90deg,#0C4044,#BDCFCE)', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '14px', color: replyLoading || !replyText.trim() ? '#0C4044' : '#FDFDFC', cursor: replyLoading || !replyText.trim() ? 'not-allowed' : 'pointer', transition: 'all 0.3s ease' }}
               >
-                {replyLoading ? 'â³ Sending...' : 'ðŸ’¬ Send Wish'}
+                {replyLoading ? '⏳ Sending...' : '💬 Send Wish'}
               </button>
             </div>
           </div>
         )}
 
-{/* â”€â”€ WISH HOVER POPUP â€” Admin â”€â”€ */}
+{/* ── WISH HOVER POPUP — Admin ── */}
 {replyPopupAnnId && (
   <div
     id="ad-wish-popup"
@@ -1688,7 +1528,7 @@ const handleSubmit = async e => {
   >
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(12,64,68,0.15)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(12,64,68,0.15)', border: '1px solid rgba(12,64,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>ðŸ’¬</div>
+        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(12,64,68,0.15)', border: '1px solid rgba(12,64,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>💬</div>
         <span style={{ fontSize: '10px', fontWeight: 800, color: '#0C4044', letterSpacing: '1.5px' }}>WISHES</span>
       </div>
       <div style={{ background: 'rgba(12,64,68,0.15)', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '20px', padding: '2px 10px', fontSize: '10px', color: '#0C4044', fontWeight: 800 }}>
@@ -1707,12 +1547,12 @@ const handleSubmit = async e => {
       </div>
     ))}
     <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(12,64,68,0.08)', textAlign: 'center', fontSize: '9px', color: dark ? '#7A8987' : '#111817', letterSpacing: '0.8px', fontWeight: 600 }}>
-      BitByte Network â€¢ Wishes
+      BitByte Network • Wishes
     </div>
   </div>
 )} 
 
-        {/* â”€â”€ ADMIN PROFILE MODAL â”€â”€ */}
+        {/* ── ADMIN PROFILE MODAL ── */}
         {showProfile && (
           <div
             onClick={() => setShowProfile(false)}
@@ -1725,10 +1565,10 @@ const handleSubmit = async e => {
               {/* Header */}
               <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: `1px solid rgba(12,64,68,0.15)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg,rgba(12,64,68,0.25),rgba(189,207,206,0.15))', border: '2px solid rgba(12,64,68,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', boxShadow: '0 4px 16px rgba(12,64,68,0.2)' }}>ðŸ›¡ï¸</div>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg,rgba(12,64,68,0.25),rgba(189,207,206,0.15))', border: '2px solid rgba(12,64,68,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', boxShadow: '0 4px 16px rgba(12,64,68,0.2)' }}>🛡️</div>
                   <div>
                     <div style={{ color: '#0C4044', fontWeight: 800, fontSize: '15px', letterSpacing: '0.05em' }}>MY PROFILE</div>
-                    <div style={{ color: subtext, fontSize: '11px', marginTop: '3px', fontFamily: 'monospace' }}>{profileData?.admin_id || 'â€”'}</div>
+                    <div style={{ color: subtext, fontSize: '11px', marginTop: '3px', fontFamily: 'monospace' }}>{profileData?.admin_id || '—'}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -1746,7 +1586,7 @@ const handleSubmit = async e => {
                       fontWeight: 800
                     }}
                   >
-                    âœŽ Edit
+                    ✎ Edit
                   </button>
 
                   <button
@@ -1761,7 +1601,7 @@ const handleSubmit = async e => {
                       fontSize: '12px'
                     }}
                   >
-                    âœ• Close
+                    ✕ Close
                   </button>
 
                 </div>
@@ -1788,17 +1628,17 @@ const handleSubmit = async e => {
                           { label: 'Last Name', value: profileData.last_name },
                           { label: 'Email', value: profileData.email },
                           { label: 'Mobile', value: profileData.mobile_number },
-                          { label: 'Gender', value: profileData.gender ? profileData.gender.charAt(0).toUpperCase() + profileData.gender.slice(1) : 'â€”' },
-                          { label: 'DOB', value: profileData.dob ? new Date(profileData.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'â€”' },
-                          { label: 'Married Status', value: profileData.married_status ? profileData.married_status.charAt(0).toUpperCase() + profileData.married_status.slice(1) : 'â€”' },
+                          { label: 'Gender', value: profileData.gender ? profileData.gender.charAt(0).toUpperCase() + profileData.gender.slice(1) : '—' },
+                          { label: 'DOB', value: profileData.dob ? new Date(profileData.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' },
+                          { label: 'Married Status', value: profileData.married_status ? profileData.married_status.charAt(0).toUpperCase() + profileData.married_status.slice(1) : '—' },
                           ...(profileData.married_status === 'married' ? [
-                            { label: 'Anniversary', value: profileData.anniversary_date ? new Date(profileData.anniversary_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'â€”' }
+                            { label: 'Anniversary', value: profileData.anniversary_date ? new Date(profileData.anniversary_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' }
                           ] : []),
 
                         ].map(f => (
                           <div key={f.label}>
                             <div style={{ color: subtext, fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '4px' }}>{f.label}</div>
-                            <div style={{ color: f.color || text, fontSize: '13px', fontWeight: f.mono ? 700 : 500, fontFamily: f.mono ? 'monospace' : 'inherit', wordBreak: 'break-all' }}>{f.value || 'â€”'}</div>
+                            <div style={{ color: f.color || text, fontSize: '13px', fontWeight: f.mono ? 700 : 500, fontFamily: f.mono ? 'monospace' : 'inherit', wordBreak: 'break-all' }}>{f.value || '—'}</div>
                           </div>
                         ))}
                       </div>
@@ -1821,7 +1661,7 @@ const handleSubmit = async e => {
                         ].map(f => (
                           <div key={f.label}>
                             <div style={{ color: subtext, fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '4px' }}>{f.label}</div>
-                            <div style={{ color: text, fontSize: '13px' }}>{f.value || 'â€”'}</div>
+                            <div style={{ color: text, fontSize: '13px' }}>{f.value || '—'}</div>
                           </div>
                         ))}
                       </div>
@@ -1841,7 +1681,7 @@ const handleSubmit = async e => {
                           <div key={f.label}>
                             <div style={{ color: subtext, fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '4px' }}>{f.label}</div>
                             <div style={{ color: text, fontSize: '13px', fontFamily: f.mono || f.mask ? 'monospace' : 'inherit', letterSpacing: f.mask ? '0.1em' : 'normal' }}>
-                              {f.mask && f.value ? `XXXX-XXXX-${f.value.slice(-4)}` : f.panMask && f.value ? `XXXXXXX${f.value.slice(-4)}` : (f.value || 'â€”')}
+                              {f.mask && f.value ? `XXXX-XXXX-${f.value.slice(-4)}` : f.panMask && f.value ? `XXXXXXX${f.value.slice(-4)}` : (f.value || '—')}
                             </div>
                           </div>
                         ))}
@@ -1856,13 +1696,13 @@ const handleSubmit = async e => {
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                         {[
-                          { label: 'Type', value: profileData.occupation ? profileData.occupation.charAt(0).toUpperCase() + profileData.occupation.slice(1) : 'â€”' },
+                          { label: 'Type', value: profileData.occupation ? profileData.occupation.charAt(0).toUpperCase() + profileData.occupation.slice(1) : '—' },
                           { label: 'Detail', value: profileData.occupation_detail },
-                          { label: 'Annual Salary', value: profileData.annual_salary ? `â‚¹ ${Number(profileData.annual_salary).toLocaleString('en-IN')}` : 'â€”' },
+                          { label: 'Annual Salary', value: profileData.annual_salary ? `₹ ${Number(profileData.annual_salary).toLocaleString('en-IN')}` : '—' },
                         ].map(f => (
                           <div key={f.label}>
                             <div style={{ color: subtext, fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '4px' }}>{f.label}</div>
-                            <div style={{ color: text, fontSize: '13px' }}>{f.value || 'â€”'}</div>
+                            <div style={{ color: text, fontSize: '13px' }}>{f.value || '—'}</div>
                           </div>
                         ))}
                       </div>
@@ -1879,11 +1719,11 @@ const handleSubmit = async e => {
                           { label: 'Admin ID', value: profileData.admin_id, mono: true, color: '#0C4044' },
                           { label: 'Admin Name', value: profileData.admin_name },
                           { label: 'Contact No', value: profileData.admin_contact_no },
-                          { label: 'Member Since', value: profileData.created_at ? new Date(profileData.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'â€”' },
+                          { label: 'Member Since', value: profileData.created_at ? new Date(profileData.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' },
                         ].map(f => (
                           <div key={f.label}>
                             <div style={{ color: subtext, fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '4px' }}>{f.label}</div>
-                            <div style={{ color: f.color || text, fontSize: '13px', fontFamily: f.mono ? 'monospace' : 'inherit', fontWeight: f.mono ? 700 : 500 }}>{f.value || 'â€”'}</div>
+                            <div style={{ color: f.color || text, fontSize: '13px', fontFamily: f.mono ? 'monospace' : 'inherit', fontWeight: f.mono ? 700 : 500 }}>{f.value || '—'}</div>
                           </div>
                         ))}
                       </div>
@@ -1934,7 +1774,7 @@ const handleSubmit = async e => {
               }}>
                 <div>
                   <div style={{ color: '#0C4044', fontWeight: 900, fontSize: '15px', letterSpacing: '1px' }}>
-                    âœŽ PROFILE UPDATE REQUEST
+                    ✎ PROFILE UPDATE REQUEST
                   </div>
                   <div style={{ color: subtext, fontSize: '12px', marginTop: '4px' }}>
                     Existing details compare pannitu correct details full ah enter pannunga
@@ -1953,7 +1793,7 @@ const handleSubmit = async e => {
                     cursor: 'pointer'
                   }}
                 >
-                  âœ• Close
+                  ✕ Close
                 </button>
               </div>
 
@@ -1998,7 +1838,7 @@ const handleSubmit = async e => {
                           color: text,
                           wordBreak: 'break-all'
                         }}>
-                          {profileData?.[key] || 'â€”'}
+                          {profileData?.[key] || '—'}
                         </td>
 
                         <td style={{
@@ -2110,7 +1950,7 @@ const handleSubmit = async e => {
 
                   {proofDocument && (
                     <div style={{ color: '#0C4044', fontSize: '12px', marginTop: '8px' }}>
-                      âœ… Selected: {proofDocument.name}
+                      ✅ Selected: {proofDocument.name}
                     </div>
                   )}
 
@@ -2334,7 +2174,7 @@ const handleSubmit = async e => {
     <div onClick={e => e.stopPropagation()} style={{ background: '#0a1628', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '24px', width: '95%', maxWidth: '560px', maxHeight: '88vh', overflowY: 'auto', padding: '28px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
-          <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: '16px' }}>Buy Coin â€” Request</div>
+          <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: '16px' }}>Buy Coin — Request</div>
           <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '3px' }}>Add coin types and weights, then send request to Super Admin</div>
         </div>
         <button onClick={() => setShowBuyCoin(false)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
@@ -2380,8 +2220,8 @@ const handleSubmit = async e => {
         <div style={{ marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {coinCart.map((item, idx) => (
             <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px' }}>
-              <span style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} â€” {item.weight_label} Ã— {item.qty}</span>
-              <button onClick={() => removeCoinCartItem(idx)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', fontSize: '11px' }}>âœ•</button>
+              <span style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} — {item.weight_label} × {item.qty}</span>
+              <button onClick={() => removeCoinCartItem(idx)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', fontSize: '11px' }}>✕</button>
             </div>
           ))}
         </div>
@@ -2422,7 +2262,7 @@ const handleSubmit = async e => {
         {coinStockLoading ? (
           <div style={{ textAlign: 'center', color: '#94a3b8', padding: '40px 0' }}>Loading...</div>
         ) : coinStock.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#94a3b8', padding: '40px 0' }}>No stock yet â€” send a Buy Coin request</div>
+          <div style={{ textAlign: 'center', color: '#94a3b8', padding: '40px 0' }}>No stock yet — send a Buy Coin request</div>
         ) : coinStock.map(s => (
           <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '12px' }}>
             <div>
@@ -2452,7 +2292,7 @@ const handleSubmit = async e => {
               {approvingAll ? 'Approving...' : 'Approve All'}
             </button>
           )}
-          <button onClick={() => { setShowRequestCoin(false); setRejectingReqId(null); setRejectReason('') }} style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' }}>âœ•</button>
+          <button onClick={() => { setShowRequestCoin(false); setRejectingReqId(null); setRejectReason('') }} style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' }}>✕</button>
         </div>
       </div>
 
@@ -2495,8 +2335,8 @@ const handleSubmit = async e => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {req.items.map(item => (
                 <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '12px' }}>
-                  <span style={{ color: '#fff' }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} â€” {item.weight_label}</span>
-                  <span style={{ color: '#fbbf24', fontWeight: 700 }}>Ã— {item.qty}</span>
+                  <span style={{ color: '#fff' }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} — {item.weight_label}</span>
+                  <span style={{ color: '#fbbf24', fontWeight: 700 }}>× {item.qty}</span>
                 </div>
               ))}
             </div>
@@ -2528,6 +2368,7 @@ const handleSubmit = async e => {
     </div>
   )
 }
+
 
 
 

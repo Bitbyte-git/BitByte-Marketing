@@ -84,136 +84,77 @@ export default function CoinRequests() {
   }
 
   const pending = coinRequests.filter(r => r.status === 'pending')
+  const pendingItems = pending.reduce((sum, req) => sum + req.items.reduce((s, i) => s + Number(i.qty || 0), 0), 0)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#020617', color: '#f8fafc', fontFamily: '"Inter",system-ui,sans-serif', padding: '32px 24px' }}>
-      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '14px' }}>
+    <main className="cr-page">
+      <style>{`
+        .cr-page{min-height:100vh;background:linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 50%,#E7EDEC 100%);color:#111817;font-family:"Manrope","Inter",system-ui,sans-serif;padding:42px 28px 76px}.cr-wrap{max-width:1240px;margin:0 auto}.cr-hero,.cr-card,.cr-stat,.cr-empty{background:rgba(253,253,252,.95);border:1px solid rgba(189,207,206,.9);border-radius:8px;box-shadow:0 22px 58px rgba(7,59,63,.08)}.cr-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding:34px 38px;margin-bottom:18px;position:relative;overflow:hidden}.cr-hero:after{content:"";position:absolute;right:-80px;top:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(187,137,88,.26),transparent 70%)}.cr-kicker{font-size:12px;font-weight:950;letter-spacing:.18em;text-transform:uppercase;color:#BB8958}.cr-title{font-family:Georgia,'Times New Roman',serif;font-size:clamp(38px,5vw,64px);line-height:.95;margin:9px 0 0;color:#073B3F;font-weight:500}.cr-sub{margin:12px 0 0;color:#7A8987;font-weight:750}.cr-actions{position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap}.cr-btn{height:46px;border-radius:999px;border:1px solid rgba(12,64,68,.24);background:#FDFDFC;color:#073B3F;padding:0 20px;font-weight:950;cursor:pointer}.cr-btn.primary{border:0;background:linear-gradient(135deg,#0C4044,#073B3F);color:#FDFDFC;box-shadow:0 16px 34px rgba(7,59,63,.16)}.cr-btn.gold{background:#F3E8DE;border-color:#CCA881;color:#9F6130}.cr-btn.danger{background:rgba(201,32,53,.08);border-color:rgba(201,32,53,.28);color:#C92035}.cr-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px}.cr-stat{padding:20px}.cr-stat small{display:block;font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.13em;color:#7A8987}.cr-stat strong{display:block;margin-top:8px;font-size:32px;color:#073B3F}.cr-msg{border-radius:8px;padding:14px 16px;margin-bottom:16px;font-weight:850}.cr-msg.success{background:rgba(12,64,68,.09);border:1px solid rgba(12,64,68,.25);color:#0C4044}.cr-msg.error{background:rgba(201,32,53,.08);border:1px solid rgba(201,32,53,.28);color:#C92035}.cr-list{display:grid;gap:15px}.cr-card{padding:20px}.cr-card-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start;margin-bottom:16px}.cr-id{font-size:15px;font-weight:950;color:#073B3F}.cr-time{font-size:12px;color:#7A8987;font-weight:800;margin-top:5px}.cr-item-list{display:grid;gap:9px}.cr-item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 14px;border-radius:8px;background:#F3F3F0;border:1px solid rgba(189,207,206,.62);font-weight:850;color:#111817}.cr-item b{color:#BB8958}.cr-reject-box{margin-top:15px;padding:16px;border-radius:8px;background:rgba(201,32,53,.06);border:1px solid rgba(201,32,53,.22)}.cr-reject-box label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#C92035;font-weight:950;margin-bottom:8px}.cr-reject-box textarea{width:100%;min-height:76px;resize:vertical;box-sizing:border-box;border-radius:8px;border:1px solid rgba(189,207,206,.95);background:#FDFDFC;color:#111817;padding:12px 14px;font:inherit;outline:none}.cr-reject-actions{display:flex;gap:10px;margin-top:10px}.cr-empty{padding:60px 28px;text-align:center;color:#7A8987;font-weight:850}.cr-loading{display:grid;place-items:center;min-height:220px;color:#7A8987;font-weight:900}.cr-error{padding:16px 18px;border-radius:8px;background:rgba(201,32,53,.08);border:1px solid rgba(201,32,53,.24);color:#C92035;font-weight:850}@media(max-width:820px){.cr-page{padding:28px 14px 56px}.cr-hero{display:block;padding:28px 22px}.cr-actions{margin-top:18px}.cr-stats{grid-template-columns:1fr}.cr-card-head{grid-template-columns:1fr}.cr-reject-actions{display:grid}}
+      `}</style>
+      <div className="cr-wrap">
+        <section className="cr-hero">
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 800, margin: 0, color: '#fbbf24' }}>Coin Requests</h1>
-            <p style={{ color: '#94a3b8', fontSize: '13px', marginTop: '4px' }}>
-              {pending.length} pending requests
-            </p>
+            <div className="cr-kicker">Approval Desk</div>
+            <h1 className="cr-title">Coin Requests</h1>
+            <p className="cr-sub">Review incoming coin requests and keep the approval flow clear for every internal role.</p>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            {pending.length > 0 && (
-              <button
-                disabled={approvingAll}
-                onClick={approveAllCoinRequests}
-                style={{ padding: '10px 20px', background: approvingAll ? 'rgba(74,222,128,0.2)' : 'linear-gradient(90deg,#4ade80,#22d3ee)', border: 'none', borderRadius: '10px', color: '#003b40', fontWeight: 800, fontSize: '13px', cursor: approvingAll ? 'not-allowed' : 'pointer' }}
-              >
-                {approvingAll ? 'Approving...' : 'Approve All'}
-              </button>
-            )}
-
-            <div onClick={() => navigate('/coin-transactions')}
-  style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.1)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-  <span style={{ fontSize: '12px', fontWeight: 700, color: '#38bdf8' }}>Transactions</span>
-</div>
-
-            <button
-              onClick={() => navigate(-1)}
-              style={{ padding: '10px 20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f8fafc', fontSize: '13px', cursor: 'pointer' }}
-            >
-              Back
-            </button>
+          <div className="cr-actions">
+            {pending.length > 0 && <button className="cr-btn primary" disabled={approvingAll} onClick={approveAllCoinRequests}>{approvingAll ? 'Approving...' : 'Approve All'}</button>}
+            <button className="cr-btn" onClick={() => navigate('/coin-transactions')}>Transactions</button>
+            <button className="cr-btn gold" onClick={() => navigate('/buy-coin')}>Buy Coin</button>
           </div>
-        </div>
+        </section>
 
-        {msg && (
-          <div style={{
-            background: msgType === 'success' ? 'rgba(74,222,128,0.1)' : 'rgba(239,68,68,0.1)',
-            border: `1px solid ${msgType === 'success' ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}`,
-            color: msgType === 'success' ? '#4ade80' : '#f87171',
-            borderRadius: '12px', padding: '14px 20px', fontSize: '14px', marginBottom: '20px'
-          }}>
-            {msg}
-          </div>
-        )}
+        <section className="cr-stats">
+          <div className="cr-stat"><small>Pending Requests</small><strong>{pending.length}</strong></div>
+          <div className="cr-stat"><small>Pending Pieces</small><strong>{pendingItems}</strong></div>
+          <div className="cr-stat"><small>Total Loaded</small><strong>{coinRequests.length}</strong></div>
+        </section>
 
-        {loading && (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>Loading...</div>
-        )}
+        {msg && <div className={`cr-msg ${msgType}`}>{msg}</div>}
+        {loading && <div className="cr-loading">Loading coin requests...</div>}
+        {error && <div className="cr-error">{error}</div>}
+        {!loading && !error && pending.length === 0 && <div className="cr-empty">No pending coin requests.</div>}
 
-        {error && (
-          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '12px', padding: '14px 20px', marginBottom: '20px' }}>
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && pending.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#94a3b8', padding: '60px 0', fontSize: '14px' }}>
-            No pending coin requests
-          </div>
-        )}
-
-        {!loading && !error && pending.map(req => (
-          <div key={req.id} style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '14px', padding: '18px 20px', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-              <div>
-                <div style={{ color: '#fbbf24', fontWeight: 700, fontSize: '14px', fontFamily: 'monospace' }}>{req.requested_by_id_str || req.requested_by_email}</div>
-                <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '3px' }}>
-                  {new Date(req.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true })}
+        {!loading && !error && pending.length > 0 && (
+          <section className="cr-list">
+            {pending.map(req => (
+              <article className="cr-card" key={req.id}>
+                <div className="cr-card-head">
+                  <div>
+                    <div className="cr-id">{req.requested_by_id_str || req.requested_by_email}</div>
+                    <div className="cr-time">{new Date(req.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true })}</div>
+                  </div>
+                  <div className="cr-actions">
+                    <button className="cr-btn primary" disabled={approvingReqId === req.id} onClick={() => approveCoinRequest(req.id)}>{approvingReqId === req.id ? 'Approving...' : 'Approve'}</button>
+                    <button className="cr-btn danger" onClick={() => { setRejectingReqId(rejectingReqId === req.id ? null : req.id); setRejectReason('') }}>Reject</button>
+                  </div>
                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  disabled={approvingReqId === req.id}
-                  onClick={() => approveCoinRequest(req.id)}
-                  style={{ padding: '10px 20px', background: approvingReqId === req.id ? 'rgba(74,222,128,0.2)' : 'linear-gradient(90deg,#4ade80,#22d3ee)', border: 'none', borderRadius: '10px', color: '#003b40', fontWeight: 800, fontSize: '13px', cursor: approvingReqId === req.id ? 'not-allowed' : 'pointer' }}
-                >
-                  {approvingReqId === req.id ? 'Approving...' : 'Approve'}
-                </button>
-                <button
-                  onClick={() => { setRejectingReqId(rejectingReqId === req.id ? null : req.id); setRejectReason('') }}
-                  style={{ padding: '10px 20px', background: rejectingReqId === req.id ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '10px', color: '#f87171', fontWeight: 800, fontSize: '13px', cursor: 'pointer' }}
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: rejectingReqId === req.id ? '14px' : '0' }}>
-              {req.items.map(item => (
-                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '13px' }}>
-                  <span>{COIN_METAL_LABELS_TEXT[item.metal_type]} — {item.weight_label}</span>
-                  <span style={{ color: '#fbbf24', fontWeight: 700 }}>× {item.qty}</span>
+                <div className="cr-item-list">
+                  {req.items.map(item => (
+                    <div className="cr-item" key={item.id}>
+                      <span>{COIN_METAL_LABELS_TEXT[item.metal_type]} - {item.weight_label}</span>
+                      <b>x {item.qty}</b>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {rejectingReqId === req.id && (
-              <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '10px', padding: '14px' }}>
-                <label style={{ display: 'block', color: '#f87171', fontSize: '12px', fontWeight: 700, marginBottom: '8px' }}>Reason for rejection</label>
-                <textarea
-                  value={rejectReason}
-                  onChange={e => setRejectReason(e.target.value)}
-                  rows={2}
-                  placeholder="Explain why this request is being rejected..."
-                  style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px 12px', color: '#f8fafc', fontSize: '13px', outline: 'none', resize: 'vertical', boxSizing: 'border-box', marginBottom: '10px' }}
-                />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    disabled={rejectSubmitting}
-                    onClick={() => rejectCoinRequest(req.id)}
-                    style={{ flex: 1, padding: '10px', background: rejectSubmitting ? 'rgba(239,68,68,0.2)' : 'linear-gradient(90deg,#ef4444,#f87171)', border: 'none', borderRadius: '8px', color: '#3b0000', fontWeight: 800, fontSize: '13px', cursor: rejectSubmitting ? 'not-allowed' : 'pointer' }}
-                  >
-                    {rejectSubmitting ? 'Rejecting...' : 'Confirm Reject'}
-                  </button>
-                  <button
-                    onClick={() => { setRejectingReqId(null); setRejectReason('') }}
-                    style={{ padding: '10px 18px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#94a3b8', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-
+                {rejectingReqId === req.id && (
+                  <div className="cr-reject-box">
+                    <label>Reason for rejection</label>
+                    <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Explain why this request is being rejected..." />
+                    <div className="cr-reject-actions">
+                      <button className="cr-btn danger" disabled={rejectSubmitting} onClick={() => rejectCoinRequest(req.id)}>{rejectSubmitting ? 'Rejecting...' : 'Confirm Reject'}</button>
+                      <button className="cr-btn" onClick={() => { setRejectingReqId(null); setRejectReason('') }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </article>
+            ))}
+          </section>
+        )}
       </div>
-    </div>
+    </main>
   )
 }

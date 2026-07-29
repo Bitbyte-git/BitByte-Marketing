@@ -1,7 +1,9 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 import logo from '../assets/logo.png'
+import InternalRoleNavbar from '../collection/InternalRoleNavbar'
+import InternalRoleDashboardFrame from '../collection/InternalRoleDashboardFrame'
 import goldCoin from '../assets/gold-coin-transparent.png'
 import silverCoin from '../assets/silver-coin.png'
 
@@ -33,7 +35,7 @@ function hexToRgb(hex) {
   return `${r},${g},${b}`
 }
 
-// â”€â”€â”€ CHAIN POPUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CHAIN POPUP ───────────────────────────────────────────────────────────────
 let _prChainPopupEl = null
 let _prChainHideTimer = null
 
@@ -47,10 +49,10 @@ function showPRChainPopup(anchorEl, customer, dark, text, subtext, superAdminEma
   removePRChainPopup()
 
   const CHAIN_CFG = {
-    super_admin: { emoji: 'ðŸ›¡ï¸', label: 'SUPER ADMIN', color: '#CCA881', idKey: null },
-    sub_dealer:  { emoji: 'ðŸ”—', label: 'SUB DEALER',  color: '#BB8958', idKey: 'sub_dealer_id' },
-    promotor:    { emoji: 'ðŸŒŸ', label: 'PROMOTOR',    color: '#CCA881', idKey: 'promotor_id' },
-    customer:    { emoji: 'ðŸ‘¤', label: 'CUSTOMER',    color: '#C92035', idKey: 'customer_id' },
+    super_admin: { emoji: '🛡️', label: 'SUPER ADMIN', color: '#CCA881', idKey: null },
+    sub_dealer:  { emoji: '🔗', label: 'SUB DEALER',  color: '#BB8958', idKey: 'sub_dealer_id' },
+    promotor:    { emoji: '🌟', label: 'PROMOTOR',    color: '#CCA881', idKey: 'promotor_id' },
+    customer:    { emoji: '👤', label: 'CUSTOMER',    color: '#C92035', idKey: 'customer_id' },
   }
 
   const chain = [
@@ -126,25 +128,25 @@ function showPRChainPopup(anchorEl, customer, dark, text, subtext, superAdminEma
         ">
           <div style="position:absolute;top:-10px;right:-10px;width:70px;height:70px;background:radial-gradient(circle,rgba(204,168,129,0.14),transparent 70%);pointer-events:none;"></div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">ðŸ›¡ï¸</div>
+            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">🛡️</div>
             <div>
               <div style="font-size:9px;color:#CCA881;font-weight:800;letter-spacing:1.8px;">SUPER ADMIN</div>
-              <div style="font-size:8px;color:rgba(204,168,129,0.45);margin-top:2px;letter-spacing:0.5px;">ROOT â€¢ FULL ACCESS</div>
+              <div style="font-size:8px;color:rgba(204,168,129,0.45);margin-top:2px;letter-spacing:0.5px;">ROOT • FULL ACCESS</div>
             </div>
             <div style="margin-left:auto;display:flex;align-items:center;gap:5px;">
               <div style="width:7px;height:7px;border-radius:50%;background:#0C4044;animation:acpPulse 1.8s ease-in-out infinite;box-shadow:0 0 8px rgba(12,64,68,0.9);"></div>
               <span style="font-size:9px;color:#0C4044;font-weight:700;">LIVE</span>
             </div>
           </div>
-          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || 'â€”'}</div>
+          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || '—'}</div>
         </div>
       `
     }
 
     const d = item.data || {}
-    const idVal = cfg.idKey ? (d[cfg.idKey] || d.id || 'â€”') : ''
-    const name  = [d.first_name, d.last_name].filter(Boolean).join(' ') || 'â€”'
-    const phone = d.mobile_number || 'â€”'
+    const idVal = cfg.idKey ? (d[cfg.idKey] || d.id || '—') : ''
+    const name  = [d.first_name, d.last_name].filter(Boolean).join(' ') || '—'
+    const phone = d.mobile_number || '—'
     const city  = d.city_name || ''
     const rc    = hexToRgb(cfg.color)
 
@@ -174,20 +176,20 @@ function showPRChainPopup(anchorEl, customer, dark, text, subtext, superAdminEma
             background:rgba(${rc},0.18);color:${cfg.color};
             border:1px solid rgba(${rc},0.4);
             animation:acpBadgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-            white-space:nowrap;letter-spacing:0.5px;">â— CURRENT</div>` : ''}
+            white-space:nowrap;letter-spacing:0.5px;">● CURRENT</div>` : ''}
         </div>
 
         <div style="font-size:14px;color:${isDark ? '#E7EDEC' : '#111817'};font-weight:700;margin-bottom:9px;letter-spacing:-0.3px;">${name}</div>
 
         <div style="display:flex;flex-direction:column;gap:6px;">
-          ${phone !== 'â€”' ? `
+          ${phone !== '—' ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“ž</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">📞</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${phone}</span>
           </div>` : ''}
           ${city ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">📍</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${city}</span>
           </div>` : ''}
         </div>
@@ -198,7 +200,7 @@ function showPRChainPopup(anchorEl, customer, dark, text, subtext, superAdminEma
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid ${isDark ? 'rgba(201,32,53,0.1)' : 'rgba(201,32,53,0.08)'};">
       <div style="display:flex;align-items:center;gap:9px;">
-        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#C92035,#CCA881);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(201,32,53,0.4);">ðŸ”—</div>
+        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#C92035,#CCA881);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(201,32,53,0.4);">🔗</div>
         <div>
           <div style="font-size:11px;color:${isDark ? '#F3E8DE' : '#C92035'};font-weight:800;letter-spacing:1.8px;">HIERARCHY CHAIN</div>
           <div style="font-size:9px;color:${isDark ? '#7A8987' : '#7A8987'};margin-top:2px;">${totalNodes} level${totalNodes !== 1 ? 's' : ''} deep</div>
@@ -211,13 +213,13 @@ function showPRChainPopup(anchorEl, customer, dark, text, subtext, superAdminEma
         animation:acpShimmer 2.5s linear infinite;
         border:1px solid rgba(201,32,53,0.25);
         color:${isDark ? '#F3E8DE' : '#C92035'};
-        letter-spacing:1px;">â— LIVE</div>
+        letter-spacing:1px;">● LIVE</div>
     </div>
 
     ${itemsHtml}
 
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid ${isDark ? 'rgba(253,253,252,0.04)' : 'rgba(17,24,23,0.05)'};">
-      <div style="font-size:9px;color:${isDark ? '#7A8987' : '#111817'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network â€¢ Hierarchy View</div>
+      <div style="font-size:9px;color:${isDark ? '#7A8987' : '#111817'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network • Hierarchy View</div>
     </div>
   `
 
@@ -239,18 +241,18 @@ function showPRChainPopup(anchorEl, customer, dark, text, subtext, superAdminEma
   _prChainPopupEl = el
 }
 
-// â”€â”€â”€ PRINT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PRINT ─────────────────────────────────────────────────────────────────────
 function printCustomerCard(node, color, superAdminEmail, promotorInfo) {
   const arrowDiv = `<div class="chain-arrow"><div style="display:flex;flex-direction:column;align-items:center;gap:0;"><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid #7A8987;"></div><div style="width:2px;height:12px;background:linear-gradient(180deg,#7A8987,rgba(122,137,135,0.2));"></div></div></div>`
 
   const chain = [
-    { type:'super_admin', label:'SUPER ADMIN', emoji:'ðŸ›¡ï¸', data:{ email: superAdminEmail } },
+    { type:'super_admin', label:'SUPER ADMIN', emoji:'🛡️', data:{ email: superAdminEmail } },
     ...(promotorInfo?.sub_dealer_id ? [{
-      type:'sub_dealer', label:'SUB DEALER', emoji:'ðŸ”—',
+      type:'sub_dealer', label:'SUB DEALER', emoji:'🔗',
       data:{ sub_dealer_id: promotorInfo.sub_dealer_id, first_name: promotorInfo.sub_dealer_name, mobile_number: promotorInfo.sub_dealer_contact_no }
     }] : []),
-    { type:'promotor', label:'PROMOTOR', emoji:'ðŸŒŸ', data: promotorInfo || {} },
-    { type:'customer', label:'CUSTOMER', emoji:'ðŸ‘¤', data: node },
+    { type:'promotor', label:'PROMOTOR', emoji:'🌟', data: promotorInfo || {} },
+    { type:'customer', label:'CUSTOMER', emoji:'👤', data: node },
   ]
 
   const idMap = { sub_dealer:'sub_dealer_id', promotor:'promotor_id', customer:'customer_id' }
@@ -260,29 +262,29 @@ function printCustomerCard(node, color, superAdminEmail, promotorInfo) {
     const arrow  = idx < chain.length - 1 ? arrowDiv : ''
     const d = item.data || {}
     if (item.type === 'super_admin') {
-      return `<div class="chain-item"><div class="chain-role">${item.emoji} ${item.label}</div><div class="chain-email">${d.email || 'â€”'}</div></div>${arrow}`
+      return `<div class="chain-item"><div class="chain-role">${item.emoji} ${item.label}</div><div class="chain-email">${d.email || '—'}</div></div>${arrow}`
     }
-    const idVal = idMap[item.type] ? (d[idMap[item.type]] || 'â€”') : ''
-    const name  = [d.first_name, d.last_name].filter(Boolean).join(' ') || 'â€”'
+    const idVal = idMap[item.type] ? (d[idMap[item.type]] || '—') : ''
+    const name  = [d.first_name, d.last_name].filter(Boolean).join(' ') || '—'
     return `
       <div class="chain-item ${isLast ? 'current' : ''}">
         <div class="chain-role">${item.emoji} ${item.label}</div>
         ${idVal ? `<div class="chain-id">${idVal}</div>` : ''}
         <div class="chain-name">${name}</div>
-        <div class="chain-info">ðŸ“ž ${d.mobile_number || 'â€”'}</div>
-        <div class="chain-info">ðŸ“ ${d.city_name || 'â€”'}</div>
+        <div class="chain-info">📞 ${d.mobile_number || '—'}</div>
+        <div class="chain-info">📍 ${d.city_name || '—'}</div>
       </div>${arrow}`
   }).join('')
 
-  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || 'â€”'
+  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || '—'
   const win = window.open('', '_blank')
-  win.document.write(`<!DOCTYPE html><html><head><title>CUSTOMER â€” ${currentName}</title>
+  win.document.write(`<!DOCTYPE html><html><head><title>CUSTOMER — ${currentName}</title>
     <style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Inter',system-ui,sans-serif;background:#FDFDFC;padding:40px;display:flex;justify-content:center;}.wrapper{max-width:480px;width:100%;}.header{text-align:center;margin-bottom:28px;}.header h1{font-size:20px;font-weight:800;color:#FDFDFC;}.header p{font-size:12px;color:#7A8987;margin-top:4px;}.chain-item{background:#FDFDFC;border:1.5px solid #E7EDEC;border-radius:12px;padding:14px 18px;}.chain-item.current{border-color:${color};background:${color}11;box-shadow:0 4px 16px ${color}22;}.chain-role{font-size:10px;font-weight:800;color:#7A8987;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;}.chain-item.current .chain-role{color:${color};}.chain-id{font-family:monospace;font-size:11px;color:${color};margin-bottom:4px;}.chain-name{font-size:16px;font-weight:800;color:#FDFDFC;margin-bottom:6px;}.chain-email{font-size:12px;color:#7A8987;}.chain-info{font-size:12px;color:#7A8987;margin-top:3px;}.chain-arrow{display:flex;justify-content:center;padding:4px 0;}.footer{text-align:center;font-size:10px;color:#7A8987;margin-top:24px;}@media print{body{background:white;padding:20px;}.chain-item{box-shadow:none;}}</style>
-    </head><body><div class="wrapper"><div class="header"><h1>BitByte â€” CUSTOMER Profile</h1><p>Hierarchy Chain Report</p></div>${chainHtml}<div class="footer">Printed on ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div></div><script>window.onload=()=>{window.print()}<\/script></body></html>`)
+    </head><body><div class="wrapper"><div class="header"><h1>BitByte — CUSTOMER Profile</h1><p>Hierarchy Chain Report</p></div>${chainHtml}<div class="footer">Printed on ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}</div></div><script>window.onload=()=>{window.print()}<\/script></body></html>`)
   win.document.close()
 }
 
-// â”€â”€â”€ CUSTOMER LEAF NODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── CUSTOMER LEAF NODE ────────────────────────────────────────────────────────
 function CustomerLeafNode({ node, dark, text, subtext, colorIdx=0, superAdminEmail='', promotorInfo=null }) {
   const c = PR_TREE_COLORS[colorIdx % PR_TREE_COLORS.length]
 
@@ -311,12 +313,12 @@ function CustomerLeafNode({ node, dark, text, subtext, colorIdx=0, superAdminEma
       }}
     >
       <div style={{ display:'inline-block', fontSize:'9px', fontWeight:700, padding:'2px 8px', borderRadius:'20px', marginBottom:'8px', background:`rgba(${hexToRgb(c)},0.15)`, color:c, border:`1px solid rgba(${hexToRgb(c)},0.35)` }}>
-        ðŸ‘¤ CUSTOMER
+        👤 CUSTOMER
       </div>
       <div style={{ color:c, fontFamily:'monospace', fontSize:'10px', marginBottom:'4px', wordBreak:'break-all' }}>{node.customer_id}</div>
-      <div style={{ color:text, fontWeight:700, fontSize:'13px', marginBottom:'6px' }}>{node.first_name || 'â€”'} {node.last_name || ''}</div>
-      <div style={{ color:subtext, fontSize:'11px', marginBottom:'2px' }}>ðŸ“ž {node.mobile_number}</div>
-      {node.city_name && <div style={{ color:subtext, fontSize:'11px' }}>ðŸ“ {node.city_name}</div>}
+      <div style={{ color:text, fontWeight:700, fontSize:'13px', marginBottom:'6px' }}>{node.first_name || '—'} {node.last_name || ''}</div>
+      <div style={{ color:subtext, fontSize:'11px', marginBottom:'2px' }}>📞 {node.mobile_number}</div>
+      {node.city_name && <div style={{ color:subtext, fontSize:'11px' }}>📍 {node.city_name}</div>}
 
       <div style={{ marginTop:'8px', width:'100%', height:2, borderRadius:2, background:`linear-gradient(90deg,rgba(${hexToRgb(c)},0.2),${c})` }} />
 
@@ -325,12 +327,12 @@ function CustomerLeafNode({ node, dark, text, subtext, colorIdx=0, superAdminEma
         style={{ marginTop:'8px', width:'100%', padding:'3px 0', fontSize:'9px', fontWeight:700, background:`rgba(${hexToRgb(c)},0.1)`, border:`1px solid rgba(${hexToRgb(c)},0.35)`, borderRadius:'6px', color:c, cursor:'pointer', letterSpacing:'0.8px', transition:'all 0.2s ease' }}
         onMouseEnter={e => e.currentTarget.style.background = `rgba(${hexToRgb(c)},0.25)`}
         onMouseLeave={e => e.currentTarget.style.background = `rgba(${hexToRgb(c)},0.1)`}
-      >ðŸ–¨ï¸ PRINT</button>
+      >🖨️ PRINT</button>
     </div>
   )
 }
 
-// â”€â”€â”€ MAIN DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── MAIN DASHBOARD ────────────────────────────────────────────────────────────
 export default function PromotorDashboard() {
   const navigate = useNavigate()                         
   const [dark, setDark] = useState(false)       
@@ -361,7 +363,7 @@ const [metalLoading, setMetalLoading] = useState(false)
 const [usdToInr, setUsdToInr] = useState(null)
 const [dbRateDate, setDbRateDate] = useState(null)
 
-// â”€â”€ COIN REQUEST / STOCK â”€â”€
+// ── COIN REQUEST / STOCK ──
 const [showBuyCoin, setShowBuyCoin] = useState(false)
 const [coinCart, setCoinCart] = useState([])   // [{metal_type, weight_label, weight_grams, qty}]
 const [coinBuyMsg, setCoinBuyMsg] = useState('')
@@ -374,7 +376,7 @@ const [showStoredCoin, setShowStoredCoin] = useState(false)
   const [coinStock, setCoinStock] = useState([])
   const [coinStockLoading, setCoinStockLoading] = useState(false)
 
-  // â”€â”€ MY COIN REQUESTS (status tracking) â”€â”€
+  // ── MY COIN REQUESTS (status tracking) ──
   const [showMyRequests, setShowMyRequests] = useState(false)
   const [myCoinRequests, setMyCoinRequests] = useState([])
   const [myRequestsLoading, setMyRequestsLoading] = useState(false)
@@ -403,7 +405,7 @@ const canvasRef = useRef(null)
   const optionBg = dark ? '#073B3F' : '#F3F3F0'
   const selectInput = { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '12px', padding: '13px 16px', color: text, fontSize: '14px', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }
 
-  // â”€â”€ Particle canvas â”€â”€
+  // ── Particle canvas ──
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
@@ -441,7 +443,7 @@ const canvasRef = useRef(null)
         this.y += forceDirectionY * force * 2
       }
     }
-  }                          // â† update() ends here
+  }                          // ← update() ends here
 
 draw() {
   ctx.fillStyle = dark ? 'rgba(189, 207, 206, 0.9)' : 'rgba(12, 64, 68, 0.8)'
@@ -476,7 +478,7 @@ function init(){pts=[];for(let i=0;i<60;i++)pts.push(new Particle())}
     function animate(){ctx.clearRect(0,0,canvas.width,canvas.height);pts.forEach(p=>{p.update();p.draw()});connect();animId=requestAnimationFrame(animate)}
 init(); animate()
 
-    // â”€â”€ PLANETS & COMETS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── PLANETS & COMETS ──────────────────────────────────────────
     let planets = [], comets2 = [], planetAnimId
 
     class Planet {
@@ -556,7 +558,7 @@ init(); animate()
     const handleResize2 = () => { canvas2.width = window.innerWidth; canvas2.height = window.innerHeight }
     window.addEventListener('resize', handleResize2)
     drawPlanets()
-    // â”€â”€ END PLANETS & COMETS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── END PLANETS & COMETS ──────────────────────────────────────
 
     return () => {
       window.removeEventListener('resize', onResize)
@@ -671,13 +673,13 @@ const submitProfileUpdate = async e => {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 
-    setMsg('âœ… Profile update request submitted successfully!')
+    setMsg('✅ Profile update request submitted successfully!')
     setMsgType('success')
     setShowProfileEdit(false)
     setUpdateMessage('')
     setProofDocument(null)
   } catch (err) {
-    setMsg('âŒ Error: ' + JSON.stringify(err.response?.data || err.message))
+    setMsg('❌ Error: ' + JSON.stringify(err.response?.data || err.message))
     setMsgType('error')
   }
 }
@@ -701,7 +703,7 @@ const fetchMetalPrices = async () => {
   setMetalLoading(false)
 }
 
-// â”€â”€ COIN REQUEST helpers â”€â”€
+// ── COIN REQUEST helpers ──
 const COIN_WEIGHTS_GOLD = [
   { label: '50 mg', grams: 0.05 }, { label: '100 mg', grams: 0.10 }, { label: '150 mg', grams: 0.15 },
   { label: '200 mg', grams: 0.20 }, { label: '500 mg', grams: 0.50 }, { label: '1 gm', grams: 1 },
@@ -712,11 +714,11 @@ const COIN_WEIGHTS_SILVER = [
   { label: '5 gm', grams: 5 }, { label: '10 gm', grams: 10 }, { label: '20 gm', grams: 20 },
   { label: '50 gm', grams: 50 }, { label: '100 gm', grams: 100 },
 ]
-const COIN_METAL_LABELS = { gold_22k: 'ðŸ… Gold 22K', gold_24k: 'ðŸ¥‡ Gold 24K', silver_999: 'ðŸ¥ˆ Silver 999' }
+const COIN_METAL_LABELS = { gold_22k: '🏅 Gold 22K', gold_24k: '🥇 Gold 24K', silver_999: '🥈 Silver 999' }
 
 const addToCoinCart = () => {
   if (!selCoinWeight || !selCoinQty || Number(selCoinQty) < 1) {
-    setCoinBuyMsg('âŒ Weight & Qty select pannunga')
+    setCoinBuyMsg('❌ Weight & Qty select pannunga')
     return
   }
   const weightsArr = selCoinMetal === 'silver_999' ? COIN_WEIGHTS_SILVER : COIN_WEIGHTS_GOLD
@@ -734,17 +736,17 @@ const removeCoinCartItem = (idx) => {
 
 const submitCoinRequest = async () => {
   if (coinCart.length === 0) {
-    setCoinBuyMsg('âŒ Ore item aavathu add pannunga')
+    setCoinBuyMsg('❌ Ore item aavathu add pannunga')
     return
   }
   setCoinBuySubmitting(true)
   try {
     await api.post('/coin-requests/', { items: coinCart })
-    setCoinBuyMsg('âœ… Request Sub Dealer-ku anupitten!')
+    setCoinBuyMsg('✅ Request Sub Dealer-ku anupitten!')
     setCoinCart([])
     setTimeout(() => { setShowBuyCoin(false); setCoinBuyMsg('') }, 1400)
   } catch (err) {
-    setCoinBuyMsg('âŒ Failed: ' + JSON.stringify(err.response?.data || err.message))
+    setCoinBuyMsg('❌ Failed: ' + JSON.stringify(err.response?.data || err.message))
   }
   setCoinBuySubmitting(false)
 }
@@ -800,13 +802,13 @@ function extractIdsFromTitle(title) {
     try {
       await api.post(`/announcements/${replyAnn.id}/replies/`, { message: replyText })
       setRepliedIds(prev => new Set([...prev, replyAnn.id]))
-      setReplyMsg('âœ… Wish sent!')
+      setReplyMsg('✅ Wish sent!')
       setReplyText('')
     } catch (err) {
       if (err.response?.data?.error === 'Already replied') {
         setRepliedIds(prev => new Set([...prev, replyAnn.id]))
-        setReplyMsg('âš ï¸ Already sent!')
-      } else { setReplyMsg('âŒ Failed.') }
+        setReplyMsg('⚠️ Already sent!')
+      } else { setReplyMsg('❌ Failed.') }
     }
     setReplyLoading(false)
   }
@@ -852,12 +854,12 @@ const handleSubmit = async e => {
   e.preventDefault()
 
   if (form.married_status === 'married' && !form.anniversary_date) {
-    setMsg('âŒ Please enter Anniversary Date!'); setMsgType('error')
+    setMsg('❌ Please enter Anniversary Date!'); setMsgType('error')
     return
   }
 
   if (form.password !== confirmPassword) {
-    setPasswordError('âŒ Passwords do not match')
+    setPasswordError('❌ Passwords do not match')
     return
   }
 
@@ -867,12 +869,12 @@ const handleSubmit = async e => {
     if (payload.married_status !== 'married') delete payload.anniversary_date
 
     await api.post('/customers/', payload)
-    setMsg('âœ… Customer created successfully!'); setMsgType('success')
+    setMsg('✅ Customer created successfully!'); setMsgType('success')
     setShowForm(false); fetchAll(); setForm(emptyForm)
     setConfirmPassword(''); setPasswordError('')
   } catch(err) {
     console.log('ERROR:', JSON.stringify(err.response?.data, null, 2))
-    setMsg('âŒ Error: ' + JSON.stringify(err.response?.data)); setMsgType('error')
+    setMsg('❌ Error: ' + JSON.stringify(err.response?.data)); setMsgType('error')
   }
 }
 
@@ -914,87 +916,53 @@ const handleSubmit = async e => {
         <div key={p.id} style={{ position:'absolute', left:`${p.x}%`, bottom:'-100px', width:p.size, height:p.size, borderRadius:'40% 60% 60% 40% / 40% 40% 60% 60%', border:`1px solid ${accent}44`, opacity:p.opacity, animation:`antigravity ${p.duration}s ${p.delay}s infinite linear`, '--op':p.opacity, pointerEvents:'none', zIndex:0 }} />
       ))}
 
-      {/* Navbar */}
-      <div style={{ position:'relative', zIndex:10, background: glass, borderBottom:`1px solid ${border}`, padding:'18px 40px', display:'flex', justifyContent:'space-between', alignItems:'center', backdropFilter:'blur(16px)' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'12px', marginLeft:'10px' }}>
-          <img src={logo} alt="BitByte Logo" style={{ width:60, height:50, borderRadius:'10px', objectFit:'contain' }} />
-          <span style={{ color:'#F3E8DE', fontWeight:700, fontSize:'14px' }}>ðŸŒŸ Promotor Dashboard</span>
-        </div>
-        <div style={{ display:'flex', alignItems:'center', gap:'14px' }}>
-<div
-  onClick={() => setShowProfile(true)}
-  style={{ cursor:'pointer', width:'38px', height:'38px', borderRadius:'50%', background:'linear-gradient(135deg,rgba(201,32,53,0.25),rgba(204,168,129,0.15))', border:'2px solid rgba(201,32,53,0.5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'18px', transition:'all 0.25s ease' }}
-  onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(201,32,53,0.3)' }}
-  onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='none' }}
->ðŸŒŸ</div>
-
-          {/* ðŸª™ Buy Coin Button */}
-          <div
-            onClick={() => { setShowBuyCoin(true); setCoinCart([]); setCoinBuyMsg('') }}
-            style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(204,168,129,0.4)', background: 'rgba(204,168,129,0.1)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            <span style={{ fontSize: '15px' }}>ðŸª™</span>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#CCA881' }}>Buy Coin</span>
-          </div>
-
-          {/* ðŸ“¦ Stored Coin Button */}
-          <div
-            onClick={() => { setShowStoredCoin(true); fetchCoinStock() }}
-            style={{ cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(12,64,68,0.4)', background: 'rgba(12,64,68,0.1)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            <span style={{ fontSize: '15px' }}>ðŸ“¦</span>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#0C4044' }}>Stored Coin</span>
-          </div>
-
-          {/* ðŸ§¾ My Coin Requests Button */}
-          <div
-            onClick={() => { setShowMyRequests(true); fetchMyCoinRequests() }}
-            style={{ position: 'relative', cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(12,64,68,0.4)', background: 'rgba(12,64,68,0.1)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(12,64,68,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 12h6M9 16h6M9 8h6"/>
-              <rect x="4" y="4" width="16" height="16" rx="2"/>
-            </svg>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#0C4044' }}>My Requests</span>
-            {myCoinRequests.filter(r => r.status === 'pending').length > 0 && (
-              <div style={{ position: 'absolute', top: '-7px', right: '-7px', background: 'linear-gradient(135deg,#0C4044,#BDCFCE)', color: '#FDFDFC', borderRadius: '50%', minWidth: '18px', height: '18px', fontSize: '9px', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', boxShadow: '0 2px 8px rgba(12,64,68,0.5)', border: '1.5px solid #FDFDFC' }}>
-                {myCoinRequests.filter(r => r.status === 'pending').length}
-              </div>
-            )}
-          </div>
-
-          {/* ðŸ“¢ Announcement Bell */}
-          <div
-            onClick={() => { setShowAnnouncements(true); localStorage.setItem('promotorAnnouncementSeen', Date.now().toString()); setUnreadCount(0) }}
-            style={{ position: 'relative', cursor: 'pointer', padding: '6px', borderRadius: '10px', border: '1px solid rgba(201,32,53,0.35)', background: 'rgba(201,32,53,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,32,53,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(201,32,53,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            <span style={{ fontSize: '18px', lineHeight: 1 }}>ðŸ“¢</span>
-            {unreadCount > 0 && (
-              <div style={{ position: 'absolute', top: '-7px', right: '-7px', background: 'linear-gradient(135deg,#C92035,#CCA881)', color: '#FDFDFC', borderRadius: '50%', minWidth: '18px', height: '18px', fontSize: '9px', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', boxShadow: '0 2px 8px rgba(201,32,53,0.5)', border: '1.5px solid #FDFDFC' }}>
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </div>
-            )}
-          </div>
-
-          <button onClick={() => setDark(!dark)}         
-            style={{ padding:'8px 16px', borderRadius:'16px', border:`1px solid ${border}`, background:'transparent', color: text, cursor:'pointer', fontWeight:600, fontSize:'13px' }}>
-            {dark ? 'â˜€ï¸ Light' : 'ðŸŒ™ Dark'}
-          </button>
-          <button onClick={() => { localStorage.clear(); navigate('/login') }} style={{ padding:'8px 18px', background:'rgba(201,32,53,0.1)', border:'1px solid rgba(201,32,53,0.3)', color:'#C92035', borderRadius:'10px', fontSize:'13px', cursor:'pointer' }}>
-            Logout
-          </button>
-        </div>
-      </div>
-
-      <div style={{ position:'relative', zIndex:10, padding:'36px 40px', maxWidth:'1200px', margin:'0 auto' }}>
+      <InternalRoleNavbar
+        roleTitle="PROMOTER"
+        homePath="/promotor"
+        managementItems={[
+          { label: 'Dashboard', path: '/promotor' },
+          { label: 'Customer Hierarchy', path: '/promotor-hierarchy' },
+          { label: 'Create Customer', action: () => setShowForm(true) },
+        ]}
+        celebrationItems={[
+          { label: "Today's Birthdays", action: () => navigate('/promotor') },
+          { label: "Today's Anniversaries", action: () => navigate('/promotor') },
+          { label: 'Work Anniversaries', action: () => navigate('/promotor') },
+        ]}
+        announcementItems={[
+          { label: 'View Announcements', action: () => { setShowAnnouncements(true); localStorage.setItem('promotorAnnouncementSeen', Date.now().toString()); setUnreadCount(0) }, badge: unreadCount },
+        ]}
+        coinItems={[
+          { label: 'Buy Coin', path: '/buy-coin' },
+          { label: 'Stored Coin', path: '/stored-coins' },
+          { label: 'My Requests', path: '/coin-requests-page', badge: myCoinRequests.filter(r => r.status === 'pending').length },
+          { label: 'Coin Transactions', path: '/coin-transactions' },
+        ]}
+        reportItems={[
+          { label: 'Customer Hierarchy Tree', path: '/promotor-hierarchy' },
+          { label: 'Customer Hierarchy Grid', path: '/promotor-hierarchy-grid' },
+          { label: 'Sales Report', path: '/sales-report' },
+        ]}
+        actionItems={[
+          { label: 'Profile', icon: 'user', action: () => setShowProfile(true) },
+          { label: 'Announcements', icon: 'bell', action: () => { setShowAnnouncements(true); localStorage.setItem('promotorAnnouncementSeen', Date.now().toString()); setUnreadCount(0) }, badge: unreadCount },
+          { label: 'Logout', icon: 'logout', variant: 'danger', action: () => { localStorage.clear(); navigate('/login') } },
+        ]}
+      />
+      <InternalRoleDashboardFrame
+        roleName="Promoter"
+        focusLabel="Customers"
+        focusCount={customers.length}
+        roleDistribution={[
+          { name: 'Customer', value: customers.length, color: '#C92035' },
+        ]}
+        quickActions={[
+          { label: 'Customer Hierarchy Tree', icon: 'store', onClick: () => setShowHierarchy(true) },
+          { label: 'Customer Hierarchy Grid', icon: 'store', onClick: () => navigate('/promotor-hierarchy-grid') },
+          { label: 'Sales Report', icon: 'report', onClick: () => navigate('/sales-report') },
+          { label: 'Create Customer', icon: 'users', onClick: () => setShowForm(true) },
+        ]}
+      />      <div style={{ position:'relative', zIndex:10, padding:'36px 40px', maxWidth:'1200px', margin:'0 auto' }}>
         {msg && (
           <div style={{ background: msgType==='success'?'rgba(201,32,53,0.1)':'rgba(201,32,53,0.1)', border:`1px solid ${msgType==='success'?'rgba(201,32,53,0.25)':'rgba(201,32,53,0.3)'}`, color: msgType==='success'?'#C92035':'#C92035', borderRadius:'12px', padding:'14px 20px', fontSize:'14px', marginBottom:'20px' }}>
             {msg}
@@ -1002,147 +970,18 @@ const handleSubmit = async e => {
         )}
 
 
-{(() => {
-  const WEIGHTS = [
-    { label: '50 mg',  grams: 0.05 },
-    { label: '100 mg', grams: 0.10 },
-    { label: '150 mg', grams: 0.15 },
-    { label: '200 mg', grams: 0.20 },
-    { label: '500 mg', grams: 0.50 },
-    { label: '1 gm',   grams: 1 },
-    { label: '2 gm',   grams: 2 },
-    { label: '4 gm',   grams: 4 },
-    { label: '8 gm',   grams: 8 },
-  ]
 
-  const METALS = [
-    {
-      key: 'gold22k', icon: 'ðŸ…', label: 'GOLD 22K',
-      price: metalPrices.gold22k,
-      cardBg: 'rgba(204,168,129,0.05)', cardBd: 'rgba(204,168,129,0.28)',
-      hoverShadow: '0 10px 28px rgba(204,168,129,0.22)',
-      coinShadow: '0 3px 10px rgba(204,168,129,0.4)',
-      pillBg: 'rgba(204,168,129,0.12)', pillBd: 'rgba(204,168,129,0.3)',
-      color: '#CCA881', img: goldCoin,
-    },
-    {
-      key: 'gold24k', icon: 'ðŸ¥‡', label: 'GOLD 24K',
-      price: metalPrices.gold24k,
-      cardBg: 'rgba(204,168,129,0.05)', cardBd: 'rgba(204,168,129,0.28)',
-      hoverShadow: '0 10px 28px rgba(204,168,129,0.22)',
-      coinShadow: '0 3px 10px rgba(204,168,129,0.5)',
-      pillBg: 'rgba(204,168,129,0.12)', pillBd: 'rgba(204,168,129,0.3)',
-      color: '#CCA881', img: goldCoin,
-    },
-    {
-      key: 'silver', icon: 'ðŸ¥ˆ', label: 'SILVER 999',
-      price: metalPrices.silver,
-      cardBg: 'rgba(192,192,192,0.04)', cardBd: 'rgba(192,192,192,0.22)',
-      hoverShadow: '0 10px 28px rgba(192,192,192,0.15)',
-      coinShadow: '0 3px 10px rgba(192,192,192,0.4)',
-      pillBg: 'rgba(192,192,192,0.1)', pillBd: 'rgba(192,192,192,0.25)',
-      color: '#BDCFCE', img: silverCoin,
-    },
-  ]
-
-  return (
-    <div style={{ background: cardBg, border: cardBorder, borderRadius: '20px', padding: '28px 32px', marginBottom: '24px' }}>
-
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-        <span style={{ fontSize: '22px' }}>âš–ï¸</span>
-        <div>
-          <div style={{ color: '#F3E8DE', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em' }}>
-            Today's Gold & Silver Rates
-          </div>
-          <div style={{ color: subtext, fontSize: '10px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span>ðŸ“ Chennai, India</span>
-            <span style={{ opacity: 0.4 }}>â€¢</span>
-            <span>â‚¹ per gram</span>
-            <span style={{ opacity: 0.4 }}>â€¢</span>
-            {dbRateDate ? (
-              <span style={{ color: '#0C4044', fontSize: '9px', fontWeight: 700 }}>
-                ðŸ“… {new Date(dbRateDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
-              </span>
-            ) : (
-              <span style={{ color: '#C92035', fontSize: '9px', fontWeight: 700 }}>No rate entered yet</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Metal Sections */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {METALS.map(m => (
-          <div key={m.key}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-              <span style={{ fontSize: '15px' }}>{m.icon}</span>
-              <span style={{ color: m.color, fontWeight: 800, fontSize: '11px', letterSpacing: '1px' }}>{m.label}</span>
-              {m.price && (
-                <span style={{ color: m.color, fontSize: '10px', opacity: 0.55 }}>â‚¹{m.price.toFixed(2)}/gm</span>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', gap: '5px', flexWrap: 'nowrap' }}>
-              {WEIGHTS.map((w, i) => (
-                <div
-                  key={w.label}
-                  className="metal-card"
-                  style={{
-                    flex: 1, minWidth: 0,
-                    background: m.cardBg,
-                    border: `1px solid ${m.cardBd}`,
-                    animationDelay: `${i * 0.06}s`,
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.boxShadow = m.hoverShadow }}
-                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 0' }}>
-                    <img
-                      src={m.img}
-                      alt={m.label}
-                      style={{
-                        width: '46px', height: '46px', objectFit: 'contain',
-                        filter: `drop-shadow(0 2px 6px ${m.color}66)`,
-                        boxShadow: m.coinShadow,
-                        borderRadius: '50%',
-                      }}
-                    />
-                  </div>
-                  <div style={{ padding: '6px 4px 8px', textAlign: 'center' }}>
-                    <div style={{
-                      display: 'inline-block', fontSize: '9px', fontWeight: 800,
-                      color: m.color, background: m.pillBg,
-                      border: `1px solid ${m.pillBd}`,
-                      borderRadius: '20px', padding: '2px 7px', marginBottom: '5px',
-                    }}>
-                      {w.label}
-                    </div>
-                    <div style={{ color: m.color, fontWeight: 900, fontSize: '11px', fontFamily: 'monospace', paddingBottom: '4px' }}>
-                      {m.price != null ? `â‚¹${(w.grams * m.price).toFixed(2)}` : 'â€”'}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-    </div>
-  )
-})()}
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px' }}>
           <h2 style={{ fontSize:'22px', fontWeight:800, margin:0 }}>Customer Management</h2>
           <div style={{ display:'flex', gap:'12px' }}>
             <button onClick={() => navigate('/sales-report')}
   style={{ padding:'11px 28px', background:'rgba(12,64,68,0.08)', border:'1px solid rgba(12,64,68,0.3)', borderRadius:'12px', fontWeight:700, color:'#0C4044', fontSize:'14px', cursor:'pointer' }}>
-  ðŸ“Š Sales Report
+  📊 Sales Report
 </button>
 <button onClick={() => navigate('/promotor-hierarchy')}
   style={{ padding:'11px 28px', background:'rgba(201,32,53,0.08)', border:'1px solid rgba(201,32,53,0.3)', borderRadius:'12px', fontWeight:700, color:'#F3E8DE', fontSize:'14px', cursor:'pointer' }}>
-  ðŸ¢ Customer Hierarchy
+  🏢 Customer Hierarchy
 </button>
             <button onClick={() => setShowForm(!showForm)} className="pr-grad-btn"
               style={{ padding:'11px 28px', background:'#073B3F', border:'none', borderRadius:'12px', fontWeight:800, color:'#3b0024', fontSize:'14px', cursor:'pointer' }}>
@@ -1158,10 +997,10 @@ const handleSubmit = async e => {
       {/* Header */}
       <div style={{ padding:'22px 28px', borderBottom:'1px solid rgba(201,32,53,0.16)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <div>
-          <div style={{ color:'#C92035', fontWeight:900, fontSize:'15px', letterSpacing:'1px' }}>âœŽ PROFILE UPDATE REQUEST</div>
+          <div style={{ color:'#C92035', fontWeight:900, fontSize:'15px', letterSpacing:'1px' }}>✎ PROFILE UPDATE REQUEST</div>
           <div style={{ color:subtext, fontSize:'12px', marginTop:'4px' }}>Existing details compare pannitu correct details full ah enter pannunga</div>
         </div>
-        <button type="button" onClick={() => setShowProfileEdit(false)} style={{ background:'rgba(201,32,53,0.1)', border:'1px solid rgba(201,32,53,0.3)', color:'#C92035', borderRadius:'8px', padding:'7px 14px', cursor:'pointer' }}>âœ• Close</button>
+        <button type="button" onClick={() => setShowProfileEdit(false)} style={{ background:'rgba(201,32,53,0.1)', border:'1px solid rgba(201,32,53,0.3)', color:'#C92035', borderRadius:'8px', padding:'7px 14px', cursor:'pointer' }}>✕ Close</button>
       </div>
 
       {/* Body */}
@@ -1184,7 +1023,7 @@ const handleSubmit = async e => {
                   {label}
                 </td>
                 <td style={{ padding:'12px 14px', border:'1px solid rgba(253,253,252,0.08)', color:text, wordBreak:'break-all' }}>
-                  {promotorInfo?.[key] || 'â€”'}
+                  {promotorInfo?.[key] || '—'}
                 </td>
                 <td style={{ padding:'10px', border:'1px solid rgba(253,253,252,0.08)' }}>
 
@@ -1278,7 +1117,7 @@ const handleSubmit = async e => {
           />
           {proofDocument && (
             <div style={{ color:'#0C4044', fontSize:'12px', marginTop:'8px' }}>
-              âœ… Selected: {proofDocument.name}
+              ✅ Selected: {proofDocument.name}
             </div>
           )}
           <div style={{ color:subtext, fontSize:'12px', marginTop:'8px' }}>
@@ -1321,21 +1160,21 @@ const handleSubmit = async e => {
       {/* Header */}
       <div style={{ flexShrink:0, padding:'24px 28px', borderBottom:'1px solid rgba(201,32,53,0.15)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'14px' }}>
-          <div style={{ width:'48px', height:'48px', borderRadius:'14px', background:'linear-gradient(135deg,rgba(201,32,53,0.25),rgba(204,168,129,0.15))', border:'2px solid rgba(201,32,53,0.5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'22px', boxShadow:'0 4px 16px rgba(201,32,53,0.2)' }}>ðŸŒŸ</div>
+          <div style={{ width:'48px', height:'48px', borderRadius:'14px', background:'linear-gradient(135deg,rgba(201,32,53,0.25),rgba(204,168,129,0.15))', border:'2px solid rgba(201,32,53,0.5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'22px', boxShadow:'0 4px 16px rgba(201,32,53,0.2)' }}>🌟</div>
           <div>
             <div style={{ color:'#C92035', fontWeight:800, fontSize:'15px', letterSpacing:'0.05em' }}>MY PROFILE</div>
-            <div style={{ color:subtext, fontSize:'11px', marginTop:'3px', fontFamily:'monospace' }}>{promotorInfo?.promotor_id || 'â€”'}</div>
+            <div style={{ color:subtext, fontSize:'11px', marginTop:'3px', fontFamily:'monospace' }}>{promotorInfo?.promotor_id || '—'}</div>
           </div>
         </div>
         <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
           <button
             onClick={() => { setShowProfile(false); openProfileEdit() }}
             style={{ background:'rgba(201,32,53,0.12)', border:'1px solid rgba(201,32,53,0.35)', color:'#C92035', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'12px', fontWeight:800 }}
-          >âœŽ Edit</button>
+          >✎ Edit</button>
           <button
             onClick={() => setShowProfile(false)}
             style={{ background:'rgba(201,32,53,0.1)', border:'1px solid rgba(201,32,53,0.3)', color:'#C92035', borderRadius:'8px', padding:'6px 14px', cursor:'pointer', fontSize:'12px' }}
-          >âœ• Close</button>
+          >✕ Close</button>
         </div>
       </div>
 
@@ -1389,7 +1228,7 @@ const handleSubmit = async e => {
                 ].map(f => (
                   <div key={f.label}>
                     <div style={{ color:subtext, fontSize:'10px', fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:'4px' }}>{f.label}</div>
-                    <div style={{ color:text, fontSize:'13px' }}>{f.value || 'â€”'}</div>
+                    <div style={{ color:text, fontSize:'13px' }}>{f.value || '—'}</div>
                   </div>
                 ))}
               </div>
@@ -1409,7 +1248,7 @@ const handleSubmit = async e => {
                   <div key={f.label}>
                     <div style={{ color:subtext, fontSize:'10px', fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:'4px' }}>{f.label}</div>
                     <div style={{ color:text, fontSize:'13px', fontFamily:'monospace' }}>
-                      {f.mask && f.value ? `XXXX-XXXX-${f.value.slice(-4)}` : (f.value || 'â€”')}
+                      {f.mask && f.value ? `XXXX-XXXX-${f.value.slice(-4)}` : (f.value || '—')}
                     </div>
                   </div>
                 ))}
@@ -1426,11 +1265,11 @@ const handleSubmit = async e => {
                 {[
                   { label:'Type',          value:promotorInfo.occupation },
                   { label:'Detail',        value:promotorInfo.occupation_detail },
-                  { label:'Annual Salary', value:promotorInfo.annual_salary ? `â‚¹ ${Number(promotorInfo.annual_salary).toLocaleString('en-IN')}` : 'â€”' },
+                  { label:'Annual Salary', value:promotorInfo.annual_salary ? `₹ ${Number(promotorInfo.annual_salary).toLocaleString('en-IN')}` : '—' },
                 ].map(f => (
                   <div key={f.label}>
                     <div style={{ color:subtext, fontSize:'10px', fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:'4px' }}>{f.label}</div>
-                    <div style={{ color:text, fontSize:'13px' }}>{f.value || 'â€”'}</div>
+                    <div style={{ color:text, fontSize:'13px' }}>{f.value || '—'}</div>
                   </div>
                 ))}
               </div>
@@ -1447,11 +1286,11 @@ const handleSubmit = async e => {
                   { label:'Sub Dealer ID',      value:promotorInfo.sub_dealer_id,      mono:true, color:'#C92035' },
                   { label:'Sub Dealer Name',     value:promotorInfo.sub_dealer_name },
                   { label:'Contact No',          value:promotorInfo.sub_dealer_contact_no },
-                  { label:'Member Since',        value:promotorInfo.created_at ? new Date(promotorInfo.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}) : 'â€”' },
+                  { label:'Member Since',        value:promotorInfo.created_at ? new Date(promotorInfo.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}) : '—' },
                 ].map(f => (
                   <div key={f.label}>
                     <div style={{ color:subtext, fontSize:'10px', fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', marginBottom:'4px' }}>{f.label}</div>
-                    <div style={{ color:f.color||text, fontSize:'13px', fontFamily:f.mono?'monospace':'inherit', fontWeight:f.mono?700:500 }}>{f.value || 'â€”'}</div>
+                    <div style={{ color:f.color||text, fontSize:'13px', fontFamily:f.mono?'monospace':'inherit', fontWeight:f.mono?700:500 }}>{f.value || '—'}</div>
                   </div>
                 ))}
               </div>
@@ -1464,17 +1303,17 @@ const handleSubmit = async e => {
 )}
 
 
-{/* â”€â”€ BUY COIN POPUP (multi-weight, becomes a request) â”€â”€ */}
+{/* ── BUY COIN POPUP (multi-weight, becomes a request) ── */}
   {showBuyCoin && (
     <div onClick={() => setShowBuyCoin(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.88)', backdropFilter: 'blur(12px)', zIndex: 1400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(204,168,129,0.4)', borderRadius: '24px', width: '95%', maxWidth: '560px', maxHeight: '88vh', overflowY: 'auto', padding: '28px', boxShadow: '0 32px 90px rgba(17,24,23,0.8)' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
-            <div style={{ color: '#CCA881', fontWeight: 900, fontSize: '16px' }}>ðŸª™ Buy Coin â€” Request</div>
+            <div style={{ color: '#CCA881', fontWeight: 900, fontSize: '16px' }}>🪙 Buy Coin — Request</div>
             <div style={{ color: subtext, fontSize: '11px', marginTop: '3px' }}>Athana coin type um weight um add pannunga, appuram Sub Dealer-ku request anuppunga</div>
           </div>
-          <button onClick={() => setShowBuyCoin(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>âœ• Close</button>
+          <button onClick={() => setShowBuyCoin(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>✕ Close</button>
         </div>
 
         {/* Metal select */}
@@ -1520,15 +1359,15 @@ const handleSubmit = async e => {
           <div style={{ marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {coinCart.map((item, idx) => (
               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '10px' }}>
-                <span style={{ color: text, fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS[item.metal_type]} â€” {item.weight_label} Ã— {item.qty}</span>
-                <button onClick={() => removeCoinCartItem(idx)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', fontSize: '11px' }}>âœ•</button>
+                <span style={{ color: text, fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS[item.metal_type]} — {item.weight_label} × {item.qty}</span>
+                <button onClick={() => removeCoinCartItem(idx)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', fontSize: '11px' }}>✕</button>
               </div>
             ))}
           </div>
         )}
 
         {coinBuyMsg && (
-          <div style={{ background: coinBuyMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${coinBuyMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: coinBuyMsg.includes('âœ…') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>
+          <div style={{ background: coinBuyMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${coinBuyMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: coinBuyMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>
             {coinBuyMsg}
           </div>
         )}
@@ -1537,28 +1376,28 @@ const handleSubmit = async e => {
           disabled={coinBuySubmitting || coinCart.length === 0}
           onClick={submitCoinRequest}
           style={{ width: '100%', padding: '14px', background: coinBuySubmitting || coinCart.length === 0 ? 'rgba(201,32,53,0.2)' : 'linear-gradient(90deg,#C92035,#CCA881)', border: 'none', borderRadius: '12px', fontWeight: 900, fontSize: '14px', color: '#FDFDFC', cursor: coinBuySubmitting || coinCart.length === 0 ? 'not-allowed' : 'pointer' }}>
-          {coinBuySubmitting ? 'â³ Sending Request...' : 'âœ… Confirm & Send Request'}
+          {coinBuySubmitting ? '⏳ Sending Request...' : '✅ Confirm & Send Request'}
         </button>
       </div>
     </div>
   )}
 
-  {/* â”€â”€ STORED COIN POPUP â”€â”€ */}
+  {/* ── STORED COIN POPUP ── */}
   {showStoredCoin && (
     <div onClick={() => setShowStoredCoin(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.82)', backdropFilter: 'blur(10px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '24px', width: '95%', maxWidth: '520px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}>
         <div style={{ flexShrink: 0, padding: '22px 26px', borderBottom: '1px solid rgba(12,64,68,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ color: '#0C4044', fontWeight: 800, fontSize: '15px' }}>ðŸ“¦ Stored Coins</div>
+            <div style={{ color: '#0C4044', fontWeight: 800, fontSize: '15px' }}>📦 Stored Coins</div>
             <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>Sub Dealer send pannina coin stock</div>
           </div>
-          <button onClick={() => setShowStoredCoin(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>âœ• Close</button>
+          <button onClick={() => setShowStoredCoin(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>✕ Close</button>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 26px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {coinStockLoading ? (
             <div style={{ textAlign: 'center', color: subtext, padding: '40px 0' }}>Loading...</div>
           ) : coinStock.length === 0 ? (
-            <div style={{ textAlign: 'center', color: subtext, padding: '40px 0' }}>Stock illa â€” Buy Coin request pannunga</div>
+            <div style={{ textAlign: 'center', color: subtext, padding: '40px 0' }}>Stock illa — Buy Coin request pannunga</div>
           ) : coinStock.map(s => (
             <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'rgba(12,64,68,0.06)', border: '1px solid rgba(12,64,68,0.25)', borderRadius: '12px' }}>
               <div>
@@ -1573,7 +1412,7 @@ const handleSubmit = async e => {
     </div>
   )}
 
-{/* â”€â”€ MY COIN REQUESTS (STATUS TRACKING) POPUP â”€â”€ */}
+{/* ── MY COIN REQUESTS (STATUS TRACKING) POPUP ── */}
   {showMyRequests && (
     <div onClick={() => setShowMyRequests(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.82)', backdropFilter: 'blur(10px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '24px', width: '95%', maxWidth: '600px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}>
@@ -1632,8 +1471,8 @@ const handleSubmit = async e => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {req.items.map(item => (
                     <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: inpBg, borderRadius: '8px', fontSize: '12px' }}>
-                      <span style={{ color: text }}>{COIN_METAL_LABELS[item.metal_type]} â€” {item.weight_label}</span>
-                      <span style={{ color: cfg.color, fontWeight: 700 }}>Ã— {item.qty}</span>
+                      <span style={{ color: text }}>{COIN_METAL_LABELS[item.metal_type]} — {item.weight_label}</span>
+                      <span style={{ color: cfg.color, fontWeight: 700 }}>× {item.qty}</span>
                     </div>
                   ))}
                 </div>
@@ -1652,7 +1491,7 @@ const handleSubmit = async e => {
     </div>
   )}
 
-  {/* â”€â”€ HIERARCHY MODAL â”€â”€ */}
+  {/* ── HIERARCHY MODAL ── */}
 {showHierarchy && (
   <div
     onClick={() => { setShowHierarchy(false); removePRChainPopup() }}
@@ -1666,7 +1505,7 @@ const handleSubmit = async e => {
       {/* HEADER - fixed top */}
       <div style={{ flexShrink: 0, padding: '20px 28px', borderBottom: '1px solid rgba(201,32,53,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <span style={{ color: '#F3E8DE', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>ðŸ¢ Customer Hierarchy</span>
+          <span style={{ color: '#F3E8DE', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>🏢 Customer Hierarchy</span>
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
             {[
               { label: 'Customers', count: customers.length, color: '#C92035' },
@@ -1681,7 +1520,7 @@ const handleSubmit = async e => {
         <button
           onClick={() => { setShowHierarchy(false); removePRChainPopup() }}
           style={{ background: 'transparent', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
-        >âœ• Close</button>
+        >✕ Close</button>
       </div>
 
       {/* SCROLL AREA - middle scrolls */}
@@ -1690,7 +1529,7 @@ const handleSubmit = async e => {
 
           {/* Promotor Root Node */}
           <div style={{ background: 'linear-gradient(135deg,rgba(201,32,53,0.13),rgba(204,168,129,0.08))', border: '1px solid rgba(201,32,53,0.55)', borderRadius: '16px', padding: '16px 48px', fontWeight: 800, fontSize: '16px', color: '#C92035', animation: 'prPulseGlow 3s ease-in-out infinite', boxShadow: '0 0 24px rgba(201,32,53,0.1)', textAlign: 'center' }}>
-            ðŸŒŸ Promotor
+            🌟 Promotor
             <div style={{ fontSize: '11px', color: '#7A8987', fontWeight: 400, marginTop: '4px' }}>
               {localStorage.getItem('email')}
             </div>
@@ -1729,8 +1568,8 @@ const handleSubmit = async e => {
       {/* LEGEND - fixed bottom */}
       <div style={{ flexShrink: 0, padding: '14px 28px', borderTop: '1px solid rgba(201,32,53,0.08)', display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
         {[
-          { role: 'Promotor', color: '#C92035', emoji: 'ðŸŒŸ' },
-          { role: 'Customer', color: '#CCA881', emoji: 'ðŸ‘¤' },
+          { role: 'Promotor', color: '#C92035', emoji: '🌟' },
+          { role: 'Customer', color: '#CCA881', emoji: '👤' },
         ].map(l => (
           <div key={l.role} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ width: 9, height: 9, borderRadius: '50%', background: l.color }} />
@@ -1738,7 +1577,7 @@ const handleSubmit = async e => {
           </div>
         ))}
         <div style={{ color: subtext, fontSize: '11px', width: '100%', textAlign: 'center' }}>
-          ðŸ’¡ Hover any node to see full hierarchy chain
+          💡 Hover any node to see full hierarchy chain
         </div>
       </div>
 
@@ -1747,19 +1586,19 @@ const handleSubmit = async e => {
 )}
 
 
-{/* â”€â”€ ANNOUNCEMENT VIEW MODAL (Promotor) â”€â”€ */}
+{/* ── ANNOUNCEMENT VIEW MODAL (Promotor) ── */}
 {showAnnouncements && (
   <div onClick={() => setShowAnnouncements(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.82)', backdropFilter: 'blur(10px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
     <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(201,32,53,0.3)', borderRadius: '24px', width: '95%', maxWidth: '560px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.6)', animation: 'fadeIn 0.3s cubic-bezier(0.22,1,0.36,1)' }}>
       <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(201,32,53,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg,rgba(201,32,53,0.25),rgba(204,168,129,0.15))', border: '1px solid rgba(201,32,53,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>ðŸ“¢</div>
+          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg,rgba(201,32,53,0.25),rgba(204,168,129,0.15))', border: '1px solid rgba(201,32,53,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>📢</div>
           <div>
             <div style={{ color: '#C92035', fontWeight: 800, fontSize: '14px' }}>ANNOUNCEMENTS</div>
             <div style={{ color: subtext, fontSize: '11px', marginTop: '2px' }}>{announcements.length} total from Super Admin</div>
           </div>
         </div>
-        <button onClick={() => setShowAnnouncements(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>âœ• Close</button>
+        <button onClick={() => setShowAnnouncements(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>✕ Close</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {announcements.length === 0 ? (
@@ -1772,13 +1611,13 @@ const handleSubmit = async e => {
             <div key={ann.id} style={{ background: idx === 0 ? (dark ? 'rgba(201,32,53,0.07)' : 'rgba(201,32,53,0.05)') : (dark ? 'rgba(253,253,252,0.02)' : 'rgba(17,24,23,0.02)'), border: `1px solid ${idx === 0 ? 'rgba(201,32,53,0.35)' : (dark ? 'rgba(253,253,252,0.06)' : 'rgba(17,24,23,0.08)')}`, borderRadius: '14px', padding: '16px 18px', position: 'relative' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {idx === 0 && <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: 'rgba(201,32,53,0.15)', color: '#C92035', border: '1px solid rgba(201,32,53,0.3)' }}>â— NEW</span>}
+                  {idx === 0 && <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: 'rgba(201,32,53,0.15)', color: '#C92035', border: '1px solid rgba(201,32,53,0.3)' }}>● NEW</span>}
                   <span style={{ color: idx === 0 ? '#C92035' : text, fontWeight: 700, fontSize: '14px' }}>{ann.title}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ color: subtext, fontSize: '10px', whiteSpace: 'nowrap' }}>{new Date(ann.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                   <button disabled={alreadyReplied} onClick={() => { setReplyAnn(ann); setReplyMsg(''); setReplyText('') }} style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 700, borderRadius: '20px', cursor: alreadyReplied ? 'not-allowed' : 'pointer', background: alreadyReplied ? 'rgba(253,253,252,0.05)' : 'rgba(201,32,53,0.15)', border: `1px solid ${alreadyReplied ? 'rgba(253,253,252,0.1)' : 'rgba(201,32,53,0.4)'}`, color: alreadyReplied ? subtext : '#C92035', whiteSpace: 'nowrap' }}>
-                    {alreadyReplied ? 'âœ“ Wished' : 'ðŸ’¬ Reply'}
+                    {alreadyReplied ? '✓ Wished' : '💬 Reply'}
                   </button>
                 </div>
               </div>
@@ -1799,7 +1638,7 @@ const handleSubmit = async e => {
     style={{ marginTop: '10px', display: 'flex', justifyContent: 'center' }}
   >
     <div style={{ fontSize: '10px', color: '#0C4044', padding: '3px 14px', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '20px', cursor: 'default', background: 'rgba(12,64,68,0.06)', fontWeight: 600 }}>
-      ðŸŽ‚ You are mentioned Â· {replies.length} wish{replies.length !== 1 ? 'es' : ''} â€” hover to see
+      🎂 You are mentioned · {replies.length} wish{replies.length !== 1 ? 'es' : ''} — hover to see
     </div>
   </div>
 )}
@@ -1812,27 +1651,27 @@ const handleSubmit = async e => {
 )}
 
 
-{/* â”€â”€ REPLY MODAL â€” Promotor â”€â”€ */}
+{/* ── REPLY MODAL — Promotor ── */}
 {replyAnn && (
   <div onClick={() => { setReplyAnn(null); setReplyMsg(''); setReplyText('') }} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.85)', backdropFilter: 'blur(12px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
     <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(201,32,53,0.3)', borderRadius: '20px', padding: '28px', width: '95%', maxWidth: '460px', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
         <div>
-          <div style={{ color: '#C92035', fontWeight: 800, fontSize: '14px' }}>ðŸ’¬ SEND YOUR WISH</div>
+          <div style={{ color: '#C92035', fontWeight: 800, fontSize: '14px' }}>💬 SEND YOUR WISH</div>
           <div style={{ color: subtext, fontSize: '11px', marginTop: '4px' }}>Replying to: <span style={{ color: text, fontWeight: 600 }}>{replyAnn.title}</span></div>
         </div>
-        <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>âœ•</button>
+        <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>✕</button>
       </div>
-      {replyMsg && <div style={{ background: replyMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${replyMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: replyMsg.includes('âœ…') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>{replyMsg}</div>}
+      {replyMsg && <div style={{ background: replyMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${replyMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: replyMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>{replyMsg}</div>}
       <textarea value={replyText} onChange={e => setReplyText(e.target.value)} rows={4} placeholder="Type your wish..." style={{ width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '10px', padding: '12px 14px', color: text, fontSize: '14px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.6', boxSizing: 'border-box' }} onFocus={e => e.target.style.borderColor = '#C92035'} onBlur={e => e.target.style.borderColor = inpBorder} />
       <button disabled={replyLoading || !replyText.trim()} onClick={submitReply} style={{ marginTop: '14px', width: '100%', padding: '13px', background: replyLoading || !replyText.trim() ? 'rgba(201,32,53,0.2)' : 'linear-gradient(90deg,#C92035,#CCA881)', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '14px', color: replyLoading || !replyText.trim() ? '#C92035' : '#3b0024', cursor: replyLoading || !replyText.trim() ? 'not-allowed' : 'pointer' }}>
-        {replyLoading ? 'â³ Sending...' : 'ðŸ’¬ Send Wish'}
+        {replyLoading ? '⏳ Sending...' : '💬 Send Wish'}
       </button>
     </div>
   </div>
 )}
 
-{/* â”€â”€ WISH HOVER POPUP â€” Admin â”€â”€ */}
+{/* ── WISH HOVER POPUP — Admin ── */}
 {replyPopupAnnId && (
   <div
     id="ad-wish-popup"
@@ -1857,7 +1696,7 @@ const handleSubmit = async e => {
   >
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(12,64,68,0.15)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(12,64,68,0.15)', border: '1px solid rgba(12,64,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>ðŸ’¬</div>
+        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(12,64,68,0.15)', border: '1px solid rgba(12,64,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>💬</div>
         <span style={{ fontSize: '10px', fontWeight: 800, color: '#0C4044', letterSpacing: '1.5px' }}>WISHES</span>
       </div>
       <div style={{ background: 'rgba(12,64,68,0.15)', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '20px', padding: '2px 10px', fontSize: '10px', color: '#0C4044', fontWeight: 800 }}>
@@ -1876,21 +1715,21 @@ const handleSubmit = async e => {
       </div>
     ))}
     <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(12,64,68,0.08)', textAlign: 'center', fontSize: '9px', color: dark ? '#7A8987' : '#111817', letterSpacing: '0.8px', fontWeight: 600 }}>
-      BitByte Network â€¢ Wishes
+      BitByte Network • Wishes
     </div>
   </div>
 )}
 
        
 
-        {/* â”€â”€ CREATE FORM â”€â”€ */}
-{/* â”€â”€ CREATE FORM â”€â”€ */}
+        {/* ── CREATE FORM ── */}
+{/* ── CREATE FORM ── */}
 {showForm && (
   <div style={card}>
     <p style={secHead('#F3E8DE')}>Create New Customer</p>
     <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:'18px' }}>
 
-      <p style={secLabel('#F3E8DE')}>ðŸ‘¤ Personal Info</p>
+      <p style={secLabel('#F3E8DE')}>👤 Personal Info</p>
 
       {/* Initial, First, Last */}
       <div style={{ display:'grid', gridTemplateColumns:'0.4fr 1fr 1fr', gap:'14px' }}>
@@ -1960,7 +1799,7 @@ const handleSubmit = async e => {
         </div>
       </div>
 
-      {/* Anniversary â€” only if married */}
+      {/* Anniversary — only if married */}
       {form.married_status === 'married' && (
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'14px' }}>
           <div>
@@ -1970,7 +1809,7 @@ const handleSubmit = async e => {
         </div>
       )}
 
-      <p style={secLabel('#F3E8DE')}>ðŸ“ Address</p>
+      <p style={secLabel('#F3E8DE')}>📍 Address</p>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'14px' }}>
         <div><label style={lbl}>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required className="pr-inp" style={inp}/></div>
         <div><label style={lbl}>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required className="pr-inp" style={inp}/></div>
@@ -1980,13 +1819,13 @@ const handleSubmit = async e => {
         <div><label style={lbl}>State *</label><input name="state" value={form.state} onChange={handleChange} required className="pr-inp" style={inp}/></div>
       </div>
 
-      <p style={secLabel('#F3E8DE')}>ðŸªª Identity</p>
+      <p style={secLabel('#F3E8DE')}>🪪 Identity</p>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px' }}>
         <div><label style={lbl}>Aadhaar No *</label><input name="aadhaar_no" value={form.aadhaar_no} onChange={handleChange} required maxLength={12} className="pr-inp" style={inp}/></div>
         <div><label style={lbl}>PAN No *</label><input name="pan_no" value={form.pan_no} onChange={handleChange} required maxLength={10} className="pr-inp" style={inp}/></div>
       </div>
 
-      <p style={secLabel('#F3E8DE')}>ðŸ’¼ Occupation</p>
+      <p style={secLabel('#F3E8DE')}>💼 Occupation</p>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'14px' }}>
         <div><label style={lbl}>Occupation *</label>
           <select name="occupation" value={form.occupation} onChange={handleChange} required className="pr-inp" style={{ ...inp, cursor:'pointer' }}>
@@ -2002,7 +1841,7 @@ const handleSubmit = async e => {
         </div>
       </div>
 
-<p style={secLabel('#F3E8DE')}>ðŸŒŸ Promotor Info</p>
+<p style={secLabel('#F3E8DE')}>🌟 Promotor Info</p>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'14px' }}>
         <div><label style={lbl}>Promotor ID *</label>
           <select
@@ -2042,7 +1881,7 @@ const handleSubmit = async e => {
   </div>
 )}
 
-        {/* â”€â”€ CUSTOMERS TABLE â”€â”€ */}
+        {/* ── CUSTOMERS TABLE ── */}
         <div style={card}>
           <p style={secHead('#F3E8DE')}>My Customers ({customers.length})</p>
           {customers.length === 0 ? (
@@ -2078,6 +1917,7 @@ const handleSubmit = async e => {
     </div>
   )
 }
+
 
 
 

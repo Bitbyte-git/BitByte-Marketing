@@ -1,7 +1,9 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 import logo from '../assets/logo.png'
+import InternalRoleNavbar from '../collection/InternalRoleNavbar'
+import InternalRoleDashboardFrame from '../collection/InternalRoleDashboardFrame'
 import goldCoin from '../assets/gold-coin-transparent.png'
 import silverCoin from '../assets/silver-coin.png'
 
@@ -78,10 +80,10 @@ function createPromotorPopup(p, i, anchorEl, dark, subtextColor, textColor, hier
       <div style="border-radius:9px;padding:10px;margin-bottom:6px;background:${boxBg};border:1px solid ${boxBorder};">
         <div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;
           background:${boxBg};color:${badgeColor};border:1px solid ${boxBorder};margin-bottom:6px;">${badge}</div>
-        <div style="font-size:10px;color:${badgeColor};font-family:monospace;margin-bottom:3px;">${id || 'â€”'}</div>
-        <div style="font-size:13px;font-weight:700;color:${text2};margin-bottom:5px;">${name || 'â€”'}</div>
-        <div style="font-size:11px;color:${subtext2};margin-bottom:2px;">ðŸ“ž ${contact || 'â€”'}</div>
-        <div style="font-size:11px;color:${subtext2};">ðŸ“ ${city || 'â€”'}</div>
+        <div style="font-size:10px;color:${badgeColor};font-family:monospace;margin-bottom:3px;">${id || '—'}</div>
+        <div style="font-size:13px;font-weight:700;color:${text2};margin-bottom:5px;">${name || '—'}</div>
+        <div style="font-size:11px;color:${subtext2};margin-bottom:2px;">📞 ${contact || '—'}</div>
+        <div style="font-size:11px;color:${subtext2};">📍 ${city || '—'}</div>
       </div>`
   }
 
@@ -104,54 +106,54 @@ function createPromotorPopup(p, i, anchorEl, dark, subtextColor, textColor, hier
 
     <div style="border-radius:9px;padding:10px;margin-bottom:2px;background:rgba(204,168,129,0.05);border:1px solid rgba(204,168,129,0.22);">
       <div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;
-        background:rgba(204,168,129,0.12);color:#CCA881;border:1px solid rgba(204,168,129,0.3);margin-bottom:6px;">ðŸ›¡ï¸ SUPER ADMIN</div>
+        background:rgba(204,168,129,0.12);color:#CCA881;border:1px solid rgba(204,168,129,0.3);margin-bottom:6px;">🛡️ SUPER ADMIN</div>
       <div style="font-size:11px;color:${subtext2};word-break:break-all;">${superAdminEmail}</div>
       <div style="margin-top:5px;font-size:9px;padding:2px 7px;background:rgba(204,168,129,0.1);
-        border:1px solid rgba(204,168,129,0.25);border-radius:20px;color:#CCA881;display:inline-block;">â— ONLINE</div>
+        border:1px solid rgba(204,168,129,0.25);border-radius:20px;color:#CCA881;display:inline-block;">● ONLINE</div>
     </div>
 
     ${arrow('#CCA881')}
 
     ${tierBox(
-    'ðŸ›¡ï¸ ADMIN',
+    '🛡️ ADMIN',
     '#0C4044', 'rgba(12,64,68,0.05)', 'rgba(12,64,68,0.2)',
-    admin?.admin_id || 'â€”',
-    admin?.first_name || admin?.admin_name || 'â€”',
-    admin?.mobile_number || admin?.admin_contact_no || 'â€”',
-    admin?.city_name || 'â€”'
+    admin?.admin_id || '—',
+    admin?.first_name || admin?.admin_name || '—',
+    admin?.mobile_number || admin?.admin_contact_no || '—',
+    admin?.city_name || '—'
   )}
 
     ${arrow('#0C4044')}
 
     ${tierBox(
-    'ðŸª DEALER',
+    '🏪 DEALER',
     '#BDCFCE', 'rgba(189,207,206,0.04)', 'rgba(189,207,206,0.18)',
-    dealer?.dealer_id || 'â€”',
-    dealer?.first_name || 'â€”',
-    dealer?.mobile_number || 'â€”',
-    dealer?.city_name || 'â€”'
+    dealer?.dealer_id || '—',
+    dealer?.first_name || '—',
+    dealer?.mobile_number || '—',
+    dealer?.city_name || '—'
   )}
 
     ${arrow('#BDCFCE')}
 
     ${tierBox(
-    'ðŸ’Ž SUB DEALER',
+    '💎 SUB DEALER',
     '#BB8958', 'rgba(187,137,88,0.05)', 'rgba(187,137,88,0.2)',
-    subDealer?.sub_dealer_id || 'â€”',
-    subDealer?.first_name || 'â€”',
-    subDealer?.mobile_number || 'â€”',
-    subDealer?.city_name || 'â€”'
+    subDealer?.sub_dealer_id || '—',
+    subDealer?.first_name || '—',
+    subDealer?.mobile_number || '—',
+    subDealer?.city_name || '—'
   )}
 
     ${arrow(c)}
 
     <div style="background:rgba(204,168,129,0.05);border:1px solid rgba(204,168,129,0.2);border-radius:10px;padding:10px;">
       <div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;
-        background:rgba(204,168,129,0.12);color:${c};border:1px solid rgba(204,168,129,0.25);margin-bottom:6px;">ðŸŒŸ PROMOTOR</div>
-      <div style="font-size:10px;color:${c};font-family:monospace;margin-bottom:3px;">${p.promotor_id || 'â€”'}</div>
+        background:rgba(204,168,129,0.12);color:${c};border:1px solid rgba(204,168,129,0.25);margin-bottom:6px;">🌟 PROMOTOR</div>
+      <div style="font-size:10px;color:${c};font-family:monospace;margin-bottom:3px;">${p.promotor_id || '—'}</div>
       <div style="font-size:14px;font-weight:700;color:${text2};margin-bottom:6px;">${p.first_name || ''}</div>
-      <div style="font-size:11px;color:${subtext2};margin-bottom:2px;">ðŸ“ž ${p.mobile_number || 'â€”'}</div>
-      <div style="font-size:11px;color:${subtext2};">ðŸ“ ${p.city_name || 'â€”'}</div>
+      <div style="font-size:11px;color:${subtext2};margin-bottom:2px;">📞 ${p.mobile_number || '—'}</div>
+      <div style="font-size:11px;color:${subtext2};">📍 ${p.city_name || '—'}</div>
     </div>
   `
 
@@ -174,19 +176,19 @@ function createPromotorPopup(p, i, anchorEl, dark, subtextColor, textColor, hier
 }
 
 
-// â”€â”€â”€ SD TREE NODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── SD TREE NODE ─────────────────────────────────────────────────────────
 const SD_TREE_COLORS = ['#BB8958', '#CCA881', '#C92035', '#BDCFCE', '#0C4044', '#BDCFCE']
 
 const SD_ROLE_CFG = {
-  sub_dealer: { color: '#BB8958', label: 'ðŸ”— SUB DEALER', idKey: 'sub_dealer_id' },
-  promotor: { color: '#CCA881', label: 'ðŸŒŸ PROMOTOR', idKey: 'promotor_id' },
-  customer: { color: '#C92035', label: 'ðŸ‘¤ CUSTOMER', idKey: 'customer_id' },
+  sub_dealer: { color: '#BB8958', label: '🔗 SUB DEALER', idKey: 'sub_dealer_id' },
+  promotor: { color: '#CCA881', label: '🌟 PROMOTOR', idKey: 'promotor_id' },
+  customer: { color: '#C92035', label: '👤 CUSTOMER', idKey: 'customer_id' },
 }
 
 const SD_ROLE_LABELS = {
-  sub_dealer: { emoji: 'ðŸ”—', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
-  promotor: { emoji: 'ðŸŒŸ', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
-  customer: { emoji: 'ðŸ‘¤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
+  sub_dealer: { emoji: '🔗', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
+  promotor: { emoji: '🌟', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
+  customer: { emoji: '👤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
 }
 
 let _sdChainPopupEl = null
@@ -214,12 +216,12 @@ function showSDChainPopup(anchorEl, ancestors, current, dark, text, subtext, sup
   removeSDChainPopup()
 
   const CHAIN_LABELS = {
-    super_admin: { emoji: 'ðŸ›¡ï¸', label: 'SUPER ADMIN', color: '#CCA881', idKey: null },
-    admin: { emoji: 'ðŸ›¡ï¸', label: 'ADMIN', color: '#0C4044', idKey: 'admin_id' },
-    dealer: { emoji: 'ðŸª', label: 'DEALER', color: '#BDCFCE', idKey: 'dealer_id' },
-    sub_dealer: { emoji: 'ðŸ”—', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
-    promotor: { emoji: 'ðŸŒŸ', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
-    customer: { emoji: 'ðŸ‘¤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
+    super_admin: { emoji: '🛡️', label: 'SUPER ADMIN', color: '#CCA881', idKey: null },
+    admin: { emoji: '🛡️', label: 'ADMIN', color: '#0C4044', idKey: 'admin_id' },
+    dealer: { emoji: '🏪', label: 'DEALER', color: '#BDCFCE', idKey: 'dealer_id' },
+    sub_dealer: { emoji: '🔗', label: 'SUB DEALER', color: '#BB8958', idKey: 'sub_dealer_id' },
+    promotor: { emoji: '🌟', label: 'PROMOTOR', color: '#CCA881', idKey: 'promotor_id' },
+    customer: { emoji: '👤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
   }
 
   const chain = [
@@ -293,25 +295,25 @@ function showSDChainPopup(anchorEl, ancestors, current, dark, text, subtext, sup
         ">
           <div style="position:absolute;top:-10px;right:-10px;width:70px;height:70px;background:radial-gradient(circle,rgba(204,168,129,0.14),transparent 70%);pointer-events:none;"></div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">ðŸ›¡ï¸</div>
+            <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#CCA881,#BB8958);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 4px 12px rgba(204,168,129,0.35);">🛡️</div>
             <div>
               <div style="font-size:9px;color:#CCA881;font-weight:800;letter-spacing:1.8px;">SUPER ADMIN</div>
-              <div style="font-size:8px;color:rgba(204,168,129,0.45);margin-top:2px;letter-spacing:0.5px;">ROOT â€¢ FULL ACCESS</div>
+              <div style="font-size:8px;color:rgba(204,168,129,0.45);margin-top:2px;letter-spacing:0.5px;">ROOT • FULL ACCESS</div>
             </div>
             <div style="margin-left:auto;display:flex;align-items:center;gap:5px;">
               <div style="width:7px;height:7px;border-radius:50%;background:#0C4044;animation:acpPulse 1.8s ease-in-out infinite;box-shadow:0 0 8px rgba(12,64,68,0.9);"></div>
               <span style="font-size:9px;color:#0C4044;font-weight:700;">LIVE</span>
             </div>
           </div>
-          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || 'â€”'}</div>
+          <div style="font-size:12px;color:${isDark ? '#111817' : '#7A8987'};word-break:break-all;font-family:monospace;letter-spacing:0.3px;">${item.data.email || '—'}</div>
         </div>
       `
     }
 
     const d = item.data || {}
-    const idVal = cfg.idKey ? (d[cfg.idKey] || d.id || 'â€”') : ''
-    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || d.admin_name || d.dealer_name || 'â€”'
-    const phone = d.mobile_number || d.admin_contact_no || 'â€”'
+    const idVal = cfg.idKey ? (d[cfg.idKey] || d.id || '—') : ''
+    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || d.admin_name || d.dealer_name || '—'
+    const phone = d.mobile_number || d.admin_contact_no || '—'
     const city = d.city_name || ''
     const rc = hexToRgbSD(cfg.color)
 
@@ -341,20 +343,20 @@ function showSDChainPopup(anchorEl, ancestors, current, dark, text, subtext, sup
             background:rgba(${rc},0.18);color:${cfg.color};
             border:1px solid rgba(${rc},0.4);
             animation:acpBadgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-            white-space:nowrap;letter-spacing:0.5px;">â— CURRENT</div>` : ''}
+            white-space:nowrap;letter-spacing:0.5px;">● CURRENT</div>` : ''}
         </div>
 
         <div style="font-size:14px;color:${isDark ? '#E7EDEC' : '#111817'};font-weight:700;margin-bottom:9px;letter-spacing:-0.3px;">${name}</div>
 
         <div style="display:flex;flex-direction:column;gap:6px;">
-          ${phone !== 'â€”' ? `
+          ${phone !== '—' ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“ž</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">📞</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${phone}</span>
           </div>` : ''}
           ${city ? `
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">ðŸ“</div>
+            <div style="width:20px;height:20px;border-radius:6px;background:rgba(${rc},0.12);border:1px solid rgba(${rc},0.2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">📍</div>
             <span style="font-size:12px;color:${isDark ? '#7A8987' : '#7A8987'};">${city}</span>
           </div>` : ''}
         </div>
@@ -365,7 +367,7 @@ function showSDChainPopup(anchorEl, ancestors, current, dark, text, subtext, sup
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid ${isDark ? 'rgba(204,168,129,0.1)' : 'rgba(124,58,237,0.08)'};">
       <div style="display:flex;align-items:center;gap:9px;">
-        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#CCA881,#BDCFCE);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(204,168,129,0.4);">ðŸ”—</div>
+        <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#CCA881,#BDCFCE);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(204,168,129,0.4);">🔗</div>
         <div>
           <div style="font-size:11px;color:${isDark ? '#F3E8DE' : '#BB8958'};font-weight:800;letter-spacing:1.8px;">HIERARCHY CHAIN</div>
           <div style="font-size:9px;color:${isDark ? '#7A8987' : '#7A8987'};margin-top:2px;">${totalNodes} level${totalNodes !== 1 ? 's' : ''} deep</div>
@@ -378,13 +380,13 @@ function showSDChainPopup(anchorEl, ancestors, current, dark, text, subtext, sup
         animation:acpShimmer 2.5s linear infinite;
         border:1px solid rgba(204,168,129,0.25);
         color:${isDark ? '#F3E8DE' : '#BB8958'};
-        letter-spacing:1px;">â— LIVE</div>
+        letter-spacing:1px;">● LIVE</div>
     </div>
 
     ${itemsHtml}
 
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid ${isDark ? 'rgba(253,253,252,0.04)' : 'rgba(17,24,23,0.05)'};">
-      <div style="font-size:9px;color:${isDark ? '#7A8987' : '#111817'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network â€¢ Hierarchy View</div>
+      <div style="font-size:9px;color:${isDark ? '#7A8987' : '#111817'};text-align:center;letter-spacing:0.8px;font-weight:600;">BitByte Network • Hierarchy View</div>
     </div>
   `
 
@@ -408,9 +410,9 @@ function showSDChainPopup(anchorEl, ancestors, current, dark, text, subtext, sup
 
 function printSDPersonCard(node, role, color, ancestors, superAdminEmail, dealerData, adminData) {
   const ROLE_PRINT = {
-    sub_dealer: { label: 'SUB DEALER', emoji: 'ðŸ”—', idKey: 'sub_dealer_id' },
-    promotor: { label: 'PROMOTOR', emoji: 'ðŸŒŸ', idKey: 'promotor_id' },
-    customer: { label: 'CUSTOMER', emoji: 'ðŸ‘¤', idKey: 'customer_id' },
+    sub_dealer: { label: 'SUB DEALER', emoji: '🔗', idKey: 'sub_dealer_id' },
+    promotor: { label: 'PROMOTOR', emoji: '🌟', idKey: 'promotor_id' },
+    customer: { label: 'CUSTOMER', emoji: '👤', idKey: 'customer_id' },
   }
 
   const chain = [
@@ -422,12 +424,12 @@ function printSDPersonCard(node, role, color, ancestors, superAdminEmail, dealer
   ]
 
   const PRINT_LABELS = {
-    super_admin: { label: 'SUPER ADMIN', emoji: 'ðŸ›¡ï¸', idKey: null },
-    admin: { label: 'ADMIN', emoji: 'ðŸ›¡ï¸', idKey: 'admin_id' },
-    dealer: { label: 'DEALER', emoji: 'ðŸª', idKey: 'dealer_id' },
-    sub_dealer: { label: 'SUB DEALER', emoji: 'ðŸ”—', idKey: 'sub_dealer_id' },
-    promotor: { label: 'PROMOTOR', emoji: 'ðŸŒŸ', idKey: 'promotor_id' },
-    customer: { label: 'CUSTOMER', emoji: 'ðŸ‘¤', idKey: 'customer_id' },
+    super_admin: { label: 'SUPER ADMIN', emoji: '🛡️', idKey: null },
+    admin: { label: 'ADMIN', emoji: '🛡️', idKey: 'admin_id' },
+    dealer: { label: 'DEALER', emoji: '🏪', idKey: 'dealer_id' },
+    sub_dealer: { label: 'SUB DEALER', emoji: '🔗', idKey: 'sub_dealer_id' },
+    promotor: { label: 'PROMOTOR', emoji: '🌟', idKey: 'promotor_id' },
+    customer: { label: 'CUSTOMER', emoji: '👤', idKey: 'customer_id' },
   }
 
   const arrowDiv = `<div class="chain-arrow"><div style="display:flex;flex-direction:column;align-items:center;gap:0px;"><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid #7A8987;"></div><div style="width:2px;height:12px;background:linear-gradient(180deg,#7A8987,rgba(122,137,135,0.2));"></div></div></div>`
@@ -440,31 +442,31 @@ function printSDPersonCard(node, role, color, ancestors, superAdminEmail, dealer
     const d = item.data || {}
 
     if (item.type === 'super_admin') {
-      return `<div class="chain-item"><div class="chain-role">ðŸ›¡ï¸ SUPER ADMIN</div><div class="chain-email">${d.email || 'â€”'}</div></div>${arrow}`
+      return `<div class="chain-item"><div class="chain-role">🛡️ SUPER ADMIN</div><div class="chain-email">${d.email || '—'}</div></div>${arrow}`
     }
 
-    const idVal = r.idKey ? (d[r.idKey] || d.id || 'â€”') : ''
-    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || d.admin_name || 'â€”'
-    const phone = d.mobile_number || d.admin_contact_no || 'â€”'
-    const city = d.city_name || 'â€”'
+    const idVal = r.idKey ? (d[r.idKey] || d.id || '—') : ''
+    const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || d.admin_name || '—'
+    const phone = d.mobile_number || d.admin_contact_no || '—'
+    const city = d.city_name || '—'
 
     return `
       <div class="chain-item ${isLast ? 'current' : ''}">
         <div class="chain-role">${r.emoji} ${r.label}</div>
         ${idVal ? `<div class="chain-id">${idVal}</div>` : ''}
         <div class="chain-name">${name}</div>
-        <div class="chain-info">ðŸ“ž ${phone}</div>
-        <div class="chain-info">ðŸ“ ${city}</div>
+        <div class="chain-info">📞 ${phone}</div>
+        <div class="chain-info">📍 ${city}</div>
       </div>${arrow}`
   }).join('')
 
   const roleLabel = ROLE_PRINT[role]?.label || role.toUpperCase()
-  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || 'â€”'
+  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || '—'
 
   const printWindow = window.open('', '_blank')
   printWindow.document.write(`
     <!DOCTYPE html><html><head>
-    <title>${roleLabel} â€” ${currentName}</title>
+    <title>${roleLabel} — ${currentName}</title>
     <style>
       *{margin:0;padding:0;box-sizing:border-box;}
       body{font-family:'Inter',system-ui,sans-serif;background:#FDFDFC;padding:40px;display:flex;justify-content:center;}
@@ -486,7 +488,7 @@ function printSDPersonCard(node, role, color, ancestors, superAdminEmail, dealer
     </style>
     </head><body>
     <div class="wrapper">
-      <div class="header"><h1>BitByte â€” ${roleLabel} Profile</h1><p>Hierarchy Chain Report</p></div>
+      <div class="header"><h1>BitByte — ${roleLabel} Profile</h1><p>Hierarchy Chain Report</p></div>
       ${chainHtml}
       <div class="footer">Printed on ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
     </div>
@@ -541,10 +543,10 @@ function SDTreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, 
           {node[cfg.idKey]}
         </div>
         <div style={{ color: text, fontWeight: 700, fontSize: '13px', marginBottom: '6px' }}>
-          {node.first_name || 'â€”'} {node.last_name || ''}
+          {node.first_name || '—'} {node.last_name || ''}
         </div>
-        <div style={{ color: subtext, fontSize: '11px', marginBottom: '2px' }}>ðŸ“ž {node.mobile_number}</div>
-        {node.city_name && <div style={{ color: subtext, fontSize: '11px' }}>ðŸ“ {node.city_name}</div>}
+        <div style={{ color: subtext, fontSize: '11px', marginBottom: '2px' }}>📞 {node.mobile_number}</div>
+        {node.city_name && <div style={{ color: subtext, fontSize: '11px' }}>📍 {node.city_name}</div>}
 
         <div style={{ marginTop: '8px', width: '100%', height: 2, borderRadius: 2, background: `linear-gradient(90deg,rgba(${hexToRgbSD(c)},0.2),${c})` }} />
 
@@ -553,10 +555,10 @@ function SDTreeNode({ node, role, depth = 0, dark, text, subtext, colorIdx = 0, 
           style={{ marginTop: '8px', width: '100%', padding: '3px 0', fontSize: '9px', fontWeight: 700, background: `rgba(${hexToRgbSD(c)},0.1)`, border: `1px solid rgba(${hexToRgbSD(c)},0.35)`, borderRadius: '6px', color: c, cursor: 'pointer', letterSpacing: '0.8px', transition: 'all 0.2s ease' }}
           onMouseEnter={e => e.currentTarget.style.background = `rgba(${hexToRgbSD(c)},0.25)`}
           onMouseLeave={e => e.currentTarget.style.background = `rgba(${hexToRgbSD(c)},0.1)`}
-        >ðŸ–¨ï¸ PRINT</button>
+        >🖨️ PRINT</button>
 
         {hasChildren && (
-          <div style={{ position: 'absolute', top: '8px', right: '10px', color: c, fontSize: '10px', fontWeight: 700, transition: 'transform 0.3s ease', transform: expanded ? 'rotate(0deg)' : 'rotate(180deg)' }}>â–²</div>
+          <div style={{ position: 'absolute', top: '8px', right: '10px', color: c, fontSize: '10px', fontWeight: 700, transition: 'transform 0.3s ease', transform: expanded ? 'rotate(0deg)' : 'rotate(180deg)' }}>▲</div>
         )}
         {hasChildren && (
           <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', background: c, color: '#FDFDFC', fontSize: '9px', fontWeight: 800, padding: '1px 7px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
@@ -632,7 +634,7 @@ export default function SubDealerDashboard() {
   const [usdToInr, setUsdToInr] = useState(null)
   const [dbRateDate, setDbRateDate] = useState(null)
 
-  // â”€â”€ COIN REQUEST â”€â”€
+  // ── COIN REQUEST ──
   const [showRequestCoin, setShowRequestCoin] = useState(false)
   const [coinRequests, setCoinRequests] = useState([])
   const [coinReqLoading, setCoinReqLoading] = useState(false)
@@ -644,7 +646,7 @@ export default function SubDealerDashboard() {
   const [rejectReason, setRejectReason] = useState('')
   const [rejectSubmitting, setRejectSubmitting] = useState(false)
 
-  // â”€â”€ BUY COIN (request to Dealer) â”€â”€
+  // ── BUY COIN (request to Dealer) ──
   const [showBuyCoin, setShowBuyCoin] = useState(false)
   const [coinCart, setCoinCart] = useState([])
   const [coinBuyMsg, setCoinBuyMsg] = useState('')
@@ -653,7 +655,7 @@ export default function SubDealerDashboard() {
   const [selCoinWeight, setSelCoinWeight] = useState('')
   const [selCoinQty, setSelCoinQty] = useState('')
 
-  // â”€â”€ STORED COIN â”€â”€
+  // ── STORED COIN ──
   const [showStoredCoin, setShowStoredCoin] = useState(false)
   const [coinStock, setCoinStock] = useState([])
   const [coinStockLoading, setCoinStockLoading] = useState(false)
@@ -718,7 +720,7 @@ const wishTimerRef = useRef(null)
             this.y += forceDirectionY * force * 2
           }
         }
-      }                          // â† update() ends here
+      }                          // ← update() ends here
 
       draw() {
         ctx.fillStyle = dark ? 'rgba(189, 207, 206, 0.9)' : 'rgba(12, 64, 68, 0.8)'
@@ -754,7 +756,7 @@ const wishTimerRef = useRef(null)
     init(); animate()
 
 
-   // â”€â”€ PLANETS & COMETS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   // ── PLANETS & COMETS ──────────────────────────────────────────
     let planets = [], comets2 = [], planetAnimId
 
     class Planet {
@@ -834,7 +836,7 @@ const wishTimerRef = useRef(null)
     const handleResize2 = () => { canvas2.width = window.innerWidth; canvas2.height = window.innerHeight }
     window.addEventListener('resize', handleResize2)
     drawPlanets()
-    // â”€â”€ END PLANETS & COMETS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── END PLANETS & COMETS ──────────────────────────────────────
 
     return () => {
       window.removeEventListener('resize', handleResize)
@@ -871,7 +873,7 @@ const allSDList = allSDRes.status === 'fulfilled' ? allSDRes.value.data : []
         }
       } catch (e) { }
 
-      // âœ… promotors-ku customers attach pannurom
+      // ✅ promotors-ku customers attach pannurom
       const enrichedPromotors = promotorList.map(p => ({
         ...p,
         customers: customerList.filter(c =>
@@ -879,7 +881,7 @@ const allSDList = allSDRes.status === 'fulfilled' ? allSDRes.value.data : []
         ),
       }))
 
-      // âœ… logged-in sub dealer as root node
+      // ✅ logged-in sub dealer as root node
       const mySelf = {
         id: dashData.id,
         sub_dealer_id: dashData.sub_dealer_id,
@@ -1010,13 +1012,13 @@ const allSDList = allSDRes.status === 'fulfilled' ? allSDRes.value.data : []
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 
-      setMsg('âœ… Profile update request submitted successfully!')
+      setMsg('✅ Profile update request submitted successfully!')
       setMsgType('success')
       setShowProfileEdit(false)
       setUpdateMessage('')
       setProofDocument(null)
     } catch (err) {
-      setMsg('âŒ Error: ' + JSON.stringify(err.response?.data || err.message))
+      setMsg('❌ Error: ' + JSON.stringify(err.response?.data || err.message))
       setMsgType('error')
     }
   }
@@ -1039,8 +1041,8 @@ const fetchMetalPrices = async () => {
   setMetalLoading(false)
 }
 
-// â”€â”€ COIN REQUEST helpers â”€â”€
-const COIN_METAL_LABELS = { gold_22k: 'ðŸ… Gold 22K', gold_24k: 'ðŸ¥‡ Gold 24K', silver_999: 'ðŸ¥ˆ Silver 999' }
+// ── COIN REQUEST helpers ──
+const COIN_METAL_LABELS = { gold_22k: '🏅 Gold 22K', gold_24k: '🥇 Gold 24K', silver_999: '🥈 Silver 999' }
 const COIN_METAL_LABELS_TEXT = { gold_22k: 'Gold 22K', gold_24k: 'Gold 24K', silver_999: 'Silver 999' }
 
 const fetchCoinRequests = async () => {
@@ -1104,7 +1106,7 @@ const rejectCoinRequest = async (reqId) => {
   setRejectSubmitting(false)
 }
 
-// â”€â”€ BUY COIN helpers â”€â”€
+// ── BUY COIN helpers ──
 const COIN_WEIGHTS_GOLD = [
   { label: '50 mg', grams: 0.05 }, { label: '100 mg', grams: 0.10 }, { label: '150 mg', grams: 0.15 },
   { label: '200 mg', grams: 0.20 }, { label: '500 mg', grams: 0.50 }, { label: '1 gm', grams: 1 },
@@ -1194,13 +1196,13 @@ const fetchCoinStock = async () => {
     try {
       await api.post(`/announcements/${replyAnn.id}/replies/`, { message: replyText })
       setRepliedIds(prev => new Set([...prev, replyAnn.id]))
-      setReplyMsg('âœ… Wish sent!')
+      setReplyMsg('✅ Wish sent!')
       setReplyText('')
     } catch (err) {
       if (err.response?.data?.error === 'Already replied') {
         setRepliedIds(prev => new Set([...prev, replyAnn.id]))
-        setReplyMsg('âš ï¸ Already sent!')
-      } else { setReplyMsg('âŒ Failed.') }
+        setReplyMsg('⚠️ Already sent!')
+      } else { setReplyMsg('❌ Failed.') }
     }
     setReplyLoading(false)
   }
@@ -1235,12 +1237,12 @@ const handleSubmit = async e => {
   e.preventDefault()
 
   if (form.married_status === 'married' && !form.anniversary_date) {
-    setMsg('âŒ Please enter Anniversary Date!'); setMsgType('error')
+    setMsg('❌ Please enter Anniversary Date!'); setMsgType('error')
     return
   }
 
   if (form.password !== confirmPassword) {
-    setPasswordError('âŒ Passwords do not match')
+    setPasswordError('❌ Passwords do not match')
     return
   }
 
@@ -1255,12 +1257,12 @@ const handleSubmit = async e => {
 
   try {
     await api.post('/promotors/', payload)
-    setMsg('âœ… Promotor created successfully!'); setMsgType('success')
+    setMsg('✅ Promotor created successfully!'); setMsgType('success')
     setShowForm(false); fetchAll(); setForm(emptyForm); setSelectedSubDealer(null)
     setConfirmPassword(''); setPasswordError('')
   } catch (err) {
     console.error('Promotor create error:', err.response?.data)
-    setMsg('âŒ Error: ' + JSON.stringify(err.response?.data)); setMsgType('error')
+    setMsg('❌ Error: ' + JSON.stringify(err.response?.data)); setMsgType('error')
   }
 }
   const card = { background: cardBg, border: cardBorder, borderRadius: '22px', padding: '34px 38px', marginBottom: '26px', boxShadow: dark ? '0 26px 70px rgba(17,24,23,0.18)' : '0 22px 58px rgba(7,59,63,0.08)', backdropFilter: 'blur(18px)' }
@@ -1300,206 +1302,62 @@ const handleSubmit = async e => {
         <div key={p.id} style={{ position: 'absolute', left: `${p.x}%`, bottom: '-100px', width: p.size, height: p.size, borderRadius: '40% 60% 60% 40% / 40% 40% 60% 60%', border: `1px solid ${accent}44`, opacity: p.opacity, animation: `antigravity ${p.duration}s ${p.delay}s infinite linear`, '--op': p.opacity, pointerEvents: 'none', zIndex: 0 }} />
       ))}
 
-      {/* Navbar */}
-      <div style={{ position: 'relative', zIndex: 10, background: glass, borderBottom: `1px solid ${border}`, padding: '18px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backdropFilter: 'blur(16px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '10px' }}>
-          <img src={logo} alt="BitByte Logo" style={{ width: 60, height: 50, borderRadius: '10px', objectFit: 'contain' }} />
-          <span style={{ color: '#F3E8DE', fontWeight: 700, fontSize: '14px' }}>ðŸ’Ž Sub Dealer Dashboard</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div
-            onClick={() => setShowProfile(true)}
-            style={{ cursor: 'pointer', width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg,rgba(204,168,129,0.25),rgba(189,207,206,0.15))', border: '2px solid rgba(204,168,129,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', transition: 'all 0.25s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(204,168,129,0.3)' }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-            title="View Profile"
-          >ðŸ’Ž</div>
-
-          {/* Buy Coin Button */}
-          <div
-            onClick={() => { setShowRequestCoin(true); fetchCoinRequests(); setCoinReqMsg('') }}
-            style={{ position: 'relative', cursor: 'pointer', padding: '6px 14px', borderRadius: '10px', border: '1px solid rgba(204,168,129,0.4)', background: 'rgba(204,168,129,0.1)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.25s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            <span style={{ fontSize: '15px' }}>ðŸª™</span>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#CCA881' }}>Request Coin</span>
-            {coinRequests.filter(r => r.status === 'pending').length > 0 && (
-              <div style={{ position: 'absolute', top: '-7px', right: '-7px', background: 'linear-gradient(135deg,#CCA881,#BB8958)', color: '#FDFDFC', borderRadius: '50%', minWidth: '18px', height: '18px', fontSize: '9px', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', boxShadow: '0 2px 8px rgba(204,168,129,0.5)', border: '1.5px solid #FDFDFC' }}>
-                {coinRequests.filter(r => r.status === 'pending').length}
-              </div>
-            )}
-          </div>
-
-          <div
-            onClick={() => { setShowAnnouncements(true); localStorage.setItem('subDealerAnnouncementSeen', Date.now().toString()); setUnreadCount(0) }}
-            style={{ position: 'relative', cursor: 'pointer', padding: '6px', borderRadius: '10px', border: '1px solid rgba(204,168,129,0.35)', background: 'rgba(204,168,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.1)'; e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            <span style={{ fontSize: '18px', lineHeight: 1 }}>ðŸ“¢</span>
-            {unreadCount > 0 && (
-              <div style={{ position: 'absolute', top: '-7px', right: '-7px', background: 'linear-gradient(135deg,#CCA881,#BDCFCE)', color: '#FDFDFC', borderRadius: '50%', minWidth: '18px', height: '18px', fontSize: '9px', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', boxShadow: '0 2px 8px rgba(204,168,129,0.5)', border: '1.5px solid #FDFDFC' }}>
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </div>
-            )}
-          </div>
-          <button onClick={() => setDark(!dark)} style={{ padding: '8px 16px', borderRadius: '16px', border: `1px solid ${border}`, background: 'transparent', color: text, cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}>
-            {dark ? 'â˜€ï¸ Light' : 'ðŸŒ™ Dark'}
-          </button>
-          <button onClick={() => { localStorage.clear(); navigate('/login') }} style={{ padding: '8px 18px', background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}>
-            Logout
-          </button>
-        </div>
-      </div>
-
-      <div style={{ position: 'relative', zIndex: 10, padding: '36px 40px', maxWidth: '1200px', margin: '0 auto' }}>
+      <InternalRoleNavbar
+        roleTitle="SUB DEALER"
+        homePath="/sub-dealer"
+        managementItems={[
+          { label: 'Dashboard', path: '/sub-dealer' },
+          { label: 'Promoter Hierarchy', path: '/subdealer-hierarchy' },
+          { label: 'Create Promoter', action: () => setShowForm(true) },
+          { label: 'Requests', action: () => setShowRequests(true) },
+        ]}
+        celebrationItems={[
+          { label: "Today's Birthdays", action: () => navigate('/sub-dealer') },
+          { label: "Today's Anniversaries", action: () => navigate('/sub-dealer') },
+          { label: 'Work Anniversaries', action: () => navigate('/sub-dealer') },
+        ]}
+        announcementItems={[
+          { label: 'View Announcements', action: () => { setShowAnnouncements(true); localStorage.setItem('subDealerAnnouncementSeen', Date.now().toString()); setUnreadCount(0) }, badge: unreadCount },
+        ]}
+        coinItems={[
+          { label: 'Buy Coin', path: '/buy-coin' },
+          { label: 'Stored Coin', path: '/stored-coins' },
+          { label: 'Coin Requests', path: '/coin-requests-page', badge: coinRequests.filter(r => r.status === 'pending').length },
+          { label: 'Coin Transactions', path: '/coin-transactions' },
+        ]}
+        reportItems={[
+          { label: 'Promoter Hierarchy Tree', path: '/subdealer-hierarchy' },
+          { label: 'Promoter Hierarchy Grid', path: '/subdealer-hierarchy-grid' },
+          { label: 'Sales Report', path: '/sales-report' },
+        ]}
+        actionItems={[
+          { label: 'Profile', icon: 'user', action: () => setShowProfile(true) },
+          { label: 'Announcements', icon: 'bell', action: () => { setShowAnnouncements(true); localStorage.setItem('subDealerAnnouncementSeen', Date.now().toString()); setUnreadCount(0) }, badge: unreadCount },
+          { label: 'Logout', icon: 'logout', variant: 'danger', action: () => { localStorage.clear(); navigate('/login') } },
+        ]}
+      />
+      <InternalRoleDashboardFrame
+        roleName="Sub Dealer"
+        focusLabel="Promoters"
+        focusCount={promotors.length}
+        roleDistribution={[
+          { name: 'Promoter', value: promotors.length, color: '#CCA881' },
+          { name: 'Customer', value: promotors.reduce((sum, promotor) => sum + (promotor.customers?.length || 0), 0), color: '#C92035' },
+        ]}
+        quickActions={[
+          { label: 'Promoter Hierarchy Tree', icon: 'store', onClick: () => setShowHierarchy(true) },
+          { label: 'Promoter Hierarchy Grid', icon: 'store', onClick: () => navigate('/subdealer-hierarchy-grid') },
+          { label: 'Sales Report', icon: 'report', onClick: () => navigate('/sales-report') },
+          { label: 'Create Promoter', icon: 'users', onClick: () => setShowForm(true) },
+        ]}
+      />      <div style={{ position: 'relative', zIndex: 10, padding: '36px 40px', maxWidth: '1200px', margin: '0 auto' }}>
         {msg && (
           <div style={{ background: msgType === 'success' ? 'rgba(204,168,129,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${msgType === 'success' ? 'rgba(204,168,129,0.25)' : 'rgba(201,32,53,0.3)'}`, color: msgType === 'success' ? '#CCA881' : '#C92035', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', marginBottom: '20px' }}>
             {msg}
           </div>
         )}
 
-{(() => {
-  const WEIGHTS = [
-    { label: '50 mg',  grams: 0.05 },
-    { label: '100 mg', grams: 0.10 },
-    { label: '150 mg', grams: 0.15 },
-    { label: '200 mg', grams: 0.20 },
-    { label: '500 mg', grams: 0.50 },
-    { label: '1 gm',   grams: 1 },
-    { label: '2 gm',   grams: 2 },
-    { label: '4 gm',   grams: 4 },
-    { label: '8 gm',   grams: 8 },
-  ]
-  return (
-    <div style={{ background: cardBg, border: cardBorder, borderRadius: '20px', padding: '28px 32px', marginBottom: '24px' }}>
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-        <span style={{ fontSize: '22px' }}>âš–ï¸</span>
-        <div>
-          <div style={{ color: '#0C4044', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            Today's Gold & Silver Rates
-          </div>
-          <div style={{ color: subtext, fontSize: '11px', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>ðŸ“ Chennai, India</span>
-            <span style={{ opacity: 0.4 }}>â€¢</span>
-            <span>â‚¹ per gram</span>
-            <span style={{ opacity: 0.4 }}>â€¢</span>
-            {dbRateDate ? (
-              <span style={{ color: '#0C4044', fontSize: '10px', fontWeight: 700 }}>
-                ðŸ“… {new Date(dbRateDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
-              </span>
-            ) : (
-              <span style={{ color: '#C92035', fontSize: '9px', fontWeight: 700 }}>No rate entered yet</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-        {/* GOLD 22K */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px' }}>ðŸ…</span>
-            <span style={{ color: '#CCA881', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>GOLD 22K</span>
-            {metalPrices.gold22k && (
-              <span style={{ color: 'rgba(204,168,129,0.55)', fontSize: '11px' }}>â‚¹{metalPrices.gold22k.toFixed(2)}/gm</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
-            {WEIGHTS.map(w => (
-              <div key={w.label}
-                style={{ flex: 1, minWidth: 0, background: dark ? 'rgba(204,168,129,0.05)' : 'rgba(204,168,129,0.07)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '14px', overflow: 'hidden', transition: 'transform 0.2s ease, box-shadow 0.2s ease', cursor: 'default' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(204,168,129,0.2)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
-                  <img src={goldCoin} alt="Gold 22K" style={{ width: '48px', height: '48px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(204,168,129,0.4))' }} />
-                </div>
-                <div style={{ padding: '8px 8px 4px', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-block', fontSize: '10px', fontWeight: 800, color: '#CCA881', background: 'rgba(204,168,129,0.12)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '20px', padding: '2px 8px', marginBottom: '6px' }}>
-                    {w.label}
-                  </div>
-                  <div style={{ color: '#CCA881', fontWeight: 900, fontSize: '12px', fontFamily: 'monospace', paddingBottom: '8px' }}>
-                    {metalPrices.gold22k != null ? `â‚¹${(w.grams * metalPrices.gold22k).toFixed(2)}` : 'â€”'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* GOLD 24K */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px' }}>ðŸ¥‡</span>
-            <span style={{ color: '#CCA881', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>GOLD 24K</span>
-            {metalPrices.gold24k && (
-              <span style={{ color: 'rgba(204,168,129,0.55)', fontSize: '11px' }}>â‚¹{metalPrices.gold24k.toFixed(2)}/gm</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
-            {WEIGHTS.map(w => (
-              <div key={w.label}
-                style={{ flex: 1, minWidth: 0, background: dark ? 'rgba(204,168,129,0.05)' : 'rgba(204,168,129,0.07)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '14px', overflow: 'hidden', transition: 'transform 0.2s ease, box-shadow 0.2s ease', cursor: 'default' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(204,168,129,0.2)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
-                  <img src={goldCoin} alt="Gold 24K" style={{ width: '48px', height: '48px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(204,168,129,0.5))' }} />
-                </div>
-                <div style={{ padding: '8px 8px 4px', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-block', fontSize: '10px', fontWeight: 800, color: '#CCA881', background: 'rgba(204,168,129,0.12)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '20px', padding: '2px 8px', marginBottom: '6px' }}>
-                    {w.label}
-                  </div>
-                  <div style={{ color: '#CCA881', fontWeight: 900, fontSize: '12px', fontFamily: 'monospace', paddingBottom: '8px' }}>
-                    {metalPrices.gold24k != null ? `â‚¹${(w.grams * metalPrices.gold24k).toFixed(2)}` : 'â€”'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* SILVER 999 */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '16px' }}>ðŸ¥ˆ</span>
-            <span style={{ color: '#BDCFCE', fontWeight: 800, fontSize: '12px', letterSpacing: '1px' }}>SILVER 999</span>
-            {metalPrices.silver && (
-              <span style={{ color: 'rgba(192,192,192,0.55)', fontSize: '11px' }}>â‚¹{metalPrices.silver.toFixed(2)}/gm</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
-            {WEIGHTS.map(w => (
-              <div key={w.label}
-                style={{ flex: 1, minWidth: 0, background: dark ? 'rgba(192,192,192,0.04)' : 'rgba(192,192,192,0.07)', border: '1px solid rgba(192,192,192,0.25)', borderRadius: '14px', overflow: 'hidden', transition: 'transform 0.2s ease, box-shadow 0.2s ease', cursor: 'default' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(192,192,192,0.15)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
-                  <img src={silverCoin} alt="Silver 999" style={{ width: '48px', height: '48px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(192,192,192,0.4))' }} />
-                </div>
-                <div style={{ padding: '8px 8px 4px', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-block', fontSize: '10px', fontWeight: 800, color: '#BDCFCE', background: 'rgba(192,192,192,0.1)', border: '1px solid rgba(192,192,192,0.25)', borderRadius: '20px', padding: '2px 8px', marginBottom: '6px' }}>
-                    {w.label}
-                  </div>
-                  <div style={{ color: '#BDCFCE', fontWeight: 900, fontSize: '12px', fontFamily: 'monospace', paddingBottom: '8px' }}>
-                    {metalPrices.silver != null ? `â‚¹${(w.grams * metalPrices.silver).toFixed(2)}` : 'â€”'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  )
-})()}
 
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -1507,11 +1365,11 @@ const handleSubmit = async e => {
           <div style={{ display: 'flex', gap: '12px' }}>
            <button onClick={() => navigate('/sales-report')}
   style={{ padding: '11px 28px', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '12px', fontWeight: 700, color: '#0C4044', fontSize: '14px', cursor: 'pointer' }}>
-  ðŸ“Š Sales Report
+  📊 Sales Report
 </button>
 <button onClick={() => navigate('/subdealer-hierarchy')}
   style={{ padding: '11px 28px', background: 'rgba(204,168,129,0.08)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '12px', fontWeight: 700, color: '#F3E8DE', fontSize: '14px', cursor: 'pointer' }}>
-  ðŸ¢ Promotor Hierarchy
+  🏢 Promotor Hierarchy
 </button>
 <button onClick={() => {
   if (!showForm && subDealers.length > 0) {
@@ -1533,10 +1391,10 @@ const handleSubmit = async e => {
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '24px', width: '95%', maxWidth: '580px', maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}>
               <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(204,168,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg,rgba(204,168,129,0.25),rgba(189,207,206,0.15))', border: '2px solid rgba(204,168,129,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>ðŸ’Ž</div>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg,rgba(204,168,129,0.25),rgba(189,207,206,0.15))', border: '2px solid rgba(204,168,129,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>💎</div>
                   <div>
                     <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '15px' }}>MY PROFILE</div>
-                    <div style={{ color: subtext, fontSize: '11px', fontFamily: 'monospace' }}>{myDashData?.sub_dealer_id || 'â€”'}</div>
+                    <div style={{ color: subtext, fontSize: '11px', fontFamily: 'monospace' }}>{myDashData?.sub_dealer_id || '—'}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -1553,7 +1411,7 @@ const handleSubmit = async e => {
                       fontWeight: 800
                     }}
                   >
-                    âœŽ Edit
+                    ✎ Edit
                   </button>
 
                   <button
@@ -1568,7 +1426,7 @@ const handleSubmit = async e => {
                       fontSize: '12px'
                     }}
                   >
-                    âœ• Close
+                    ✕ Close
                   </button>
                 </div>
               </div>
@@ -1584,11 +1442,11 @@ const handleSubmit = async e => {
                           { label: 'Last Name', value: myDashData.last_name },
                           { label: 'Email', value: myDashData.email },
                           { label: 'Mobile', value: myDashData.mobile_number },
-                          { label: 'Gender', value: myDashData.gender ? myDashData.gender.charAt(0).toUpperCase() + myDashData.gender.slice(1) : 'â€”' },
-                          { label: 'DOB', value: myDashData.dob ? new Date(myDashData.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'â€”' },
-                          { label: 'Married Status', value: myDashData.married_status ? myDashData.married_status.charAt(0).toUpperCase() + myDashData.married_status.slice(1) : 'â€”' },
+                          { label: 'Gender', value: myDashData.gender ? myDashData.gender.charAt(0).toUpperCase() + myDashData.gender.slice(1) : '—' },
+                          { label: 'DOB', value: myDashData.dob ? new Date(myDashData.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' },
+                          { label: 'Married Status', value: myDashData.married_status ? myDashData.married_status.charAt(0).toUpperCase() + myDashData.married_status.slice(1) : '—' },
                           ...(myDashData.married_status === 'married' ? [
-                            { label: 'Anniversary', value: myDashData.anniversary_date ? new Date(myDashData.anniversary_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'â€”' }
+                            { label: 'Anniversary', value: myDashData.anniversary_date ? new Date(myDashData.anniversary_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' }
                           ] : []),
                         ]
                       },
@@ -1610,9 +1468,9 @@ const handleSubmit = async e => {
                       },
                       {
                         title: 'OCCUPATION', color: '#BB8958', fields: [
-                          { label: 'Type', value: myDashData.occupation ? myDashData.occupation.charAt(0).toUpperCase() + myDashData.occupation.slice(1) : 'â€”' },
+                          { label: 'Type', value: myDashData.occupation ? myDashData.occupation.charAt(0).toUpperCase() + myDashData.occupation.slice(1) : '—' },
                           { label: 'Detail', value: myDashData.occupation_detail },
-                          { label: 'Annual Salary', value: myDashData.annual_salary ? `â‚¹ ${Number(myDashData.annual_salary).toLocaleString('en-IN')}` : 'â€”' },
+                          { label: 'Annual Salary', value: myDashData.annual_salary ? `₹ ${Number(myDashData.annual_salary).toLocaleString('en-IN')}` : '—' },
                         ]
                       },
                       {
@@ -1620,7 +1478,7 @@ const handleSubmit = async e => {
                           { label: 'Dealer ID', value: myDashData.dealer_id, mono: true, color: '#BB8958' },
                           { label: 'Dealer Name', value: myDashData.dealer_name },
                           { label: 'Dealer Contact', value: myDashData.dealer_contact_no },
-                          { label: 'Member Since', value: myDashData.created_at ? new Date(myDashData.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'â€”' },
+                          { label: 'Member Since', value: myDashData.created_at ? new Date(myDashData.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—' },
                         ]
                       },
                     ].map(section => (
@@ -1633,7 +1491,7 @@ const handleSubmit = async e => {
                             <div key={f.label}>
                               <div style={{ color: subtext, fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '4px' }}>{f.label}</div>
                               <div style={{ color: f.color || text, fontSize: '13px', fontWeight: f.mono ? 700 : 500, fontFamily: f.mono ? 'monospace' : 'inherit', wordBreak: 'break-all' }}>
-                                {f.mask && f.value ? `XXXX-XXXX-${f.value.slice(-4)}` : f.pan && f.value ? `XXXXXXX${f.value.slice(-4)}` : (f.value || 'â€”')}
+                                {f.mask && f.value ? `XXXX-XXXX-${f.value.slice(-4)}` : f.pan && f.value ? `XXXXXXX${f.value.slice(-4)}` : (f.value || '—')}
                               </div>
                             </div>
                           ))}
@@ -1652,10 +1510,10 @@ const handleSubmit = async e => {
             <form onSubmit={submitProfileUpdate} onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(204,168,129,0.35)', borderRadius: '24px', width: '96%', maxWidth: '1050px', maxHeight: '90vh', overflow: 'hidden', boxShadow: '0 32px 90px rgba(17,24,23,0.8)', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '22px 28px', borderBottom: '1px solid rgba(204,168,129,0.16)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ color: '#CCA881', fontWeight: 900, fontSize: '15px', letterSpacing: '1px' }}>âœŽ PROFILE UPDATE REQUEST</div>
+                  <div style={{ color: '#CCA881', fontWeight: 900, fontSize: '15px', letterSpacing: '1px' }}>✎ PROFILE UPDATE REQUEST</div>
                   <div style={{ color: subtext, fontSize: '12px', marginTop: '4px' }}>Existing details compare pannitu correct details full ah enter pannunga</div>
                 </div>
-                <button type="button" onClick={() => setShowProfileEdit(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '7px 14px', cursor: 'pointer' }}>âœ• Close</button>
+                <button type="button" onClick={() => setShowProfileEdit(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '7px 14px', cursor: 'pointer' }}>✕ Close</button>
               </div>
 
               <div style={{ flex: 1, overflow: 'auto', padding: '24px 28px' }}>
@@ -1674,7 +1532,7 @@ const handleSubmit = async e => {
                     {PROFILE_FIELDS.map(([key, label]) => (
                       <tr key={key}>
                         <td style={{ padding: '12px 14px', border: '1px solid rgba(253,253,252,0.08)', color: '#F3E8DE', fontWeight: 700 }}>{label}</td>
-                        <td style={{ padding: '12px 14px', border: '1px solid rgba(253,253,252,0.08)', color: text, wordBreak: 'break-all' }}>{myDashData?.[key] || 'â€”'}</td>
+                        <td style={{ padding: '12px 14px', border: '1px solid rgba(253,253,252,0.08)', color: text, wordBreak: 'break-all' }}>{myDashData?.[key] || '—'}</td>
                         <td style={{ padding: '10px', border: '1px solid rgba(253,253,252,0.08)' }}>
                           {key === 'gender' ? (
                             <select
@@ -1781,7 +1639,7 @@ const handleSubmit = async e => {
 
                   {/* {proofDocument && (
     <div style={{ color: '#0C4044', fontSize: '12px', marginTop: '8px' }}>
-      âœ… Selected: {proofDocument.name}
+      ✅ Selected: {proofDocument.name}
     </div>
   )}
 
@@ -1805,7 +1663,7 @@ const handleSubmit = async e => {
         )}
 
 
-        {/* â”€â”€ COIN REQUESTS POPUP â”€â”€ */}
+        {/* ── COIN REQUESTS POPUP ── */}
         {showRequestCoin && (
           <div onClick={() => { setShowRequestCoin(false); setRejectingReqId(null); setRejectReason('') }} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.82)', backdropFilter: 'blur(10px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '24px', width: '95%', maxWidth: '620px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}>
@@ -1917,9 +1775,9 @@ const handleSubmit = async e => {
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#CCA881" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <circle cx="12" cy="12" r="8"/>
                             </svg>
-                            {COIN_METAL_LABELS_TEXT[item.metal_type]} â€” {item.weight_label}
+                            {COIN_METAL_LABELS_TEXT[item.metal_type]} — {item.weight_label}
                           </span>
-                          <span style={{ color: '#CCA881', fontWeight: 700 }}>Ã— {item.qty}</span>
+                          <span style={{ color: '#CCA881', fontWeight: 700 }}>× {item.qty}</span>
                         </div>
                       ))}
                     </div>
@@ -1956,14 +1814,14 @@ const handleSubmit = async e => {
           </div>
         )}
 
-        {/* â”€â”€ BUY COIN POPUP (request to Dealer) â”€â”€ */}
+        {/* ── BUY COIN POPUP (request to Dealer) ── */}
         {showBuyCoin && (
           <div onClick={() => setShowBuyCoin(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 1400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#0a1628,#060e1c)' : '#f8fafc', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '24px', width: '95%', maxWidth: '560px', maxHeight: '88vh', overflowY: 'auto', padding: '28px', boxShadow: '0 32px 90px rgba(0,0,0,0.8)' }}>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <div>
-                  <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: '16px' }}>Buy Coin â€” Request</div>
+                  <div style={{ color: '#fbbf24', fontWeight: 900, fontSize: '16px' }}>Buy Coin — Request</div>
                   <div style={{ color: subtext, fontSize: '11px', marginTop: '3px' }}>Add coin types and weights, then send request to your Dealer</div>
                 </div>
                 <button onClick={() => setShowBuyCoin(false)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
@@ -2009,8 +1867,8 @@ const handleSubmit = async e => {
                 <div style={{ marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {coinCart.map((item, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '10px' }}>
-                      <span style={{ color: text, fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} â€” {item.weight_label} Ã— {item.qty}</span>
-                      <button onClick={() => removeCoinCartItem(idx)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', fontSize: '11px' }}>âœ•</button>
+                      <span style={{ color: text, fontSize: '13px', fontWeight: 600 }}>{COIN_METAL_LABELS_TEXT[item.metal_type]} — {item.weight_label} × {item.qty}</span>
+                      <button onClick={() => removeCoinCartItem(idx)} style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', fontSize: '11px' }}>✕</button>
                     </div>
                   ))}
                 </div>
@@ -2037,7 +1895,7 @@ const handleSubmit = async e => {
           </div>
         )}
 
-        {/* â”€â”€ STORED COIN POPUP â”€â”€ */}
+        {/* ── STORED COIN POPUP ── */}
         {showStoredCoin && (
           <div onClick={() => setShowStoredCoin(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(10px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#0a1628,#060e1c)' : '#f8fafc', border: '1px solid rgba(74,222,128,0.3)', borderRadius: '24px', width: '95%', maxWidth: '520px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
@@ -2052,7 +1910,7 @@ const handleSubmit = async e => {
                 {coinStockLoading ? (
                   <div style={{ textAlign: 'center', color: subtext, padding: '40px 0' }}>Loading...</div>
                 ) : coinStock.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: subtext, padding: '40px 0' }}>No stock yet â€” send a Buy Coin request</div>
+                  <div style={{ textAlign: 'center', color: subtext, padding: '40px 0' }}>No stock yet — send a Buy Coin request</div>
                 ) : coinStock.map(s => (
                   <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '12px' }}>
                     <div>
@@ -2081,7 +1939,7 @@ const handleSubmit = async e => {
               {/* HEADER - fixed top */}
               <div style={{ flexShrink: 0, padding: '20px 28px', borderBottom: '1px solid rgba(204,168,129,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <span style={{ color: '#F3E8DE', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>ðŸ¢ Promotor Hierarchy</span>
+                  <span style={{ color: '#F3E8DE', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>🏢 Promotor Hierarchy</span>
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
                     {[
                       { label: 'Promotors', count: promotors.length, color: '#CCA881' },
@@ -2097,7 +1955,7 @@ const handleSubmit = async e => {
                 <button
                   onClick={() => { setShowHierarchy(false); removeSDChainPopup() }}
                   style={{ background: 'transparent', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
-                >âœ• Close</button>
+                >✕ Close</button>
               </div>
 
               {/* SCROLL AREA - middle scrolls */}
@@ -2106,7 +1964,7 @@ const handleSubmit = async e => {
 
                   {/* Sub Dealer Root Node */}
                   <div style={{ background: 'linear-gradient(135deg,rgba(204,168,129,0.13),rgba(189,207,206,0.08))', border: '1px solid rgba(204,168,129,0.55)', borderRadius: '16px', padding: '16px 48px', fontWeight: 800, fontSize: '16px', color: '#CCA881', animation: 'proSDPulseGlow 3s ease-in-out infinite', boxShadow: '0 0 24px rgba(204,168,129,0.1)', textAlign: 'center' }}>
-                    ðŸ”— Sub Dealer
+                    🔗 Sub Dealer
                     <div style={{ fontSize: '11px', color: '#7A8987', fontWeight: 400, marginTop: '4px' }}>
                       {localStorage.getItem('email')}
                     </div>
@@ -2149,9 +2007,9 @@ const handleSubmit = async e => {
               {/* LEGEND - fixed bottom */}
               <div style={{ flexShrink: 0, padding: '14px 28px', borderTop: '1px solid rgba(204,168,129,0.08)', display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
                 {[
-                  { role: 'Sub Dealer', color: '#BB8958', emoji: 'ðŸ”—' },
-                  { role: 'Promotor', color: '#CCA881', emoji: 'ðŸŒŸ' },
-                  { role: 'Customer', color: '#C92035', emoji: 'ðŸ‘¤' },
+                  { role: 'Sub Dealer', color: '#BB8958', emoji: '🔗' },
+                  { role: 'Promotor', color: '#CCA881', emoji: '🌟' },
+                  { role: 'Customer', color: '#C92035', emoji: '👤' },
                 ].map(l => (
                   <div key={l.role} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <div style={{ width: 9, height: 9, borderRadius: '50%', background: l.color }} />
@@ -2159,7 +2017,7 @@ const handleSubmit = async e => {
                   </div>
                 ))}
                 <div style={{ color: subtext, fontSize: '11px', width: '100%', textAlign: 'center' }}>
-                  ðŸ’¡ Click any node to expand/collapse â€¢ Hover to see full chain
+                  💡 Click any node to expand/collapse • Hover to see full chain
                 </div>
               </div>
 
@@ -2167,7 +2025,7 @@ const handleSubmit = async e => {
           </div>
         )}
 
-        {/* â”€â”€ ANNOUNCEMENT VIEW MODAL (SubDealer) â”€â”€ */}
+        {/* ── ANNOUNCEMENT VIEW MODAL (SubDealer) ── */}
         {showAnnouncements && (
           <div
             onClick={() => setShowAnnouncements(false)}
@@ -2215,7 +2073,7 @@ const handleSubmit = async e => {
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    ðŸ“¢
+                    📢
                   </div>
 
                   <div>
@@ -2237,7 +2095,7 @@ const handleSubmit = async e => {
                     cursor: 'pointer'
                   }}
                 >
-                  âœ• Close
+                  ✕ Close
                 </button>
               </div>
 
@@ -2262,13 +2120,13 @@ const handleSubmit = async e => {
                     <div key={ann.id} style={{ background: i === 0 ? 'rgba(204,168,129,0.08)' : 'rgba(253,253,252,0.03)', border: '1px solid rgba(204,168,129,0.25)', borderRadius: '14px', padding: '16px', position: 'relative' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {i === 0 && <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: 'rgba(204,168,129,0.15)', color: '#CCA881', border: '1px solid rgba(204,168,129,0.3)' }}>â— NEW</span>}
+                          {i === 0 && <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: 'rgba(204,168,129,0.15)', color: '#CCA881', border: '1px solid rgba(204,168,129,0.3)' }}>● NEW</span>}
                           <span style={{ fontWeight: 700, color: '#CCA881', fontSize: '14px' }}>{ann.title}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontSize: '11px', color: subtext }}>{new Date(ann.created_at).toLocaleDateString()}</span>
                           <button disabled={alreadyReplied} onClick={() => { setReplyAnn(ann); setReplyMsg(''); setReplyText('') }} style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 700, borderRadius: '20px', cursor: alreadyReplied ? 'not-allowed' : 'pointer', background: alreadyReplied ? 'rgba(253,253,252,0.05)' : 'rgba(204,168,129,0.15)', border: `1px solid ${alreadyReplied ? 'rgba(253,253,252,0.1)' : 'rgba(204,168,129,0.4)'}`, color: alreadyReplied ? subtext : '#CCA881', whiteSpace: 'nowrap' }}>
-                            {alreadyReplied ? 'âœ“ Wished' : 'ðŸ’¬ Reply'}
+                            {alreadyReplied ? '✓ Wished' : '💬 Reply'}
                           </button>
                         </div>
                       </div>
@@ -2289,7 +2147,7 @@ const handleSubmit = async e => {
     style={{ marginTop: '10px', display: 'flex', justifyContent: 'center' }}
   >
     <div style={{ fontSize: '10px', color: '#0C4044', padding: '3px 14px', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '20px', cursor: 'default', background: 'rgba(12,64,68,0.06)', fontWeight: 600 }}>
-      ðŸŽ‚ You are mentioned Â· {replies.length} wish{replies.length !== 1 ? 'es' : ''} â€” hover to see
+      🎂 You are mentioned · {replies.length} wish{replies.length !== 1 ? 'es' : ''} — hover to see
     </div>
   </div>
 )}
@@ -2302,27 +2160,27 @@ const handleSubmit = async e => {
         )}
 
 
-        {/* â”€â”€ REPLY MODAL â€” SubDealer â”€â”€ */}
+        {/* ── REPLY MODAL — SubDealer ── */}
         {replyAnn && (
           <div onClick={() => { setReplyAnn(null); setReplyMsg(''); setReplyText('') }} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.85)', backdropFilter: 'blur(12px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '20px', padding: '28px', width: '95%', maxWidth: '460px', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                 <div>
-                  <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '14px' }}>ðŸ’¬ SEND YOUR WISH</div>
+                  <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '14px' }}>💬 SEND YOUR WISH</div>
                   <div style={{ color: subtext, fontSize: '11px', marginTop: '4px' }}>Replying to: <span style={{ color: text, fontWeight: 600 }}>{replyAnn.title}</span></div>
                 </div>
-                <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>âœ•</button>
+                <button onClick={() => setReplyAnn(null)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer', fontSize: '12px' }}>✕</button>
               </div>
-              {replyMsg && <div style={{ background: replyMsg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${replyMsg.includes('âœ…') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: replyMsg.includes('âœ…') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>{replyMsg}</div>}
+              {replyMsg && <div style={{ background: replyMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${replyMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: replyMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' }}>{replyMsg}</div>}
               <textarea value={replyText} onChange={e => setReplyText(e.target.value)} rows={4} placeholder="Type your wish..." style={{ width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '10px', padding: '12px 14px', color: text, fontSize: '14px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.6', boxSizing: 'border-box' }} onFocus={e => e.target.style.borderColor = '#CCA881'} onBlur={e => e.target.style.borderColor = inpBorder} />
               <button disabled={replyLoading || !replyText.trim()} onClick={submitReply} style={{ marginTop: '14px', width: '100%', padding: '13px', background: replyLoading || !replyText.trim() ? 'rgba(204,168,129,0.2)' : 'linear-gradient(90deg,#CCA881,#BDCFCE)', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '14px', color: replyLoading || !replyText.trim() ? '#CCA881' : '#FDFDFC', cursor: replyLoading || !replyText.trim() ? 'not-allowed' : 'pointer' }}>
-                {replyLoading ? 'â³ Sending...' : 'ðŸ’¬ Send Wish'}
+                {replyLoading ? '⏳ Sending...' : '💬 Send Wish'}
               </button>
             </div>
           </div>
         )}
 
-        {/* â”€â”€ WISH HOVER POPUP â€” Admin â”€â”€ */}
+        {/* ── WISH HOVER POPUP — Admin ── */}
 {replyPopupAnnId && (
   <div
     id="ad-wish-popup"
@@ -2347,7 +2205,7 @@ const handleSubmit = async e => {
   >
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(12,64,68,0.15)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(12,64,68,0.15)', border: '1px solid rgba(12,64,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>ðŸ’¬</div>
+        <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(12,64,68,0.15)', border: '1px solid rgba(12,64,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px' }}>💬</div>
         <span style={{ fontSize: '10px', fontWeight: 800, color: '#0C4044', letterSpacing: '1.5px' }}>WISHES</span>
       </div>
       <div style={{ background: 'rgba(12,64,68,0.15)', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '20px', padding: '2px 10px', fontSize: '10px', color: '#0C4044', fontWeight: 800 }}>
@@ -2366,7 +2224,7 @@ const handleSubmit = async e => {
       </div>
     ))}
     <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(12,64,68,0.08)', textAlign: 'center', fontSize: '9px', color: dark ? '#7A8987' : '#111817', letterSpacing: '0.8px', fontWeight: 600 }}>
-      BitByte Network â€¢ Wishes
+      BitByte Network • Wishes
     </div>
   </div>
 )}
@@ -2543,6 +2401,8 @@ const handleSubmit = async e => {
     </div>
   )
 }
+
+
 
 
 

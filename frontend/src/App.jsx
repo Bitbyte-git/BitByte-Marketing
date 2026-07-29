@@ -1,7 +1,9 @@
-﻿
+
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import CustomerNavbar from './collection/CustomerNavbar'
+import SuperAdminNavbar from './collection/SuperAdminNavbar'
+import InternalRoleNavbar from './collection/InternalRoleNavbar'
 
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -11,12 +13,16 @@ const SuperadminHierarchyGrid = lazy(() => import('./Grid/Superadmin_Hierarchy_g
 const SuperAdminHierarchySalesCount = lazy(() => import('./Hierarchy/superadmin_Hierarchy_SalesCount'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const AdminHierarchy = lazy(() => import('./Hierarchy/Admin_Hierarchy'))
+const AdminHierarchyGrid = lazy(() => import('./Grid/Admin_Hierarchy_grid'))
 const DealerDashboard = lazy(() => import('./pages/DealerDashboard'))
 const DealerHierarchy = lazy(() => import('./Hierarchy/Dealer_Hierarchy'))
+const DealerHierarchyGrid = lazy(() => import('./Grid/Dealer_Hierarchy_grid'))
 const SubDealerDashboard = lazy(() => import('./pages/SubDealerDashboard'))
 const SubdealerHierarchy = lazy(() => import('./Hierarchy/Subdealer_Hierarchy'))
+const SubdealerHierarchyGrid = lazy(() => import('./Grid/Subdealer_Hierarchy_grid'))
 const PromotorDashboard = lazy(() => import('./pages/PromotorDashboard'))
 const PromotorHierarchy = lazy(() => import('./Hierarchy/Promotor_Hierarchy'))
+const PromotorHierarchyGrid = lazy(() => import('./Grid/Promotor_Hierarchy_grid'))
 const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard'))
 const Profile = lazy(() => import('./collection/profile'))
 const CoinsCollection = lazy(() => import('./collection/coins_collection'))
@@ -35,6 +41,7 @@ const Report = lazy(() => import('./Orders/Report'))
 const LoginActive = lazy(() => import('./Orders/login_active'))
 const LoginInactive = lazy(() => import('./Orders/login_inactive'))
 const CoinsReward = lazy(() => import('./Coins_products/Coins_Reward'))
+const BuyCoin = lazy(() => import('./Coins_products/Buy_Coin'))
 const StoredCoins = lazy(() => import('./Coins_products/Stored_coins'))
 const CoinRequests = lazy(() => import('./Coins_products/Coin_Requests'))
 const TransactionHistory = lazy(() => import('./Coins_products/Transaction_History'))
@@ -48,6 +55,8 @@ const collectionPath = (category, metal) => {
 
 const coinsPath = metal => `/collection/coins?metal=${metal}`
 
+const INTERNAL_COIN_ROLES = ['super_admin', 'admin', 'dealer', 'sub_dealer', 'promotor']
+
 function ProtectedRoute({ children, role }) {
   const token = localStorage.getItem('token')
   const userRole = localStorage.getItem('role')
@@ -57,9 +66,12 @@ function ProtectedRoute({ children, role }) {
     return <Navigate to="/login" replace />
   }
 
-  if (role && userRole !== role) {
-    localStorage.clear()
-    return <Navigate to="/login" replace />
+  if (role) {
+    const allowedRoles = Array.isArray(role) ? role : [role]
+    if (!allowedRoles.includes(userRole)) {
+      localStorage.clear()
+      return <Navigate to="/login" replace />
+    }
   }
 
   return children
@@ -107,7 +119,70 @@ function WithCustomerNavbar({ children }) {
     </>
   )
 }
+function WithSuperAdminNavbar({ children }) {
+  const role = localStorage.getItem('role')
+  if (role !== 'super_admin') return children
+  return (
+    <>
+      <SuperAdminNavbar showSidebar={false} />
+      {children}
+    </>
+  )
+}
 
+
+function getInternalRoleChrome(role) {
+  const map = {
+    admin: { title: 'ADMIN', home: '/admin', hierarchy: '/admin-hierarchy', hierarchyGrid: '/admin-hierarchy-grid', hierarchyLabel: 'Dealer Hierarchy', hierarchyGridLabel: 'Dealer Hierarchy Grid', createLabel: 'Create Dealer' },
+    dealer: { title: 'DEALER', home: '/dealer', hierarchy: '/dealer-hierarchy', hierarchyGrid: '/dealer-hierarchy-grid', hierarchyLabel: 'Sub Dealer Hierarchy', hierarchyGridLabel: 'Sub Dealer Hierarchy Grid', createLabel: 'Create Sub Dealer' },
+    sub_dealer: { title: 'SUB DEALER', home: '/sub-dealer', hierarchy: '/subdealer-hierarchy', hierarchyGrid: '/subdealer-hierarchy-grid', hierarchyLabel: 'Promoter Hierarchy', hierarchyGridLabel: 'Promoter Hierarchy Grid', createLabel: 'Create Promoter' },
+    promotor: { title: 'PROMOTER', home: '/promotor', hierarchy: '/promotor-hierarchy', hierarchyGrid: '/promotor-hierarchy-grid', hierarchyLabel: 'Customer Hierarchy', hierarchyGridLabel: 'Customer Hierarchy Grid', createLabel: 'Create Customer' },
+  }
+  return map[role] || null
+}
+
+function WithInternalRoleNavbar({ children }) {
+  const role = localStorage.getItem('role')
+  if (role === 'super_admin') {
+    return <WithSuperAdminNavbar>{children}</WithSuperAdminNavbar>
+  }
+  const cfg = getInternalRoleChrome(role)
+  if (!cfg) return children
+  return (
+    <>
+      <InternalRoleNavbar
+        roleTitle={cfg.title}
+        homePath={cfg.home}
+        managementItems={[
+          { label: 'Dashboard', path: cfg.home },
+          { label: cfg.hierarchyLabel, path: cfg.hierarchy },
+          { label: cfg.createLabel, path: cfg.home },
+        ]}
+        celebrationItems={[
+          { label: "Today's Birthdays", path: cfg.home },
+          { label: "Today's Anniversaries", path: cfg.home },
+          { label: 'Work Anniversaries', path: cfg.home },
+        ]}
+        announcementItems={[{ label: 'Announcements', path: cfg.home }]}
+        coinItems={[
+          { label: 'Buy Coin', path: '/buy-coin' },
+          { label: 'Stored Coin', path: '/stored-coins' },
+          { label: role === 'promotor' ? 'My Requests' : 'Coin Requests', path: '/coin-requests-page' },
+          { label: 'Coin Transactions', path: '/coin-transactions' },
+        ]}
+        reportItems={[
+          { label: 'Hierarchy Report', path: cfg.hierarchy },
+          { label: 'Sales Report', path: '/sales-report' },
+        ]}
+        actionItems={[
+          { label: 'Dashboard', icon: 'user', path: cfg.home },
+          { label: 'Logout', icon: 'logout', variant: 'danger', action: () => { localStorage.clear(); window.location.href = '/login' } },
+        ]}
+      />
+      {children}
+    </>
+  )
+}
 export default function App() {
   return (
     <BrowserRouter>
@@ -116,16 +191,20 @@ export default function App() {
           <Route path="/" element={<WithCustomerNavbar><LandingPage /></WithCustomerNavbar>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/super-admin" element={<ProtectedRoute role="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
-          <Route path="/superadmin-hierarchy" element={<SuperadminHierarchy />} />
-          <Route path="/superadmin-hierarchy-grid" element={<SuperadminHierarchyGrid />} />
+          <Route path="/superadmin-hierarchy" element={<WithSuperAdminNavbar><SuperadminHierarchy /></WithSuperAdminNavbar>} />
+          <Route path="/superadmin-hierarchy-grid" element={<WithSuperAdminNavbar><SuperadminHierarchyGrid /></WithSuperAdminNavbar>} />
           <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/admin-hierarchy" element={<AdminHierarchy />} />
+          <Route path="/admin-hierarchy" element={<ProtectedRoute role="admin"><WithInternalRoleNavbar><AdminHierarchy /></WithInternalRoleNavbar></ProtectedRoute>} />
+          <Route path="/admin-hierarchy-grid" element={<ProtectedRoute role="admin"><WithInternalRoleNavbar><AdminHierarchyGrid /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/dealer" element={<ProtectedRoute role="dealer"><DealerDashboard /></ProtectedRoute>} />
-          <Route path="/dealer-hierarchy" element={<DealerHierarchy />} />
+          <Route path="/dealer-hierarchy" element={<ProtectedRoute role="dealer"><WithInternalRoleNavbar><DealerHierarchy /></WithInternalRoleNavbar></ProtectedRoute>} />
+          <Route path="/dealer-hierarchy-grid" element={<ProtectedRoute role="dealer"><WithInternalRoleNavbar><DealerHierarchyGrid /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/sub-dealer" element={<ProtectedRoute role="sub_dealer"><SubDealerDashboard /></ProtectedRoute>} />
-          <Route path="/subdealer-hierarchy" element={<SubdealerHierarchy />} />
+          <Route path="/subdealer-hierarchy" element={<ProtectedRoute role="sub_dealer"><WithInternalRoleNavbar><SubdealerHierarchy /></WithInternalRoleNavbar></ProtectedRoute>} />
+          <Route path="/subdealer-hierarchy-grid" element={<ProtectedRoute role="sub_dealer"><WithInternalRoleNavbar><SubdealerHierarchyGrid /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/promotor" element={<ProtectedRoute role="promotor"><PromotorDashboard /></ProtectedRoute>} />
-          <Route path="/promotor-hierarchy" element={<PromotorHierarchy />} />
+          <Route path="/promotor-hierarchy" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchy /></WithInternalRoleNavbar></ProtectedRoute>} />
+          <Route path="/promotor-hierarchy-grid" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchyGrid /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/customer" element={<ProtectedRoute role="customer"><WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/profile" element={<WithCustomerNavbar><Profile /></WithCustomerNavbar>} />
 
@@ -181,9 +260,9 @@ export default function App() {
 
           <Route path="/cart" element={<WithCustomerNavbar><CardSection /></WithCustomerNavbar>} />
           <Route path="/product-display" element={<WithCustomerNavbar><ProductDisplay /></WithCustomerNavbar>} />
-          <Route path="/add-product" element={<ProtectedRoute role="super_admin"><AddProduct /></ProtectedRoute>} />
-          <Route path="/add-banners" element={<ProtectedRoute role="super_admin"><AddBanners /></ProtectedRoute>} />
-          <Route path="/home-banner" element={<ProtectedRoute role="super_admin"><HomeBanner /></ProtectedRoute>} />
+          <Route path="/add-product" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AddProduct /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/add-banners" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AddBanners /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/home-banner" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><HomeBanner /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/collection/all" element={<WithCustomerNavbar><AllCollection /></WithCustomerNavbar>} />
           <Route path="/collection/coins" element={<WithCustomerNavbar><CoinsCollection /></WithCustomerNavbar>} />
           <Route path="/gold-coins" element={<Navigate to={coinsPath('gold')} replace />} />
@@ -192,19 +271,22 @@ export default function App() {
           <Route path="/order-confirm" element={<WithCustomerNavbar><OrderConfirm /></WithCustomerNavbar>} />
           <Route path="/bj-live" element={<WithCustomerNavbar><BBLive /></WithCustomerNavbar>} />
           <Route path="/order-summary" element={<ProtectedRoute role="customer"><WithCustomerNavbar><OrderSummary /></WithCustomerNavbar></ProtectedRoute>} />
-          <Route path="/admin-orders" element={<ProtectedRoute role="super_admin"><AdminOrdersPage /></ProtectedRoute>} />
-          <Route path="/sales-report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
-          <Route path="/hierarchy-sales-count" element={<SuperAdminHierarchySalesCount />} />
+          <Route path="/admin-orders" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AdminOrdersPage /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/sales-report" element={<ProtectedRoute><WithInternalRoleNavbar><Report /></WithInternalRoleNavbar></ProtectedRoute>} />
+          <Route path="/hierarchy-sales-count" element={<WithSuperAdminNavbar><SuperAdminHierarchySalesCount /></WithSuperAdminNavbar>} />
           <Route path="/login-active" element={<LoginActive />} />
 <Route path="/login-inactive" element={<LoginInactive />} />
-<Route path="/coins-reward" element={<ProtectedRoute role="super_admin"><CoinsReward /></ProtectedRoute>} />
-<Route path="/stored-coins" element={<ProtectedRoute role="super_admin"><StoredCoins /></ProtectedRoute>} />
-<Route path="/coin-requests-page" element={<ProtectedRoute role="super_admin"><CoinRequests /></ProtectedRoute>} />
-<Route path="/coin-transactions" element={<ProtectedRoute role="super_admin"><TransactionHistory /></ProtectedRoute>} />
+<Route path="/buy-coin" element={<ProtectedRoute role={INTERNAL_COIN_ROLES}><WithInternalRoleNavbar><BuyCoin /></WithInternalRoleNavbar></ProtectedRoute>} />
+<Route path="/coins-reward" element={<ProtectedRoute role={INTERNAL_COIN_ROLES}><WithInternalRoleNavbar><CoinsReward /></WithInternalRoleNavbar></ProtectedRoute>} />
+<Route path="/stored-coins" element={<ProtectedRoute role={INTERNAL_COIN_ROLES}><WithInternalRoleNavbar><StoredCoins /></WithInternalRoleNavbar></ProtectedRoute>} />
+<Route path="/coin-requests-page" element={<ProtectedRoute role={INTERNAL_COIN_ROLES}><WithInternalRoleNavbar><CoinRequests /></WithInternalRoleNavbar></ProtectedRoute>} />
+<Route path="/coin-transactions" element={<ProtectedRoute role={INTERNAL_COIN_ROLES}><WithInternalRoleNavbar><TransactionHistory /></WithInternalRoleNavbar></ProtectedRoute>} />
 </Routes>
       </Suspense>
     </BrowserRouter>
   )
 }
+
+
 
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api'
 
 const COIN_METAL_LABELS_TEXT = { gold_22k: 'Gold 22K', gold_24k: 'Gold 24K', silver_999: 'Silver 999' }
-const METAL_COLORS = { gold_22k: '#fbbf24', gold_24k: '#ffd700', silver_999: '#c0c0c0' }
+const METAL_COLORS = { gold_22k: '#CCA881', gold_24k: '#BB8958', silver_999: '#7A8987' }
 
 export default function StoredCoins() {
   const navigate = useNavigate()
@@ -32,134 +32,56 @@ export default function StoredCoins() {
   }))
 
   const totalCoins = coinStock.reduce((sum, s) => sum + s.qty, 0)
+  const totalLines = coinStock.length
 
   return (
-    <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 20% 0%, #0f1729 0%, #020617 55%)', color: '#f8fafc', fontFamily: '"Inter",system-ui,sans-serif', padding: '40px 24px' }}>
-      <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
+    <main className="sc-page">
+      <style>{`
+        .sc-page{min-height:100vh;background:linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 52%,#E7EDEC 100%);color:#111817;font-family:"Manrope","Inter",system-ui,sans-serif;padding:42px 28px 76px}.sc-wrap{max-width:1280px;margin:0 auto}.sc-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:stretch;margin-bottom:22px}.sc-title-card,.sc-stat,.sc-section,.sc-empty{background:rgba(253,253,252,.95);border:1px solid rgba(189,207,206,.95);border-radius:8px;box-shadow:0 22px 58px rgba(7,59,63,.08)}.sc-title-card{padding:34px 38px;position:relative;overflow:hidden}.sc-title-card:after{content:"";position:absolute;right:-80px;top:-90px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(204,168,129,.3),transparent 70%)}.sc-kicker{font-size:12px;font-weight:950;letter-spacing:.18em;text-transform:uppercase;color:#BB8958}.sc-title{font-family:Georgia,'Times New Roman',serif;font-size:clamp(38px,5vw,66px);line-height:.95;margin:9px 0 0;color:#073B3F;font-weight:500}.sc-sub{margin:12px 0 0;color:#7A8987;font-weight:750;line-height:1.7}.sc-actions{display:flex;gap:12px;align-items:center}.sc-btn{height:48px;border-radius:999px;border:1px solid rgba(12,64,68,.24);background:#FDFDFC;color:#073B3F;padding:0 22px;font-weight:950;cursor:pointer}.sc-btn.primary{border:0;background:linear-gradient(135deg,#0C4044,#073B3F);color:#FDFDFC;box-shadow:0 16px 34px rgba(7,59,63,.18)}.sc-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:24px}.sc-stat{padding:20px}.sc-stat small{display:block;font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.13em;color:#7A8987}.sc-stat strong{display:block;margin-top:8px;font-size:32px;color:#073B3F}.sc-stat span{display:block;margin-top:5px;color:#7A8987;font-weight:750}.sc-section{padding:24px;margin-bottom:18px}.sc-section-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.sc-dot{width:12px;height:12px;border-radius:50%;background:var(--tone);box-shadow:0 0 18px var(--tone)}.sc-section h2{font-size:18px;margin:0;color:#073B3F;font-weight:950}.sc-section-line{height:1px;flex:1;background:linear-gradient(90deg,rgba(189,207,206,.9),transparent)}.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}.sc-card{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:110px;padding:20px;border-radius:8px;border:1px solid rgba(189,207,206,.82);background:linear-gradient(145deg,#FDFDFC,#F3F3F0);transition:.22s ease}.sc-card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 10%,rgba(var(--rgb),.18),transparent 42%);opacity:.8}.sc-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px rgba(7,59,63,.1);border-color:rgba(var(--rgb),.55)}.sc-card-label,.sc-card-qty{position:relative}.sc-card-label{font-size:16px;font-weight:900;color:#111817}.sc-card-label small{display:block;color:#7A8987;margin-top:5px;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.sc-card-qty{font-size:34px;line-height:1;font-weight:950;color:#073B3F}.sc-empty{padding:54px 28px;text-align:center;color:#7A8987;font-weight:850}.sc-loading{display:grid;place-items:center;min-height:240px;color:#7A8987;font-weight:900}.sc-error{padding:16px 18px;border-radius:8px;background:rgba(201,32,53,.08);border:1px solid rgba(201,32,53,.24);color:#C92035;font-weight:850}@media(max-width:900px){.sc-page{padding:28px 14px 56px}.sc-hero{grid-template-columns:1fr}.sc-actions{justify-content:flex-start;flex-wrap:wrap}.sc-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.sc-stats{grid-template-columns:1fr}.sc-title-card{padding:28px 22px}.sc-actions{display:grid}.sc-btn{width:100%}}
+      `}</style>
+      <div className="sc-wrap">
+        <section className="sc-hero">
+          <div className="sc-title-card">
+            <div className="sc-kicker">Inventory Vault</div>
+            <h1 className="sc-title">Stored Coin</h1>
+            <p className="sc-sub">Role-wise coin stock, grouped by purity, with a clean live inventory view for all internal teams.</p>
+          </div>
+          <div className="sc-actions">
+            <button className="sc-btn" onClick={() => navigate('/coin-transactions')}>Transactions</button>
+            <button className="sc-btn primary" onClick={() => navigate('/buy-coin')}>Buy Coin</button>
+          </div>
+        </section>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-              <div style={{ width: '4px', height: '22px', borderRadius: '4px', background: 'linear-gradient(180deg,#4ade80,#22c55e)' }} />
-              <h1 style={{ fontSize: '26px', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', background: 'linear-gradient(90deg,#4ade80,#86efac)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Stored Coins
-              </h1>
+        {!loading && !error && (
+          <section className="sc-stats">
+            <div className="sc-stat"><small>Total coins</small><strong>{totalCoins}</strong><span>{totalLines} stock lines</span></div>
+            {grouped.map(g => <div className="sc-stat" key={g.metal}><small>{COIN_METAL_LABELS_TEXT[g.metal]}</small><strong>{g.items.reduce((s, i) => s + i.qty, 0)}</strong><span>{g.items.length} weights</span></div>)}
+          </section>
+        )}
+
+        {loading && <div className="sc-loading">Loading stored coins...</div>}
+        {error && <div className="sc-error">{error}</div>}
+        {!loading && !error && coinStock.length === 0 && <div className="sc-empty">No stored coin stock available yet.</div>}
+
+        {!loading && !error && grouped.map(group => group.items.length > 0 && (
+          <section className="sc-section" key={group.metal}>
+            <div className="sc-section-head" style={{ '--tone': group.color }}>
+              <span className="sc-dot" />
+              <h2>{COIN_METAL_LABELS_TEXT[group.metal]}</h2>
+              <span className="sc-section-line" />
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0, paddingLeft: '14px' }}>
-              {totalCoins} coins currently in your stock
-            </p>
-          </div>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              padding: '10px 22px',
-              background: 'rgba(255,255,255,0.04)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '12px',
-              color: '#f8fafc',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.09)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.24)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)' }}
-          >
-            ← Back
-          </button>
-        </div>
-
-        {/* Summary strip */}
-        {!loading && !error && coinStock.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '32px' }}>
-            {grouped.map(g => {
-              const subtotal = g.items.reduce((s, i) => s + i.qty, 0)
-              return (
-                <div key={g.metal} style={{
-                  background: `linear-gradient(135deg, rgba(${hexToRgb(g.color)},0.10), rgba(${hexToRgb(g.color)},0.02))`,
-                  border: `1px solid rgba(${hexToRgb(g.color)},0.25)`,
-                  borderRadius: '16px',
-                  padding: '16px 20px',
-                }}>
-                  <div style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {COIN_METAL_LABELS_TEXT[g.metal]}
-                  </div>
-                  <div style={{ color: g.color, fontSize: '28px', fontWeight: 900, fontFamily: 'monospace', marginTop: '4px' }}>
-                    {subtotal}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {loading && (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: '#94a3b8' }}>
-            <div style={{
-              width: '32px', height: '32px', margin: '0 auto 14px',
-              border: '3px solid rgba(255,255,255,0.1)',
-              borderTopColor: '#4ade80',
-              borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
-            }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            Loading...
-          </div>
-        )}
-
-        {error && (
-          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', borderRadius: '14px', padding: '16px 22px', marginBottom: '24px', fontSize: '13px' }}>
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && coinStock.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#64748b', padding: '80px 0', fontSize: '14px', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '18px' }}>
-            No stock yet
-          </div>
-        )}
-
-        {!loading && !error && grouped.map(group => (
-          group.items.length > 0 && (
-            <div key={group.metal} style={{ marginBottom: '32px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: group.color, boxShadow: `0 0 10px ${group.color}` }} />
-                <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: group.color }}>
-                  {COIN_METAL_LABELS_TEXT[group.metal]}
-                </h2>
-                <div style={{ flex: 1, height: '1px', background: `linear-gradient(90deg, rgba(${hexToRgb(group.color)},0.3), transparent)` }} />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' }}>
-                {group.items.map(s => (
-                  <div
-                    key={s.id}
-                    style={{
-                      background: `linear-gradient(135deg, rgba(${hexToRgb(group.color)},0.08), rgba(255,255,255,0.02))`,
-                      border: `1px solid rgba(${hexToRgb(group.color)},0.28)`,
-                      borderRadius: '16px',
-                      padding: '18px 20px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      transition: 'transform 0.2s ease, border-color 0.2s ease',
-                      cursor: 'default',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = `rgba(${hexToRgb(group.color)},0.55)` }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = `rgba(${hexToRgb(group.color)},0.28)` }}
-                  >
-                    <div style={{ color: '#94a3b8', fontSize: '13px', fontWeight: 500 }}>{s.weight_label}</div>
-                    <div style={{ color: group.color, fontWeight: 900, fontSize: '24px', fontFamily: 'monospace' }}>{s.qty}</div>
-                  </div>
-                ))}
-              </div>
+            <div className="sc-grid">
+              {group.items.map(s => (
+                <article className="sc-card" key={s.id} style={{ '--rgb': hexToRgb(group.color) }}>
+                  <div className="sc-card-label">{s.weight_label}<small>available stock</small></div>
+                  <div className="sc-card-qty">{s.qty}</div>
+                </article>
+              ))}
             </div>
-          )
+          </section>
         ))}
-
       </div>
-    </div>
+    </main>
   )
 }
 
