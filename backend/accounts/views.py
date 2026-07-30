@@ -2379,8 +2379,10 @@ class RetailerPromotionListView(APIView):
             total_customers = sub_customers.count()
             today_customers = sub_customers.filter(created_at__date=today).count()
 
+            # Customer A's own purchases + all their sub-customers' purchases — combined total
+            all_user_ids = sub_user_ids + [creator.id]
             total_value = JewelryOrder.objects.filter(
-                user_id__in=sub_user_ids
+                user_id__in=all_user_ids
             ).aggregate(total=Sum('total_price'))['total'] or 0
 
             eligible = total_value >= self.SALES_THRESHOLD or total_customers >= self.CUSTOMER_COUNT_THRESHOLD

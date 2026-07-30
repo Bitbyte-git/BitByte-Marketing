@@ -37,12 +37,21 @@ export default function InternalRoleNavbar({
     localStorage.clear()
     navigate('/login')
   }
+  // Promotor(Retailer) navbar la mattum tha idhu varum — vera role ku empty ah irukkum
+  const roleSwitchItems = roleTitle === 'PROMOTER'
+    ? [
+        { label: 'Retailer', path: homePath },
+        { label: 'Customer', path: '/customer' },
+      ]
+    : []
+
   const groups = [
     { label: 'Management', items: managementItems },
     { label: 'Celebrations', items: celebrationItems },
     { label: 'Announcements', items: announcementItems },
     { label: 'Coins', items: coinItems },
     { label: 'Reports', items: reportItems },
+    { label: 'Role', items: roleSwitchItems },
   ].filter(group => group.items.length)
 
   const actions = actionItems.length ? actionItems : [{ label: 'Logout', icon: 'logout', variant: 'danger', action: logout }]
