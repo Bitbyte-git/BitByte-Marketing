@@ -156,9 +156,16 @@ class DealerProfile(models.Model):
     dealer_id = models.CharField(max_length=20, unique=True, blank=True)
     dealer_contact_no = models.CharField(max_length=10, blank=True)
 
+    SUPER_STOCKIST_STATUS_CHOICES = [
+        ('none', 'Not Eligible'),
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    super_stockist_status = models.CharField(max_length=10, choices=SUPER_STOCKIST_STATUS_CHOICES, default='none')
+
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # ✅ FIX 1: indentation correct + __str__ separate பண்ணினோம்
     def save(self, *args, **kwargs):
         if not self.dealer_name:
             self.dealer_name = self.first_name
@@ -218,9 +225,17 @@ class SubDealerProfile(models.Model):
     annual_salary = models.CharField(max_length=10, blank=True, null=True)
 
     sub_dealer_id = models.CharField(max_length=20, unique=True, blank=True)
+
+    DISTRIBUTOR_STATUS_CHOICES = [
+        ('none', 'Not Eligible'),
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    distributor_status = models.CharField(max_length=10, choices=DISTRIBUTOR_STATUS_CHOICES, default='none')
+
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # ✅ FIX 2: sub_dealer_id மட்டும் - dealer fields இல்ல இங்க!
     def save(self, *args, **kwargs):
         if not self.sub_dealer_id:
             from django.utils import timezone
@@ -282,6 +297,14 @@ class PromotorProfile(models.Model):
     promotor_name = models.CharField(max_length=50, blank=True)
     promotor_id = models.CharField(max_length=20, unique=True, blank=True)
     promotor_contact_no = models.CharField(max_length=10, blank=True)
+
+    WHOLESALE_STATUS_CHOICES = [
+        ('none', 'Not Eligible'),
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    wholesale_status = models.CharField(max_length=10, choices=WHOLESALE_STATUS_CHOICES, default='none')
 
     created_at = models.DateTimeField(auto_now_add=True)
 

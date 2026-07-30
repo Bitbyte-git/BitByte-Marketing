@@ -154,7 +154,7 @@ export default function App() {
           <Route path="/promotor" element={<ProtectedRoute role="promotor"><PromotorDashboard /></ProtectedRoute>} />
           <Route path="/promotor-hierarchy" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchy /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/promotor-hierarchy-grid" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchyGrid /></WithInternalRoleNavbar></ProtectedRoute>} />
-          <Route path="/customer" element={<ProtectedRoute role={["customer", "promotor"]}><WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar></ProtectedRoute>} />
+          <Route path="/customer" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/profile" element={<WithCustomerNavbar><Profile /></WithCustomerNavbar>} />
           <Route path="/create-customer" element={<ProtectedRoute role="customer"><WithCustomerNavbar><CreateCustomer /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/collection/rings" element={<Navigate to={collectionPath('rings')} replace />} />

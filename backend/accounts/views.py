@@ -2467,6 +2467,385 @@ class RetailerPromotionActionView(APIView):
 
         return Response({'error': 'Invalid action'}, status=400)
 
+# ── NEW: Wholesale Dealer Promotion System (Promotor -> SubDealer) ──
+class WholesaleDealerPromotionListView(APIView):
+    """Promotors (Retailers) who created 20+ customers AND crossed 35L sales — eligible for Wholesale Dealer."""
+    permission_classes = [IsAuthenticated]
+
+    SALES_THRESHOLD = 3500000        # ₹35 Lakh
+    CUSTOMER_THRESHOLD = 20
+
+    def get(self, request):
+        if request.user.role not in ['super_admin', 'admin']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        today = timezone.now().date()
+        creators = User.objects.filter(role='promotor', created_customers__isnull=False).distinct()
+
+        results = []
+        for creator in creators:
+            try:
+                creator_profile = creator.promotor_profile
+            except PromotorProfile.DoesNotExist:
+                continue
+
+            sub_customers = CustomerProfile.objects.filter(created_by=creator)
+            sub_user_ids = list(sub_customers.values_list('user_id', flat=True))
+
+            total_customers = sub_customers.count()
+            today_customers = sub_customers.filter(created_at__date=today).count()
+
+            all_user_ids = sub_user_ids + [creator.id]
+            total_value = JewelryOrder.objects.filter(
+                user_id__in=all_user_ids
+            ).aggregate(total=Sum('total_price'))['total'] or 0
+
+            # ── AND logic: rendும் satisfy aganum ──
+            eligible = total_customers >= self.CUSTOMER_THRESHOLD and total_value >= self.SALES_THRESHOLD
+            if not eligible and creator_profile.wholesale_status == 'none':
+                continue
+
+            results.append({
+                'user_id': creator.id,
+                'promotor_id': creator_profile.promotor_id,
+                'first_name': creator_profile.first_name,
+                'last_name': creator_profile.last_name,
+                'mobile_number': creator_profile.mobile_number,
+                'email': creator.email,
+                'today_customers': today_customers,
+                'total_customers': total_customers,
+                'total_value': float(total_value),
+                'status': creator_profile.wholesale_status,
+            })
+
+        results.sort(key=lambda r: r['total_value'], reverse=True)
+        return Response(results)
+
+
+class WholesaleDealerPromotionActionView(APIView):
+    """Approve converts the Promotor into a real SubDealer; reject just marks it."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        if request.user.role not in ['super_admin', 'admin']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        action = request.data.get('action')
+        try:
+            target_user = User.objects.get(id=user_id, role='promotor')
+            target_profile = target_user.promotor_profile
+        except (User.DoesNotExist, PromotorProfile.DoesNotExist):
+            return Response({'error': 'Promotor not found'}, status=404)
+
+        if action == 'reject':
+            target_profile.wholesale_status = 'rejected'
+            target_profile.save(update_fields=['wholesale_status'])
+            return Response({'message': 'Rejected'})
+
+        if action == 'approve':
+            if hasattr(target_user, 'sub_dealer_profile'):
+                return Response({'error': 'Already a sub dealer'}, status=400)
+
+            SubDealerProfile.objects.create(
+                user=target_user,
+                created_by=target_profile.created_by,   # original parent preserve pannurom, tier roll-up ku
+                initial=target_profile.initial,
+                first_name=target_profile.first_name,
+                last_name=target_profile.last_name,
+                mobile_number=target_profile.mobile_number,
+                gender=target_profile.gender,
+                dob=target_profile.dob,
+                married_status=target_profile.married_status,
+                anniversary_date=target_profile.anniversary_date,
+                door_no=target_profile.door_no,
+                street_name=target_profile.street_name,
+                town_name=target_profile.town_name,
+                city_name=target_profile.city_name,
+                district=target_profile.district,
+                state=target_profile.state,
+                aadhaar_no=target_profile.aadhaar_no,
+                pan_no=target_profile.pan_no,
+                occupation=target_profile.occupation,
+                occupation_detail=target_profile.occupation_detail,
+                annual_salary=target_profile.annual_salary,
+            )
+
+            target_profile.wholesale_status = 'approved'
+            target_profile.save(update_fields=['wholesale_status'])
+
+            target_user.role = 'sub_dealer'
+            target_user.save(update_fields=['role'])
+
+            return Response({'message': 'Approved — promoted to Wholesale Dealer'})
+
+        return Response({'error': 'Invalid action'}, status=400)
+
+
+# ── NEW: Distributor Promotion System (SubDealer -> Dealer) ──
+class DistributorPromotionListView(APIView):
+    """SubDealers (Wholesale Dealers) who built 40+ customers, 10+ Retailers, 5+ Wholesale Dealers
+    keezhе AND crossed 2.4C overall — eligible for Distributor."""
+    permission_classes = [IsAuthenticated]
+
+    SALES_THRESHOLD = 24000000       # ₹2.4 Crore
+    CUSTOMER_THRESHOLD = 40
+    RETAILER_THRESHOLD = 10
+    WHOLESALE_THRESHOLD = 5
+
+    def get(self, request):
+        if request.user.role not in ['super_admin', 'admin']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        today = timezone.now().date()
+        creators = User.objects.filter(role='sub_dealer', created_promotors__isnull=False).distinct()
+
+        results = []
+        for creator in creators:
+            try:
+                creator_profile = creator.sub_dealer_profile
+            except SubDealerProfile.DoesNotExist:
+                continue
+
+            promotors = PromotorProfile.objects.filter(created_by=creator)
+            promotor_user_ids = list(promotors.values_list('user_id', flat=True))
+
+            sub_customers = CustomerProfile.objects.filter(created_by_id__in=promotor_user_ids)
+            customer_user_ids = list(sub_customers.values_list('user_id', flat=True))
+
+            total_wholesale_dealers = SubDealerProfile.objects.filter(created_by=creator).count()
+
+            total_retailers = promotors.count()
+            total_customers = sub_customers.count()
+            today_customers = sub_customers.filter(created_at__date=today).count()
+
+            all_user_ids = customer_user_ids + promotor_user_ids + [creator.id]
+            total_value = JewelryOrder.objects.filter(
+                user_id__in=all_user_ids
+            ).aggregate(total=Sum('total_price'))['total'] or 0
+
+            eligible = (
+                total_customers >= self.CUSTOMER_THRESHOLD and
+                total_retailers >= self.RETAILER_THRESHOLD and
+                total_wholesale_dealers >= self.WHOLESALE_THRESHOLD and
+                total_value >= self.SALES_THRESHOLD
+            )
+            if not eligible and creator_profile.distributor_status == 'none':
+                continue
+
+            results.append({
+                'user_id': creator.id,
+                'sub_dealer_id': creator_profile.sub_dealer_id,
+                'first_name': creator_profile.first_name,
+                'last_name': creator_profile.last_name,
+                'mobile_number': creator_profile.mobile_number,
+                'email': creator.email,
+                'today_customers': today_customers,
+                'total_customers': total_customers,
+                'total_retailers': total_retailers,
+                'total_wholesale_dealers': total_wholesale_dealers,
+                'total_value': float(total_value),
+                'status': creator_profile.distributor_status,
+            })
+
+        results.sort(key=lambda r: r['total_value'], reverse=True)
+        return Response(results)
+
+
+class DistributorPromotionActionView(APIView):
+    """Approve converts the SubDealer into a real Dealer; reject just marks it."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        if request.user.role not in ['super_admin', 'admin']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        action = request.data.get('action')
+        try:
+            target_user = User.objects.get(id=user_id, role='sub_dealer')
+            target_profile = target_user.sub_dealer_profile
+        except (User.DoesNotExist, SubDealerProfile.DoesNotExist):
+            return Response({'error': 'Sub dealer not found'}, status=404)
+
+        if action == 'reject':
+            target_profile.distributor_status = 'rejected'
+            target_profile.save(update_fields=['distributor_status'])
+            return Response({'message': 'Rejected'})
+
+        if action == 'approve':
+            if hasattr(target_user, 'dealer_profile'):
+                return Response({'error': 'Already a dealer'}, status=400)
+
+            DealerProfile.objects.create(
+                user=target_user,
+                created_by=target_profile.created_by,
+                initial=target_profile.initial,
+                first_name=target_profile.first_name,
+                last_name=target_profile.last_name,
+                mobile_number=target_profile.mobile_number,
+                gender=target_profile.gender,
+                dob=target_profile.dob,
+                married_status=target_profile.married_status,
+                anniversary_date=target_profile.anniversary_date,
+                door_no=target_profile.door_no,
+                street_name=target_profile.street_name,
+                town_name=target_profile.town_name,
+                city_name=target_profile.city_name,
+                district=target_profile.district,
+                state=target_profile.state,
+                aadhaar_no=target_profile.aadhaar_no,
+                pan_no=target_profile.pan_no,
+                occupation=target_profile.occupation,
+                occupation_detail=target_profile.occupation_detail,
+                annual_salary=target_profile.annual_salary,
+            )
+
+            target_profile.distributor_status = 'approved'
+            target_profile.save(update_fields=['distributor_status'])
+
+            target_user.role = 'dealer'
+            target_user.save(update_fields=['role'])
+
+            return Response({'message': 'Approved — promoted to Distributor'})
+
+        return Response({'error': 'Invalid action'}, status=400)
+
+
+# ── NEW: Super Stockist Promotion System (Dealer -> Admin) ──
+class SuperStockistPromotionListView(APIView):
+    """Dealers (Distributors) who built 80+ customers, 20+ Retailers, 10+ Wholesale Dealers,
+    5+ Distributors keezhе AND crossed 12C overall — eligible for Super Stockist."""
+    permission_classes = [IsAuthenticated]
+
+    SALES_THRESHOLD = 120000000      # ₹12 Crore
+    CUSTOMER_THRESHOLD = 80
+    RETAILER_THRESHOLD = 20
+    WHOLESALE_THRESHOLD = 10
+    DISTRIBUTOR_THRESHOLD = 5
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+
+        today = timezone.now().date()
+        creators = User.objects.filter(role='dealer', created_sub_dealers__isnull=False).distinct()
+
+        results = []
+        for creator in creators:
+            try:
+                creator_profile = creator.dealer_profile
+            except DealerProfile.DoesNotExist:
+                continue
+
+            sub_dealers = SubDealerProfile.objects.filter(created_by=creator)
+            sub_dealer_user_ids = list(sub_dealers.values_list('user_id', flat=True))
+
+            promotors = PromotorProfile.objects.filter(created_by_id__in=sub_dealer_user_ids)
+            promotor_user_ids = list(promotors.values_list('user_id', flat=True))
+
+            sub_customers = CustomerProfile.objects.filter(created_by_id__in=promotor_user_ids)
+            customer_user_ids = list(sub_customers.values_list('user_id', flat=True))
+
+            total_distributors = DealerProfile.objects.filter(created_by=creator).count()
+
+            total_wholesale_dealers = sub_dealers.count()
+            total_retailers = promotors.count()
+            total_customers = sub_customers.count()
+            today_customers = sub_customers.filter(created_at__date=today).count()
+
+            all_user_ids = customer_user_ids + promotor_user_ids + sub_dealer_user_ids + [creator.id]
+            total_value = JewelryOrder.objects.filter(
+                user_id__in=all_user_ids
+            ).aggregate(total=Sum('total_price'))['total'] or 0
+
+            eligible = (
+                total_customers >= self.CUSTOMER_THRESHOLD and
+                total_retailers >= self.RETAILER_THRESHOLD and
+                total_wholesale_dealers >= self.WHOLESALE_THRESHOLD and
+                total_distributors >= self.DISTRIBUTOR_THRESHOLD and
+                total_value >= self.SALES_THRESHOLD
+            )
+            if not eligible and creator_profile.super_stockist_status == 'none':
+                continue
+
+            results.append({
+                'user_id': creator.id,
+                'dealer_id': creator_profile.dealer_id,
+                'first_name': creator_profile.first_name,
+                'last_name': creator_profile.last_name,
+                'mobile_number': creator_profile.mobile_number,
+                'email': creator.email,
+                'today_customers': today_customers,
+                'total_customers': total_customers,
+                'total_retailers': total_retailers,
+                'total_wholesale_dealers': total_wholesale_dealers,
+                'total_distributors': total_distributors,
+                'total_value': float(total_value),
+                'status': creator_profile.super_stockist_status,
+            })
+
+        results.sort(key=lambda r: r['total_value'], reverse=True)
+        return Response(results)
+
+
+class SuperStockistPromotionActionView(APIView):
+    """Approve converts the Dealer into a real Admin; reject just marks it."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+
+        action = request.data.get('action')
+        try:
+            target_user = User.objects.get(id=user_id, role='dealer')
+            target_profile = target_user.dealer_profile
+        except (User.DoesNotExist, DealerProfile.DoesNotExist):
+            return Response({'error': 'Dealer not found'}, status=404)
+
+        if action == 'reject':
+            target_profile.super_stockist_status = 'rejected'
+            target_profile.save(update_fields=['super_stockist_status'])
+            return Response({'message': 'Rejected'})
+
+        if action == 'approve':
+            if hasattr(target_user, 'admin_profile'):
+                return Response({'error': 'Already an admin'}, status=400)
+
+            AdminProfile.objects.create(
+                user=target_user,
+                created_by=target_profile.created_by,
+                initial=target_profile.initial,
+                first_name=target_profile.first_name,
+                last_name=target_profile.last_name,
+                mobile_number=target_profile.mobile_number,
+                gender=target_profile.gender,
+                dob=target_profile.dob,
+                married_status=target_profile.married_status,
+                anniversary_date=target_profile.anniversary_date,
+                door_no=target_profile.door_no,
+                street_name=target_profile.street_name,
+                town_name=target_profile.town_name,
+                city_name=target_profile.city_name,
+                district=target_profile.district,
+                state=target_profile.state,
+                aadhaar_no=target_profile.aadhaar_no,
+                pan_no=target_profile.pan_no,
+                occupation=target_profile.occupation,
+                occupation_detail=target_profile.occupation_detail,
+                annual_salary=target_profile.annual_salary,
+            )
+
+            target_profile.super_stockist_status = 'approved'
+            target_profile.save(update_fields=['super_stockist_status'])
+
+            target_user.role = 'admin'
+            target_user.save(update_fields=['role'])
+
+            return Response({'message': 'Approved — promoted to Super Stockist'})
+
+        return Response({'error': 'Invalid action'}, status=400)
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def ping(request):

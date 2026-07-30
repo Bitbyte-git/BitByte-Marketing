@@ -5,7 +5,9 @@ from .views import (
     CreateSubDealerView, CreatePromotorView, CreateCustomerView,
     DashboardView, AdminListForAdminView, DealerListForDealerView,
     SubDealerListForView, PromotorListForView,  FullHierarchyView, AnnouncementView, AnnouncementReplyView, ProfileUpdateRequestView, ProfileUpdateApproveView,MetalRateView,MetalOrderView, MetalOrderSummaryView, JewelryProductView, JewelryProductDetailView, JewelryProductImageDeleteView, HomeBannerView, HomeBannerDetailView, CartView, CartItemQtyView, WishlistView, JewelryOrderView, create_razorpay_order, verify_payment, ping,
-HierarchySubtreeOrdersView, SalesReportView, OrderTimeSeriesView, TodayLoginStatusView, CoinRequestView, CoinRequestApproveView, CoinRequestRejectView, CoinRequestApproveAllView, CoinStockView, SuperAdminAddCoinsView, CoinStockForUserView, MyHierarchyView, TodayRewardsView, MyBasicInfoView, RetailerPromotionListView, RetailerPromotionActionView
+HierarchySubtreeOrdersView, SalesReportView, OrderTimeSeriesView, TodayLoginStatusView, CoinRequestView, CoinRequestApproveView, CoinRequestRejectView, CoinRequestApproveAllView, CoinStockView, SuperAdminAddCoinsView, CoinStockForUserView, MyHierarchyView, TodayRewardsView, MyBasicInfoView,
+ RetailerPromotionListView, RetailerPromotionActionView, WholesaleDealerPromotionListView, WholesaleDealerPromotionActionView, DistributorPromotionListView, DistributorPromotionActionView, SuperStockistPromotionListView, SuperStockistPromotionActionView
+
 )
 
 urlpatterns = [
@@ -58,6 +60,13 @@ urlpatterns = [
     path('rewards/today/', TodayRewardsView.as_view()),
     path('retailer-promotions/', RetailerPromotionListView.as_view()),
     path('retailer-promotions/<int:user_id>/action/', RetailerPromotionActionView.as_view()),
+    path('wholesale-dealer-promotions/', WholesaleDealerPromotionListView.as_view()),
+    path('wholesale-dealer-promotions/<int:user_id>/action/', WholesaleDealerPromotionActionView.as_view()),
+    path('distributor-promotions/', DistributorPromotionListView.as_view()),
+    path('distributor-promotions/<int:user_id>/action/', DistributorPromotionActionView.as_view()),
+    path('super-stockist-promotions/', SuperStockistPromotionListView.as_view()),
+    path('super-stockist-promotions/<int:user_id>/action/', SuperStockistPromotionActionView.as_view()),
+
     
     
 ]

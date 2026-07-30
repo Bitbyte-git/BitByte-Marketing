@@ -106,6 +106,14 @@ function Icon({ name, size = 20, filled = false }) {
         <path d="M8 21h8" />
       </>
     ),
+    role: (
+      <>
+        <path d="M7 7h11l-3-3" />
+        <path d="M18 7l-3 3" />
+        <path d="M17 17H6l3 3" />
+        <path d="M6 17l3-3" />
+      </>
+    ),
   };
 
   return <svg {...common}>{paths[name]}</svg>;
@@ -1168,8 +1176,17 @@ const megaIconFor = (title) => {
   return title.charAt(0);
 };
 
+const ROLE_SWITCH_LABELS = {
+  promotor: { label: "Retailer", path: "/promotor" },
+  sub_dealer: { label: "Wholesale Dealer", path: "/sub-dealer" },
+  dealer: { label: "Distributor", path: "/dealer" },
+  admin: { label: "Super Stockist", path: "/admin" },
+};
+
 export default function CustomerNavbar() {
   const navigate = useNavigate();
+  const role = localStorage.getItem("role");
+  const roleSwitchCfg = ROLE_SWITCH_LABELS[role];
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [rates, setRates] = useState(null);
@@ -1181,6 +1198,7 @@ export default function CustomerNavbar() {
   const [voiceSupported, setVoiceSupported] = useState(true);
   const [ratesOpen, setRatesOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [roleDrawerOpen, setRoleDrawerOpen] = useState(false);
   const [activeMega, setActiveMega] = useState(null);
   const megaRefs = useRef({});
   const recognitionRef = useRef(null);
@@ -2074,6 +2092,75 @@ export default function CustomerNavbar() {
             background: var(--bb-mist-aqua);
           }
         }
+
+        .role-drawer-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(17,24,23,0.55);
+          backdrop-filter: blur(4px);
+          z-index: 10050;
+          display: flex;
+          justify-content: flex-end;
+        }
+
+        .role-drawer {
+          width: 260px;
+          max-width: 80vw;
+          height: 100%;
+          background: var(--bb-bg, #FDFDFC);
+          box-shadow: -12px 0 40px rgba(7,59,63,0.22);
+          padding: 20px;
+          box-sizing: border-box;
+          animation: role-drawer-in 220ms ease both;
+        }
+
+        @keyframes role-drawer-in {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+
+        .role-drawer-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 18px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--bb-soft-aqua, #D1DFDE);
+          color: #073B3F;
+        }
+
+        .role-drawer-close {
+          border: 0;
+          background: transparent;
+          color: #073B3F;
+          cursor: pointer;
+        }
+
+        .role-drawer-item {
+          width: 100%;
+          text-align: left;
+          border: 1px solid var(--bb-soft-aqua, #D1DFDE);
+          border-radius: 12px;
+          padding: 12px 16px;
+          background: var(--bb-mist-aqua, #F3F3F0);
+          color: #073B3F;
+          font-weight: 800;
+          font-size: 14px;
+          cursor: pointer;
+        }
+
+        .role-drawer-item:hover {
+          background: var(--bb-soft-aqua, #D1DFDE);
+        }
+
+        .role-drawer-item + .role-drawer-item {
+          margin-top: 10px;
+        }
+
+        .role-drawer-logout {
+          color: #C92035;
+          border-color: rgba(201,32,53,0.35);
+        }
         @media (max-width: 1020px) and (min-width: 901px) {
           .summary-pill {
             width: 42px;
@@ -2427,15 +2514,6 @@ export default function CustomerNavbar() {
               <button
                 className="exact-icon"
                 type="button"
-                onClick={() => navigate("/profile")}
-                aria-label="Profile"
-              >
-                <Icon name="user" />
-              </button>
-
-              <button
-                className="exact-icon"
-                type="button"
                 onClick={() => navigate("/cart")}
                 aria-label="Cart"
               >
@@ -2448,22 +2526,11 @@ export default function CustomerNavbar() {
               <button
                 className="exact-icon"
                 type="button"
-                onClick={() => navigate("/create-customer")}
-                aria-label="Create Customer"
-                title="Create Customer"
+                onClick={() => setRoleDrawerOpen(true)}
+                aria-label="Menu"
+                title="Menu"
               >
-                <Icon name="userPlus" />
-                {/* no text label, pure SVG icon like the rest */}
-              </button>
-
-
-              <button
-                className="exact-icon"
-                type="button"
-                onClick={logout}
-                aria-label="Logout"
-              >
-                <Icon name="logout" />
+                <Icon name="menu" />
               </button>
 
               <button
@@ -2581,6 +2648,74 @@ export default function CustomerNavbar() {
           </div>
         </div>
       </header>
+
+     {roleDrawerOpen && (
+        <div
+          className="role-drawer-overlay"
+          onClick={() => setRoleDrawerOpen(false)}
+        >
+          <div className="role-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="role-drawer-head">
+              <strong>Menu</strong>
+              <button
+                className="role-drawer-close"
+                type="button"
+                onClick={() => setRoleDrawerOpen(false)}
+                aria-label="Close"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <button
+              className="role-drawer-item"
+              type="button"
+              onClick={() => {
+                setRoleDrawerOpen(false);
+                navigate("/profile");
+              }}
+            >
+              Profile
+            </button>
+
+            <button
+              className="role-drawer-item"
+              type="button"
+              onClick={() => {
+                setRoleDrawerOpen(false);
+                navigate("/create-customer");
+              }}
+            >
+              Create Customer
+            </button>
+
+            
+            {roleSwitchCfg && (
+              <button
+                className="role-drawer-item"
+                type="button"
+                onClick={() => {
+                  setRoleDrawerOpen(false);
+                  navigate(roleSwitchCfg.path);
+                }}
+              >
+                {roleSwitchCfg.label}
+              </button>
+            )}
+
+            <button
+              className="role-drawer-item role-drawer-logout"
+              type="button"
+              onClick={() => {
+                setRoleDrawerOpen(false);
+                logout();
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="exact-nav-spacer" aria-hidden="true" />
     </>
