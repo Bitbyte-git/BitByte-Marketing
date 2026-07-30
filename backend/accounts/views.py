@@ -515,8 +515,6 @@ class FullHierarchyView(APIView):
         if request.user.role not in ['super_admin', 'admin', 'dealer', 'sub_dealer', 'promotor']:
             return Response({'error': 'Permission denied'}, status=403)
 
-        # ✅ Nested prefetch - loop-ku ulla query podathu,
-        # ella data-yum ore 5-6 queries-la fetch pannidum (N+1 fix)
         customers_pf = Prefetch(
             'assigned_customers',
             queryset=CustomerProfile.objects.filter(assigned_promotor__isnull=False)

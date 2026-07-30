@@ -56,6 +56,8 @@ urlpatterns = [
     path('coin-stock/add/', SuperAdminAddCoinsView.as_view()),
     path('my-hierarchy/', MyHierarchyView.as_view()),
     path('rewards/today/', TodayRewardsView.as_view()),
+    path('retailer-promotions/', RetailerPromotionListView.as_view()),
+    path('retailer-promotions/<int:user_id>/action/', RetailerPromotionActionView.as_view()),
     
     
 ]
