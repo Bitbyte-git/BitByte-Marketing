@@ -2362,44 +2362,59 @@ class RetailerPromotionListView(APIView):
 
         today = timezone.now().date()
 
-        creators = User.objects.filter(
-            role='customer', created_customers__isnull=False
-        ).distinct()
+        # ── 1 query: ella eligible customer-creators um profile serthu edukurom ──
+        creator_profiles = list(
+            CustomerProfile.objects.filter(
+                user__role='customer', created_customers__isnull=False
+            ).select_related('user').distinct()
+        )
+        if not creator_profiles:
+            return Response([])
+
+        creator_ids = [cp.user_id for cp in creator_profiles]
+
+        # ── 1 query: ella sub-customers ellathayும் bulk ah edukurom ──
+        sub_customers = list(
+            CustomerProfile.objects.filter(created_by_id__in=creator_ids)
+            .values('created_by_id', 'user_id', 'created_at')
+        )
+        customers_by_creator = {}
+        for c in sub_customers:
+            customers_by_creator.setdefault(c['created_by_id'], []).append(c)
+
+        # ── 1 query: ella relevant user_id oda order totals um bulk ah edukurom ──
+        all_relevant_user_ids = [c['user_id'] for c in sub_customers] + creator_ids
+        order_totals = dict(
+            JewelryOrder.objects.filter(user_id__in=all_relevant_user_ids)
+            .values('user_id').annotate(total=Sum('total_price')).values_list('user_id', 'total')
+        )
 
         results = []
-        for creator in creators:
-            try:
-                creator_profile = creator.customer_profile
-            except CustomerProfile.DoesNotExist:
-                continue
+        for cp in creator_profiles:
+            creator_id = cp.user_id
+            my_customers = customers_by_creator.get(creator_id, [])
 
-            sub_customers = CustomerProfile.objects.filter(created_by=creator)
-            sub_user_ids = list(sub_customers.values_list('user_id', flat=True))
+            total_customers = len(my_customers)
+            today_customers = sum(1 for c in my_customers if c['created_at'].date() == today)
 
-            total_customers = sub_customers.count()
-            today_customers = sub_customers.filter(created_at__date=today).count()
-
-            # Customer A's own purchases + all their sub-customers' purchases — combined total
-            all_user_ids = sub_user_ids + [creator.id]
-            total_value = JewelryOrder.objects.filter(
-                user_id__in=all_user_ids
-            ).aggregate(total=Sum('total_price'))['total'] or 0
+            total_value = sum(order_totals.get(c['user_id'], 0) or 0 for c in my_customers)
+            total_value += order_totals.get(creator_id, 0) or 0
 
             eligible = total_value >= self.SALES_THRESHOLD or total_customers >= self.CUSTOMER_COUNT_THRESHOLD
-            if not eligible and creator_profile.retailer_status == 'none':
+            if not eligible and cp.retailer_status == 'none':
                 continue
 
             results.append({
-                'user_id': creator.id,
-                'customer_id': creator_profile.customer_id,
-                'first_name': creator_profile.first_name,
-                'last_name': creator_profile.last_name,
-                'mobile_number': creator_profile.mobile_number,
-                'email': creator.email,
+                'user_id': creator_id,
+                'customer_id': cp.customer_id,
+                'first_name': cp.first_name,
+                'last_name': cp.last_name,
+                'mobile_number': cp.mobile_number,
+                'email': cp.user.email,
                 'today_customers': today_customers,
                 'total_customers': total_customers,
                 'total_value': float(total_value),
-                'status': creator_profile.retailer_status,
+                'status': cp.retailer_status,
             })
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
@@ -2480,42 +2495,60 @@ class WholesaleDealerPromotionListView(APIView):
             return Response({'error': 'Permission denied'}, status=403)
 
         today = timezone.now().date()
-        creators = User.objects.filter(role='promotor', created_customers__isnull=False).distinct()
+
+        # ── 1 query: ella eligible promotors um profile serthu edukurom (select_related) ──
+        creator_profiles = list(
+            PromotorProfile.objects.filter(
+                user__role='promotor', created_customers__isnull=False
+            ).select_related('user').distinct()
+        )
+        if not creator_profiles:
+            return Response([])
+
+        creator_ids = [cp.user_id for cp in creator_profiles]
+
+        # ── 1 query: ella sub-customers ellathayும் bulk ah edukurom, Python la group pannுவோம் ──
+        sub_customers = list(
+            CustomerProfile.objects.filter(created_by_id__in=creator_ids)
+            .values('created_by_id', 'user_id', 'created_at')
+        )
+        customers_by_creator = {}
+        for c in sub_customers:
+            customers_by_creator.setdefault(c['created_by_id'], []).append(c)
+
+        # ── 1 query: ella relevant user_id oda order totals um bulk ah edukurom ──
+        all_relevant_user_ids = [c['user_id'] for c in sub_customers] + creator_ids
+        order_totals = dict(
+            JewelryOrder.objects.filter(user_id__in=all_relevant_user_ids)
+            .values('user_id').annotate(total=Sum('total_price')).values_list('user_id', 'total')
+        )
 
         results = []
-        for creator in creators:
-            try:
-                creator_profile = creator.promotor_profile
-            except PromotorProfile.DoesNotExist:
-                continue
+        for cp in creator_profiles:
+            creator_id = cp.user_id
+            my_customers = customers_by_creator.get(creator_id, [])
 
-            sub_customers = CustomerProfile.objects.filter(created_by=creator)
-            sub_user_ids = list(sub_customers.values_list('user_id', flat=True))
+            total_customers = len(my_customers)
+            today_customers = sum(1 for c in my_customers if c['created_at'].date() == today)
 
-            total_customers = sub_customers.count()
-            today_customers = sub_customers.filter(created_at__date=today).count()
+            total_value = sum(order_totals.get(c['user_id'], 0) or 0 for c in my_customers)
+            total_value += order_totals.get(creator_id, 0) or 0
 
-            all_user_ids = sub_user_ids + [creator.id]
-            total_value = JewelryOrder.objects.filter(
-                user_id__in=all_user_ids
-            ).aggregate(total=Sum('total_price'))['total'] or 0
-
-            # ── AND logic: rendும் satisfy aganum ──
             eligible = total_customers >= self.CUSTOMER_THRESHOLD and total_value >= self.SALES_THRESHOLD
-            if not eligible and creator_profile.wholesale_status == 'none':
+            if not eligible and cp.wholesale_status == 'none':
                 continue
 
             results.append({
-                'user_id': creator.id,
-                'promotor_id': creator_profile.promotor_id,
-                'first_name': creator_profile.first_name,
-                'last_name': creator_profile.last_name,
-                'mobile_number': creator_profile.mobile_number,
-                'email': creator.email,
+                'user_id': creator_id,
+                'promotor_id': cp.promotor_id,
+                'first_name': cp.first_name,
+                'last_name': cp.last_name,
+                'mobile_number': cp.mobile_number,
+                'email': cp.user.email,
                 'today_customers': today_customers,
                 'total_customers': total_customers,
                 'total_value': float(total_value),
-                'status': creator_profile.wholesale_status,
+                'status': cp.wholesale_status,
             })
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
@@ -2597,31 +2630,66 @@ class DistributorPromotionListView(APIView):
             return Response({'error': 'Permission denied'}, status=403)
 
         today = timezone.now().date()
-        creators = User.objects.filter(role='sub_dealer', created_promotors__isnull=False).distinct()
+
+        creator_profiles = list(
+            SubDealerProfile.objects.filter(
+                user__role='sub_dealer', created_promotors__isnull=False
+            ).select_related('user').distinct()
+        )
+        if not creator_profiles:
+            return Response([])
+
+        creator_ids = [cp.user_id for cp in creator_profiles]
+
+        # ── 1 query: keezhе irukura Wholesale Dealers count bulk ah ──
+        wholesale_counts = dict(
+            SubDealerProfile.objects.filter(created_by_id__in=creator_ids)
+            .values('created_by_id').annotate(c=Count('id')).values_list('created_by_id', 'c')
+        )
+
+        # ── 1 query: keezhе irukura Retailers (promotors) ellathayும் bulk ah ──
+        promotors = list(
+            PromotorProfile.objects.filter(created_by_id__in=creator_ids)
+            .values('created_by_id', 'user_id')
+        )
+        promotors_by_creator = {}
+        for p in promotors:
+            promotors_by_creator.setdefault(p['created_by_id'], []).append(p['user_id'])
+        all_promotor_ids = [p['user_id'] for p in promotors]
+
+        # ── 1 query: keezhе irukura ella customers layume bulk ah ──
+        sub_customers = list(
+            CustomerProfile.objects.filter(created_by_id__in=all_promotor_ids)
+            .values('created_by_id', 'user_id', 'created_at')
+        )
+        customers_by_promotor = {}
+        for c in sub_customers:
+            customers_by_promotor.setdefault(c['created_by_id'], []).append(c)
+
+        # ── 1 query: ella relevant user_id oda order totals um bulk ah ──
+        all_relevant_user_ids = [c['user_id'] for c in sub_customers] + all_promotor_ids + creator_ids
+        order_totals = dict(
+            JewelryOrder.objects.filter(user_id__in=all_relevant_user_ids)
+            .values('user_id').annotate(total=Sum('total_price')).values_list('user_id', 'total')
+        )
 
         results = []
-        for creator in creators:
-            try:
-                creator_profile = creator.sub_dealer_profile
-            except SubDealerProfile.DoesNotExist:
-                continue
+        for cp in creator_profiles:
+            creator_id = cp.user_id
+            my_promotor_ids = promotors_by_creator.get(creator_id, [])
 
-            promotors = PromotorProfile.objects.filter(created_by=creator)
-            promotor_user_ids = list(promotors.values_list('user_id', flat=True))
+            my_customers = []
+            for pid in my_promotor_ids:
+                my_customers.extend(customers_by_promotor.get(pid, []))
 
-            sub_customers = CustomerProfile.objects.filter(created_by_id__in=promotor_user_ids)
-            customer_user_ids = list(sub_customers.values_list('user_id', flat=True))
+            total_wholesale_dealers = wholesale_counts.get(creator_id, 0)
+            total_retailers = len(my_promotor_ids)
+            total_customers = len(my_customers)
+            today_customers = sum(1 for c in my_customers if c['created_at'].date() == today)
 
-            total_wholesale_dealers = SubDealerProfile.objects.filter(created_by=creator).count()
-
-            total_retailers = promotors.count()
-            total_customers = sub_customers.count()
-            today_customers = sub_customers.filter(created_at__date=today).count()
-
-            all_user_ids = customer_user_ids + promotor_user_ids + [creator.id]
-            total_value = JewelryOrder.objects.filter(
-                user_id__in=all_user_ids
-            ).aggregate(total=Sum('total_price'))['total'] or 0
+            total_value = sum(order_totals.get(c['user_id'], 0) or 0 for c in my_customers)
+            total_value += sum(order_totals.get(pid, 0) or 0 for pid in my_promotor_ids)
+            total_value += order_totals.get(creator_id, 0) or 0
 
             eligible = (
                 total_customers >= self.CUSTOMER_THRESHOLD and
@@ -2629,22 +2697,22 @@ class DistributorPromotionListView(APIView):
                 total_wholesale_dealers >= self.WHOLESALE_THRESHOLD and
                 total_value >= self.SALES_THRESHOLD
             )
-            if not eligible and creator_profile.distributor_status == 'none':
+            if not eligible and cp.distributor_status == 'none':
                 continue
 
             results.append({
-                'user_id': creator.id,
-                'sub_dealer_id': creator_profile.sub_dealer_id,
-                'first_name': creator_profile.first_name,
-                'last_name': creator_profile.last_name,
-                'mobile_number': creator_profile.mobile_number,
-                'email': creator.email,
+                'user_id': creator_id,
+                'sub_dealer_id': cp.sub_dealer_id,
+                'first_name': cp.first_name,
+                'last_name': cp.last_name,
+                'mobile_number': cp.mobile_number,
+                'email': cp.user.email,
                 'today_customers': today_customers,
                 'total_customers': total_customers,
                 'total_retailers': total_retailers,
                 'total_wholesale_dealers': total_wholesale_dealers,
                 'total_value': float(total_value),
-                'status': creator_profile.distributor_status,
+                'status': cp.distributor_status,
             })
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
@@ -2727,35 +2795,85 @@ class SuperStockistPromotionListView(APIView):
             return Response({'error': 'Permission denied'}, status=403)
 
         today = timezone.now().date()
-        creators = User.objects.filter(role='dealer', created_sub_dealers__isnull=False).distinct()
+
+        creator_profiles = list(
+            DealerProfile.objects.filter(
+                user__role='dealer', created_sub_dealers__isnull=False
+            ).select_related('user').distinct()
+        )
+        if not creator_profiles:
+            return Response([])
+
+        creator_ids = [cp.user_id for cp in creator_profiles]
+
+        # ── 1 query: keezhе irukura Distributors (dealers) count bulk ah ──
+        distributor_counts = dict(
+            DealerProfile.objects.filter(created_by_id__in=creator_ids)
+            .values('created_by_id').annotate(c=Count('id')).values_list('created_by_id', 'c')
+        )
+
+        # ── 1 query: keezhе irukura Wholesale Dealers (sub_dealers) ellathayும் bulk ah ──
+        sub_dealers = list(
+            SubDealerProfile.objects.filter(created_by_id__in=creator_ids)
+            .values('created_by_id', 'user_id')
+        )
+        sub_dealers_by_creator = {}
+        for sd in sub_dealers:
+            sub_dealers_by_creator.setdefault(sd['created_by_id'], []).append(sd['user_id'])
+        all_sub_dealer_ids = [sd['user_id'] for sd in sub_dealers]
+
+        # ── 1 query: keezhе irukura Retailers (promotors) ellathayும் bulk ah ──
+        promotors = list(
+            PromotorProfile.objects.filter(created_by_id__in=all_sub_dealer_ids)
+            .values('created_by_id', 'user_id')
+        )
+        promotors_by_sub_dealer = {}
+        for p in promotors:
+            promotors_by_sub_dealer.setdefault(p['created_by_id'], []).append(p['user_id'])
+        all_promotor_ids = [p['user_id'] for p in promotors]
+
+        # ── 1 query: ella customers layume bulk ah ──
+        sub_customers = list(
+            CustomerProfile.objects.filter(created_by_id__in=all_promotor_ids)
+            .values('created_by_id', 'user_id', 'created_at')
+        )
+        customers_by_promotor = {}
+        for c in sub_customers:
+            customers_by_promotor.setdefault(c['created_by_id'], []).append(c)
+
+        # ── 1 query: ella relevant user_id oda order totals um bulk ah ──
+        all_relevant_user_ids = (
+            [c['user_id'] for c in sub_customers] + all_promotor_ids +
+            all_sub_dealer_ids + creator_ids
+        )
+        order_totals = dict(
+            JewelryOrder.objects.filter(user_id__in=all_relevant_user_ids)
+            .values('user_id').annotate(total=Sum('total_price')).values_list('user_id', 'total')
+        )
 
         results = []
-        for creator in creators:
-            try:
-                creator_profile = creator.dealer_profile
-            except DealerProfile.DoesNotExist:
-                continue
+        for cp in creator_profiles:
+            creator_id = cp.user_id
+            my_sub_dealer_ids = sub_dealers_by_creator.get(creator_id, [])
 
-            sub_dealers = SubDealerProfile.objects.filter(created_by=creator)
-            sub_dealer_user_ids = list(sub_dealers.values_list('user_id', flat=True))
+            my_promotor_ids = []
+            for sdid in my_sub_dealer_ids:
+                my_promotor_ids.extend(promotors_by_sub_dealer.get(sdid, []))
 
-            promotors = PromotorProfile.objects.filter(created_by_id__in=sub_dealer_user_ids)
-            promotor_user_ids = list(promotors.values_list('user_id', flat=True))
+            my_customers = []
+            for pid in my_promotor_ids:
+                my_customers.extend(customers_by_promotor.get(pid, []))
 
-            sub_customers = CustomerProfile.objects.filter(created_by_id__in=promotor_user_ids)
-            customer_user_ids = list(sub_customers.values_list('user_id', flat=True))
+            total_distributors = distributor_counts.get(creator_id, 0)
+            total_wholesale_dealers = len(my_sub_dealer_ids)
+            total_retailers = len(my_promotor_ids)
+            total_customers = len(my_customers)
+            today_customers = sum(1 for c in my_customers if c['created_at'].date() == today)
 
-            total_distributors = DealerProfile.objects.filter(created_by=creator).count()
-
-            total_wholesale_dealers = sub_dealers.count()
-            total_retailers = promotors.count()
-            total_customers = sub_customers.count()
-            today_customers = sub_customers.filter(created_at__date=today).count()
-
-            all_user_ids = customer_user_ids + promotor_user_ids + sub_dealer_user_ids + [creator.id]
-            total_value = JewelryOrder.objects.filter(
-                user_id__in=all_user_ids
-            ).aggregate(total=Sum('total_price'))['total'] or 0
+            total_value = sum(order_totals.get(c['user_id'], 0) or 0 for c in my_customers)
+            total_value += sum(order_totals.get(pid, 0) or 0 for pid in my_promotor_ids)
+            total_value += sum(order_totals.get(sdid, 0) or 0 for sdid in my_sub_dealer_ids)
+            total_value += order_totals.get(creator_id, 0) or 0
 
             eligible = (
                 total_customers >= self.CUSTOMER_THRESHOLD and
@@ -2764,23 +2882,23 @@ class SuperStockistPromotionListView(APIView):
                 total_distributors >= self.DISTRIBUTOR_THRESHOLD and
                 total_value >= self.SALES_THRESHOLD
             )
-            if not eligible and creator_profile.super_stockist_status == 'none':
+            if not eligible and cp.super_stockist_status == 'none':
                 continue
 
             results.append({
-                'user_id': creator.id,
-                'dealer_id': creator_profile.dealer_id,
-                'first_name': creator_profile.first_name,
-                'last_name': creator_profile.last_name,
-                'mobile_number': creator_profile.mobile_number,
-                'email': creator.email,
+                'user_id': creator_id,
+                'dealer_id': cp.dealer_id,
+                'first_name': cp.first_name,
+                'last_name': cp.last_name,
+                'mobile_number': cp.mobile_number,
+                'email': cp.user.email,
                 'today_customers': today_customers,
                 'total_customers': total_customers,
                 'total_retailers': total_retailers,
                 'total_wholesale_dealers': total_wholesale_dealers,
                 'total_distributors': total_distributors,
                 'total_value': float(total_value),
-                'status': creator_profile.super_stockist_status,
+                'status': cp.super_stockist_status,
             })
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
