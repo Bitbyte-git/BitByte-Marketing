@@ -54,35 +54,31 @@ def random_anniversary(dob):
 
 
 class Command(BaseCommand):
-    help = 'Create dummy Dealer users, RANDOMLY (mixed counts) distributed across all Admins'
+    help = 'Create dummy Dealer users, all assigned to a single specified Admin (via --admin_id)'
 
     def add_arguments(self, parser):
         parser.add_argument('--count', type=int, default=40, help='Total number of dummy dealers to create')
+        parser.add_argument('--admin_id', type=str, default='BBADM20261002',
+                             help='admin_id of the Admin to assign all dummy dealers under')
 
     def handle(self, *args, **options):
         count = options['count']
+        admin_id = options['admin_id']
         created = 0
 
-        # ── Step 1: Fetch all admins ──
-        admins = list(AdminProfile.objects.all())
-        if not admins:
-            self.stdout.write(self.style.ERROR("No admins found! Create admins first."))
+        # ── Step 1: Fetch the ONE target admin (by admin_id) ──
+        try:
+            target_admin = AdminProfile.objects.get(admin_id=admin_id)
+        except AdminProfile.DoesNotExist:
+            self.stdout.write(self.style.ERROR(f"Admin with admin_id={admin_id} not found!"))
             return
 
-        total_admins = len(admins)
         self.stdout.write(self.style.SUCCESS(
-            f"Found {total_admins} admins. Creating {count} dealers, RANDOMLY assigned (mixed counts per admin)..."
+            f"Creating {count} dealers, ALL assigned to Admin {target_admin.admin_id} ({target_admin.first_name})..."
         ))
 
-        # keep a tally so we can print a summary at the end (Admin X -> N dealers)
-        admin_tally = {a.id: 0 for a in admins}
-
         for i in range(1, count + 1):
-            # ── CHANGED: random.choice instead of round-robin ──
-            # This is what makes the distribution "mixed" — Admin A might end up
-            # with 2 dealers, Admin B with 4, purely by chance, instead of every
-            # admin getting an equal, predictable share.
-            admin = random.choice(admins)
+            admin = target_admin
 
             first_name = random.choice(FIRST_NAMES)
             father_name = random.choice(FATHER_NAMES)
@@ -152,17 +148,9 @@ class Command(BaseCommand):
                 annual_salary=str(random.randint(150000, 700000)),
             )
 
-            admin_tally[admin.id] += 1
             created += 1
             self.stdout.write(self.style.SUCCESS(
                 f"Created: {email} / {DUMMY_PASSWORD} -> assigned to Admin {admin.admin_id} ({admin.first_name})"
             ))
 
-        self.stdout.write(self.style.SUCCESS(f"\nDone! {created} dummy dealers created and randomly linked to {total_admins} admins."))
-
-        # ── Summary: how many dealers each admin ended up with ──
-        self.stdout.write(self.style.SUCCESS("\n── Distribution summary ──"))
-        for a in admins:
-            n = admin_tally[a.id]
-            if n > 0:
-                self.stdout.write(f"  {a.admin_id} ({a.first_name}) -> {n} dealer(s)")
+        self.stdout.write(self.style.SUCCESS(f"\nDone! {created} dummy dealers created under Admin {target_admin.admin_id}."))

@@ -1,7 +1,7 @@
 import random
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
-from accounts.models import User, SubDealerProfile, PromotorProfile
+from accounts.models import User, AdminProfile, SubDealerProfile, PromotorProfile
 
 
 FIRST_NAMES = [
@@ -58,16 +58,31 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--count', type=int, default=250, help='Total number of dummy promotors to create')
+        parser.add_argument('--admin_id', type=str, default=None,
+                             help='Only create promotors for sub dealers under this admin_id (default: ALL sub dealers)')
 
     def handle(self, *args, **options):
         count = options['count']
         created = 0
 
-        # ── Step 1: Fetch all sub dealers ──
-        sub_dealers = list(SubDealerProfile.objects.all())
-        if not sub_dealers:
-            self.stdout.write(self.style.ERROR("No sub dealers found! Create sub dealers first."))
-            return
+        # ── Step 1: Fetch sub dealers (all, or filtered to one admin's downline) ──
+        admin_id = options['admin_id']
+
+        if admin_id:
+            try:
+                target_admin = AdminProfile.objects.get(admin_id=admin_id)
+            except AdminProfile.DoesNotExist:
+                self.stdout.write(self.style.ERROR(f"Admin with admin_id={admin_id} not found!"))
+                return
+            sub_dealers = list(SubDealerProfile.objects.filter(assigned_dealer__assigned_admin=target_admin))
+            if not sub_dealers:
+                self.stdout.write(self.style.ERROR(f"No sub dealers found under Admin {admin_id}!"))
+                return
+        else:
+            sub_dealers = list(SubDealerProfile.objects.all())
+            if not sub_dealers:
+                self.stdout.write(self.style.ERROR("No sub dealers found! Create sub dealers first."))
+                return
 
         total_sd = len(sub_dealers)
 
@@ -93,42 +108,47 @@ class Command(BaseCommand):
 
         for sub_dealer in assignment_plan:
 
-            first_name = random.choice(FIRST_NAMES)
-            father_name = random.choice(FATHER_NAMES)
-            initial = random.choice(INITIALS)
-            city, district, state = random.choice(CITIES)
+            # ── FIX: retry loop — duplicate email no longer skips this promotor slot,
+            # it just tries a new random name until it succeeds (keeps total exact) ──
+            user = None
+            email = None
+            while user is None:
+                first_name = random.choice(FIRST_NAMES)
+                father_name = random.choice(FATHER_NAMES)
+                initial = random.choice(INITIALS)
+                city, district, state = random.choice(CITIES)
 
-            mobile = f"9{random.randint(100000000, 999999999)}"
-            aadhaar = str(random.randint(100000000000, 999999999999))
-            pan = f"PR{random.randint(100000, 999999)}"
+                mobile = f"9{random.randint(100000000, 999999999)}"
+                aadhaar = str(random.randint(100000000000, 999999999999))
+                pan = f"PR{random.randint(100000, 999999)}"
 
-            occupation = random.choice(['employee', 'business', 'others'])
-            occupation_detail = random.choice(OCCUPATION_DETAILS[occupation])
+                occupation = random.choice(['employee', 'business', 'others'])
+                occupation_detail = random.choice(OCCUPATION_DETAILS[occupation])
 
-            dob = random_dob()
-            married_status = random.choice(['single', 'married'])
-            anniversary_date = random_anniversary(dob) if married_status == 'married' else None
+                dob = random_dob()
+                married_status = random.choice(['single', 'married'])
+                anniversary_date = random_anniversary(dob) if married_status == 'married' else None
 
-            # Email serial = SAME counter that builds promotor_id (BBPRO{year}{count:07d}).
-            # Continues automatically from existing 2 -> starts at 003.
-            serial_num = PromotorProfile.objects.count() + 1
-            serial = str(serial_num).zfill(2)
+                serial_num = PromotorProfile.objects.count() + 1
+                serial = str(serial_num).zfill(2)
 
-            temp_email = f"temp_promotor_{serial_num}_{random.randint(1000,9999)}@bitbyte.test"
-            user = User.objects.create_user(
-                email=temp_email,
-                password=DUMMY_PASSWORD,
-                role='promotor',
-            )
-            email = f"{first_name.lower()}{serial}@gmail.com"
+                temp_email = f"temp_promotor_{serial_num}_{random.randint(1000,9999)}@bitbyte.test"
+                candidate_user = User.objects.create_user(
+                    email=temp_email,
+                    password=DUMMY_PASSWORD,
+                    role='promotor',
+                )
+                candidate_email = f"{first_name.lower()}{serial}@gmail.com"
 
-            if User.objects.filter(email=email).exclude(pk=user.pk).exists():
-                self.stdout.write(self.style.WARNING(f"Skip: {email} already exists, removing temp user"))
-                user.delete()
-                continue
+                if User.objects.filter(email=candidate_email).exclude(pk=candidate_user.pk).exists():
+                    self.stdout.write(self.style.WARNING(f"Retry: {candidate_email} already exists, trying again"))
+                    candidate_user.delete()
+                    continue
 
-            user.email = email
-            user.save(update_fields=['email'])
+                candidate_user.email = candidate_email
+                candidate_user.save(update_fields=['email'])
+                user = candidate_user
+                email = candidate_email
 
             PromotorProfile.objects.create(
                 user=user,

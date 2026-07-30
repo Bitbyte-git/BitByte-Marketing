@@ -19,7 +19,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from accounts.models import CustomerProfile, JewelryProduct, JewelryOrder
+from accounts.models import AdminProfile, CustomerProfile, JewelryProduct, JewelryOrder
 
 # Live chart testing ku - ovvoru order um indha gaps la RANDOM ah oru gap edutthu,
 # andha nerathukku munnadi create aana madhiri created_at timestamp vaikkum
@@ -45,20 +45,40 @@ class Command(BaseCommand):
         parser.add_argument('--max-orders', type=int, default=15, help='Maximum NEW orders to add per customer')
         parser.add_argument('--force-add', action='store_true',
                              help='Ignore existing order count, ADD this many new orders to EVERY customer regardless')
+        parser.add_argument('--admin_id', type=str, default=None,
+                             help='Only create orders for customers under this admin_id (default: ALL customers)')
 
     def handle(self, *args, **options):
         min_orders = options['min_orders']
         max_orders = options['max_orders']
         force_add = options['force_add']
+        admin_id = options['admin_id']
 
-        customers = list(
-            CustomerProfile.objects.all()
-            .select_related('user')
-            .order_by('id')
-        )
-        if not customers:
-            self.stdout.write(self.style.ERROR("No dummy customers found! Run create_dummy_customers first."))
-            return
+        if admin_id:
+            try:
+                target_admin = AdminProfile.objects.get(admin_id=admin_id)
+            except AdminProfile.DoesNotExist:
+                self.stdout.write(self.style.ERROR(f"Admin with admin_id={admin_id} not found!"))
+                return
+            customers = list(
+                CustomerProfile.objects.filter(
+                    assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin=target_admin
+                )
+                .select_related('user')
+                .order_by('id')
+            )
+            if not customers:
+                self.stdout.write(self.style.ERROR(f"No customers found under Admin {admin_id}!"))
+                return
+        else:
+            customers = list(
+                CustomerProfile.objects.all()
+                .select_related('user')
+                .order_by('id')
+            )
+            if not customers:
+                self.stdout.write(self.style.ERROR("No dummy customers found! Run create_dummy_customers first."))
+                return
 
         existing_counts = {}
         for row in JewelryOrder.objects.filter(user__in=[c.user_id for c in customers]).values('user_id'):

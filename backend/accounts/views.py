@@ -2365,7 +2365,7 @@ class RetailerPromotionListView(APIView):
         # ── 1 query: ella eligible customer-creators um profile serthu edukurom ──
         creator_profiles = list(
             CustomerProfile.objects.filter(
-                user__role='customer', created_customers__isnull=False
+                user__role='customer', user__created_customers__isnull=False
             ).select_related('user').distinct()
         )
         if not creator_profiles:
@@ -2496,10 +2496,9 @@ class WholesaleDealerPromotionListView(APIView):
 
         today = timezone.now().date()
 
-        # ── 1 query: ella eligible promotors um profile serthu edukurom (select_related) ──
         creator_profiles = list(
             PromotorProfile.objects.filter(
-                user__role='promotor', created_customers__isnull=False
+                user__role='promotor', user__created_customers__isnull=False
             ).select_related('user').distinct()
         )
         if not creator_profiles:
@@ -2633,7 +2632,7 @@ class DistributorPromotionListView(APIView):
 
         creator_profiles = list(
             SubDealerProfile.objects.filter(
-                user__role='sub_dealer', created_promotors__isnull=False
+                user__role='sub_dealer', user__created_promotors__isnull=False
             ).select_related('user').distinct()
         )
         if not creator_profiles:
@@ -2798,7 +2797,7 @@ class SuperStockistPromotionListView(APIView):
 
         creator_profiles = list(
             DealerProfile.objects.filter(
-                user__role='dealer', created_sub_dealers__isnull=False
+                user__role='dealer', user__created_sub_dealers__isnull=False
             ).select_related('user').distinct()
         )
         if not creator_profiles:

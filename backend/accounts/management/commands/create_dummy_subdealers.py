@@ -54,13 +54,13 @@ def random_anniversary(dob):
 
 
 class Command(BaseCommand):
-    help = 'Create dummy Sub Dealers — every dealer gets AT LEAST 1, remaining spread randomly (mixed counts)'
+    help = 'Create dummy Sub Dealers — EACH dealer gets exactly --per_dealer sub dealers (default 2)'
 
     def add_arguments(self, parser):
-        parser.add_argument('--count', type=int, default=100, help='Total number of dummy sub dealers to create')
+        parser.add_argument('--per_dealer', type=int, default=2, help='Number of dummy sub dealers to create for EACH dealer')
 
     def handle(self, *args, **options):
-        count = options['count']
+        per_dealer = options['per_dealer']
         created = 0
 
         dealers = list(DealerProfile.objects.all())
@@ -69,28 +69,18 @@ class Command(BaseCommand):
             return
 
         total_dealers = len(dealers)
+        count = total_dealers * per_dealer
 
-        if count < total_dealers:
-            self.stdout.write(self.style.ERROR(
-                f"count={count} is less than total_dealers={total_dealers}. "
-                f"Need count >= number of dealers so every dealer can get at least 1."
-            ))
-            return
+        # ── Build the assignment plan: EXACTLY per_dealer slots for each dealer ──
+        assignment_plan = []
+        for dealer in dealers:
+            assignment_plan.extend([dealer] * per_dealer)
 
-        # ── Build the assignment plan BEFORE creating anything ──
-        # Step A: guarantee every dealer gets exactly 1 (no dealer left with 0)
-        assignment_plan = list(dealers)  # 1 slot per dealer
-        # Step B: remaining slots go to random dealers (this is what makes it "mixed" —
-        # some dealers will end up with just 1, others with several extra)
-        remaining = count - total_dealers
-        for _ in range(remaining):
-            assignment_plan.append(random.choice(dealers))
-
-        random.shuffle(assignment_plan)  # so the "guaranteed 1" ones aren't all created first
+        random.shuffle(assignment_plan)  # just mixes creation order, not the distribution
 
         self.stdout.write(self.style.SUCCESS(
-            f"Found {total_dealers} dealers. Every dealer gets >= 1. "
-            f"Creating {count} sub dealers total (mixed distribution)..."
+            f"Found {total_dealers} dealers. Creating exactly {per_dealer} sub dealers EACH "
+            f"({count} sub dealers total)..."
         ))
 
         dealer_tally = {d.id: 0 for d in dealers}
@@ -169,12 +159,13 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"\nDone! {created} dummy sub dealers created and linked to {total_dealers} dealers."))
 
-        zero_dealers = [d for d in dealers if dealer_tally[d.id] == 0]
+        wrong_count_dealers = [d for d in dealers if dealer_tally[d.id] != per_dealer]
         self.stdout.write(self.style.SUCCESS("\n── Distribution summary ──"))
         for d in dealers:
             n = dealer_tally[d.id]
             self.stdout.write(f"  {d.dealer_id} ({d.first_name}) -> {n} sub dealer(s)")
-        if zero_dealers:
-            self.stdout.write(self.style.ERROR(f"⚠️ {len(zero_dealers)} dealers got 0 (should not happen — check for skipped duplicates)"))
+        if wrong_count_dealers:
+            self.stdout.write(self.style.ERROR(f"⚠️ {len(wrong_count_dealers)} dealers didn't get exactly {per_dealer} (check for skipped duplicates)"))
         else:
-            self.stdout.write(self.style.SUCCESS("✅ Every dealer has at least 1 sub dealer."))
+            self.stdout.write(self.style.SUCCESS(f"✅ Every dealer has exactly {per_dealer} sub dealers."))
+            
