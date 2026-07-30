@@ -1465,13 +1465,13 @@ def _collect_user_ids_sub_dealer(sd):
     return ids
 
 def _bulk_orders_for_admin(a):
-    return _orders_by_user_map(_collect_user_ids_admin(a))
+    return _orders_by_user_map(_collect_user_ids_admin(a) + [a.user_id])
 
 def _bulk_orders_for_dealer(d):
-    return _orders_by_user_map(_collect_user_ids_dealer(d))
+    return _orders_by_user_map(_collect_user_ids_dealer(d) + [d.user_id])
 
 def _bulk_orders_for_sub_dealer(sd):
-    return _orders_by_user_map(_collect_user_ids_sub_dealer(sd))
+    return _orders_by_user_map(_collect_user_ids_sub_dealer(sd) + [sd.user_id])
 
 def _bulk_orders_for_promotor(p):
     ids = [c.user_id for c in p.assigned_customers.all()]
@@ -1506,46 +1506,58 @@ def _build_customer(c, orders_by_user, monthly_counts):
 
 def _build_promotor(p, orders_by_user, monthly_counts):
     customers = [_build_customer(c, orders_by_user, monthly_counts) for c in p.assigned_customers.all()]
+    own_orders = orders_by_user.get(p.user_id, [])
+    own_monthly = monthly_counts.get(p.user_id, 0)
     return {
         'type': 'promotor', 'id': p.id, 'promotor_id': p.promotor_id, 'user_id': p.user_id,
         'first_name': p.first_name, 'last_name': p.last_name,
         'mobile_number': p.mobile_number, 'city_name': p.city_name,
         'customers': customers,
-        'order_count': sum(c['order_count'] for c in customers),
-        'status': worst_status([c['status'] for c in customers]),
+        'own_orders': own_orders,
+        'order_count': sum(c['order_count'] for c in customers) + own_monthly,
+        'status': worst_status([c['status'] for c in customers] + [get_target_status(own_monthly)]),
     }
 
 def _build_sub_dealer(sd, orders_by_user, monthly_counts):
     promotors = [_build_promotor(p, orders_by_user, monthly_counts) for p in sd.assigned_promotors.all()]
+    own_orders = orders_by_user.get(sd.user_id, [])
+    own_monthly = monthly_counts.get(sd.user_id, 0)
     return {
         'type': 'sub_dealer', 'id': sd.id, 'sub_dealer_id': sd.sub_dealer_id, 'user_id': sd.user_id,
         'first_name': sd.first_name, 'last_name': sd.last_name,
         'mobile_number': sd.mobile_number, 'city_name': sd.city_name,
         'promotors': promotors,
-        'order_count': sum(p['order_count'] for p in promotors),
-        'status': worst_status([p['status'] for p in promotors]),
+        'own_orders': own_orders,
+        'order_count': sum(p['order_count'] for p in promotors) + own_monthly,
+        'status': worst_status([p['status'] for p in promotors] + [get_target_status(own_monthly)]),
     }
 
 def _build_dealer(d, orders_by_user, monthly_counts):
     sub_dealers = [_build_sub_dealer(sd, orders_by_user, monthly_counts) for sd in d.assigned_sub_dealers.all()]
+    own_orders = orders_by_user.get(d.user_id, [])
+    own_monthly = monthly_counts.get(d.user_id, 0)
     return {
         'type': 'dealer', 'id': d.id, 'dealer_id': d.dealer_id, 'user_id': d.user_id,
         'first_name': d.first_name, 'last_name': d.last_name,
         'mobile_number': d.mobile_number, 'city_name': d.city_name,
         'sub_dealers': sub_dealers,
-        'order_count': sum(sd['order_count'] for sd in sub_dealers),
-        'status': worst_status([sd['status'] for sd in sub_dealers]),
+        'own_orders': own_orders,
+        'order_count': sum(sd['order_count'] for sd in sub_dealers) + own_monthly,
+        'status': worst_status([sd['status'] for sd in sub_dealers] + [get_target_status(own_monthly)]),
     }
 
 def _build_admin(a, orders_by_user, monthly_counts):
     dealers = [_build_dealer(d, orders_by_user, monthly_counts) for d in a.assigned_dealers.all()]
+    own_orders = orders_by_user.get(a.user_id, [])
+    own_monthly = monthly_counts.get(a.user_id, 0)
     return {
         'type': 'admin', 'id': a.id, 'admin_id': a.admin_id, 'user_id': a.user_id,
         'first_name': a.first_name, 'last_name': a.last_name,
         'mobile_number': a.mobile_number, 'city_name': a.city_name,
         'dealers': dealers,
-        'order_count': sum(d['order_count'] for d in dealers),
-        'status': worst_status([d['status'] for d in dealers]),
+        'own_orders': own_orders,
+        'order_count': sum(d['order_count'] for d in dealers) + own_monthly,
+        'status': worst_status([d['status'] for d in dealers] + [get_target_status(own_monthly)]),
     }
 
 
@@ -1623,20 +1635,20 @@ class MyHierarchyView(APIView):
                     'assigned_sub_dealers__assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_dealer(node)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_dealer(node))
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_dealer(node) + [node.user_id])
                 root = _build_dealer(node, orders_by_user, monthly_counts)
             elif role == 'sub_dealer':
                 node = SubDealerProfile.objects.prefetch_related(
                     'assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_sub_dealer(node)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_sub_dealer(node))
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_sub_dealer(node) + [node.user_id])
                 root = _build_sub_dealer(node, orders_by_user, monthly_counts)
             elif role == 'promotor':
                 node = PromotorProfile.objects.prefetch_related('assigned_customers').get(user=user)
                 orders_by_user = _bulk_orders_for_promotor(node)
                 monthly_counts = _monthly_order_counts_map(
-                    [c.user_id for c in node.assigned_customers.all()]
+                    [c.user_id for c in node.assigned_customers.all()] + [node.user_id]
                 )
                 root = _build_promotor(node, orders_by_user, monthly_counts)
         except Exception as e:
@@ -1755,7 +1767,7 @@ class SalesReportView(APIView):
                     'assigned_sub_dealers__assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_dealer(dealer)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_dealer(dealer))
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_dealer(dealer) + [dealer.user_id])
                 return Response({
                     'role': role,
                     'data': [_build_dealer(dealer, orders_by_user, monthly_counts)],
@@ -1770,7 +1782,7 @@ class SalesReportView(APIView):
                     'assigned_promotors__assigned_customers'
                 ).get(user=user)
                 orders_by_user = _bulk_orders_for_sub_dealer(sd)
-                monthly_counts = _monthly_order_counts_map(_collect_user_ids_sub_dealer(sd))
+                monthly_counts = _monthly_order_counts_map(_collect_user_ids_sub_dealer(sd) + [sd.user_id])
                 return Response({
                     'role': role,
                     'data': [_build_sub_dealer(sd, orders_by_user, monthly_counts)],
@@ -1785,7 +1797,7 @@ class SalesReportView(APIView):
                     'assigned_sub_dealer__assigned_dealer__assigned_admin'
                 ).prefetch_related('assigned_customers').get(user=user)
                 orders_by_user = _bulk_orders_for_promotor(p)
-                monthly_counts = _monthly_order_counts_map([c.user_id for c in p.assigned_customers.all()])
+                monthly_counts = _monthly_order_counts_map([c.user_id for c in p.assigned_customers.all()] + [p.user_id])
                 return Response({
                     'role': role,
                     'data': [_build_promotor(p, orders_by_user, monthly_counts)],
@@ -1793,8 +1805,6 @@ class SalesReportView(APIView):
                 })
             except PromotorProfile.DoesNotExist:
                 return Response({'role': role, 'data': [], 'ancestors': []})
-
-        return Response({'error': 'Invalid role'}, status=400)
 
 
 class OrderTimeSeriesView(APIView):

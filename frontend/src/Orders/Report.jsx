@@ -136,6 +136,22 @@ function flattenToRows(root) {
       })
       return
     }
+
+    // ── NEW: promotor/sub_dealer/dealer/admin own purchases — oru "Self" row ah add pannurom ──
+    const ownOrders = node.own_orders || []
+    if (ownOrders.length > 0) {
+      const ownAmount = ownOrders.reduce((s, o) => s + (parseFloat(o.total_price) || 0), 0)
+      const selfId = node[`${node.type}_id`] || node.id || '—'
+      const selfName = `${node.first_name || ''} ${node.last_name || ''}`.trim() || selfId
+      rows.push({
+        chain: [...chain, { id: selfId, name: `${selfName} (Self)`, color: node.status ? STATUS_COLOR[node.status] : null }],
+        customerId: selfId,
+        orders: ownOrders.length,
+        amount: ownAmount,
+        rawOrders: ownOrders,
+      })
+    }
+
     const { key, childType } = getChildren(node)
     const children = node[key] || []
     if (children.length === 0) return
