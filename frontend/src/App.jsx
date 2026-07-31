@@ -49,6 +49,7 @@ const RetailerPromotions = lazy(() => import('./Promotions/Retailer_Promotions')
 const WholesaleDealerPromotions = lazy(() => import('./Promotions/WholesaleDealer_Promotions'))
 const DistributorPromotions = lazy(() => import('./Promotions/Distributor'))
 const SuperStokistPromotions = lazy(() => import('./Promotions/SuperStokist'))
+const PromotionSalesOrderList = lazy(() => import('./Promotions/Promotion_sales_order_list'))
 
 const collectionPath = (category, metal) => {
   const params = new URLSearchParams({ category })
@@ -227,6 +228,7 @@ export default function App() {
           <Route path="/stored-coins" element={<ProtectedRoute role={INTERNAL_COIN_ROLES}><WithInternalRoleNavbar><StoredCoins /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/coin-requests-page" element={<ProtectedRoute role={INTERNAL_COIN_ROLES}><WithInternalRoleNavbar><CoinRequests /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/coin-transactions" element={<ProtectedRoute role={INTERNAL_COIN_ROLES}><WithInternalRoleNavbar><TransactionHistory /></WithInternalRoleNavbar></ProtectedRoute>} />
+          <Route path="/promotions/sales-order-list" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><PromotionSalesOrderList /></WithSuperAdminNavbar></ProtectedRoute>} />
         </Routes>
       </Suspense>
     </BrowserRouter>

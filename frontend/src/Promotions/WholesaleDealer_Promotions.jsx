@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 
 function money(value) {
@@ -201,7 +202,19 @@ export default function WholesaleDealerPromotions() {
                         </td>
                         <td>{r.mobile_number}</td>
                         <td><span className="rp-count-pill">{r.today_customers}</span></td>
-                        <td><span className="rp-count-pill">{r.total_customers}</span></td>
+                         <td>
+                          <span
+                            className="rp-count-pill"
+                            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() =>
+                              navigate(
+                                `/promotions/sales-order-list?node_type=promotor&user_id=${r.user_id}&name=${encodeURIComponent(r.first_name + ' ' + r.last_name)}`
+                              )
+                            }
+                          >
+                            {r.total_customers}
+                          </span>
+                        </td>
                         <td className="rp-value">{money(r.total_value)}</td>
                         <td>
                           {isFinal ? (

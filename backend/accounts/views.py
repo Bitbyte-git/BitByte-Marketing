@@ -3012,6 +3012,133 @@ class SuperStockistPromotionActionView(APIView):
 
         return Response({'error': 'Invalid action'}, status=400)
 
+# ── NEW: Generic customer list for any promotion-node "Total Customers" click ──
+class PromotionCustomerListView(APIView):
+    """node_type = customer / promotor / sub_dealer / dealer
+    user_id = that node's User id
+    Returns the FULL recursive customer chain under that node with order stats."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['super_admin', 'admin']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        node_type = request.query_params.get('node_type')
+        user_id = request.query_params.get('user_id')
+        if not node_type or not user_id:
+            return Response({'error': 'node_type and user_id required'}, status=400)
+
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            return Response({'error': 'invalid user_id'}, status=400)
+
+        # Step 1: figure out which promotor user_ids we need customer-chains for
+        if node_type == 'customer':
+            promotor_user_ids = None
+        elif node_type == 'promotor':
+            promotor_user_ids = [user_id]
+        elif node_type == 'sub_dealer':
+            promotor_user_ids = list(
+                PromotorProfile.objects.filter(created_by_id=user_id).values_list('user_id', flat=True)
+            )
+        elif node_type == 'dealer':
+            sub_dealer_ids = list(
+                SubDealerProfile.objects.filter(created_by_id=user_id).values_list('user_id', flat=True)
+            )
+            promotor_user_ids = list(
+                PromotorProfile.objects.filter(created_by_id__in=sub_dealer_ids).values_list('user_id', flat=True)
+            )
+        else:
+            return Response({'error': 'invalid node_type'}, status=400)
+
+        # Step 2: recursive customer chain collect pannu (already built helper)
+        if node_type == 'customer':
+            customers_map = _recursive_customers_by_creator([user_id])
+            customer_dicts = customers_map.get(user_id, [])
+        else:
+            customers_map = _recursive_customers_by_creator(promotor_user_ids)
+            customer_dicts = []
+            for pid in promotor_user_ids:
+                customer_dicts.extend(customers_map.get(pid, []))
+
+        customer_user_ids = [c['user_id'] for c in customer_dicts]
+
+        # Step 3: full profile + order stats bulk-a edukurom
+        profiles = list(
+            CustomerProfile.objects.filter(user_id__in=customer_user_ids).select_related('user')
+        )
+
+        order_rows = (
+            JewelryOrder.objects.filter(user_id__in=customer_user_ids)
+            .values('user_id')
+            .annotate(cnt=Count('id'), total=Sum('total_price'))
+        )
+        order_map = {r['user_id']: {'count': r['cnt'], 'value': float(r['total'] or 0)} for r in order_rows}
+
+        # AFTER
+        # ── NEW: node-oda own purchases layum (role-switch pannitu purchase pannirundhaa) sera vachi kaatanum ──
+        node_labels = {
+            'customer': 'Retailer',      # customer promoted-to-Retailer nu paakkarom
+            'promotor': 'Retailer',
+            'sub_dealer': 'Wholesale Dealer',
+            'dealer': 'Distributor',
+        }
+        own_orders_row = None
+        own_agg = order_map.get(user_id) if 'order_map' in dir() else None
+
+        # own order stats (node's own user_id) — customer_user_ids-la illama thani-a fetch pannanum
+        own_order_row = (
+            JewelryOrder.objects.filter(user_id=user_id)
+            .aggregate(cnt=Count('id'), total=Sum('total_price'))
+        )
+        own_count = own_order_row['cnt'] or 0
+        own_value = float(own_order_row['total'] or 0)
+
+        if own_count > 0:
+            try:
+                node_user = User.objects.get(id=user_id)
+                node_profile_map = {
+                    'customer': 'customer_profile', 'promotor': 'promotor_profile',
+                    'sub_dealer': 'sub_dealer_profile', 'dealer': 'dealer_profile',
+                }
+                node_id_field_map = {
+                    'customer': 'customer_id', 'promotor': 'promotor_id',
+                    'sub_dealer': 'sub_dealer_id', 'dealer': 'dealer_id',
+                }
+                node_profile = getattr(node_user, node_profile_map[node_type])
+                own_orders_row = {
+                    'position': node_labels.get(node_type, 'Self'),
+                    'customer_id': getattr(node_profile, node_id_field_map[node_type], ''),
+                    'name': f"{node_profile.first_name} {node_profile.last_name or ''}".strip(),
+                    'email': node_user.email,
+                    'phone': node_profile.mobile_number,
+                    'order_count': own_count,
+                    'total_value': own_value,
+                }
+            except Exception:
+                own_orders_row = None
+
+        profiles.sort(key=lambda p: order_map.get(p.user_id, {}).get('value', 0), reverse=True)
+
+        results = []
+        if own_orders_row:
+            results.append(own_orders_row)   # ── retailer own row mudhalla varum ──
+
+        for idx, p in enumerate(profiles, start=1):
+            agg = order_map.get(p.user_id, {'count': 0, 'value': 0})
+            results.append({
+                'position': idx,
+                'customer_id': p.customer_id,
+                'name': f"{p.first_name} {p.last_name or ''}".strip(),
+                'email': p.user.email,
+                'phone': p.mobile_number,
+                'order_count': agg['count'],
+                'total_value': agg['value'],
+            })
+
+        return Response(results)
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
