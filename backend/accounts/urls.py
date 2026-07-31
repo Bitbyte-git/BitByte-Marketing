@@ -66,7 +66,7 @@ urlpatterns = [
     path('distributor-promotions/<int:user_id>/action/', DistributorPromotionActionView.as_view()),
     path('super-stockist-promotions/', SuperStockistPromotionListView.as_view()),
     path('super-stockist-promotions/<int:user_id>/action/', SuperStockistPromotionActionView.as_view()),
-    path('promotion-customers/', views.PromotionCustomerListView.as_view(), name='promotion-customers'),
+    path('promotion-customers/', PromotionCustomerListView.as_view(), name='promotion-customers'),
 
     
     
