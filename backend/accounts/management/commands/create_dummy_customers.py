@@ -60,14 +60,24 @@ class Command(BaseCommand):
         parser.add_argument('--count', type=int, default=600, help='Total number of dummy customers to create')
         parser.add_argument('--admin_id', type=str, default=None,
                              help='Only create customers for promotors under this admin_id (default: ALL promotors)')
+        parser.add_argument('--promotor_id', type=str, default=None,
+                             help='Assign ALL created customers to this ONE specific promotor_id (overrides --admin_id)')
 
     def handle(self, *args, **options):
         count = options['count']
         created = 0
 
         admin_id = options['admin_id']
+        promotor_id = options['promotor_id']
 
-        if admin_id:
+        if promotor_id:
+            try:
+                target_promotor = PromotorProfile.objects.get(promotor_id=promotor_id)
+            except PromotorProfile.DoesNotExist:
+                self.stdout.write(self.style.ERROR(f"Promotor with promotor_id={promotor_id} not found!"))
+                return
+            promotors = [target_promotor]
+        elif admin_id:
             try:
                 target_admin = AdminProfile.objects.get(admin_id=admin_id)
             except AdminProfile.DoesNotExist:

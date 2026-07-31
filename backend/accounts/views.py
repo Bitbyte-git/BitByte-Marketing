@@ -2366,13 +2366,13 @@ class RetailerPromotionListView(APIView):
     SALES_THRESHOLD = 500000          # ₹5 Lakh
     CUSTOMER_COUNT_THRESHOLD = 7
 
+    # AFTER
     def get(self, request):
         if request.user.role not in ['super_admin', 'admin']:
             return Response({'error': 'Permission denied'}, status=403)
 
         today = timezone.now().date()
 
-        # ── 1 query: ella eligible customer-creators um profile serthu edukurom ──
         creator_profiles = list(
             CustomerProfile.objects.filter(
                 user__role='customer', user__created_customers__isnull=False
@@ -2383,26 +2383,45 @@ class RetailerPromotionListView(APIView):
 
         creator_ids = [cp.user_id for cp in creator_profiles]
 
-        # ── 1 query: ella sub-customers ellathayும் bulk ah edukurom ──
-        sub_customers = list(
-            CustomerProfile.objects.filter(created_by_id__in=creator_ids)
-            .values('created_by_id', 'user_id', 'created_at')
+        # ── NEW: fetch ALL customers ONE query, build a created_by → children map
+        # for a recursive walk (A→B→C→D... any depth) ──
+        all_customers = list(
+            CustomerProfile.objects.all().values('user_id', 'created_by_id', 'created_at')
         )
-        customers_by_creator = {}
-        for c in sub_customers:
-            customers_by_creator.setdefault(c['created_by_id'], []).append(c)
+        children_by_parent = {}
+        for c in all_customers:
+            children_by_parent.setdefault(c['created_by_id'], []).append(c)
 
-        # ── 1 query: ella relevant user_id oda order totals um bulk ah edukurom ──
-        all_relevant_user_ids = [c['user_id'] for c in sub_customers] + creator_ids
+        def collect_descendants(root_user_id):
+            """BFS keezhe poi ella level layume customers-a collect pannum (loop-safe)."""
+            collected, seen = [], set()
+            queue = list(children_by_parent.get(root_user_id, []))
+            while queue:
+                node = queue.pop(0)
+                uid = node['user_id']
+                if uid in seen:
+                    continue
+                seen.add(uid)
+                collected.append(node)
+                queue.extend(children_by_parent.get(uid, []))
+            return collected
+
+        descendants_by_creator = {}
+        all_relevant_user_ids = set(creator_ids)
+        for creator_id in creator_ids:
+            desc = collect_descendants(creator_id)
+            descendants_by_creator[creator_id] = desc
+            all_relevant_user_ids.update(d['user_id'] for d in desc)
+
         order_totals = dict(
-            JewelryOrder.objects.filter(user_id__in=all_relevant_user_ids)
+            JewelryOrder.objects.filter(user_id__in=list(all_relevant_user_ids))
             .values('user_id').annotate(total=Sum('total_price')).values_list('user_id', 'total')
         )
 
         results = []
         for cp in creator_profiles:
             creator_id = cp.user_id
-            my_customers = customers_by_creator.get(creator_id, [])
+            my_customers = descendants_by_creator.get(creator_id, [])
 
             total_customers = len(my_customers)
             today_customers = sum(1 for c in my_customers if c['created_at'].date() == today)
@@ -2479,8 +2498,25 @@ class RetailerPromotionActionView(APIView):
                 annual_salary=target_profile.annual_salary,
             )
 
-            # This customer's own created sub-customers now belong to their new Promotor profile
-            CustomerProfile.objects.filter(created_by=target_user).update(assigned_promotor=promotor)
+            all_customers = list(CustomerProfile.objects.all().values('id', 'user_id', 'created_by_id'))
+            children_by_parent = {}
+            for c in all_customers:
+                children_by_parent.setdefault(c['created_by_id'], []).append(c)
+
+            def collect_descendant_ids(root_user_id):
+                ids, seen = [], set()
+                queue = list(children_by_parent.get(root_user_id, []))
+                while queue:
+                    node = queue.pop(0)
+                    if node['id'] in seen:
+                        continue
+                    seen.add(node['id'])
+                    ids.append(node['id'])
+                    queue.extend(children_by_parent.get(node['user_id'], []))
+                return ids
+
+            descendant_ids = collect_descendant_ids(target_user.id)
+            CustomerProfile.objects.filter(id__in=descendant_ids).update(assigned_promotor=promotor)
 
             target_profile.retailer_status = 'approved'
             target_profile.save(update_fields=['retailer_status'])
@@ -2492,9 +2528,40 @@ class RetailerPromotionActionView(APIView):
 
         return Response({'error': 'Invalid action'}, status=400)
 
+    # ── Shared helper: recursive customer-chain collector (any depth A→B→C→D...→1000+) ──
+def _recursive_customers_by_creator(creator_user_ids):
+    """creator_user_ids = promotor user_ids who directly create customers.
+    Returns dict: creator_user_id -> list of customer dicts {user_id, created_by_id, created_at}
+    covering EVERY level of the downline chain, not just direct children."""
+    all_customers = list(
+        CustomerProfile.objects.all().values('user_id', 'created_by_id', 'created_at')
+    )
+    children_by_parent = {}
+    for c in all_customers:
+        children_by_parent.setdefault(c['created_by_id'], []).append(c)
+
+    def collect_descendants(root_user_id):
+        collected, seen = [], set()
+        queue = list(children_by_parent.get(root_user_id, []))
+        while queue:
+            node = queue.pop(0)
+            uid = node['user_id']
+            if uid in seen:
+                continue
+            seen.add(uid)
+            collected.append(node)
+            queue.extend(children_by_parent.get(uid, []))
+        return collected
+
+    result = {}
+    for cid in creator_user_ids:
+        result[cid] = collect_descendants(cid)
+    return result    
+
 # ── NEW: Wholesale Dealer Promotion System (Promotor -> SubDealer) ──
 class WholesaleDealerPromotionListView(APIView):
-    """Promotors (Retailers) who created 20+ customers AND crossed 35L sales — eligible for Wholesale Dealer."""
+    """Promotors (Retailers) who built 20+ customers (any depth in downline chain)
+    AND crossed ₹35 Lakh overall sales — eligible for Wholesale Dealer."""
     permission_classes = [IsAuthenticated]
 
     SALES_THRESHOLD = 3500000        # ₹35 Lakh
@@ -2516,17 +2583,13 @@ class WholesaleDealerPromotionListView(APIView):
 
         creator_ids = [cp.user_id for cp in creator_profiles]
 
-        # ── 1 query: ella sub-customers ellathayும் bulk ah edukurom, Python la group pannுவோம் ──
-        sub_customers = list(
-            CustomerProfile.objects.filter(created_by_id__in=creator_ids)
-            .values('created_by_id', 'user_id', 'created_at')
-        )
-        customers_by_creator = {}
-        for c in sub_customers:
-            customers_by_creator.setdefault(c['created_by_id'], []).append(c)
+        # ── NEW: recursive walk — ella level customer chain-um (A→B→C→D...) cover pannum ──
+        customers_by_creator = _recursive_customers_by_creator(creator_ids)
 
-        # ── 1 query: ella relevant user_id oda order totals um bulk ah edukurom ──
-        all_relevant_user_ids = [c['user_id'] for c in sub_customers] + creator_ids
+        all_relevant_user_ids = list(creator_ids)
+        for cid in creator_ids:
+            all_relevant_user_ids.extend(c['user_id'] for c in customers_by_creator.get(cid, []))
+
         order_totals = dict(
             JewelryOrder.objects.filter(user_id__in=all_relevant_user_ids)
             .values('user_id').annotate(total=Sum('total_price')).values_list('user_id', 'total')
@@ -2623,16 +2686,13 @@ class WholesaleDealerPromotionActionView(APIView):
         return Response({'error': 'Invalid action'}, status=400)
 
 
-# ── NEW: Distributor Promotion System (SubDealer -> Dealer) ──
 class DistributorPromotionListView(APIView):
-    """SubDealers (Wholesale Dealers) who built 40+ customers, 10+ Retailers, 5+ Wholesale Dealers
-    keezhе AND crossed 2.4C overall — eligible for Distributor."""
+    """SubDealers (Wholesale Dealers) who built 40+ customers (any depth) AND crossed
+    ₹2.5 Crore overall sales — eligible for Distributor."""
     permission_classes = [IsAuthenticated]
 
-    SALES_THRESHOLD = 24000000       # ₹2.4 Crore
+    SALES_THRESHOLD = 25000000       # ₹2.5 Crore
     CUSTOMER_THRESHOLD = 40
-    RETAILER_THRESHOLD = 10
-    WHOLESALE_THRESHOLD = 5
 
     def get(self, request):
         if request.user.role not in ['super_admin', 'admin']:
@@ -2650,13 +2710,11 @@ class DistributorPromotionListView(APIView):
 
         creator_ids = [cp.user_id for cp in creator_profiles]
 
-        # ── 1 query: keezhе irukura Wholesale Dealers count bulk ah ──
         wholesale_counts = dict(
             SubDealerProfile.objects.filter(created_by_id__in=creator_ids)
             .values('created_by_id').annotate(c=Count('id')).values_list('created_by_id', 'c')
         )
 
-        # ── 1 query: keezhе irukura Retailers (promotors) ellathayும் bulk ah ──
         promotors = list(
             PromotorProfile.objects.filter(created_by_id__in=creator_ids)
             .values('created_by_id', 'user_id')
@@ -2666,17 +2724,13 @@ class DistributorPromotionListView(APIView):
             promotors_by_creator.setdefault(p['created_by_id'], []).append(p['user_id'])
         all_promotor_ids = [p['user_id'] for p in promotors]
 
-        # ── 1 query: keezhе irukura ella customers layume bulk ah ──
-        sub_customers = list(
-            CustomerProfile.objects.filter(created_by_id__in=all_promotor_ids)
-            .values('created_by_id', 'user_id', 'created_at')
-        )
-        customers_by_promotor = {}
-        for c in sub_customers:
-            customers_by_promotor.setdefault(c['created_by_id'], []).append(c)
+        # ── NEW: recursive walk — ella level customer chain-um cover pannum ──
+        customers_by_promotor = _recursive_customers_by_creator(all_promotor_ids)
 
-        # ── 1 query: ella relevant user_id oda order totals um bulk ah ──
-        all_relevant_user_ids = [c['user_id'] for c in sub_customers] + all_promotor_ids + creator_ids
+        all_relevant_user_ids = list(creator_ids) + list(all_promotor_ids)
+        for pid in all_promotor_ids:
+            all_relevant_user_ids.extend(c['user_id'] for c in customers_by_promotor.get(pid, []))
+
         order_totals = dict(
             JewelryOrder.objects.filter(user_id__in=all_relevant_user_ids)
             .values('user_id').annotate(total=Sum('total_price')).values_list('user_id', 'total')
@@ -2702,8 +2756,6 @@ class DistributorPromotionListView(APIView):
 
             eligible = (
                 total_customers >= self.CUSTOMER_THRESHOLD and
-                total_retailers >= self.RETAILER_THRESHOLD and
-                total_wholesale_dealers >= self.WHOLESALE_THRESHOLD and
                 total_value >= self.SALES_THRESHOLD
             )
             if not eligible and cp.distributor_status == 'none':
@@ -2726,7 +2778,6 @@ class DistributorPromotionListView(APIView):
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
         return Response(results)
-
 
 class DistributorPromotionActionView(APIView):
     """Approve converts the SubDealer into a real Dealer; reject just marks it."""
@@ -2787,10 +2838,10 @@ class DistributorPromotionActionView(APIView):
         return Response({'error': 'Invalid action'}, status=400)
 
 
-# ── NEW: Super Stockist Promotion System (Dealer -> Admin) ──
 class SuperStockistPromotionListView(APIView):
-    """Dealers (Distributors) who built 80+ customers, 20+ Retailers, 10+ Wholesale Dealers,
-    5+ Distributors keezhе AND crossed 12C overall — eligible for Super Stockist."""
+    """Dealers (Distributors) who built 80+ customers (any depth), 20+ Retailers,
+    10+ Wholesale Dealers, 5+ Distributors keezhе AND crossed ₹12 Crore overall —
+    eligible for Super Stockist."""
     permission_classes = [IsAuthenticated]
 
     SALES_THRESHOLD = 120000000      # ₹12 Crore
@@ -2815,13 +2866,11 @@ class SuperStockistPromotionListView(APIView):
 
         creator_ids = [cp.user_id for cp in creator_profiles]
 
-        # ── 1 query: keezhе irukura Distributors (dealers) count bulk ah ──
         distributor_counts = dict(
             DealerProfile.objects.filter(created_by_id__in=creator_ids)
             .values('created_by_id').annotate(c=Count('id')).values_list('created_by_id', 'c')
         )
 
-        # ── 1 query: keezhе irukura Wholesale Dealers (sub_dealers) ellathayும் bulk ah ──
         sub_dealers = list(
             SubDealerProfile.objects.filter(created_by_id__in=creator_ids)
             .values('created_by_id', 'user_id')
@@ -2831,7 +2880,6 @@ class SuperStockistPromotionListView(APIView):
             sub_dealers_by_creator.setdefault(sd['created_by_id'], []).append(sd['user_id'])
         all_sub_dealer_ids = [sd['user_id'] for sd in sub_dealers]
 
-        # ── 1 query: keezhе irukura Retailers (promotors) ellathayும் bulk ah ──
         promotors = list(
             PromotorProfile.objects.filter(created_by_id__in=all_sub_dealer_ids)
             .values('created_by_id', 'user_id')
@@ -2841,20 +2889,13 @@ class SuperStockistPromotionListView(APIView):
             promotors_by_sub_dealer.setdefault(p['created_by_id'], []).append(p['user_id'])
         all_promotor_ids = [p['user_id'] for p in promotors]
 
-        # ── 1 query: ella customers layume bulk ah ──
-        sub_customers = list(
-            CustomerProfile.objects.filter(created_by_id__in=all_promotor_ids)
-            .values('created_by_id', 'user_id', 'created_at')
-        )
-        customers_by_promotor = {}
-        for c in sub_customers:
-            customers_by_promotor.setdefault(c['created_by_id'], []).append(c)
+        # ── NEW: recursive walk — ella level customer chain-um cover pannum ──
+        customers_by_promotor = _recursive_customers_by_creator(all_promotor_ids)
 
-        # ── 1 query: ella relevant user_id oda order totals um bulk ah ──
-        all_relevant_user_ids = (
-            [c['user_id'] for c in sub_customers] + all_promotor_ids +
-            all_sub_dealer_ids + creator_ids
-        )
+        all_relevant_user_ids = list(creator_ids) + list(all_sub_dealer_ids) + list(all_promotor_ids)
+        for pid in all_promotor_ids:
+            all_relevant_user_ids.extend(c['user_id'] for c in customers_by_promotor.get(pid, []))
+
         order_totals = dict(
             JewelryOrder.objects.filter(user_id__in=all_relevant_user_ids)
             .values('user_id').annotate(total=Sum('total_price')).values_list('user_id', 'total')
@@ -2912,7 +2953,6 @@ class SuperStockistPromotionListView(APIView):
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
         return Response(results)
-
 
 class SuperStockistPromotionActionView(APIView):
     """Approve converts the Dealer into a real Admin; reject just marks it."""

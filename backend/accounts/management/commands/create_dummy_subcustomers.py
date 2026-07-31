@@ -59,13 +59,31 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--admin_id', type=str, default=None,
                              help='Only create sub-customers for customers under this admin_id (default: ALL customers)')
+        parser.add_argument('--customer_id', type=str, default=None,
+                             help='Create --count sub-customers under this ONE specific customer_id (overrides --admin_id)')
+        parser.add_argument('--count', type=int, default=1,
+                             help='Number of sub-customers to create per parent customer (default: 1)')
 
     def handle(self, *args, **options):
         admin_id = options['admin_id']
+        customer_id = options['customer_id']
+        count = options['count']
         created = 0
 
-        # ── Step 1: Fetch parent customers (all, or filtered to one admin's downline) ──
-        if admin_id:
+        # ── Step 1: Fetch parent customer(s) ──
+        if customer_id:
+            try:
+                target_customer = CustomerProfile.objects.get(customer_id=customer_id)
+            except CustomerProfile.DoesNotExist:
+                self.stdout.write(self.style.ERROR(f"Customer with customer_id={customer_id} not found!"))
+                return
+            # ── same parent repeated `count` times, so the loop below creates exactly `count` sub-customers ──
+            parent_customers = [target_customer] * count
+            total_parents = count
+            self.stdout.write(self.style.SUCCESS(
+                f"Creating exactly {count} sub-customers under Customer {target_customer.customer_id} ({target_customer.first_name})..."
+            ))
+        elif admin_id:
             try:
                 target_admin = AdminProfile.objects.get(admin_id=admin_id)
             except AdminProfile.DoesNotExist:
@@ -77,16 +95,19 @@ class Command(BaseCommand):
             if not parent_customers:
                 self.stdout.write(self.style.ERROR(f"No customers found under Admin {admin_id}!"))
                 return
+            total_parents = len(parent_customers)
+            self.stdout.write(self.style.SUCCESS(
+                f"Found {total_parents} customers. Creating exactly 1 sub-customer EACH ({total_parents} total)..."
+            ))
         else:
             parent_customers = list(CustomerProfile.objects.all())
             if not parent_customers:
                 self.stdout.write(self.style.ERROR("No customers found! Create customers first."))
                 return
-
-        total_parents = len(parent_customers)
-        self.stdout.write(self.style.SUCCESS(
-            f"Found {total_parents} customers. Creating exactly 1 sub-customer EACH ({total_parents} total)..."
-        ))
+            total_parents = len(parent_customers)
+            self.stdout.write(self.style.SUCCESS(
+                f"Found {total_parents} customers. Creating exactly 1 sub-customer EACH ({total_parents} total)..."
+            ))
 
         for parent in parent_customers:
             # ── Retry loop: duplicate email no longer skips this slot,

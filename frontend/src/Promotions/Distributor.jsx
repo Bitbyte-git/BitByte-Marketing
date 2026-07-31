@@ -126,8 +126,8 @@ export default function DistributorPromotions() {
             <span className="rp-kicker">Promotions</span>
             <h1>Distributor Promotions</h1>
             <p>
-              Wholesale Dealers with 40+ customers, 10+ Retailers, 5+ Wholesale Dealers in their
-              downline, and ₹2.4 Crore+ overall sales — review and approve to promote into Distributor (Dealer).
+              Wholesale Dealers with 40+ customers and ₹2.5 Crore+ overall sales — review and
+              approve to promote into Distributor (Dealer).
             </p>
           </div>
           <button className="rp-refresh" onClick={fetchRows} disabled={loading}>

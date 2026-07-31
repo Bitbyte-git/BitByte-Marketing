@@ -47,6 +47,12 @@ class Command(BaseCommand):
                              help='Ignore existing order count, ADD this many new orders to EVERY customer regardless')
         parser.add_argument('--admin_id', type=str, default=None,
                              help='Only create orders for customers under this admin_id (default: ALL customers)')
+        parser.add_argument('--promotor_id', type=str, default=None,
+                             help='Only create orders for customers under this ONE promotor_id (overrides --admin_id)')
+        parser.add_argument('--high-value-count', type=int, default=0,
+                             help='Number of customers (from the filtered set) whose orders must total above --high-value-threshold')
+        parser.add_argument('--high-value-threshold', type=float, default=500000,
+                             help='Rupee total each high-value customer must cross (default: 5,00,000)')
 
     def handle(self, *args, **options):
         min_orders = options['min_orders']
@@ -54,7 +60,20 @@ class Command(BaseCommand):
         force_add = options['force_add']
         admin_id = options['admin_id']
 
-        if admin_id:
+        promotor_id = options['promotor_id']
+        high_value_count = options['high_value_count']
+        high_value_threshold = options['high_value_threshold']
+
+        if promotor_id:
+            customers = list(
+                CustomerProfile.objects.filter(assigned_promotor__promotor_id=promotor_id)
+                .select_related('user')
+                .order_by('id')
+            )
+            if not customers:
+                self.stdout.write(self.style.ERROR(f"No customers found under Promotor {promotor_id}!"))
+                return
+        elif admin_id:
             try:
                 target_admin = AdminProfile.objects.get(admin_id=admin_id)
             except AdminProfile.DoesNotExist:
@@ -83,6 +102,10 @@ class Command(BaseCommand):
         existing_counts = {}
         for row in JewelryOrder.objects.filter(user__in=[c.user_id for c in customers]).values('user_id'):
             existing_counts[row['user_id']] = existing_counts.get(row['user_id'], 0) + 1
+
+        # ── High-value customers: first `high_value_count` customers in this filtered
+        # set are flagged to keep receiving orders until their total crosses the threshold ──
+        high_value_ids = {c.user_id for c in customers[:high_value_count]} if high_value_count else set()
 
         if force_add:
             # ADD mode: every customer gets random(min,max) NEW orders on top of existing ones
@@ -163,10 +186,14 @@ class Command(BaseCommand):
             else:
                 chosen_products = random.choices(products, k=need)
 
+            customer_running_total = 0.0
+            is_high_value = customer.user_id in high_value_ids
+
             for product in chosen_products:
                 qty = random.randint(1, 2)
                 unit_price = float(product.price or 0)
                 total_price = round(unit_price * qty, 2)
+                customer_running_total += total_price
 
                 order_time = timezone.now() - timedelta(minutes=random.choice(GAP_OPTIONS_MINUTES))
 
@@ -205,6 +232,61 @@ class Command(BaseCommand):
 
                 if len(batch) >= BATCH_SIZE:
                     flush_batch()
+
+            # ── High-value top-up: keep adding orders (repeat products allowed)
+            # until this customer's total crosses the threshold ──
+            if is_high_value:
+                safety_limit = 200  # avoid infinite loop if products are too cheap
+                loops = 0
+                while customer_running_total < high_value_threshold and loops < safety_limit:
+                    product = random.choice(products)
+                    qty = random.randint(1, 2)
+                    unit_price = float(product.price or 0)
+                    total_price = round(unit_price * qty, 2)
+                    customer_running_total += total_price
+                    loops += 1
+
+                    order_time = timezone.now() - timedelta(minutes=random.choice(GAP_OPTIONS_MINUTES))
+
+                    order_obj = JewelryOrder(
+                        order_id=next_order_id(),
+                        user=customer.user,
+                        product=product,
+                        product_name=product.name,
+                        product_metal=product.metal,
+                        product_grade=product.grade or '',
+                        product_category=product.category,
+                        product_image_url=product_image_urls.get(product.id, ''),
+
+                        customer_name=f"{customer.first_name} {customer.last_name}".strip(),
+                        customer_phone=customer.mobile_number,
+                        customer_alt_phone='',
+                        customer_dob=customer.dob,
+                        customer_anniversary=customer.anniversary_date,
+
+                        pincode=str(random.randint(600001, 643001)),
+                        address_line1=random.choice(ADDRESS_LINES),
+                        address_line2=customer.town_name or '',
+                        city=customer.city_name,
+                        state=customer.state,
+
+                        quantity=qty,
+                        unit_price=unit_price,
+                        total_price=total_price,
+
+                        payment_method=random.choice(PAYMENT_METHODS),
+                        payment_status='paid',
+                        status=random.choice(ORDER_STATUSES),
+                    )
+                    order_obj._staggered_time = order_time
+                    batch.append(order_obj)
+
+                    if len(batch) >= BATCH_SIZE:
+                        flush_batch()
+
+                self.stdout.write(self.style.SUCCESS(
+                    f"  High-value: {customer.customer_id} ({customer.first_name}) reached ₹{customer_running_total:,.2f}"
+                ))
 
         flush_batch()
 
