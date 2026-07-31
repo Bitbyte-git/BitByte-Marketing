@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
-
 function money(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "Rs. 0";
@@ -15,6 +15,7 @@ const STATUS_CFG = {
 };
 
 export default function DistributorPromotions() {
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -201,10 +202,48 @@ export default function DistributorPromotions() {
                           <div className="rp-sub">{r.email}</div>
                         </td>
                         <td>{r.mobile_number}</td>
-                        <td><span className="rp-count-pill">{r.total_customers}</span></td>
-                        <td><span className="rp-count-pill">{r.total_retailers}</span></td>
-                        <td><span className="rp-count-pill">{r.total_wholesale_dealers}</span></td>
-                        <td className="rp-value">{money(r.total_value)}</td>
+                        <td>
+                          <span
+                            className="rp-count-pill"
+                            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() =>
+                              navigate(`/promotions/sales-order-list?node_type=sub_dealer&user_id=${r.user_id}&list_type=customers&name=${encodeURIComponent(r.first_name + ' ' + r.last_name)}`)
+                            }
+                          >
+                            {r.total_customers}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className="rp-count-pill"
+                            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() =>
+                              navigate(`/promotions/sales-order-list?node_type=sub_dealer&user_id=${r.user_id}&list_type=retailers&name=${encodeURIComponent(r.first_name + ' ' + r.last_name)}`)
+                            }
+                          >
+                            {r.total_retailers}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className="rp-count-pill"
+                            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() =>
+                              navigate(`/promotions/sales-order-list?node_type=sub_dealer&user_id=${r.user_id}&list_type=wholesale_dealers&name=${encodeURIComponent(r.first_name + ' ' + r.last_name)}`)
+                            }
+                          >
+                            {r.total_wholesale_dealers}
+                          </span>
+                        </td>
+                        <td
+                          className="rp-value"
+                          style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                          onClick={() =>
+                            navigate(`/promotions/sales-order-list?node_type=sub_dealer&user_id=${r.user_id}&list_type=customers&order_filter=orders_only&name=${encodeURIComponent(r.first_name + ' ' + r.last_name)}`)
+                          }
+                        >
+                          {money(r.total_value)}
+                        </td>
                         <td>
                           {isFinal ? (
                             <span className="rp-status-pill" style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>

@@ -15,7 +15,9 @@ const STATUS_CFG = {
   rejected: { label: "Rejected", color: "#C92035", bg: "rgba(201,32,53,0.12)", border: "rgba(201,32,53,0.32)" },
 };
 
+// AFTER
 export default function WholesaleDealerPromotions() {
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -200,22 +202,39 @@ export default function WholesaleDealerPromotions() {
                           <div className="rp-name">{r.first_name} {r.last_name}</div>
                           <div className="rp-sub">{r.email}</div>
                         </td>
+                      
                         <td>{r.mobile_number}</td>
-                        <td><span className="rp-count-pill">{r.today_customers}</span></td>
-                         <td>
+                        <td>
                           <span
                             className="rp-count-pill"
                             style={{ cursor: 'pointer', textDecoration: 'underline' }}
                             onClick={() =>
-                              navigate(
-                                `/promotions/sales-order-list?node_type=promotor&user_id=${r.user_id}&name=${encodeURIComponent(r.first_name + ' ' + r.last_name)}`
-                              )
+                              navigate(`/promotions/sales-order-list?node_type=promotor&user_id=${r.user_id}&list_type=customers&name=${encodeURIComponent(r.first_name + ' ' + r.last_name)}`)
+                            }
+                          >
+                            {r.today_customers}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className="rp-count-pill"
+                            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            onClick={() =>
+                          navigate(`/promotions/sales-order-list?node_type=promotor&user_id=${r.user_id}&list_type=customers&order_filter=orders_only&name=${encodeURIComponent(r.first_name + ' ' + r.last_name)}`)
                             }
                           >
                             {r.total_customers}
                           </span>
                         </td>
-                        <td className="rp-value">{money(r.total_value)}</td>
+                        <td
+                          className="rp-value"
+                          style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                          onClick={() =>
+                          navigate(`/promotions/sales-order-list?node_type=promotor&user_id=${r.user_id}&list_type=customers&order_filter=orders_only&name=${encodeURIComponent(r.first_name + ' ' + r.last_name)}`)
+                          }
+                        >
+                          {money(r.total_value)}
+                        </td>
                         <td>
                           {isFinal ? (
                             <span className="rp-status-pill" style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>

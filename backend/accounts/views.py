@@ -2846,9 +2846,6 @@ class SuperStockistPromotionListView(APIView):
 
     SALES_THRESHOLD = 120000000      # ₹12 Crore
     CUSTOMER_THRESHOLD = 80
-    RETAILER_THRESHOLD = 20
-    WHOLESALE_THRESHOLD = 10
-    DISTRIBUTOR_THRESHOLD = 5
 
     def get(self, request):
         if request.user.role != 'super_admin':
@@ -2927,9 +2924,6 @@ class SuperStockistPromotionListView(APIView):
 
             eligible = (
                 total_customers >= self.CUSTOMER_THRESHOLD and
-                total_retailers >= self.RETAILER_THRESHOLD and
-                total_wholesale_dealers >= self.WHOLESALE_THRESHOLD and
-                total_distributors >= self.DISTRIBUTOR_THRESHOLD and
                 total_value >= self.SALES_THRESHOLD
             )
             if not eligible and cp.super_stockist_status == 'none':
@@ -3074,10 +3068,13 @@ class PromotionCustomerListView(APIView):
             .values('user_id')
             .annotate(cnt=Count('id'), total=Sum('total_price'))
         )
+       
         order_map = {r['user_id']: {'count': r['cnt'], 'value': float(r['total'] or 0)} for r in order_rows}
 
-        # AFTER
-        # ── NEW: node-oda own purchases layum (role-switch pannitu purchase pannirundhaa) sera vachi kaatanum ──
+        order_filter = request.query_params.get('order_filter', 'all')   # ── NEW
+        if order_filter == 'orders_only':
+            profiles = [p for p in profiles if order_map.get(p.user_id, {}).get('count', 0) > 0]
+
         node_labels = {
             'customer': 'Retailer',      # customer promoted-to-Retailer nu paakkarom
             'promotor': 'Retailer',
@@ -3085,9 +3082,7 @@ class PromotionCustomerListView(APIView):
             'dealer': 'Distributor',
         }
         own_orders_row = None
-        own_agg = order_map.get(user_id) if 'order_map' in dir() else None
 
-        # own order stats (node's own user_id) — customer_user_ids-la illama thani-a fetch pannanum
         own_order_row = (
             JewelryOrder.objects.filter(user_id=user_id)
             .aggregate(cnt=Count('id'), total=Sum('total_price'))
@@ -3138,6 +3133,118 @@ class PromotionCustomerListView(APIView):
             })
 
         return Response(results)
+
+
+# ── NEW: Retailer/Wholesale Dealer/Distributor node list (not customers) ──
+class PromotionNodeListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['super_admin', 'admin']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        node_type = request.query_params.get('node_type')
+        list_type = request.query_params.get('list_type')
+        user_id = request.query_params.get('user_id')
+        if not node_type or not list_type or not user_id:
+            return Response({'error': 'node_type, list_type and user_id required'}, status=400)
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            return Response({'error': 'invalid user_id'}, status=400)
+
+        if list_type == 'retailers':
+            if node_type == 'sub_dealer':
+                promotor_ids = list(PromotorProfile.objects.filter(created_by_id=user_id).values_list('user_id', flat=True))
+            elif node_type == 'dealer':
+                sd_ids = list(SubDealerProfile.objects.filter(created_by_id=user_id).values_list('user_id', flat=True))
+                promotor_ids = list(PromotorProfile.objects.filter(created_by_id__in=sd_ids).values_list('user_id', flat=True))
+            else:
+                return Response({'error': 'invalid node_type for retailers'}, status=400)
+            profiles = list(PromotorProfile.objects.filter(user_id__in=promotor_ids).select_related('user'))
+            id_field = 'promotor_id'
+
+        elif list_type == 'wholesale_dealers':
+            if node_type in ('sub_dealer', 'dealer'):
+                sd_ids = list(SubDealerProfile.objects.filter(created_by_id=user_id).values_list('user_id', flat=True))
+            else:
+                return Response({'error': 'invalid node_type for wholesale_dealers'}, status=400)
+            profiles = list(SubDealerProfile.objects.filter(user_id__in=sd_ids).select_related('user'))
+            id_field = 'sub_dealer_id'
+
+        elif list_type == 'distributors':
+            if node_type in ('admin', 'dealer'):
+                d_ids = list(DealerProfile.objects.filter(created_by_id=user_id).values_list('user_id', flat=True))
+            else:
+                return Response({'error': 'invalid node_type for distributors'}, status=400)
+            profiles = list(DealerProfile.objects.filter(user_id__in=d_ids).select_related('user'))
+            id_field = 'dealer_id'
+        else:
+            return Response({'error': 'invalid list_type'}, status=400)
+
+        node_user_ids = [p.user_id for p in profiles]
+
+        if list_type == 'retailers':
+            customers_map = _recursive_customers_by_creator(node_user_ids)
+        elif list_type == 'wholesale_dealers':
+            promotors = list(PromotorProfile.objects.filter(created_by_id__in=node_user_ids).values('created_by_id', 'user_id'))
+            promotors_by_sd = {}
+            for p in promotors:
+                promotors_by_sd.setdefault(p['created_by_id'], []).append(p['user_id'])
+            all_promotor_ids = [p['user_id'] for p in promotors]
+            customers_by_promotor = _recursive_customers_by_creator(all_promotor_ids)
+            customers_map = {}
+            for sd_id in node_user_ids:
+                merged = []
+                for pid in promotors_by_sd.get(sd_id, []):
+                    merged.extend(customers_by_promotor.get(pid, []))
+                customers_map[sd_id] = merged
+        else:  # distributors
+            sub_dealers = list(SubDealerProfile.objects.filter(created_by_id__in=node_user_ids).values('created_by_id', 'user_id'))
+            sd_by_dealer = {}
+            for sd in sub_dealers:
+                sd_by_dealer.setdefault(sd['created_by_id'], []).append(sd['user_id'])
+            all_sd_ids = [sd['user_id'] for sd in sub_dealers]
+            promotors = list(PromotorProfile.objects.filter(created_by_id__in=all_sd_ids).values('created_by_id', 'user_id'))
+            promotors_by_sd = {}
+            for p in promotors:
+                promotors_by_sd.setdefault(p['created_by_id'], []).append(p['user_id'])
+            all_promotor_ids = [p['user_id'] for p in promotors]
+            customers_by_promotor = _recursive_customers_by_creator(all_promotor_ids)
+            customers_map = {}
+            for d_id in node_user_ids:
+                my_promotors = []
+                for sdid in sd_by_dealer.get(d_id, []):
+                    my_promotors.extend(promotors_by_sd.get(sdid, []))
+                merged = []
+                for pid in my_promotors:
+                    merged.extend(customers_by_promotor.get(pid, []))
+                customers_map[d_id] = merged
+
+        all_customer_ids = list(set(
+            [c['user_id'] for lst in customers_map.values() for c in lst] + node_user_ids
+        ))
+        order_totals = dict(
+            JewelryOrder.objects.filter(user_id__in=all_customer_ids)
+            .values('user_id').annotate(total=Sum('total_price')).values_list('user_id', 'total')
+        )
+
+        results = []
+        for p in profiles:
+            my_customers = customers_map.get(p.user_id, [])
+            value = sum(order_totals.get(c['user_id'], 0) or 0 for c in my_customers)
+            value += order_totals.get(p.user_id, 0) or 0
+            results.append({
+                'id_str': getattr(p, id_field, ''),
+                'name': f"{p.first_name} {p.last_name or ''}".strip(),
+                'email': p.user.email,
+                'phone': p.mobile_number,
+                'total_customers': len(my_customers),
+                'total_value': float(value),
+            })
+
+        results.sort(key=lambda r: r['total_value'], reverse=True)
+        return Response(results)        
 
 
 @api_view(['GET'])

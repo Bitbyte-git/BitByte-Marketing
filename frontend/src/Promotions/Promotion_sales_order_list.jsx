@@ -8,12 +8,21 @@ function money(value) {
   return `Rs. ${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 }
 
+const LIST_TITLES = {
+  customers: "Customer List",
+  retailers: "Retailer List",
+  wholesale_dealers: "Wholesale Dealer List",
+  distributors: "Distributor List",
+};
+
 export default function PromotionSalesOrderList() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const nodeType = searchParams.get("node_type");
   const userId = searchParams.get("user_id");
   const nodeName = searchParams.get("name") || "";
+  const listType = searchParams.get("list_type") || "customers";
+  const orderFilter = searchParams.get("order_filter") || "all";
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,18 +36,27 @@ export default function PromotionSalesOrderList() {
     }
     setLoading(true);
     setError("");
+
+    const url =
+      listType === "customers"
+        ? `/promotion-customers/?node_type=${nodeType}&user_id=${userId}&order_filter=${orderFilter}`
+        : `/promotion-nodes/?node_type=${nodeType}&list_type=${listType}&user_id=${userId}`;
+
     api
-      .get(`/promotion-customers/?node_type=${nodeType}&user_id=${userId}`)
+      .get(url)
       .then((res) => setRows(Array.isArray(res.data) ? res.data : []))
       .catch((err) => {
-        setError(err.response?.data?.error || "Could not load customer list.");
+        setError(err.response?.data?.error || "Could not load list.");
         setRows([]);
       })
       .finally(() => setLoading(false));
-  }, [nodeType, userId]);
+  }, [nodeType, userId, listType, orderFilter]);
 
-  const totalOrders = rows.reduce((sum, r) => sum + r.order_count, 0);
-  const totalValue = rows.reduce((sum, r) => sum + r.total_value, 0);
+  const isCustomerMode = listType === "customers";
+  const totalOrders = isCustomerMode ? rows.reduce((sum, r) => sum + (r.order_count || 0), 0) : null;
+  const totalValue = rows.reduce((sum, r) => sum + (r.total_value || 0), 0);
+  const totalCustomersAgg = !isCustomerMode ? rows.reduce((sum, r) => sum + (r.total_customers || 0), 0) : null;
+  const pageTitle = LIST_TITLES[listType] || "List";
 
   return (
     <div className="psl-page">
@@ -83,35 +101,58 @@ export default function PromotionSalesOrderList() {
         <div className="psl-header">
           <div>
             <span className="psl-kicker">Promotion Detail</span>
-            <h1>Customer List{nodeName ? ` — ${nodeName}` : ""}</h1>
-            <p>Full downline customer chain (any depth) with order stats, sorted by value.</p>
+            <h1>{pageTitle}{nodeName ? ` — ${nodeName}` : ""}</h1>
+            <p>
+              {isCustomerMode
+                ? orderFilter === "orders_only"
+                  ? "Customers who placed orders, sorted by value."
+                  : "Full downline customer chain (any depth) with order stats, sorted by value."
+                : "Sorted by total sales value, highest first."}
+            </p>
           </div>
-          <button className="psl-back" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
+          <button className="psl-back" onClick={() => navigate(-1)}>← Back</button>
         </div>
 
         {error && <div className="psl-error">{error}</div>}
 
         <div className="psl-stats">
-          <div className="psl-stat">
-            <div className="psl-stat-label">Total Customers</div>
-            <div className="psl-stat-value">{rows.length}</div>
-          </div>
-          <div className="psl-stat">
-            <div className="psl-stat-label">Total Orders</div>
-            <div className="psl-stat-value">{totalOrders}</div>
-          </div>
-          <div className="psl-stat">
-            <div className="psl-stat-label">Total Value</div>
-            <div className="psl-stat-value">{money(totalValue)}</div>
-          </div>
+          {isCustomerMode ? (
+            <>
+              <div className="psl-stat">
+                <div className="psl-stat-label">Total Customers</div>
+                <div className="psl-stat-value">{rows.length}</div>
+              </div>
+              <div className="psl-stat">
+                <div className="psl-stat-label">Total Orders</div>
+                <div className="psl-stat-value">{totalOrders}</div>
+              </div>
+              <div className="psl-stat">
+                <div className="psl-stat-label">Total Value</div>
+                <div className="psl-stat-value">{money(totalValue)}</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="psl-stat">
+                <div className="psl-stat-label">Total {pageTitle.replace(" List", "")}s</div>
+                <div className="psl-stat-value">{rows.length}</div>
+              </div>
+              <div className="psl-stat">
+                <div className="psl-stat-label">Total Customers</div>
+                <div className="psl-stat-value">{totalCustomersAgg}</div>
+              </div>
+              <div className="psl-stat">
+                <div className="psl-stat-label">Total Value</div>
+                <div className="psl-stat-value">{money(totalValue)}</div>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="psl-card">
           <div className="psl-card-head">
-            <h2>Customers</h2>
-            <p>Sorted by total order value, highest first.</p>
+            <h2>{pageTitle}</h2>
+            <p>Sorted by total value, highest first.</p>
           </div>
 
           <div className="psl-table-wrap">
@@ -119,10 +160,10 @@ export default function PromotionSalesOrderList() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Customer ID</th>
+                  <th>ID</th>
                   <th>Name</th>
                   <th>Phone</th>
-                  <th>Orders</th>
+                  {isCustomerMode ? <th>Orders</th> : <th>Customers</th>}
                   <th>Value</th>
                 </tr>
               </thead>
@@ -131,21 +172,22 @@ export default function PromotionSalesOrderList() {
                   <tr className="psl-loading-row"><td colSpan={6}>Loading...</td></tr>
                 ) : rows.length === 0 ? (
                   <tr className="psl-loading-row">
-                    <td colSpan={6}>
-                      <div className="psl-empty">No customers found.</div>
-                    </td>
+                    <td colSpan={6}><div className="psl-empty">No records found.</div></td>
                   </tr>
                 ) : (
-                  rows.map((r) => (
-                    <tr key={r.customer_id} style={r.position === 'Retailer' ? { background: 'rgba(7,59,63,0.05)' } : undefined}>
-                      <td className="psl-pos">{r.position}</td>
-                      <td className="psl-id">{r.customer_id}</td>
+                  rows.map((r, i) => (
+                    <tr
+                      key={r.customer_id || r.id_str || i}
+                      style={["Retailer", "Wholesale Dealer", "Distributor"].includes(r.position) ? { background: "rgba(7,59,63,0.05)" } : undefined}
+                    >
+                      <td className="psl-pos">{isCustomerMode ? r.position : i + 1}</td>
+                      <td className="psl-id">{isCustomerMode ? r.customer_id : r.id_str}</td>
                       <td>
                         <div className="psl-name">{r.name}</div>
                         <div className="psl-sub">{r.email}</div>
                       </td>
                       <td>{r.phone}</td>
-                      <td><span className="psl-count-pill">{r.order_count}</span></td>
+                      <td><span className="psl-count-pill">{isCustomerMode ? r.order_count : r.total_customers}</span></td>
                       <td className="psl-value">{money(r.total_value)}</td>
                     </tr>
                   ))

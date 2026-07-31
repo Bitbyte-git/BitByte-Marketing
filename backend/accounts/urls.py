@@ -6,7 +6,7 @@ from .views import (
     DashboardView, AdminListForAdminView, DealerListForDealerView,
     SubDealerListForView, PromotorListForView,  FullHierarchyView, AnnouncementView, AnnouncementReplyView, ProfileUpdateRequestView, ProfileUpdateApproveView,MetalRateView,MetalOrderView, MetalOrderSummaryView, JewelryProductView, JewelryProductDetailView, JewelryProductImageDeleteView, HomeBannerView, HomeBannerDetailView, CartView, CartItemQtyView, WishlistView, JewelryOrderView, create_razorpay_order, verify_payment, ping,
 HierarchySubtreeOrdersView, SalesReportView, OrderTimeSeriesView, TodayLoginStatusView, CoinRequestView, CoinRequestApproveView, CoinRequestRejectView, CoinRequestApproveAllView, CoinStockView, SuperAdminAddCoinsView, CoinStockForUserView, MyHierarchyView, TodayRewardsView, MyBasicInfoView,
- RetailerPromotionListView, RetailerPromotionActionView, WholesaleDealerPromotionListView, WholesaleDealerPromotionActionView, DistributorPromotionListView, DistributorPromotionActionView, SuperStockistPromotionListView, SuperStockistPromotionActionView, PromotionCustomerListView
+ RetailerPromotionListView, RetailerPromotionActionView, WholesaleDealerPromotionListView, WholesaleDealerPromotionActionView, DistributorPromotionListView, DistributorPromotionActionView, SuperStockistPromotionListView, SuperStockistPromotionActionView, PromotionCustomerListView, PromotionCustomerListView, PromotionNodeListView
 
 )
 
@@ -67,6 +67,7 @@ urlpatterns = [
     path('super-stockist-promotions/', SuperStockistPromotionListView.as_view()),
     path('super-stockist-promotions/<int:user_id>/action/', SuperStockistPromotionActionView.as_view()),
     path('promotion-customers/', PromotionCustomerListView.as_view(), name='promotion-customers'),
+    path('promotion-nodes/', PromotionNodeListView.as_view(), name='promotion-nodes'),
 
     
     
