@@ -455,10 +455,87 @@ class MyBasicInfoView(APIView):
         info = get_user_display_info(user)   # already defined at the top of this file
         return Response({
             'role': user.role,
+            'db_id': user.id,          # ← NEW: actual numeric User id — Copy URL button-ku venum
             'id': info['user_id_str'],
             'name': info['name'],
             'phone': info['phone'],
         })
+
+
+# ── NEW: Public referral link system — anyone can share, only Customer registers ──
+class ReferrerInfoView(APIView):
+    """AllowAny — register page-la referral card-ku id/name/phone fetch panna."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        ref_id = request.query_params.get('ref')
+        if not ref_id:
+            return Response({'error': 'ref required'}, status=400)
+        try:
+            user = User.objects.get(id=ref_id)
+        except User.DoesNotExist:
+            return Response({'error': 'Invalid referral link'}, status=404)
+
+        info = get_user_display_info(user)
+        return Response({
+            'id': info['user_id_str'],
+            'name': info['name'],
+            'phone': info['phone'],
+        })
+
+
+class PublicCustomerRegisterView(APIView):
+    """AllowAny — login illama, referral link vazhi vara customer registration.
+    created_by = referrer. assigned_promotor = referrer's promotor profile
+    (referrer promotor-a irundha mattum), illana null."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data
+        ref_id = data.get('ref')
+        if not ref_id:
+            return Response({'error': 'Invalid referral link'}, status=400)
+        try:
+            referrer = User.objects.get(id=ref_id)
+        except User.DoesNotExist:
+            return Response({'error': 'Invalid referral link'}, status=404)
+
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return Response({'error': 'Email and password required'}, status=400)
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'A user with this email already exists.'}, status=400)
+
+        assigned_promotor = None
+        if referrer.role == 'promotor':
+            try:
+                assigned_promotor = referrer.promotor_profile
+            except PromotorProfile.DoesNotExist:
+                assigned_promotor = None
+
+        profile_fields = [
+            'initial', 'first_name', 'last_name', 'mobile_number',
+            'gender', 'dob', 'married_status', 'anniversary_date',
+            'door_no', 'street_name', 'town_name', 'city_name',
+            'district', 'state', 'aadhaar_no', 'pan_no',
+            'occupation', 'occupation_detail', 'annual_salary',
+        ]
+        profile_data = {f: data.get(f) for f in profile_fields if data.get(f) not in [None, '']}
+
+        user = User.objects.create_user(email=email, password=password, role='customer')
+        try:
+            CustomerProfile.objects.create(
+                user=user,
+                created_by=referrer,
+                assigned_promotor=assigned_promotor,
+                **profile_data
+            )
+        except Exception as e:
+            user.delete()
+            return Response({'error': str(e)}, status=400)
+
+        return Response({'message': 'Customer registered successfully'}, status=201)
 
 class CreatePromotorView(APIView):
     permission_classes = [IsAuthenticated]

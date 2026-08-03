@@ -6,6 +6,7 @@ import InternalRoleNavbar from './collection/InternalRoleNavbar'
 
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'))
 const SuperadminHierarchy = lazy(() => import('./Hierarchy/Superadmin_Hierarchy'))
 const SuperadminHierarchyGrid = lazy(() => import('./Grid/Superadmin_Hierarchy_grid'))
@@ -140,6 +141,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<WithCustomerNavbar><LandingPage /></WithCustomerNavbar>} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/super-admin" element={<ProtectedRoute role="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
           <Route path="/superadmin-hierarchy" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperadminHierarchy /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/superadmin-hierarchy-grid" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperadminHierarchyGrid /></WithSuperAdminNavbar></ProtectedRoute>} />

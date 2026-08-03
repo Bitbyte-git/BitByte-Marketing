@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 import logo from '../assets/logo.png'
 import InternalRoleNavbar from '../collection/InternalRoleNavbar'
 import InternalRoleDashboardFrame from '../collection/InternalRoleDashboardFrame'
+import CopyUrlButton from '../collection/CopyUrlButton'
 import goldCoin from '../assets/gold-coin-transparent.png'
 import silverCoin from '../assets/silver-coin.png'
 
@@ -1772,7 +1773,10 @@ const fetchCoinStock = async () => {
         {/* Create Sub Dealer Form */}
         {showForm && (
           <div style={card}>
-            <p style={secHead('#fcd34d')}>Create New Sub Dealer</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <p style={secHead('#fcd34d')}>Create New Sub Dealer</p>
+              <CopyUrlButton />
+            </div>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
               <p style={secLabel('#fcd34d')}>Account Info</p>

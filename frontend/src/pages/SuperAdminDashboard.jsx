@@ -4,9 +4,9 @@ import api from '../api'
 import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import logo from '../assets/logo.png'
 import SuperAdminNavbar from '../collection/SuperAdminNavbar'
-
 import goldCoin from '../assets/gold-coin-transparent.png'
 import silverCoin from '../assets/silver-coin-transparent.png'
+import CopyUrlButton from '../collection/CopyUrlButton'
 
 const OCCUPATION_OPTIONS = ['employee', 'business', 'others']
 
@@ -5613,7 +5613,10 @@ fetchAnnouncementCount(annData)
         {/* Create Admin Form - unchanged */}
         {showForm && (
           <div style={s.card}>
-            <p style={s.secHead}>Create New Admin</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <p style={s.secHead}>Create New Admin</p>
+              <CopyUrlButton />
+            </div>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <p style={s.secSub}>Personal Info</p>
               <div style={{ display: 'grid', gridTemplateColumns: '0.4fr 1fr 1fr', gap: '14px' }}>
