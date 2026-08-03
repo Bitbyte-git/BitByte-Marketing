@@ -41,6 +41,29 @@ def worst_status(statuses):
     return min(statuses, key=lambda s: STATUS_SEVERITY[s])
 
 
+# ── NEW: recursive customer node builder — customer kீழ customer, evלavu level venalum cover pannும் ──
+def build_customer_node(c, children_by_creator, order_counts):
+    own_count = order_counts.get(c.user_id, 0)
+    nested = [
+        build_customer_node(sc, children_by_creator, order_counts)
+        for sc in children_by_creator.get(c.user_id, [])
+    ]
+    total_count = own_count + sum(n['order_count'] for n in nested)
+    status = worst_status([get_target_status(own_count)] + [n['status'] for n in nested])
+    return {
+        'id': c.id,
+        'user_id': c.user_id,
+        'customer_id': c.customer_id,
+        'first_name': c.first_name,
+        'last_name': c.last_name,
+        'mobile_number': c.mobile_number,
+        'city_name': c.city_name,
+        'order_count': total_count,
+        'status': status,
+        'customers': nested,   # ← same key name 'customers' — frontend-ku label maatha vendam
+    }
+
+
 # ── NEW: Reward coin values ──
 REWARD_COINS = {
     'first_login': 5,
@@ -532,13 +555,17 @@ class FullHierarchyView(APIView):
             queryset=DealerProfile.objects.filter(assigned_admin__isnull=False).prefetch_related(sub_dealers_pf)
         )
 
-        # ✅ Order count per customer — oru query-la ella customer order count-um edukurom
         now = timezone.now()
         order_counts = dict(
                JewelryOrder.objects.filter(
                created_at__year=now.year, created_at__month=now.month
         ).values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
         )
+
+        # ── NEW: customer -> customer chain (created_by) — ella depth-um map pannும் ──
+        children_by_creator = {}
+        for cust in CustomerProfile.objects.all().only('id', 'user_id', 'created_by_id'):
+            children_by_creator.setdefault(cust.created_by_id, []).append(cust)
 
         if request.user.role == 'admin':
             admins = AdminProfile.objects.filter(user=request.user).prefetch_related(dealers_pf)
@@ -554,17 +581,7 @@ class FullHierarchyView(APIView):
                     promotor_list = []
                     for pr in sd.assigned_promotors.all():
                         customer_list = [
-    {
-        'id': c.id,
-        'user_id': c.user_id,
-        'customer_id': c.customer_id,
-        'first_name': c.first_name,
-        'last_name': c.last_name,
-        'mobile_number': c.mobile_number,
-        'city_name': c.city_name,
-        'order_count': order_counts.get(c.user_id, 0),
-        'status': get_target_status(order_counts.get(c.user_id, 0)),   # ← NEW
-    }
+    build_customer_node(c, children_by_creator, order_counts)
     for c in pr.assigned_customers.all()
 ]
                         promotor_order_count = sum(c['order_count'] for c in customer_list)

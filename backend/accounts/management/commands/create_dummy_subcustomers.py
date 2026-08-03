@@ -61,17 +61,43 @@ class Command(BaseCommand):
                              help='Only create sub-customers for customers under this admin_id (default: ALL customers)')
         parser.add_argument('--customer_id', type=str, default=None,
                              help='Create --count sub-customers under this ONE specific customer_id (overrides --admin_id)')
+        parser.add_argument('--customer_ids', type=str, default=None,
+                             help='Comma-separated customer_ids — --count TOTAL sub-customers spread across them (each gets >=1)')
         parser.add_argument('--count', type=int, default=1,
-                             help='Number of sub-customers to create per parent customer (default: 1)')
+                             help='Number of sub-customers to create (per parent for --customer_id, or TOTAL for --customer_ids)')
 
     def handle(self, *args, **options):
         admin_id = options['admin_id']
         customer_id = options['customer_id']
+        customer_ids_arg = options['customer_ids']
         count = options['count']
         created = 0
 
         # ── Step 1: Fetch parent customer(s) ──
-        if customer_id:
+        if customer_ids_arg:
+            id_list = [cid.strip() for cid in customer_ids_arg.split(',') if cid.strip()]
+            found = list(CustomerProfile.objects.filter(customer_id__in=id_list))
+            found_ids = {c.customer_id for c in found}
+            missing = [cid for cid in id_list if cid not in found_ids]
+            if missing:
+                self.stdout.write(self.style.ERROR(f"These customer_id(s) not found: {', '.join(missing)}"))
+                return
+            if count < len(found):
+                self.stdout.write(self.style.ERROR(
+                    f"--count={count} is less than number of parents={len(found)}. Need count >= parents so each gets >=1."
+                ))
+                return
+            # every parent gets >= 1, remaining slots random (mixed)
+            parent_customers = list(found)
+            remaining = count - len(found)
+            for _ in range(remaining):
+                parent_customers.append(random.choice(found))
+            random.shuffle(parent_customers)
+            total_parents = count
+            self.stdout.write(self.style.SUCCESS(
+                f"Creating {count} sub-customers TOTAL, spread across {len(found)} parent customers (each >=1)..."
+            ))
+        elif customer_id:
             try:
                 target_customer = CustomerProfile.objects.get(customer_id=customer_id)
             except CustomerProfile.DoesNotExist:

@@ -107,8 +107,8 @@ const ROLE_CFG = {
   promotor: { color: '#CA8A04', Icon: IconStar, label: 'PROMOTOR', idKey: 'promotor_id' },
   customer: { color: '#DB2777', Icon: IconUser, label: 'CUSTOMER', idKey: 'customer_id' },
 }
-const CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer' }
-const CHILD_KEY = { admin: 'dealers', dealer: 'sub_dealers', sub_dealer: 'promotors', promotor: 'customers' }
+const CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer', customer: 'customer' }
+const CHILD_KEY = { admin: 'dealers', dealer: 'sub_dealers', sub_dealer: 'promotors', promotor: 'customers', customer: 'customers' }
 const LEVEL_NUM = { super_admin: 1, admin: 2, dealer: 3, sub_dealer: 4, promotor: 5, customer: 6 }
 
 // ── raw SVG strings for the innerHTML popup (DOM-la direct-a build panrom,
@@ -728,9 +728,9 @@ export default function SuperadminHierarchyGrid() {
   const [selSubDealer, setSelSubDealer] = useState(null)
 const [selPromotor, setSelPromotor] = useState(null)
 
-// ── NEW: status filter — scoped to the SPECIFIC card whose dot was clicked.
-  // { role, nodeId, status } — role + nodeId identify WHICH card, status is the color.
-  // Only that card's own children lane gets filtered. ──
+
+  const [customerChain, setCustomerChain] = useState([])
+
   const [activeStatusFilter, setActiveStatusFilter] = useState(null)
 
   // ── NEW: Direct message popup state ──
@@ -849,6 +849,25 @@ setMessageSending(false)
 
 const customers = currentPromotor?.customers || []
 
+// ── NEW: customer -> customer -> customer... evלavu level venaalum, chain vachi dynamic-a
+  // ovvoru depth-kum oru lane build pannும். Level 0 = promotor-oda direct customers.
+  // Apparam ovvoru click-um oru puthu lane add pannும். ──
+  const customerLanes = useMemo(() => {
+    if (!currentPromotor) return []
+    const lanes = []
+    let levelItems = currentPromotor.customers || []
+    let levelAncestors = promotorAncestors.concat([{ node: currentPromotor, role: 'promotor' }])
+    lanes.push({ depth: 0, items: levelItems, activeId: customerChain[0] ?? null, ancestors: levelAncestors })
+    for (let d = 0; d < customerChain.length; d++) {
+      const selectedNode = levelItems.find(c => c.id === customerChain[d])
+      if (!selectedNode) break
+      levelItems = selectedNode.customers || []
+      levelAncestors = levelAncestors.concat([{ node: selectedNode, role: 'customer' }])
+      lanes.push({ depth: d + 1, items: levelItems, activeId: customerChain[d + 1] ?? null, ancestors: levelAncestors })
+    }
+    return lanes
+  }, [currentPromotor, customerChain])
+
 // ── NEW: filter scoped per-parent — dealers filter only when the active dot
   // belongs to currentAdmin, sub_dealers only when it belongs to currentDealer, etc. ──
   const filteredDealers = useMemo(() => {
@@ -890,8 +909,14 @@ const customers = currentPromotor?.customers || []
   // (so the next rows auto-fall-back to their own "first" item) ──
 const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSelSubDealer(null); setSelPromotor(null) }
   const selectDealer = (node) => { setSelDealer(node.id); setSelSubDealer(null); setSelPromotor(null) }
-  const selectSubDealer = (node) => { setSelSubDealer(node.id); setSelPromotor(null) }
-  const selectPromotor = (node) => { setSelPromotor(node.id) }
+ const selectSubDealer = (node) => { setSelSubDealer(node.id); setSelPromotor(null); setCustomerChain([]) }
+  const selectPromotor = (node) => { setSelPromotor(node.id); setCustomerChain([]) }
+
+  // ── NEW: customer-ah oru specific depth-la click panninaal, adha varaikkum chain vaichi
+  // apparam andha customer-oda id-ah chain-la add pannும். Adhu than adutha row-ah open pannும். ──
+  const selectCustomerAtDepth = (depth, node) => {
+    setCustomerChain(prev => [...prev.slice(0, depth), node.id])
+  }
 
   // ── NEW: dot click = (1) select that card so its children lane opens,
   // (2) set/clear a filter scoped ONLY to that card's id. Same dot again = clear. ──
@@ -1163,12 +1188,22 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
                   activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
               )}
 
-              {currentPromotor && (
-                <LaneRow role="customer" items={filteredCustomers} activeId={null} onSelect={() => {}}
-                  ancestors={customerAncestors} superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
-                  emptyText={`No customers match this filter under ${currentPromotor.first_name}.`} onMessage={openMessagePopup} onPrint={openPrintPopup}
-                  activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
-              )}
+              {currentPromotor && customerLanes.map((lane, idx) => (
+                <LaneRow
+                  key={`customer-lane-${idx}`}
+                  role="customer"
+                  items={lane.items}
+                  activeId={lane.activeId}
+                  onSelect={(node) => selectCustomerAtDepth(lane.depth, node)}
+                  ancestors={lane.ancestors}
+                  superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
+                  emptyText={idx === 0
+                    ? `No customers under ${currentPromotor.first_name}.`
+                    : `No further customers under this one.`}
+                  onMessage={openMessagePopup} onPrint={openPrintPopup}
+                  activeStatusFilter={null} onToggleStatusFilter={null}
+                />
+              ))}
             </>
           )
         )}
