@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 
@@ -809,7 +809,13 @@ setMessageSending(false)
     setLoading(false)
   }
 
-  useEffect(() => { fetchHierarchy() }, [])
+  // ── NEW: useRef guard — StrictMode double-invoke aanaalum, API call ONE time mattum pogum ──
+const hasFetchedRef = useRef(false)
+useEffect(() => {
+  if (hasFetchedRef.current) return
+  hasFetchedRef.current = true
+  fetchHierarchy()
+}, [])
 
   useEffect(() => {
     return () => {
@@ -849,24 +855,30 @@ setMessageSending(false)
 
 const customers = currentPromotor?.customers || []
 
+// ── ancestor chains per level — idha MUNNADIYE move pannanum, customerLanes ku thevai ──
+const adminAncestors = []
+const dealerAncestors = currentAdmin ? [{ node: currentAdmin, role: 'admin' }] : []
+const subDealerAncestors = currentDealer ? [...dealerAncestors, { node: currentDealer, role: 'dealer' }] : dealerAncestors
+const promotorAncestors = currentSubDealer ? [...subDealerAncestors, { node: currentSubDealer, role: 'sub_dealer' }] : subDealerAncestors
+const customerAncestors = currentPromotor ? [...promotorAncestors, { node: currentPromotor, role: 'promotor' }] : promotorAncestors
+
 // ── NEW: customer -> customer -> customer... evלavu level venaalum, chain vachi dynamic-a
-  // ovvoru depth-kum oru lane build pannும். Level 0 = promotor-oda direct customers.
-  // Apparam ovvoru click-um oru puthu lane add pannும். ──
-  const customerLanes = useMemo(() => {
-    if (!currentPromotor) return []
-    const lanes = []
-    let levelItems = currentPromotor.customers || []
-    let levelAncestors = promotorAncestors.concat([{ node: currentPromotor, role: 'promotor' }])
-    lanes.push({ depth: 0, items: levelItems, activeId: customerChain[0] ?? null, ancestors: levelAncestors })
-    for (let d = 0; d < customerChain.length; d++) {
-      const selectedNode = levelItems.find(c => c.id === customerChain[d])
-      if (!selectedNode) break
-      levelItems = selectedNode.customers || []
-      levelAncestors = levelAncestors.concat([{ node: selectedNode, role: 'customer' }])
-      lanes.push({ depth: d + 1, items: levelItems, activeId: customerChain[d + 1] ?? null, ancestors: levelAncestors })
-    }
-    return lanes
-  }, [currentPromotor, customerChain])
+// ovvoru depth-kum oru lane build pannும். ──
+const customerLanes = useMemo(() => {
+  if (!currentPromotor) return []
+  const lanes = []
+  let levelItems = currentPromotor.customers || []
+  let levelAncestors = promotorAncestors.concat([{ node: currentPromotor, role: 'promotor' }])
+  lanes.push({ depth: 0, items: levelItems, activeId: customerChain[0] ?? null, ancestors: levelAncestors })
+  for (let d = 0; d < customerChain.length; d++) {
+    const selectedNode = levelItems.find(c => c.id === customerChain[d])
+    if (!selectedNode) break
+    levelItems = selectedNode.customers || []
+    levelAncestors = levelAncestors.concat([{ node: selectedNode, role: 'customer' }])
+    lanes.push({ depth: d + 1, items: levelItems, activeId: customerChain[d + 1] ?? null, ancestors: levelAncestors })
+  }
+  return lanes
+}, [currentPromotor, customerChain, promotorAncestors])
 
 // ── NEW: filter scoped per-parent — dealers filter only when the active dot
   // belongs to currentAdmin, sub_dealers only when it belongs to currentDealer, etc. ──
@@ -897,13 +909,6 @@ const customers = currentPromotor?.customers || []
     }
     return customers
   }, [customers, activeStatusFilter, currentPromotor])
-
-  // ── ancestor chains per level, for the hover popup + print card ──
-  const adminAncestors = []
-  const dealerAncestors = currentAdmin ? [{ node: currentAdmin, role: 'admin' }] : []
-  const subDealerAncestors = currentDealer ? [...dealerAncestors, { node: currentDealer, role: 'dealer' }] : dealerAncestors
-  const promotorAncestors = currentSubDealer ? [...subDealerAncestors, { node: currentSubDealer, role: 'sub_dealer' }] : subDealerAncestors
-  const customerAncestors = currentPromotor ? [...promotorAncestors, { node: currentPromotor, role: 'promotor' }] : promotorAncestors
 
   // ── click handlers — select this level, reset everything BELOW it
   // (so the next rows auto-fall-back to their own "first" item) ──

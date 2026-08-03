@@ -556,10 +556,18 @@ class FullHierarchyView(APIView):
         )
 
         now = timezone.now()
+        # ── FIX: year/month extract panradhukku pathila date RANGE use pandrom.
+        # Idhu database INDEX-ah use pannum (full table scan aagadhu) — romba fast aagum. ──
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if now.month == 12:
+            next_month_start = month_start.replace(year=now.year + 1, month=1)
+        else:
+            next_month_start = month_start.replace(month=now.month + 1)
+
         order_counts = dict(
-               JewelryOrder.objects.filter(
-               created_at__year=now.year, created_at__month=now.month
-        ).values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
+            JewelryOrder.objects.filter(
+                created_at__gte=month_start, created_at__lt=next_month_start
+            ).values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
         )
 
         # ── NEW: customer -> customer chain (created_by) — ella depth-um map pannும் ──

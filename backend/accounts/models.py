@@ -732,16 +732,11 @@ class JewelryOrder(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # def save(self, *args, **kwargs):
-    #     if not self.order_id:
-    #         from django.utils import timezone
-    #         year = timezone.now().year
-    #         count = JewelryOrder.objects.count() + 1
-    #         self.order_id = f"BBORD{year}{count:06d}"
-    #     super().save(*args, **kwargs)
 
-    # def __str__(self):
-    #     return f"{self.order_id} - {self.product_name}"
+    class Meta:
+        indexes = [
+            models.Index(fields=['user_id', 'created_at']),
+        ]
     
     def save(self, *args, **kwargs):
         if not self.order_id:
