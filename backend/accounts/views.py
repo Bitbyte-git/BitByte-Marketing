@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge, CommissionLog
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge
 from django.db.models import Prefetch, Count, Q, Sum
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
 from .serializers import *
@@ -1518,9 +1518,11 @@ def distribute_commission(order):
         wallet.balance_coins += coins
         wallet.save(update_fields=['balance_coins'])
 
-        CommissionLog.objects.create(
-            order=order, beneficiary=creator_user, level=level,
-            percent=pct, amount=amount, coins_credited=coins,
+        CoinRecharge.objects.create(
+            user=creator_user, amount_paid=amount, coins_credited=coins,
+            payment_method='commission', status='success',
+            entry_type='credit', source='commission',
+            related_order=order, commission_level=level,
         )
         remaining_percent -= pct
 
@@ -1535,9 +1537,11 @@ def distribute_commission(order):
             wallet.balance_coins += coins
             wallet.save(update_fields=['balance_coins'])
 
-            CommissionLog.objects.create(
-                order=order, beneficiary=super_admin, level=0,
-                percent=remaining_percent, amount=amount, coins_credited=coins,
+            CoinRecharge.objects.create(
+                user=super_admin, amount_paid=amount, coins_credited=coins,
+                payment_method='commission', status='success',
+                entry_type='credit', source='commission',
+                related_order=order, commission_level=0,
             )
 
 
@@ -3571,26 +3575,6 @@ class RechargeVerifyPaymentView(APIView):
             'balance_coins': wallet.balance_coins,
         })
 
-
-def _commission_period_queryset(user, period, start_date=None, end_date=None):
-    """Recharge period filter அதே logic — commission log kum apply pண்ணுறோம்."""
-    qs = CommissionLog.objects.filter(beneficiary=user).select_related('order__user')
-    today = timezone.now().date()
-
-    if period == 'today':
-        qs = qs.filter(created_at__date=today)
-    elif period == 'month':
-        month_start = today.replace(day=1)
-        qs = qs.filter(created_at__date__gte=month_start, created_at__date__lte=today)
-    elif period == '6month':
-        six_months_ago = today - timedelta(days=180)
-        qs = qs.filter(created_at__date__gte=six_months_ago, created_at__date__lte=today)
-    elif period == 'custom' and start_date and end_date:
-        qs = qs.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
-
-    return qs.order_by('-created_at')
-
-
 class RechargeHistoryView(APIView):
     """Full paginated recharge + commission history — GPay mari, Today/Month/6Month/Custom filter
     + page by page load pannurom (delete pannradhu illa)."""
@@ -3603,23 +3587,17 @@ class RechargeHistoryView(APIView):
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
 
-        recharge_qs = _recharge_period_queryset(request.user, period, start_date, end_date)
-        commission_qs = _commission_period_queryset(request.user, period, start_date, end_date)
+        qs = _recharge_period_queryset(request.user, period, start_date, end_date).select_related('related_order__user')
 
-        # ── NEW: rendும் merge pண்ணி date order la sort pண்ணி, appuram page pண்ணுறோம் ──
-        combined = [_serialize_recharge(r) for r in recharge_qs] + \
-                   [_serialize_commission(c) for c in commission_qs]
-        combined.sort(key=lambda x: x['created_at'], reverse=True)
-
-        total = len(combined)
+        total = qs.count()
         start = (page - 1) * page_size
-        items = combined[start:start + page_size]
+        items = qs[start:start + page_size]
 
         return Response({
             'page': page,
             'total': total,
             'has_more': start + page_size < total,
-            'items': items,
+            'items': [_serialize_coin_entry(r) for r in items],
         })
 
 
@@ -3708,29 +3686,25 @@ def _recharge_period_queryset(user, period, start_date=None, end_date=None):
     return qs.order_by('-created_at')
 
 
-def _serialize_recharge(r):
-    return {
-        'id': f'r{r.id}', 'type': 'recharge',
+def _serialize_coin_entry(r):
+    """CoinRecharge row ah — recharge/commission/debit edhuvaanalum, frontend ku
+    same shape la anuppum (Recharge.jsx already idha expect pannuthu)."""
+    entry = {
+        'id': r.id,
+        'type': {'recharge': 'recharge', 'commission': 'commission', 'purchase': 'debit'}.get(r.source, r.source),
+        'direction': r.entry_type,
         'amount_paid': float(r.amount_paid),
         'coins_credited': r.coins_credited,
         'payment_method': r.payment_method,
-        'source': None, 'level': None, 'order_id': None,
+        'source': None,
+        'level': r.commission_level,
+        'order_id': r.related_order.order_id if r.related_order else None,
         'created_at': r.created_at,
     }
-
-
-def _serialize_commission(c):
-    buyer = c.order.user
-    return {
-        'id': f'c{c.id}', 'type': 'commission',
-        'amount_paid': float(c.amount),
-        'coins_credited': c.coins_credited,
-        'payment_method': 'commission',
-        'source': get_user_profile_id(buyer) or buyer.email,
-        'level': c.level,
-        'order_id': c.order.order_id,
-        'created_at': c.created_at,
-    }
+    if r.source == 'commission' and r.related_order:
+        buyer = r.related_order.user
+        entry['source'] = get_user_profile_id(buyer) or buyer.email
+    return entry
 
 
 class WalletView(APIView):
@@ -3740,26 +3714,18 @@ class WalletView(APIView):
         wallet, _ = Wallet.objects.get_or_create(user=request.user)
         today = timezone.now().date()
 
-        recharge_history = CoinRecharge.objects.filter(
+        # ── NEW: ella entry um (recharge/commission/debit) ஒரே table, ஒரே query ──
+        history = CoinRecharge.objects.filter(
             user=request.user, status='success'
-        ).order_by('-created_at')[:5]
-        commission_history = CommissionLog.objects.filter(
-            beneficiary=request.user
-        ).select_related('order__user').order_by('-created_at')[:5]
+        ).select_related('related_order__user').order_by('-created_at')[:5]
 
-        # ── NEW: recharge + commission ella coin activity um oru list la merge pannurom ──
-        combined = [_serialize_recharge(r) for r in recharge_history] + \
-                   [_serialize_commission(c) for c in commission_history]
-        combined.sort(key=lambda x: x['created_at'], reverse=True)
-        combined = combined[:5]
-
+        # ── "Today Recharged" — actual money recharge mattum (commission/debit illa) ──
         today_agg = CoinRecharge.objects.filter(
-            user=request.user, status='success', created_at__date=today
+            user=request.user, status='success', source='recharge', created_at__date=today
         ).aggregate(coins=Sum('coins_credited'), amount=Sum('amount_paid'))
 
-        # ── NEW: lifetime spending total — indha varaikkum evlo recharge pannirukanga ──
         lifetime_agg = CoinRecharge.objects.filter(
-            user=request.user, status='success'
+            user=request.user, status='success', source='recharge'
         ).aggregate(
             coins=Sum('coins_credited'),
             amount=Sum('amount_paid'),
@@ -3770,10 +3736,10 @@ class WalletView(APIView):
             'balance_coins': wallet.balance_coins,
             'today_coins': today_agg['coins'] or 0,
             'today_amount': float(today_agg['amount'] or 0),
-            'total_spent': float(lifetime_agg['amount'] or 0),          # ── NEW
-            'total_coins_purchased': lifetime_agg['coins'] or 0,        # ── NEW
-            'total_recharge_count': lifetime_agg['count'] or 0,         # ── NEW
-            'history': combined,
+            'total_spent': float(lifetime_agg['amount'] or 0),
+            'total_coins_purchased': lifetime_agg['coins'] or 0,
+            'total_recharge_count': lifetime_agg['count'] or 0,
+            'history': [_serialize_coin_entry(r) for r in history],
         })
 
 
@@ -3837,6 +3803,14 @@ class PayWithCoinsView(APIView):
         # ── Coins deduct pண்ணு ──
         wallet.balance_coins -= coins_needed
         wallet.save(update_fields=['balance_coins'])
+
+        # ── NEW: debit entry — history la "DEBIT" ah kaamikkanum, adhே CoinRecharge table la ──
+        CoinRecharge.objects.create(
+            user=request.user, amount_paid=total_price, coins_credited=coins_needed,
+            payment_method='purchase', status='success',
+            entry_type='debit', source='purchase',
+            related_order=order,
+        )
 
         # ── Commission distribute pண்ணு ──
         distribute_commission(order)

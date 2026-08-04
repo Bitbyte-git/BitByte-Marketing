@@ -818,12 +818,24 @@ class CoinRecharge(models.Model):
         ('upi', 'UPI'),
         ('netbanking', 'Netbanking'),
         ('wallet', 'Wallet'),
+        ('commission', 'Commission'),
+        ('purchase', 'Purchase'),
         ('other', 'Other'),
     ]
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('success', 'Success'),
         ('failed', 'Failed'),
+    ]
+    # ── Unified ledger fields — recharge/commission/debit ella ஒரே table la ──
+    ENTRY_TYPE_CHOICES = [
+        ('credit', 'Credit'),
+        ('debit', 'Debit'),
+    ]
+    SOURCE_CHOICES = [
+        ('recharge', 'Recharge'),
+        ('commission', 'Commission'),
+        ('purchase', 'Purchase'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='coin_recharges')
@@ -833,24 +845,15 @@ class CoinRecharge(models.Model):
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE_CHOICES, default='credit')
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='recharge')
+    related_order = models.ForeignKey('JewelryOrder', on_delete=models.SET_NULL, null=True, blank=True, related_name='coin_entries')
+    commission_level = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.email} - ₹{self.amount_paid} - {self.coins_credited} coins ({self.status})"
-
-
-# ── COMMISSION SYSTEM: order buy pண்ணும்போது 27% chain ku distribute aagும் ──
-class CommissionLog(models.Model):
-    order = models.ForeignKey(JewelryOrder, on_delete=models.CASCADE, related_name='commission_logs')
-    beneficiary = models.ForeignKey(User, on_delete=models.CASCADE, related_name='commissions_received')
-    level = models.PositiveIntegerField(default=0)   # 1 = direct creator, 0 = super admin (balance)
-    percent = models.DecimalField(max_digits=5, decimal_places=2)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    coins_credited = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.beneficiary.email} - L{self.level} - {self.percent}% - ₹{self.amount}"
+        sign = '+' if self.entry_type == 'credit' else '-'
+        return f"{self.user.email} - {sign}₹{self.amount_paid} - {self.coins_credited} coins ({self.source})"
 
 
 # ── COIN REWARDS SYSTEM ──

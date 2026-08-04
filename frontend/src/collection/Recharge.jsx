@@ -53,6 +53,11 @@ const DownloadIcon = ({ size = 15 }) => (
     <path d="M12 3v13" /><path d="m6 11 6 6 6-6" /><path d="M4 21h16" />
   </svg>
 )
+const DirectionBadge = ({ direction }) => (
+  <span className={`rc-direction-badge ${direction}`}>
+    {direction === 'debit' ? '− DEBIT' : '+ CREDIT'}
+  </span>
+)
 
 const PRESET_AMOUNTS = [100, 1000, 5000, 10000, 100000]
 
@@ -98,7 +103,11 @@ const rechargeStyles = `
   .rc-method-tag.wallet{background:rgba(13,148,136,.12);color:#0d9488}
   .rc-method-tag.other{background:rgba(7,59,63,.08);color:${RED}}
   .rc-method-tag.commission{background:rgba(139,92,246,.12);color:#8b5cf6}
+  .rc-method-tag.purchase{background:rgba(229,62,62,.1);color:#c0392b}
   .rc-history-source{color:${GOLD};font-size:11px;font-weight:700;margin-top:2px}
+  .rc-direction-badge{display:inline-block;font-size:9px;font-weight:900;padding:3px 8px;border-radius:20px;letter-spacing:.4px;margin-left:8px}
+  .rc-direction-badge.credit{background:rgba(22,163,74,.12);color:#16a34a}
+  .rc-direction-badge.debit{background:rgba(229,62,62,.1);color:#c0392b}
   .rc-empty{color:${MUTED};font-size:13px;text-align:center;padding:24px 0}
   .rc-date-header{font-size:11px;font-weight:900;color:${MUTED};text-transform:uppercase;letter-spacing:1px;padding:14px 4px 6px}
   .rc-loadmore-btn{width:100%;margin-top:14px;padding:12px;border-radius:8px;border:1.5px solid #D1DFDE;background:#FDFDFC;color:${RED};font-weight:800;font-size:13px;cursor:pointer;transition:.15s ease}
@@ -378,7 +387,7 @@ export default function Recharge() {
                 <div className="rc-empty">No recharges yet</div>
               ) : (
                 wallet.history.map(h => {
-                  const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED, commission: '#8b5cf6' }
+                  const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED, commission: '#8b5cf6', purchase: '#c0392b' }
                   return (
                     <div key={h.id} className="rc-history-row">
                       <div className="rc-history-icon" style={{ background: methodColors[h.payment_method] || RED }}>
@@ -386,12 +395,19 @@ export default function Recharge() {
                       </div>
                       <div className="rc-history-body">
                         <div className="rc-history-amount">
-                          ₹{h.amount_paid} <span style={{ color: MUTED, fontWeight: 700 }}>→</span>{' '}
-                          <span className="rc-history-coins">{h.coins_credited.toLocaleString('en-IN')} coins</span>
+                          {h.direction === 'debit' ? '−' : '+'}₹{h.amount_paid}{' '}
+                          <span style={{ color: MUTED, fontWeight: 700 }}>→</span>{' '}
+                          <span className="rc-history-coins">
+                            {h.direction === 'debit' ? '−' : ''}{h.coins_credited.toLocaleString('en-IN')} coins
+                          </span>
+                          <DirectionBadge direction={h.direction} />
                         </div>
                         <div className="rc-history-date">{fmtDate(h.created_at)}</div>
                         {h.type === 'commission' && (
                           <div className="rc-history-source">From {h.source} · Level {h.level} · {h.order_id}</div>
+                        )}
+                        {h.type === 'debit' && (
+                          <div className="rc-history-source">Used for order {h.order_id}</div>
                         )}
                       </div>
                       <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
@@ -458,7 +474,7 @@ export default function Recharge() {
             <div className="rc-empty">No recharges yet</div>
           ) : (
             (() => {
-              const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED, commission: '#8b5cf6' }
+              const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED, commission: '#8b5cf6', purchase: '#c0392b' }
               let lastGroup = null
               return fullHistory.map(h => {
                 const group = dateGroupLabel(h.created_at)
@@ -473,12 +489,19 @@ export default function Recharge() {
                       </div>
                       <div className="rc-history-body">
                         <div className="rc-history-amount">
-                          ₹{h.amount_paid} <span style={{ color: MUTED, fontWeight: 700 }}>→</span>{' '}
-                          <span className="rc-history-coins">{h.coins_credited.toLocaleString('en-IN')} coins</span>
+                          {h.direction === 'debit' ? '−' : '+'}₹{h.amount_paid}{' '}
+                          <span style={{ color: MUTED, fontWeight: 700 }}>→</span>{' '}
+                          <span className="rc-history-coins">
+                            {h.direction === 'debit' ? '−' : ''}{h.coins_credited.toLocaleString('en-IN')} coins
+                          </span>
+                          <DirectionBadge direction={h.direction} />
                         </div>
                         <div className="rc-history-date">{fmtDate(h.created_at)}</div>
                         {h.type === 'commission' && (
                           <div className="rc-history-source">From {h.source} · Level {h.level} · {h.order_id}</div>
+                        )}
+                        {h.type === 'debit' && (
+                          <div className="rc-history-source">Used for order {h.order_id}</div>
                         )}
                       </div>
                       <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
