@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge
 from django.db.models import Prefetch, Count, Q, Sum
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
 from .serializers import *
@@ -3371,6 +3371,129 @@ class PromotionNodeListView(APIView):
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
         return Response(results)        
+
+
+# ── WALLET RECHARGE SYSTEM ──
+COIN_RATE_PER_RUPEE = 100   # 1 Rs = 100 coins
+
+
+class RechargeCreateOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        amount = request.data.get('amount')
+        try:
+            amount = float(amount)
+        except (TypeError, ValueError):
+            return Response({'error': 'Valid amount required'}, status=400)
+        if amount <= 0:
+            return Response({'error': 'Amount must be greater than 0'}, status=400)
+
+        coins = int(amount * COIN_RATE_PER_RUPEE)
+
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        razorpay_order = client.order.create({
+            "amount": int(amount * 100),
+            "currency": "INR",
+            "payment_capture": 1,
+        })
+
+        recharge = CoinRecharge.objects.create(
+            user=request.user,
+            amount_paid=amount,
+            coins_credited=coins,
+            razorpay_order_id=razorpay_order['id'],
+            status='pending',
+        )
+
+        return Response({
+            'razorpay_order_id': razorpay_order['id'],
+            'amount': amount,
+            'currency': 'INR',
+            'key': settings.RAZORPAY_KEY_ID,
+            'recharge_id': recharge.id,
+            'coins': coins,
+        })
+
+
+class RechargeVerifyPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        try:
+            recharge = CoinRecharge.objects.get(
+                id=data.get('recharge_id'), user=request.user, status='pending'
+            )
+        except CoinRecharge.DoesNotExist:
+            return Response({'error': 'Recharge not found'}, status=404)
+
+        body = data['razorpay_order_id'] + "|" + data['razorpay_payment_id']
+        expected_sig = hmac.new(
+            settings.RAZORPAY_KEY_SECRET.encode(), body.encode(), hashlib.sha256
+        ).hexdigest()
+
+        if expected_sig != data.get('razorpay_signature'):
+            recharge.status = 'failed'
+            recharge.save(update_fields=['status'])
+            return Response({'status': 'failed', 'msg': 'Invalid signature'}, status=400)
+
+        # ── Razorpay payment fetch pannurom method (card/upi/netbanking/wallet) edukka ──
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        method = 'other'
+        try:
+            payment = client.payment.fetch(data['razorpay_payment_id'])
+            raw_method = payment.get('method', 'other')
+            method_map = {'card': 'card', 'upi': 'upi', 'netbanking': 'netbanking', 'wallet': 'wallet'}
+            method = method_map.get(raw_method, 'other')
+        except Exception:
+            pass
+
+        recharge.razorpay_payment_id = data['razorpay_payment_id']
+        recharge.payment_method = method
+        recharge.status = 'success'
+        recharge.save(update_fields=['razorpay_payment_id', 'payment_method', 'status'])
+
+        wallet, _ = Wallet.objects.get_or_create(user=request.user)
+        wallet.balance_coins += recharge.coins_credited
+        wallet.save(update_fields=['balance_coins'])
+
+        return Response({
+            'status': 'success',
+            'coins_credited': recharge.coins_credited,
+            'balance_coins': wallet.balance_coins,
+        })
+
+
+class WalletView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        wallet, _ = Wallet.objects.get_or_create(user=request.user)
+        today = timezone.now().date()
+
+        history = CoinRecharge.objects.filter(
+            user=request.user, status='success'
+        ).order_by('-created_at')[:20]
+
+        today_agg = CoinRecharge.objects.filter(
+            user=request.user, status='success', created_at__date=today
+        ).aggregate(coins=Sum('coins_credited'), amount=Sum('amount_paid'))
+
+        return Response({
+            'balance_coins': wallet.balance_coins,
+            'today_coins': today_agg['coins'] or 0,
+            'today_amount': float(today_agg['amount'] or 0),
+            'history': [
+                {
+                    'id': r.id,
+                    'amount_paid': float(r.amount_paid),
+                    'coins_credited': r.coins_credited,
+                    'payment_method': r.payment_method,
+                    'created_at': r.created_at,
+                } for r in history
+            ],
+        })
 
 
 @api_view(['GET'])

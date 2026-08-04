@@ -795,7 +795,44 @@ class CoinStock(models.Model):
 
     def __str__(self):
         return f"{self.user} — {self.metal_type} {self.weight_label}: {self.qty}"
-        
+
+
+# ── WALLET RECHARGE SYSTEM (1 Rs = 100 coins) ──
+class Wallet(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='wallet')
+    balance_coins = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.email} — {self.balance_coins} coins"
+
+
+class CoinRecharge(models.Model):
+    PAYMENT_METHOD_CHOICES = [
+        ('card', 'Card'),
+        ('upi', 'UPI'),
+        ('netbanking', 'Netbanking'),
+        ('wallet', 'Wallet'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('success', 'Success'),
+        ('failed', 'Failed'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='coin_recharges')
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    coins_credited = models.PositiveIntegerField(default=0)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='other')
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - ₹{self.amount_paid} - {self.coins_credited} coins ({self.status})"
+
 
 # ── COIN REWARDS SYSTEM ──
 class DailyLoginLog(models.Model):

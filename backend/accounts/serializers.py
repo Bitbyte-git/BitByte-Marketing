@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder,JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock 
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder,JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, Wallet, CoinRecharge 
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -625,3 +625,15 @@ class CoinStockSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoinStock
         fields = ['id', 'metal_type', 'weight_label', 'weight_grams', 'qty']
+
+
+class CoinRechargeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CoinRecharge
+        fields = ['id', 'amount_paid', 'coins_credited', 'payment_method', 'status', 'created_at']
+
+
+class WalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Wallet
+        fields = ['balance_coins', 'updated_at']

@@ -38,7 +38,13 @@ export default function RegisterPage() {
     api
       .get(`/referrer-info/?ref=${ref}`)
       .then((res) => setReferrer(res.data))
-      .catch(() => setReferrerError("Invalid referral link. Please check the URL."))
+      .catch((err) => {
+        if (err.response?.status === 410) {
+          setReferrerError("This link has already been used.");
+        } else {
+          setReferrerError("Invalid referral link. Please check the URL.");
+        }
+      })
       .finally(() => setReferrerLoading(false));
   }, [ref]);
 
@@ -82,8 +88,17 @@ export default function RegisterPage() {
       setConfirmPassword("");
       setPasswordError("");
     } catch (err) {
-      setMsg("Error: " + JSON.stringify(err.response?.data || err.message));
-      setMsgType("error");
+      const status = err.response?.status;
+      const backendMsg = err.response?.data?.error;
+      if (status === 410) {
+        setReferrerError("This link has already been used.");
+      } else if (backendMsg) {
+        setMsg(backendMsg);
+        setMsgType("error");
+      } else {
+        setMsg("Something went wrong. Please try again.");
+        setMsgType("error");
+      }
     }
     setSubmitting(false);
   };
@@ -120,32 +135,32 @@ export default function RegisterPage() {
         .rg-btn-signin { padding: 13px 30px; background: #F3F3F0; border: 1px solid #D1DFDE; border-radius: 999px; color: #073B3F; font-size: 14px; font-weight: 700; cursor: pointer; }
         .rg-error-card {
           background: #fff;
-          border: 1px solid rgba(201,32,53,0.18);
+          border: 1px solid rgba(179,31,53,0.22);
           border-radius: 20px;
           padding: 48px 40px;
           text-align: center;
-          box-shadow: 0 10px 28px rgba(201,32,53,0.06);
+          box-shadow: 0 14px 34px rgba(179,31,53,0.08);
         }
         .rg-error-icon {
           width: 68px;
           height: 68px;
           margin: 0 auto 20px;
           border-radius: 50%;
-          background: rgba(201,32,53,0.08);
-          border: 1px solid rgba(201,32,53,0.18);
+          background: rgba(179,31,53,0.10);
+          border: 1px solid rgba(179,31,53,0.22);
           display: flex;
           align-items: center;
           justify-content: center;
         }
         .rg-error-title {
           margin: 0 0 10px;
-          color: #C92035;
+          color: #B31F35;
           font-family: Georgia, serif;
-          font-size: 22px;
+          font-size: 24px;
           font-weight: 700;
         }
         .rg-error-text {
-          margin: 0 0 24px;
+          margin: 0;
           color: #7A8987;
           font-size: 14px;
           line-height: 1.6;
@@ -172,23 +187,16 @@ export default function RegisterPage() {
         ) : referrerError ? (
           <div className="rg-error-card">
             <div className="rg-error-icon">
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#B31F35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="9" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             </div>
-            <h3 className="rg-error-title">
-              {referrerError.includes("already been used") ? "Link Already Used" : "Invalid Link"}
-            </h3>
+            <h3 className="rg-error-title">Link Already Used</h3>
             <p className="rg-error-text">
-              {referrerError.includes("already been used")
-                ? "This registration link has already been used to create an account. Please ask for a new invite link to continue."
-                : "This registration link is invalid or has expired. Please check the URL or request a new link."}
+              This registration link has already been used to create an account. Please ask your leader for a new invite link to continue.
             </p>
-            <button className="rg-btn-signin" onClick={() => navigate("/login")}>
-              Go to Sign In
-            </button>
           </div>
         ) : (
           <>

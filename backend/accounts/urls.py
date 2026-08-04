@@ -8,7 +8,7 @@ from .views import (
     SubDealerListForView, PromotorListForView,  FullHierarchyView, AnnouncementView, AnnouncementReplyView, ProfileUpdateRequestView, ProfileUpdateApproveView,MetalRateView,MetalOrderView, MetalOrderSummaryView, JewelryProductView, JewelryProductDetailView, JewelryProductImageDeleteView, HomeBannerView, HomeBannerDetailView, CartView, CartItemQtyView, WishlistView, JewelryOrderView, create_razorpay_order, verify_payment, ping,
 HierarchySubtreeOrdersView, SalesReportView, OrderTimeSeriesView, TodayLoginStatusView, CoinRequestView, CoinRequestApproveView, CoinRequestRejectView, CoinRequestApproveAllView, CoinStockView, SuperAdminAddCoinsView, CoinStockForUserView, MyHierarchyView, TodayRewardsView, MyBasicInfoView,
  RetailerPromotionListView, RetailerPromotionActionView, WholesaleDealerPromotionListView, WholesaleDealerPromotionActionView, DistributorPromotionListView, DistributorPromotionActionView, SuperStockistPromotionListView, SuperStockistPromotionActionView, PromotionCustomerListView, PromotionCustomerListView, PromotionNodeListView,
- ReferrerInfoView, PublicCustomerRegisterView,GenerateReferralLinkView
+ ReferrerInfoView, PublicCustomerRegisterView,GenerateReferralLinkView, RechargeCreateOrderView, RechargeVerifyPaymentView, WalletView
 
 
 )
@@ -74,6 +74,9 @@ urlpatterns = [
     path('referrer-info/', ReferrerInfoView.as_view(), name='referrer-info'),
     path('public-register-customer/', PublicCustomerRegisterView.as_view(), name='public-register-customer'),
     path('generate-referral-link/', GenerateReferralLinkView.as_view(), name='generate-referral-link'),
+    path('recharge/create-order/', RechargeCreateOrderView.as_view()),
+    path('recharge/verify/', RechargeVerifyPaymentView.as_view()),
+    path('wallet/', WalletView.as_view()),
     
     
 ]

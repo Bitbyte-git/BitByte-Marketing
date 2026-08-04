@@ -2493,10 +2493,10 @@ export default function CustomerNavbar() {
               <button
                 className="summary-pill"
                 type="button"
-                onClick={() => navigate("/order-summary")}
+                onClick={() => navigate("/recharge")}
               >
                 <Icon name="star" size={15} />{" "}
-                <span className="summary-text">Order Summary</span>
+                <span className="summary-text">Recharge</span>
               </button>
 
               <button
@@ -2676,6 +2676,17 @@ export default function CustomerNavbar() {
               }}
             >
               Profile
+            </button>
+
+            <button
+              className="role-drawer-item"
+              type="button"
+              onClick={() => {
+                setRoleDrawerOpen(false);
+                navigate("/order-summary");
+              }}
+            >
+              Order Summary
             </button>
 
             <button

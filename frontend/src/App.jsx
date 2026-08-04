@@ -37,6 +37,7 @@ const AddBanners = lazy(() => import('./Products/banners/add_banners'))
 const HomeBanner = lazy(() => import('./Products/banners/home_banner'))
 const OrderConfirm = lazy(() => import('./Orders/Orderconfirm'))
 const OrderSummary = lazy(() => import('./Orders/Ordersummary'))
+const Recharge = lazy(() => import('./collection/Recharge'))
 const AdminOrdersPage = lazy(() => import('./Orders/Adminorderspage'))
 const Report = lazy(() => import('./Orders/Report'))
 const LoginActive = lazy(() => import('./Orders/login_active'))
@@ -216,6 +217,7 @@ export default function App() {
           <Route path="/order-confirm" element={<WithCustomerNavbar><OrderConfirm /></WithCustomerNavbar>} />
           <Route path="/bj-live" element={<WithCustomerNavbar><BBLive /></WithCustomerNavbar>} />
           <Route path="/order-summary" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><OrderSummary /></WithCustomerNavbar></ProtectedRoute>} />
+          <Route path="/recharge" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><Recharge /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/admin-orders" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AdminOrdersPage /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/sales-report" element={<ProtectedRoute><WithInternalRoleNavbar><Report /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/hierarchy-sales-count" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperAdminHierarchySalesCount /></WithSuperAdminNavbar></ProtectedRoute>} />
