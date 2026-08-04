@@ -118,7 +118,41 @@ export default function RegisterPage() {
         .rg-btn-primary { padding: 13px 30px; background: #073B3F; border: none; border-radius: 999px; font-weight: 800; color: #fff; font-size: 14px; cursor: pointer; box-shadow: 0 14px 30px rgba(7,59,63,0.24); }
         .rg-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .rg-btn-signin { padding: 13px 30px; background: #F3F3F0; border: 1px solid #D1DFDE; border-radius: 999px; color: #073B3F; font-size: 14px; font-weight: 700; cursor: pointer; }
-        .rg-blocked { text-align: center; padding: 60px 20px; color: #C92035; font-weight: 700; }
+        .rg-error-card {
+          background: #fff;
+          border: 1px solid rgba(201,32,53,0.18);
+          border-radius: 20px;
+          padding: 48px 40px;
+          text-align: center;
+          box-shadow: 0 10px 28px rgba(201,32,53,0.06);
+        }
+        .rg-error-icon {
+          width: 68px;
+          height: 68px;
+          margin: 0 auto 20px;
+          border-radius: 50%;
+          background: rgba(201,32,53,0.08);
+          border: 1px solid rgba(201,32,53,0.18);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .rg-error-title {
+          margin: 0 0 10px;
+          color: #C92035;
+          font-family: Georgia, serif;
+          font-size: 22px;
+          font-weight: 700;
+        }
+        .rg-error-text {
+          margin: 0 0 24px;
+          color: #7A8987;
+          font-size: 14px;
+          line-height: 1.6;
+          max-width: 420px;
+          margin-left: auto;
+          margin-right: auto;
+        }
         @media (max-width: 640px) {
           .rg-shell { width: calc(100% - 24px); }
           .rg-card { padding: 22px 18px; }
@@ -136,7 +170,26 @@ export default function RegisterPage() {
         {referrerLoading ? (
           <div className="rg-card"><p style={{ textAlign: "center", color: "#7A8987" }}>Loading...</p></div>
         ) : referrerError ? (
-          <div className="rg-card"><p className="rg-blocked">{referrerError}</p></div>
+          <div className="rg-error-card">
+            <div className="rg-error-icon">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <h3 className="rg-error-title">
+              {referrerError.includes("already been used") ? "Link Already Used" : "Invalid Link"}
+            </h3>
+            <p className="rg-error-text">
+              {referrerError.includes("already been used")
+                ? "This registration link has already been used to create an account. Please ask for a new invite link to continue."
+                : "This registration link is invalid or has expired. Please check the URL or request a new link."}
+            </p>
+            <button className="rg-btn-signin" onClick={() => navigate("/login")}>
+              Go to Sign In
+            </button>
+          </div>
         ) : (
           <>
             {msg && <div className={`rg-msg ${msgType}`}>{msg}</div>}

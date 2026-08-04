@@ -544,13 +544,13 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
 // `active` = this is the currently selected one in its row (full bright).
 // not active = dimmed, but still clickable.
 // ══════════════════════════════════════════════════════════════════
-const STATUS_COLOR = { red: '#C92035', orange: '#BB8958', yellow: '#CCA881', green: '#0C4044' }
+const STATUS_COLOR = { red: '#C92035', orange: '#BB8958', yellow: '#CCA881', green: '#16A34A' }
 
 function LaneCard({ node, role, active, onClick, ancestors, superAdminEmail, dark, text, subtext, showChildCount, onMessage, onPrint, activeStatusFilter, onToggleStatusFilter }) {
   const navigate = useNavigate()
   const cfg = ROLE_CFG[role]
-const c = cfg.color
-const sc = node.status ? STATUS_COLOR[node.status] : c   // ← NEW
+const sc = role === 'customer' ? STATUS_COLOR.green : (STATUS_COLOR[node.status] || STATUS_COLOR.green)
+const c = sc
 const Icon = cfg.Icon
   const childRole = CHILD_ROLE[role]
   const childCount = childRole && showChildCount ? (node[CHILD_KEY[role]] || []).length : null

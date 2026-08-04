@@ -56,6 +56,8 @@ class Command(BaseCommand):
                              help='Comma-separated list of customer_id values (e.g. "BBCUS20260000544,BBCUS20260000741"). Switches to combined-target mode.')
         parser.add_argument('--combined-target', type=float, default=0,
                              help='Rupee total the LISTED customers must reach COMBINED (used with --customer_ids)')
+        parser.add_argument('--orders-each', type=int, default=0,
+                             help='Exact number of orders to create for EACH listed customer (used with --customer_ids, overrides --combined-target)')
 
     def handle(self, *args, **options):
         customer_ids_arg = options['customer_ids']
@@ -95,6 +97,8 @@ class Command(BaseCommand):
         # Spreads random orders ACROSS the listed customers, picking a
         # random customer each round, until their COMBINED total crosses target.
         # ══════════════════════════════════════════════════════════
+        orders_each = options['orders_each']
+
         if customer_ids_arg:
             id_list = [cid.strip() for cid in customer_ids_arg.split(',') if cid.strip()]
             customers = list(CustomerProfile.objects.filter(customer_id__in=id_list).select_related('user'))
@@ -109,8 +113,79 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR("No valid customers to process."))
                 return
 
+            # ── MODE 1a: --orders-each — exact fixed order count for EACH listed customer ──
+            if orders_each > 0:
+                self.stdout.write(self.style.SUCCESS(
+                    f"Creating exactly {orders_each} orders EACH for {len(customers)} customers..."
+                ))
+                batch = []
+                created = 0
+                per_customer_total = {c.customer_id: 0.0 for c in customers}
+
+                def flush_batch():
+                    nonlocal batch, created
+                    if batch:
+                        with transaction.atomic():
+                            JewelryOrder.objects.bulk_create(batch, batch_size=BATCH_SIZE)
+                            for order_obj in batch:
+                                JewelryOrder.objects.filter(order_id=order_obj.order_id).update(
+                                    created_at=order_obj._staggered_time
+                                )
+                        created += len(batch)
+                        batch = []
+
+                for customer in customers:
+                    for _ in range(orders_each):
+                        product = random.choice(products)
+                        qty = random.randint(1, 2)
+                        unit_price = float(product.price or 0)
+                        total_price = round(unit_price * qty, 2)
+                        per_customer_total[customer.customer_id] += total_price
+
+                        order_time = timezone.now() - timedelta(minutes=random.choice(GAP_OPTIONS_MINUTES))
+
+                        order_obj = JewelryOrder(
+                            order_id=next_order_id(),
+                            user=customer.user,
+                            product=product,
+                            product_name=product.name,
+                            product_metal=product.metal,
+                            product_grade=product.grade or '',
+                            product_category=product.category,
+                            product_image_url=product_image_urls.get(product.id, ''),
+                            customer_name=f"{customer.first_name} {customer.last_name}".strip(),
+                            customer_phone=customer.mobile_number,
+                            customer_alt_phone='',
+                            customer_dob=customer.dob,
+                            customer_anniversary=customer.anniversary_date,
+                            pincode=str(random.randint(600001, 643001)),
+                            address_line1=random.choice(ADDRESS_LINES),
+                            address_line2=customer.town_name or '',
+                            city=customer.city_name,
+                            state=customer.state,
+                            quantity=qty,
+                            unit_price=unit_price,
+                            total_price=total_price,
+                            payment_method=random.choice(PAYMENT_METHODS),
+                            payment_status='paid',
+                            status=random.choice(ORDER_STATUSES),
+                        )
+                        order_obj._staggered_time = order_time
+                        batch.append(order_obj)
+
+                        if len(batch) >= BATCH_SIZE:
+                            flush_batch()
+
+                flush_batch()
+
+                self.stdout.write(self.style.SUCCESS(f"\nDone! {created} orders created ({orders_each} each)."))
+                self.stdout.write(self.style.SUCCESS("\n── Per-customer breakdown ──"))
+                for c in customers:
+                    self.stdout.write(f"  {c.customer_id} ({c.first_name}) -> ₹{per_customer_total[c.customer_id]:,.2f}")
+                return
+
             if combined_target <= 0:
-                self.stdout.write(self.style.ERROR("--combined-target must be a positive rupee amount."))
+                self.stdout.write(self.style.ERROR("Either --orders-each or --combined-target must be provided."))
                 return
 
             self.stdout.write(self.style.SUCCESS(
@@ -190,9 +265,6 @@ class Command(BaseCommand):
                 self.stdout.write(f"  {c.customer_id} ({c.first_name}) -> ₹{per_customer_total[c.customer_id]:,.2f}")
             return
 
-        # ══════════════════════════════════════════════════════════
-        # MODE 2: existing normal / admin_id / promotor_id / high-value mode
-        # ══════════════════════════════════════════════════════════
         min_orders = options['min_orders']
         max_orders = options['max_orders']
         force_add = options['force_add']
