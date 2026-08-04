@@ -14,6 +14,12 @@ import razorpay
 import hmac
 import hashlib
 from django.conf import settings
+from io import BytesIO
+from django.http import FileResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -3466,17 +3472,18 @@ class RechargeVerifyPaymentView(APIView):
 
 
 class RechargeHistoryView(APIView):
-    """Full paginated recharge history — GPay mari, ella transaction um permanent-a
-    DB la irukkum, page by page load pannurom (delete pannradhu illa)."""
+    """Full paginated recharge history — GPay mari, Today/Month/6Month/Custom filter
+    + page by page load pannurom (delete pannradhu illa)."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         page = max(int(request.query_params.get('page', 1)), 1)
         page_size = 10
+        period = request.query_params.get('period', 'all')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
 
-        qs = CoinRecharge.objects.filter(
-            user=request.user, status='success'
-        ).order_by('-created_at')
+        qs = _recharge_period_queryset(request.user, period, start_date, end_date)
 
         total = qs.count()
         start = (page - 1) * page_size
@@ -3496,6 +3503,91 @@ class RechargeHistoryView(APIView):
                 } for r in items
             ],
         })
+
+
+class RechargeStatementView(APIView):
+    """Selected filter (today/month/6month/custom) padi PDF statement generate pannum."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        period = request.query_params.get('period', 'all')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        qs = _recharge_period_queryset(request.user, period, start_date, end_date)
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=30, bottomMargin=30)
+        styles = getSampleStyleSheet()
+        elements = []
+
+        elements.append(Paragraph("BitByte Wallet — Recharge Statement", styles['Title']))
+        elements.append(Paragraph(f"Customer: {request.user.email}", styles['Normal']))
+        elements.append(Paragraph(
+            f"Generated on: {timezone.now().strftime('%d %b %Y, %I:%M %p')}", styles['Normal']
+        ))
+        elements.append(Spacer(1, 14))
+
+        data = [['Date', 'Amount Paid', 'Coins Credited', 'Method', 'Status']]
+        total_amount = 0
+        total_coins = 0
+        for r in qs:
+            data.append([
+                r.created_at.strftime('%d %b %Y'),
+                f"Rs. {r.amount_paid}",
+                str(r.coins_credited),
+                r.get_payment_method_display(),
+                r.get_status_display(),
+            ])
+            total_amount += float(r.amount_paid)
+            total_coins += r.coins_credited
+
+        if len(data) == 1:
+            data.append(['-', '-', '-', '-', '-'])
+
+        table = Table(data, colWidths=[80, 90, 100, 90, 80])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#073B3F')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#D1DFDE')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F3F3F0')]),
+            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 16))
+        elements.append(Paragraph(f"<b>Total Spent:</b> Rs. {total_amount}", styles['Normal']))
+        elements.append(Paragraph(f"<b>Total Coins Credited:</b> {total_coins}", styles['Normal']))
+
+        doc.build(elements)
+        buffer.seek(0)
+
+        filename = f"recharge-statement-{period}-{timezone.now().strftime('%Y%m%d')}.pdf"
+        return FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+
+
+def _recharge_period_queryset(user, period, start_date=None, end_date=None):
+    """Common filter logic — Today / Month / 6 Month / Custom date.
+    WalletView, RechargeHistoryView, RechargeStatementView ella idhை than use pannum."""
+    qs = CoinRecharge.objects.filter(user=user, status='success')
+    today = timezone.now().date()
+
+    if period == 'today':
+        qs = qs.filter(created_at__date=today)
+    elif period == 'month':
+        month_start = today.replace(day=1)
+        qs = qs.filter(created_at__date__gte=month_start, created_at__date__lte=today)
+    elif period == '6month':
+        six_months_ago = today - timedelta(days=180)
+        qs = qs.filter(created_at__date__gte=six_months_ago, created_at__date__lte=today)
+    elif period == 'custom' and start_date and end_date:
+        qs = qs.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
+    # period == 'all' — no date filter, everything
+
+    return qs.order_by('-created_at')
 
 
 class WalletView(APIView):

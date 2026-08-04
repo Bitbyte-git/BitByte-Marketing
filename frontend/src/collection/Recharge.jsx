@@ -45,6 +45,11 @@ const ReceiptIcon = ({ size = 15 }) => (
     <path d="M6 2h9l3 3v17l-3-2-3 2-3-2-3 2V2Z" /><line x1="8" y1="7" x2="16" y2="7" /><line x1="8" y1="11" x2="16" y2="11" />
   </svg>
 )
+const DownloadIcon = ({ size = 15 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3v13" /><path d="m6 11 6 6 6-6" /><path d="M4 21h16" />
+  </svg>
+)
 
 const PRESET_AMOUNTS = [100, 1000, 5000, 10000, 100000]
 
@@ -94,6 +99,18 @@ const rechargeStyles = `
   .rc-loadmore-btn{width:100%;margin-top:14px;padding:12px;border-radius:8px;border:1.5px solid #D1DFDE;background:#FDFDFC;color:${RED};font-weight:800;font-size:13px;cursor:pointer;transition:.15s ease}
   .rc-loadmore-btn:hover{border-color:${RED};background:rgba(7,59,63,.04)}
   .rc-loadmore-btn:disabled{opacity:.6;cursor:not-allowed}
+  .rc-filter-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+  .rc-filter-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .rc-filter-tab{padding:8px 16px;border-radius:20px;border:1.5px solid #D1DFDE;background:#FDFDFC;color:${DARK};font-weight:800;font-size:12px;cursor:pointer;transition:.15s ease;white-space:nowrap}
+  .rc-filter-tab.active{border-color:${RED};background:${RED};color:#fff}
+  .rc-custom-date{padding:8px 12px;border-radius:8px;border:1.5px solid #D1DFDE;font-size:12px;font-weight:700;color:${DARK};height:38px;box-sizing:border-box}
+  .rc-date-to-label{display:flex;align-items:center;height:38px;color:${MUTED};font-weight:800;font-size:12px}
+  .rc-apply-btn{height:38px;padding:0 18px;border-radius:20px;border:none;background:${GOLD};color:#fff;font-weight:900;font-size:12px;cursor:pointer;transition:.15s ease}
+  .rc-apply-btn:hover{background:#9F6130}
+  .rc-apply-btn:disabled{opacity:.5;cursor:not-allowed}
+  .rc-download-btn{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:20px;border:1.5px solid ${RED};background:#fff;color:${RED};font-weight:800;font-size:12px;cursor:pointer;transition:.15s ease;white-space:nowrap}
+  .rc-download-btn:hover{background:${RED};color:#fff}
+  @media(max-width:600px){.rc-filter-row{flex-direction:column;align-items:stretch}.rc-download-btn{justify-content:center}}
   .rc-spend-card{background:linear-gradient(135deg,${GOLD},#9F6130);color:#fff;border:none}
   .rc-spend-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
   .rc-spend-row + .rc-spend-row{border-top:1px dashed rgba(255,255,255,.3)}
@@ -136,11 +153,17 @@ export default function Recharge() {
   const [historyPage, setHistoryPage] = useState(1)
   const [hasMoreHistory, setHasMoreHistory] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [activeFilter, setActiveFilter] = useState('today')
+  const [customFrom, setCustomFrom] = useState('')
+  const [customTo, setCustomTo] = useState('')
+  const [downloading, setDownloading] = useState(false)
 
-  const fetchHistory = async (page = 1) => {
+  const fetchHistory = async (page = 1, filter = activeFilter, from = customFrom, to = customTo) => {
     try {
       const { default: api } = await import('../api')
-      const res = await api.get(`/recharge/history/?page=${page}`)
+      let url = `/recharge/history/?page=${page}&period=${filter}`
+      if (filter === 'custom' && from && to) url += `&start_date=${from}&end_date=${to}`
+      const res = await api.get(url)
       setFullHistory(prev => page === 1 ? res.data.items : [...prev, ...res.data.items])
       setHasMoreHistory(res.data.has_more)
       setHistoryPage(page)
@@ -153,10 +176,54 @@ export default function Recharge() {
 
   const loadMoreHistory = () => {
     setLoadingMore(true)
-    fetchHistory(historyPage + 1)
+    fetchHistory(historyPage + 1, activeFilter, customFrom, customTo)
   }
 
-  useEffect(() => { fetchWallet(); fetchHistory(1) }, [])
+  const handleFilterClick = filter => {
+    setActiveFilter(filter)
+    if (filter !== 'custom') {
+      fetchHistory(1, filter, '', '')
+    } else if (customFrom && customTo) {
+      fetchHistory(1, 'custom', customFrom, customTo)
+    }
+  }
+
+  const handleCustomFromChange = e => setCustomFrom(e.target.value)
+  const handleCustomToChange = e => setCustomTo(e.target.value)
+
+  const applyCustomRange = () => {
+    if (!customFrom || !customTo) {
+      setBanner({ type: 'error', text: 'Please select both From and To dates' })
+      return
+    }
+    fetchHistory(1, 'custom', customFrom, customTo)
+  }
+
+  const downloadStatement = async () => {
+    if (activeFilter === 'custom' && (!customFrom || !customTo)) {
+      setBanner({ type: 'error', text: 'Please select both From and To dates' })
+      return
+    }
+    setDownloading(true)
+    try {
+      const { default: api } = await import('../api')
+      let url = `/recharge/statement/?period=${activeFilter}`
+      if (activeFilter === 'custom') url += `&start_date=${customFrom}&end_date=${customTo}`
+      const res = await api.get(url, { responseType: 'blob' })
+      const blob = new Blob([res.data], { type: 'application/pdf' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `recharge-statement-${activeFilter}.pdf`
+      link.click()
+      URL.revokeObjectURL(link.href)
+    } catch {
+      setBanner({ type: 'error', text: 'Unable to download statement. Please try again.' })
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  useEffect(() => { fetchWallet(); fetchHistory(1, 'today', '', '') }, [])
 
   const loadRazorpay = () => new Promise(resolve => {
     if (window.Razorpay) { resolve(true); return }
@@ -301,71 +368,120 @@ export default function Recharge() {
             </section>
 
             <section className="rc-card">
-              <h3 className="rc-section-title">Transaction History</h3>
-              {fullHistory.length === 0 ? (
+              <h3 className="rc-section-title">Recent Recharges</h3>
+              {wallet.history.length === 0 ? (
                 <div className="rc-empty">No recharges yet</div>
               ) : (
-                (() => {
+                wallet.history.map(h => {
                   const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED }
-                  let lastGroup = null
-                  return fullHistory.map(h => {
-                    const group = dateGroupLabel(h.created_at)
-                    const showHeader = group !== lastGroup
-                    lastGroup = group
-                    return (
-                      <div key={h.id}>
-                        {showHeader && <div className="rc-date-header">{group}</div>}
-                        <div className="rc-history-row">
-                          <div className="rc-history-icon" style={{ background: methodColors[h.payment_method] || RED }}>
-                            <MethodIcon type={h.payment_method} size={19} />
-                          </div>
-                          <div className="rc-history-body">
-                            <div className="rc-history-amount">
-                              ₹{h.amount_paid} <span style={{ color: MUTED, fontWeight: 700 }}>→</span>{' '}
-                              <span className="rc-history-coins">{h.coins_credited.toLocaleString('en-IN')} coins</span>
-                            </div>
-                            <div className="rc-history-date">{fmtDate(h.created_at)}</div>
-                          </div>
-                          <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
-                        </div>
+                  return (
+                    <div key={h.id} className="rc-history-row">
+                      <div className="rc-history-icon" style={{ background: methodColors[h.payment_method] || RED }}>
+                        <MethodIcon type={h.payment_method} size={19} />
                       </div>
-                    )
-                  })
-                })()
-              )}
-              {hasMoreHistory && (
-                <button className="rc-loadmore-btn" type="button" onClick={loadMoreHistory} disabled={loadingMore}>
-                  {loadingMore ? 'Loading...' : 'Load More'}
-                </button>
+                      <div className="rc-history-body">
+                        <div className="rc-history-amount">
+                          ₹{h.amount_paid} <span style={{ color: MUTED, fontWeight: 700 }}>→</span>{' '}
+                          <span className="rc-history-coins">{h.coins_credited.toLocaleString('en-IN')} coins</span>
+                        </div>
+                        <div className="rc-history-date">{fmtDate(h.created_at)}</div>
+                      </div>
+                      <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
+                    </div>
+                  )
+                })
               )}
             </section>
           </div>
         </div>
 
-        {/* BOTTOM: Spending History — full width, below Buy Recharge & Recent Recharges */}
-        <section className="rc-card rc-spend-card" style={{ marginTop: 20 }}>
-          <h3 className="rc-section-title" style={{ color: '#fff', opacity: .95 }}>Spending History</h3>
-          <div className="rc-spend-row">
-            <span className="rc-spend-label">
-              <span className="rc-spend-icon"><RupeeIcon /></span>
-              Total Spent
-            </span>
-            <span className="rc-spend-value">₹{(wallet.total_spent || 0).toLocaleString('en-IN')}</span>
+        {/* BOTTOM: Transaction History — full width, GPay style with date groups + Load More */}
+        <section className="rc-card" style={{ marginTop: 20 }}>
+          <h3 className="rc-section-title">Transaction History</h3>
+
+          <div className="rc-filter-row">
+            <div className="rc-filter-tabs">
+              {[
+                { key: 'today', label: 'Today' },
+                { key: 'month', label: 'This Month' },
+                { key: '6month', label: '6 Months' },
+                { key: 'custom', label: 'Custom' },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  type="button"
+                  className={`rc-filter-tab ${activeFilter === f.key ? 'active' : ''}`}
+                  onClick={() => handleFilterClick(f.key)}
+                >
+                  {f.label}
+                </button>
+              ))}
+              {activeFilter === 'custom' && (
+                <>
+                  <input
+                    type="date"
+                    className="rc-custom-date"
+                    value={customFrom}
+                    max={customTo || new Date().toISOString().split('T')[0]}
+                    onChange={handleCustomFromChange}
+                  />
+                  <span className="rc-date-to-label">to</span>
+                  <input
+                    type="date"
+                    className="rc-custom-date"
+                    value={customTo}
+                    min={customFrom}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={handleCustomToChange}
+                  />
+                  <button type="button" className="rc-apply-btn" onClick={applyCustomRange}>
+                    Apply
+                  </button>
+                </>
+              )}
+            </div>
+            <button className="rc-download-btn" type="button" onClick={downloadStatement} disabled={downloading}>
+              <DownloadIcon size={14} />
+              {downloading ? 'Downloading...' : 'Download Statement'}
+            </button>
           </div>
-          <div className="rc-spend-row">
-            <span className="rc-spend-label">
-              <span className="rc-spend-icon"><CoinStackIcon /></span>
-              Total Coins Bought
-            </span>
-            <span className="rc-spend-value">{(wallet.total_coins_purchased || 0).toLocaleString('en-IN')}</span>
-          </div>
-          <div className="rc-spend-row">
-            <span className="rc-spend-label">
-              <span className="rc-spend-icon"><ReceiptIcon /></span>
-              Total Recharges
-            </span>
-            <span className="rc-spend-value">{wallet.total_recharge_count || 0}</span>
-          </div>
+
+          {fullHistory.length === 0 ? (
+            <div className="rc-empty">No recharges yet</div>
+          ) : (
+            (() => {
+              const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED }
+              let lastGroup = null
+              return fullHistory.map(h => {
+                const group = dateGroupLabel(h.created_at)
+                const showHeader = group !== lastGroup
+                lastGroup = group
+                return (
+                  <div key={h.id}>
+                    {showHeader && <div className="rc-date-header">{group}</div>}
+                    <div className="rc-history-row">
+                      <div className="rc-history-icon" style={{ background: methodColors[h.payment_method] || RED }}>
+                        <MethodIcon type={h.payment_method} size={19} />
+                      </div>
+                      <div className="rc-history-body">
+                        <div className="rc-history-amount">
+                          ₹{h.amount_paid} <span style={{ color: MUTED, fontWeight: 700 }}>→</span>{' '}
+                          <span className="rc-history-coins">{h.coins_credited.toLocaleString('en-IN')} coins</span>
+                        </div>
+                        <div className="rc-history-date">{fmtDate(h.created_at)}</div>
+                      </div>
+                      <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
+                    </div>
+                  </div>
+                )
+              })
+            })()
+          )}
+          {hasMoreHistory && (
+            <button className="rc-loadmore-btn" type="button" onClick={loadMoreHistory} disabled={loadingMore}>
+              {loadingMore ? 'Loading...' : 'Load More'}
+            </button>
+          )}
         </section>
       </main>
       <CustomerFooter />
