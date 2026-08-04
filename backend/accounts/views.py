@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog 
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink
 from django.db.models import Prefetch, Count, Q, Sum
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
 from .serializers import *
