@@ -3572,8 +3572,27 @@ class RechargeVerifyPaymentView(APIView):
         })
 
 
+def _commission_period_queryset(user, period, start_date=None, end_date=None):
+    """Recharge period filter அதே logic — commission log kum apply pண்ணுறோம்."""
+    qs = CommissionLog.objects.filter(beneficiary=user).select_related('order__user')
+    today = timezone.now().date()
+
+    if period == 'today':
+        qs = qs.filter(created_at__date=today)
+    elif period == 'month':
+        month_start = today.replace(day=1)
+        qs = qs.filter(created_at__date__gte=month_start, created_at__date__lte=today)
+    elif period == '6month':
+        six_months_ago = today - timedelta(days=180)
+        qs = qs.filter(created_at__date__gte=six_months_ago, created_at__date__lte=today)
+    elif period == 'custom' and start_date and end_date:
+        qs = qs.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
+
+    return qs.order_by('-created_at')
+
+
 class RechargeHistoryView(APIView):
-    """Full paginated recharge history — GPay mari, Today/Month/6Month/Custom filter
+    """Full paginated recharge + commission history — GPay mari, Today/Month/6Month/Custom filter
     + page by page load pannurom (delete pannradhu illa)."""
     permission_classes = [IsAuthenticated]
 
@@ -3584,25 +3603,23 @@ class RechargeHistoryView(APIView):
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
 
-        qs = _recharge_period_queryset(request.user, period, start_date, end_date)
+        recharge_qs = _recharge_period_queryset(request.user, period, start_date, end_date)
+        commission_qs = _commission_period_queryset(request.user, period, start_date, end_date)
 
-        total = qs.count()
+        # ── NEW: rendும் merge pண்ணி date order la sort pண்ணி, appuram page pண்ணுறோம் ──
+        combined = [_serialize_recharge(r) for r in recharge_qs] + \
+                   [_serialize_commission(c) for c in commission_qs]
+        combined.sort(key=lambda x: x['created_at'], reverse=True)
+
+        total = len(combined)
         start = (page - 1) * page_size
-        items = qs[start:start + page_size]
+        items = combined[start:start + page_size]
 
         return Response({
             'page': page,
             'total': total,
             'has_more': start + page_size < total,
-            'items': [
-                {
-                    'id': r.id,
-                    'amount_paid': float(r.amount_paid),
-                    'coins_credited': r.coins_credited,
-                    'payment_method': r.payment_method,
-                    'created_at': r.created_at,
-                } for r in items
-            ],
+            'items': items,
         })
 
 
@@ -3691,6 +3708,31 @@ def _recharge_period_queryset(user, period, start_date=None, end_date=None):
     return qs.order_by('-created_at')
 
 
+def _serialize_recharge(r):
+    return {
+        'id': f'r{r.id}', 'type': 'recharge',
+        'amount_paid': float(r.amount_paid),
+        'coins_credited': r.coins_credited,
+        'payment_method': r.payment_method,
+        'source': None, 'level': None, 'order_id': None,
+        'created_at': r.created_at,
+    }
+
+
+def _serialize_commission(c):
+    buyer = c.order.user
+    return {
+        'id': f'c{c.id}', 'type': 'commission',
+        'amount_paid': float(c.amount),
+        'coins_credited': c.coins_credited,
+        'payment_method': 'commission',
+        'source': get_user_profile_id(buyer) or buyer.email,
+        'level': c.level,
+        'order_id': c.order.order_id,
+        'created_at': c.created_at,
+    }
+
+
 class WalletView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -3698,9 +3740,18 @@ class WalletView(APIView):
         wallet, _ = Wallet.objects.get_or_create(user=request.user)
         today = timezone.now().date()
 
-        history = CoinRecharge.objects.filter(
+        recharge_history = CoinRecharge.objects.filter(
             user=request.user, status='success'
         ).order_by('-created_at')[:5]
+        commission_history = CommissionLog.objects.filter(
+            beneficiary=request.user
+        ).select_related('order__user').order_by('-created_at')[:5]
+
+        # ── NEW: recharge + commission ella coin activity um oru list la merge pannurom ──
+        combined = [_serialize_recharge(r) for r in recharge_history] + \
+                   [_serialize_commission(c) for c in commission_history]
+        combined.sort(key=lambda x: x['created_at'], reverse=True)
+        combined = combined[:5]
 
         today_agg = CoinRecharge.objects.filter(
             user=request.user, status='success', created_at__date=today
@@ -3722,15 +3773,7 @@ class WalletView(APIView):
             'total_spent': float(lifetime_agg['amount'] or 0),          # ── NEW
             'total_coins_purchased': lifetime_agg['coins'] or 0,        # ── NEW
             'total_recharge_count': lifetime_agg['count'] or 0,         # ── NEW
-            'history': [
-                {
-                    'id': r.id,
-                    'amount_paid': float(r.amount_paid),
-                    'coins_credited': r.coins_credited,
-                    'payment_method': r.payment_method,
-                    'created_at': r.created_at,
-                } for r in history
-            ],
+            'history': combined,
         })
 
 

@@ -23,6 +23,9 @@ const MethodIcon = ({ type, size = 18 }) => {
   if (type === 'wallet') return (
     <svg {...common}><path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Z" /><path d="M2 9V6a2 2 0 0 1 2-2h13" /><circle cx="17" cy="13.5" r="1.5" /></svg>
   )
+  if (type === 'commission') return (
+    <svg {...common}><path d="M20.8 5.6a5.1 5.1 0 0 0-7.2 0L12 7.2l-1.6-1.6a5.1 5.1 0 0 0-7.2 7.2L12 21l8.8-8.2a5.1 5.1 0 0 0 0-7.2Z" /></svg>
+  )
   return (
     <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
   )
@@ -94,6 +97,8 @@ const rechargeStyles = `
   .rc-method-tag.netbanking{background:rgba(234,88,12,.12);color:#ea580c}
   .rc-method-tag.wallet{background:rgba(13,148,136,.12);color:#0d9488}
   .rc-method-tag.other{background:rgba(7,59,63,.08);color:${RED}}
+  .rc-method-tag.commission{background:rgba(139,92,246,.12);color:#8b5cf6}
+  .rc-history-source{color:${GOLD};font-size:11px;font-weight:700;margin-top:2px}
   .rc-empty{color:${MUTED};font-size:13px;text-align:center;padding:24px 0}
   .rc-date-header{font-size:11px;font-weight:900;color:${MUTED};text-transform:uppercase;letter-spacing:1px;padding:14px 4px 6px}
   .rc-loadmore-btn{width:100%;margin-top:14px;padding:12px;border-radius:8px;border:1.5px solid #D1DFDE;background:#FDFDFC;color:${RED};font-weight:800;font-size:13px;cursor:pointer;transition:.15s ease}
@@ -373,7 +378,7 @@ export default function Recharge() {
                 <div className="rc-empty">No recharges yet</div>
               ) : (
                 wallet.history.map(h => {
-                  const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED }
+                  const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED, commission: '#8b5cf6' }
                   return (
                     <div key={h.id} className="rc-history-row">
                       <div className="rc-history-icon" style={{ background: methodColors[h.payment_method] || RED }}>
@@ -385,6 +390,9 @@ export default function Recharge() {
                           <span className="rc-history-coins">{h.coins_credited.toLocaleString('en-IN')} coins</span>
                         </div>
                         <div className="rc-history-date">{fmtDate(h.created_at)}</div>
+                        {h.type === 'commission' && (
+                          <div className="rc-history-source">From {h.source} · Level {h.level} · {h.order_id}</div>
+                        )}
                       </div>
                       <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
                     </div>
@@ -450,7 +458,7 @@ export default function Recharge() {
             <div className="rc-empty">No recharges yet</div>
           ) : (
             (() => {
-              const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED }
+              const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED, commission: '#8b5cf6' }
               let lastGroup = null
               return fullHistory.map(h => {
                 const group = dateGroupLabel(h.created_at)
@@ -469,6 +477,9 @@ export default function Recharge() {
                           <span className="rc-history-coins">{h.coins_credited.toLocaleString('en-IN')} coins</span>
                         </div>
                         <div className="rc-history-date">{fmtDate(h.created_at)}</div>
+                        {h.type === 'commission' && (
+                          <div className="rc-history-source">From {h.source} · Level {h.level} · {h.order_id}</div>
+                        )}
                       </div>
                       <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
                     </div>
