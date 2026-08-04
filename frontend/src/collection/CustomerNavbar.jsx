@@ -2496,7 +2496,7 @@ export default function CustomerNavbar() {
                 onClick={() => navigate("/recharge")}
               >
                 <Icon name="star" size={15} />{" "}
-                <span className="summary-text">Recharge</span>
+                <span className="summary-text">AUG Coin</span>
               </button>
 
               <button

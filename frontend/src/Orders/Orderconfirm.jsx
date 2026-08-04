@@ -521,74 +521,22 @@ export default function OrderConfirm() {
     document.body.appendChild(script)
   })
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
     if (!savedAddress) return
-    setPlacing(true)
-
-    try {
-      const loaded = await loadRazorpay()
-      if (!loaded) {
-        alert('Payment could not load. Please check your internet connection.')
-        setPlacing(false)
-        return
+    // ── Razorpay ippo direct-a open aagathu — AUG Coin payment page ku pogum ──
+    navigate('/order-payment', {
+      state: {
+        product,
+        qty: isCartCheckout ? cartQuantity : qty,
+        displayPrice,
+        totalPrice,
+        metal,
+        isCartCheckout,
+        cartItems,
+        firstImage,
+        savedAddress,
       }
-
-      const { default: api } = await import('../api')
-      const orderRes = await api.post('/create-razorpay-order/', { amount: totalPrice })
-      const { razorpay_order_id, amount, currency, key } = orderRes.data
-
-      const options = {
-        key,
-        amount: parseInt(amount) * 100,
-        currency,
-        name: 'BitByte Jewels',
-        description: isCartCheckout ? `${cartItems.length} jewellery pieces` : product.name,
-        image: firstImage?.startsWith('http') && !firstImage?.includes('localhost') ? firstImage : '',
-        order_id: razorpay_order_id,
-        handler: async response => {
-          try {
-            const verifyRes = await api.post('/verify-payment/', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              product_id: product.id,
-              customer_name: savedAddress.name,
-              customer_phone: savedAddress.phone,
-              pincode: savedAddress.pincode,
-              address_line1: savedAddress.address,
-              address_line2: savedAddress.locality || '',
-              city: savedAddress.city,
-              state: savedAddress.state,
-              quantity: isCartCheckout ? cartQuantity : qty,
-              unit_price: isCartCheckout ? totalPrice : displayPrice,
-              total_price: totalPrice,
-            })
-            if (verifyRes.data.status === 'success') {
-              setOrderId(verifyRes.data.order_id)
-              setStep(4)
-            } else {
-              alert('Payment verification failed. Please contact support.')
-            }
-          } catch {
-            alert('Something went wrong. Please try again.')
-          }
-          setPlacing(false)
-        },
-        modal: { ondismiss: () => setPlacing(false) },
-        prefill: {
-          name: savedAddress.name,
-          contact: savedAddress.phone,
-          email: savedAddress.email || '',
-        },
-        theme: { color: '#073B3F' },
-      }
-
-      const rzp = new window.Razorpay(options)
-      rzp.open()
-    } catch {
-      alert('Unable to create order. Please try again.')
-      setPlacing(false)
-    }
+    })
   }
 
   const selectedCountry = COUNTRIES.find(c => c.code === country) || COUNTRIES[0]

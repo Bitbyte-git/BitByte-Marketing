@@ -839,6 +839,20 @@ class CoinRecharge(models.Model):
         return f"{self.user.email} - ₹{self.amount_paid} - {self.coins_credited} coins ({self.status})"
 
 
+# ── COMMISSION SYSTEM: order buy pண்ணும்போது 27% chain ku distribute aagும் ──
+class CommissionLog(models.Model):
+    order = models.ForeignKey(JewelryOrder, on_delete=models.CASCADE, related_name='commission_logs')
+    beneficiary = models.ForeignKey(User, on_delete=models.CASCADE, related_name='commissions_received')
+    level = models.PositiveIntegerField(default=0)   # 1 = direct creator, 0 = super admin (balance)
+    percent = models.DecimalField(max_digits=5, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    coins_credited = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.beneficiary.email} - L{self.level} - {self.percent}% - ₹{self.amount}"
+
+
 # ── COIN REWARDS SYSTEM ──
 class DailyLoginLog(models.Model):
     """Every day user login pannumbodhu, oru entry create aagum. Streak calculate panna idhu than base."""

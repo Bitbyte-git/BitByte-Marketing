@@ -4,12 +4,13 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge, CommissionLog
 from django.db.models import Prefetch, Count, Q, Sum
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
 from .serializers import *
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 import razorpay
 import hmac
 import hashlib
@@ -1441,6 +1442,105 @@ class JewelryOrderView(APIView):
             order.save()
         return Response(JewelryOrderSerializer(order, context={'request': request}).data)
     
+# ── COMMISSION DISTRIBUTION ENGINE ──
+# Order oda buyer-ஐ irundhu மேலே ஏறி, created_by chain walk pண்ணி commission distribute pண்ணும்.
+COMMISSION_POOL_PERCENT = Decimal('27.00')
+COMMISSION_LEVEL1_PERCENT = Decimal('7.00')
+COMMISSION_LEVEL_PERCENT = Decimal('1.00')
+
+_ROLE_PROFILE_MAP = {
+    'customer': CustomerProfile,
+    'promotor': PromotorProfile,
+    'sub_dealer': SubDealerProfile,
+    'dealer': DealerProfile,
+    'admin': AdminProfile,
+}
+
+def _get_creator_user(user):
+    """Idha user-ஐ direct create pண்ணின User-ஐ return pண்ணும் (role edhுவும் ஆகலாம்)."""
+    model = _ROLE_PROFILE_MAP.get(user.role)
+    if not model:
+        return None
+    try:
+        profile = model.objects.get(user=user)
+        return profile.created_by
+    except model.DoesNotExist:
+        return None
+
+
+def build_commission_chain(buyer_user):
+    """Buyer-ஐ இருந்து மேலே ஏறி, Super Admin varaikkum chain build pண்ணும்.
+    Loop-safe — seen ids track pண்ணுறோம்."""
+    chain = []
+    current = buyer_user
+    seen = set()
+    while True:
+        creator = _get_creator_user(current)
+        if not creator or creator.id in seen:
+            break
+        seen.add(creator.id)
+        chain.append(creator)
+        if creator.role == 'super_admin':
+            break
+        current = creator
+    return chain
+
+
+def distribute_commission(order):
+    """Order success aana odane call pண்ணனும் — 27% chain ku distribute pண்ணும்,
+    balance Super Admin ku pogும்."""
+    buyer = order.user
+    if buyer.role != 'customer':
+        return
+
+    total_amount = Decimal(str(order.total_price))
+    chain = build_commission_chain(buyer)
+
+    remaining_percent = COMMISSION_POOL_PERCENT
+    level = 0
+
+    for creator_user in chain:
+        if creator_user.role == 'super_admin':
+            break   # Super Admin ku balance kீழே handle pண்ணுறோம்
+
+        if remaining_percent <= 0:
+            break
+
+        level += 1
+        pct = COMMISSION_LEVEL1_PERCENT if level == 1 else COMMISSION_LEVEL_PERCENT
+        if pct > remaining_percent:
+            pct = remaining_percent
+
+        amount = (total_amount * pct / Decimal('100')).quantize(Decimal('0.01'))
+        coins = int(amount * COIN_RATE_PER_RUPEE)
+
+        wallet, _ = Wallet.objects.get_or_create(user=creator_user)
+        wallet.balance_coins += coins
+        wallet.save(update_fields=['balance_coins'])
+
+        CommissionLog.objects.create(
+            order=order, beneficiary=creator_user, level=level,
+            percent=pct, amount=amount, coins_credited=coins,
+        )
+        remaining_percent -= pct
+
+    # ── Balance percent (evlo mudியalaiyோ) — direct Super Admin ku ──
+    if remaining_percent > 0:
+        super_admin = User.objects.filter(role='super_admin').first()
+        if super_admin:
+            amount = (total_amount * remaining_percent / Decimal('100')).quantize(Decimal('0.01'))
+            coins = int(amount * COIN_RATE_PER_RUPEE)
+
+            wallet, _ = Wallet.objects.get_or_create(user=super_admin)
+            wallet.balance_coins += coins
+            wallet.save(update_fields=['balance_coins'])
+
+            CommissionLog.objects.create(
+                order=order, beneficiary=super_admin, level=0,
+                percent=remaining_percent, amount=amount, coins_credited=coins,
+            )
+
+
 # ── VIEW 1: Razorpay Order Create ──
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -1529,6 +1629,7 @@ def verify_payment(request):
                 razorpay_payment_id=data['razorpay_payment_id'],
             )
             order_id = order.order_id
+            distribute_commission(order)   # ── NEW: commission chain ku pogும் ──
         except Exception as e:
             print('❌ JewelryOrder SAVE FAILED:', repr(e))
             order_id = "BB" + data['razorpay_payment_id'][-8:].upper()
@@ -3630,6 +3731,78 @@ class WalletView(APIView):
                     'created_at': r.created_at,
                 } for r in history
             ],
+        })
+
+
+class PayWithCoinsView(APIView):
+    """Customer AUG Coin balance vachi jewelry order pண்ணும் view.
+    Order amount ku thevayana coins balance la irundha mattum proceed aagும்."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        product_id = data.get('product_id')
+        total_price = Decimal(str(data.get('total_price', 0)))
+
+        if total_price <= 0:
+            return Response({'error': 'Invalid order amount'}, status=400)
+
+        coins_needed = int(total_price * COIN_RATE_PER_RUPEE)
+
+        wallet, _ = Wallet.objects.get_or_create(user=request.user)
+        if wallet.balance_coins < coins_needed:
+            return Response({
+                'error': 'Insufficient AUG coins',
+                'balance_coins': wallet.balance_coins,
+                'coins_needed': coins_needed,
+            }, status=400)
+
+        try:
+            product = JewelryProduct.objects.get(id=product_id)
+        except JewelryProduct.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=404)
+
+        product_image_url = data.get('product_image_url', '')
+        if not product_image_url:
+            first_img = product.images.first()
+            if first_img:
+                product_image_url = request.build_absolute_uri(first_img.image.url)
+
+        order = JewelryOrder.objects.create(
+            user=request.user,
+            product=product,
+            product_name=product.name,
+            product_metal=product.metal,
+            product_grade=product.grade or '',
+            product_category=product.category,
+            product_image_url=product_image_url,
+            customer_name=data.get('customer_name', ''),
+            customer_phone=data.get('customer_phone', ''),
+            pincode=data.get('pincode', ''),
+            address_line1=data.get('address_line1', ''),
+            address_line2=data.get('address_line2', ''),
+            city=data.get('city', ''),
+            state=data.get('state', ''),
+            quantity=int(data.get('quantity', 1)),
+            unit_price=float(data.get('unit_price', 0)),
+            total_price=float(total_price),
+            payment_method='upi',
+            payment_status='paid',
+            status='confirmed',
+        )
+
+        # ── Coins deduct pண்ணு ──
+        wallet.balance_coins -= coins_needed
+        wallet.save(update_fields=['balance_coins'])
+
+        # ── Commission distribute pண்ணு ──
+        distribute_commission(order)
+
+        return Response({
+            'status': 'success',
+            'order_id': order.order_id,
+            'coins_used': coins_needed,
+            'balance_coins': wallet.balance_coins,
         })
 
 

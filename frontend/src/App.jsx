@@ -38,6 +38,7 @@ const HomeBanner = lazy(() => import('./Products/banners/home_banner'))
 const OrderConfirm = lazy(() => import('./Orders/Orderconfirm'))
 const OrderSummary = lazy(() => import('./Orders/Ordersummary'))
 const Recharge = lazy(() => import('./collection/Recharge'))
+const OrderPayment = lazy(() => import('./Orders/OrderPayment'))
 const AdminOrdersPage = lazy(() => import('./Orders/Adminorderspage'))
 const Report = lazy(() => import('./Orders/Report'))
 const LoginActive = lazy(() => import('./Orders/login_active'))
@@ -135,6 +136,13 @@ function WithInternalRoleNavbar({ children }) {
   )
 }
 
+// ── Role-aware navbar picker — customer ku CustomerNavbar, internal roles ku InternalRoleNavbar ──
+function WithAnyNavbar({ children }) {
+  const role = localStorage.getItem('role')
+  if (role === 'customer') return <WithCustomerNavbar>{children}</WithCustomerNavbar>
+  return <WithInternalRoleNavbar>{children}</WithInternalRoleNavbar>
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -218,6 +226,7 @@ export default function App() {
           <Route path="/bj-live" element={<WithCustomerNavbar><BBLive /></WithCustomerNavbar>} />
           <Route path="/order-summary" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><OrderSummary /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/recharge" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><Recharge /></WithCustomerNavbar></ProtectedRoute>} />
+          <Route path="/order-payment" element={<WithCustomerNavbar><OrderPayment /></WithCustomerNavbar>} />
           <Route path="/admin-orders" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AdminOrdersPage /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/sales-report" element={<ProtectedRoute><WithInternalRoleNavbar><Report /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/hierarchy-sales-count" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperAdminHierarchySalesCount /></WithSuperAdminNavbar></ProtectedRoute>} />
