@@ -3465,6 +3465,39 @@ class RechargeVerifyPaymentView(APIView):
         })
 
 
+class RechargeHistoryView(APIView):
+    """Full paginated recharge history — GPay mari, ella transaction um permanent-a
+    DB la irukkum, page by page load pannurom (delete pannradhu illa)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        page = max(int(request.query_params.get('page', 1)), 1)
+        page_size = 10
+
+        qs = CoinRecharge.objects.filter(
+            user=request.user, status='success'
+        ).order_by('-created_at')
+
+        total = qs.count()
+        start = (page - 1) * page_size
+        items = qs[start:start + page_size]
+
+        return Response({
+            'page': page,
+            'total': total,
+            'has_more': start + page_size < total,
+            'items': [
+                {
+                    'id': r.id,
+                    'amount_paid': float(r.amount_paid),
+                    'coins_credited': r.coins_credited,
+                    'payment_method': r.payment_method,
+                    'created_at': r.created_at,
+                } for r in items
+            ],
+        })
+
+
 class WalletView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -3474,16 +3507,28 @@ class WalletView(APIView):
 
         history = CoinRecharge.objects.filter(
             user=request.user, status='success'
-        ).order_by('-created_at')[:20]
+        ).order_by('-created_at')[:5]
 
         today_agg = CoinRecharge.objects.filter(
             user=request.user, status='success', created_at__date=today
         ).aggregate(coins=Sum('coins_credited'), amount=Sum('amount_paid'))
 
+        # ── NEW: lifetime spending total — indha varaikkum evlo recharge pannirukanga ──
+        lifetime_agg = CoinRecharge.objects.filter(
+            user=request.user, status='success'
+        ).aggregate(
+            coins=Sum('coins_credited'),
+            amount=Sum('amount_paid'),
+            count=Count('id'),
+        )
+
         return Response({
             'balance_coins': wallet.balance_coins,
             'today_coins': today_agg['coins'] or 0,
             'today_amount': float(today_agg['amount'] or 0),
+            'total_spent': float(lifetime_agg['amount'] or 0),          # ── NEW
+            'total_coins_purchased': lifetime_agg['coins'] or 0,        # ── NEW
+            'total_recharge_count': lifetime_agg['count'] or 0,         # ── NEW
             'history': [
                 {
                     'id': r.id,

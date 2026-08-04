@@ -9,16 +9,53 @@ const MUTED = '#7A8987'
 const RED = '#073B3F'
 const COIN_RATE = 100 // 1 Rs = 100 coins
 
+const MethodIcon = ({ type, size = 18 }) => {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' }
+  if (type === 'card') return (
+    <svg {...common}><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>
+  )
+  if (type === 'upi') return (
+    <svg {...common}><polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" /></svg>
+  )
+  if (type === 'netbanking') return (
+    <svg {...common}><line x1="3" y1="22" x2="21" y2="22" /><line x1="6" y1="18" x2="6" y2="11" /><line x1="10" y1="18" x2="10" y2="11" /><line x1="14" y1="18" x2="14" y2="11" /><line x1="18" y1="18" x2="18" y2="11" /><polygon points="12 2 20 7 4 7" /></svg>
+  )
+  if (type === 'wallet') return (
+    <svg {...common}><path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Z" /><path d="M2 9V6a2 2 0 0 1 2-2h13" /><circle cx="17" cy="13.5" r="1.5" /></svg>
+  )
+  return (
+    <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+  )
+}
+
+const RupeeIcon = ({ size = 15 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="6" y1="4" x2="18" y2="4" /><line x1="6" y1="9" x2="18" y2="9" />
+    <path d="M6 4c5 0 8 2 8 5.5S11 15 6 15" /><line x1="6" y1="15" x2="18" y2="21" />
+  </svg>
+)
+const CoinStackIcon = ({ size = 15 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6" />
+    <path d="M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" />
+  </svg>
+)
+const ReceiptIcon = ({ size = 15 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2h9l3 3v17l-3-2-3 2-3-2-3 2V2Z" /><line x1="8" y1="7" x2="16" y2="7" /><line x1="8" y1="11" x2="16" y2="11" />
+  </svg>
+)
+
 const PRESET_AMOUNTS = [100, 1000, 5000, 10000, 100000]
 
 const rechargeStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@400;500;600;700;800;900&display=swap');
   @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   .rc-page{min-height:100vh;background:#FDFDFC;font-family:"Montserrat",system-ui,sans-serif;color:${DARK}}
-  .rc-main{width:min(1100px,calc(100% - 32px));margin:0 auto;padding:44px 0 90px;animation:fadeUp .4s ease both}
+  .rc-main{width:min(1400px,calc(100% - 64px));margin:0 auto;padding:44px 0 90px;animation:fadeUp .4s ease both}
   .rc-kicker{margin:0 0 8px;color:${GOLD};font-size:12px;font-weight:900;letter-spacing:2.4px;text-transform:uppercase}
   .rc-title{margin:0 0 30px;color:${RED};font-family:"Playfair Display",serif;font-size:clamp(30px,4vw,44px)}
-  .rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .rc-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:28px}
   .rc-card{border:1px solid rgba(189,207,206,.8);border-radius:10px;background:#fff;box-shadow:0 18px 46px rgba(12,64,68,.08);padding:26px}
   .rc-balance-card{background:linear-gradient(135deg,${RED},#0C4044);color:#fff;border:none;display:flex;flex-direction:column;gap:6px}
   .rc-balance-label{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;opacity:.8;font-weight:800}
@@ -38,17 +75,42 @@ const rechargeStyles = `
   .rc-banner{margin-bottom:18px;padding:13px 16px;border-radius:8px;font-size:13px;font-weight:700}
   .rc-banner.success{background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.3)}
   .rc-banner.error{background:rgba(229,62,62,.1);color:#e53e3e;border:1px solid rgba(229,62,62,.3)}
-  .rc-history-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(189,207,206,.5);font-size:13px}
+  .rc-history-row{display:flex;align-items:center;gap:14px;padding:14px 4px;border-bottom:1px solid rgba(189,207,206,.4);transition:background .15s ease;border-radius:8px}
+  .rc-history-row:hover{background:rgba(7,59,63,.03)}
   .rc-history-row:last-child{border-bottom:none}
-  .rc-method-tag{font-size:10px;font-weight:900;padding:3px 9px;border-radius:20px;background:rgba(7,59,63,.08);color:${RED};text-transform:uppercase;letter-spacing:.5px}
-  .rc-empty{color:${MUTED};font-size:13px;text-align:center;padding:20px 0}
+  .rc-history-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;color:#fff;font-weight:900}
+  .rc-history-body{flex:1;min-width:0}
+  .rc-history-amount{font-size:14px;font-weight:900;color:${DARK};margin-bottom:2px}
+  .rc-history-coins{color:${GOLD};font-weight:900}
+  .rc-history-date{color:${MUTED};font-size:11px;font-weight:600}
+  .rc-method-tag{font-size:10px;font-weight:900;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;flex-shrink:0}
+  .rc-method-tag.card{background:rgba(37,99,235,.12);color:#2563eb}
+  .rc-method-tag.upi{background:rgba(147,51,234,.12);color:#9333ea}
+  .rc-method-tag.netbanking{background:rgba(234,88,12,.12);color:#ea580c}
+  .rc-method-tag.wallet{background:rgba(13,148,136,.12);color:#0d9488}
+  .rc-method-tag.other{background:rgba(7,59,63,.08);color:${RED}}
+  .rc-empty{color:${MUTED};font-size:13px;text-align:center;padding:24px 0}
+  .rc-date-header{font-size:11px;font-weight:900;color:${MUTED};text-transform:uppercase;letter-spacing:1px;padding:14px 4px 6px}
+  .rc-loadmore-btn{width:100%;margin-top:14px;padding:12px;border-radius:8px;border:1.5px solid #D1DFDE;background:#FDFDFC;color:${RED};font-weight:800;font-size:13px;cursor:pointer;transition:.15s ease}
+  .rc-loadmore-btn:hover{border-color:${RED};background:rgba(7,59,63,.04)}
+  .rc-loadmore-btn:disabled{opacity:.6;cursor:not-allowed}
+  .rc-spend-card{background:linear-gradient(135deg,${GOLD},#9F6130);color:#fff;border:none}
+  .rc-spend-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+  .rc-spend-row + .rc-spend-row{border-top:1px dashed rgba(255,255,255,.3)}
+  .rc-spend-label{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;opacity:.92}
+  .rc-spend-value{font-size:17px;font-weight:900;font-family:"Playfair Display",serif}
+  .rc-spend-icon{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
   @media(max-width:760px){.rc-grid{grid-template-columns:1fr}}
 `
 
 export default function Recharge() {
   const navigate = useNavigate()
 
-  const [wallet, setWallet] = useState({ balance_coins: 0, today_coins: 0, today_amount: 0, history: [] })
+  const [wallet, setWallet] = useState({
+    balance_coins: 0, today_coins: 0, today_amount: 0,
+    total_spent: 0, total_coins_purchased: 0, total_recharge_count: 0,
+    history: [],
+  })
   const [loadingWallet, setLoadingWallet] = useState(true)
   const [selectedAmount, setSelectedAmount] = useState(100)
   const [customAmount, setCustomAmount] = useState('')
@@ -70,7 +132,31 @@ export default function Recharge() {
     }
   }
 
-  useEffect(() => { fetchWallet() }, [])
+  const [fullHistory, setFullHistory] = useState([])
+  const [historyPage, setHistoryPage] = useState(1)
+  const [hasMoreHistory, setHasMoreHistory] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  const fetchHistory = async (page = 1) => {
+    try {
+      const { default: api } = await import('../api')
+      const res = await api.get(`/recharge/history/?page=${page}`)
+      setFullHistory(prev => page === 1 ? res.data.items : [...prev, ...res.data.items])
+      setHasMoreHistory(res.data.has_more)
+      setHistoryPage(page)
+    } catch {
+      // silent
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
+  const loadMoreHistory = () => {
+    setLoadingMore(true)
+    fetchHistory(historyPage + 1)
+  }
+
+  useEffect(() => { fetchWallet(); fetchHistory(1) }, [])
 
   const loadRazorpay = () => new Promise(resolve => {
     if (window.Razorpay) { resolve(true); return }
@@ -142,6 +228,18 @@ export default function Recharge() {
 
   const fmtDate = d => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
 
+  // ── GPay mari: Today / Yesterday / actual date nu group pannurom ──
+  const dateGroupLabel = d => {
+    const date = new Date(d)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+    const sameDay = (a, b) => a.toDateString() === b.toDateString()
+    if (sameDay(date, today)) return 'Today'
+    if (sameDay(date, yesterday)) return 'Yesterday'
+    return fmtDate(d)
+  }
+
   return (
     <div className="rc-page">
       <style>{rechargeStyles}</style>
@@ -188,38 +286,87 @@ export default function Recharge() {
             </button>
           </section>
 
-          {/* RIGHT: Available Coin */}
+          {/* RIGHT: Available Coin + Recent Recharges */}
           <div style={{ display: 'grid', gap: 20, alignContent: 'start' }}>
             <section className="rc-card rc-balance-card">
               <span className="rc-balance-label">Available Coin</span>
               <div className="rc-balance-value">
-                {loadingWallet ? '...' : wallet.balance_coins.toLocaleString('en-IN')}
+                {loadingWallet ? '...' : (wallet.balance_coins || 0).toLocaleString('en-IN')}
                 <span>coins</span>
               </div>
               <div className="rc-today-row">
                 <span>Today Recharged</span>
-                <span>₹{wallet.today_amount} · {wallet.today_coins} coins</span>
+                <span>₹{wallet.today_amount || 0} · {wallet.today_coins || 0} coins</span>
               </div>
             </section>
 
             <section className="rc-card">
-              <h3 className="rc-section-title">Recent Recharges</h3>
-              {wallet.history.length === 0 ? (
+              <h3 className="rc-section-title">Transaction History</h3>
+              {fullHistory.length === 0 ? (
                 <div className="rc-empty">No recharges yet</div>
               ) : (
-                wallet.history.map(h => (
-                  <div key={h.id} className="rc-history-row">
-                    <div>
-                      <div style={{ fontWeight: 800 }}>₹{h.amount_paid} → {h.coins_credited} coins</div>
-                      <div style={{ color: MUTED, fontSize: 11 }}>{fmtDate(h.created_at)}</div>
-                    </div>
-                    <span className="rc-method-tag">{h.payment_method}</span>
-                  </div>
-                ))
+                (() => {
+                  const methodColors = { card: '#2563eb', upi: '#9333ea', netbanking: '#ea580c', wallet: '#0d9488', other: RED }
+                  let lastGroup = null
+                  return fullHistory.map(h => {
+                    const group = dateGroupLabel(h.created_at)
+                    const showHeader = group !== lastGroup
+                    lastGroup = group
+                    return (
+                      <div key={h.id}>
+                        {showHeader && <div className="rc-date-header">{group}</div>}
+                        <div className="rc-history-row">
+                          <div className="rc-history-icon" style={{ background: methodColors[h.payment_method] || RED }}>
+                            <MethodIcon type={h.payment_method} size={19} />
+                          </div>
+                          <div className="rc-history-body">
+                            <div className="rc-history-amount">
+                              ₹{h.amount_paid} <span style={{ color: MUTED, fontWeight: 700 }}>→</span>{' '}
+                              <span className="rc-history-coins">{h.coins_credited.toLocaleString('en-IN')} coins</span>
+                            </div>
+                            <div className="rc-history-date">{fmtDate(h.created_at)}</div>
+                          </div>
+                          <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
+                        </div>
+                      </div>
+                    )
+                  })
+                })()
+              )}
+              {hasMoreHistory && (
+                <button className="rc-loadmore-btn" type="button" onClick={loadMoreHistory} disabled={loadingMore}>
+                  {loadingMore ? 'Loading...' : 'Load More'}
+                </button>
               )}
             </section>
           </div>
         </div>
+
+        {/* BOTTOM: Spending History — full width, below Buy Recharge & Recent Recharges */}
+        <section className="rc-card rc-spend-card" style={{ marginTop: 20 }}>
+          <h3 className="rc-section-title" style={{ color: '#fff', opacity: .95 }}>Spending History</h3>
+          <div className="rc-spend-row">
+            <span className="rc-spend-label">
+              <span className="rc-spend-icon"><RupeeIcon /></span>
+              Total Spent
+            </span>
+            <span className="rc-spend-value">₹{(wallet.total_spent || 0).toLocaleString('en-IN')}</span>
+          </div>
+          <div className="rc-spend-row">
+            <span className="rc-spend-label">
+              <span className="rc-spend-icon"><CoinStackIcon /></span>
+              Total Coins Bought
+            </span>
+            <span className="rc-spend-value">{(wallet.total_coins_purchased || 0).toLocaleString('en-IN')}</span>
+          </div>
+          <div className="rc-spend-row">
+            <span className="rc-spend-label">
+              <span className="rc-spend-icon"><ReceiptIcon /></span>
+              Total Recharges
+            </span>
+            <span className="rc-spend-value">{wallet.total_recharge_count || 0}</span>
+          </div>
+        </section>
       </main>
       <CustomerFooter />
     </div>

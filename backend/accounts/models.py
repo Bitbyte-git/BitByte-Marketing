@@ -801,6 +801,11 @@ class CoinStock(models.Model):
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='wallet')
     balance_coins = models.PositiveIntegerField(default=0)
+    # ── Lifetime ledger totals — permanent-a store pannurom, history rows edhachum
+    # future-la archive/delete aana kூda idhu correct-a than irukkum ──
+    lifetime_spent = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    lifetime_coins_purchased = models.PositiveIntegerField(default=0)
+    lifetime_recharge_count = models.PositiveIntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
