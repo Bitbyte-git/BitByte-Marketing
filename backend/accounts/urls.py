@@ -1,3 +1,4 @@
+from django import views
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
@@ -7,7 +8,7 @@ from .views import (
     SubDealerListForView, PromotorListForView,  FullHierarchyView, AnnouncementView, AnnouncementReplyView, ProfileUpdateRequestView, ProfileUpdateApproveView,MetalRateView,MetalOrderView, MetalOrderSummaryView, JewelryProductView, JewelryProductDetailView, JewelryProductImageDeleteView, HomeBannerView, HomeBannerDetailView, CartView, CartItemQtyView, WishlistView, JewelryOrderView, create_razorpay_order, verify_payment, ping,
 HierarchySubtreeOrdersView, SalesReportView, OrderTimeSeriesView, TodayLoginStatusView, CoinRequestView, CoinRequestApproveView, CoinRequestRejectView, CoinRequestApproveAllView, CoinStockView, SuperAdminAddCoinsView, CoinStockForUserView, MyHierarchyView, TodayRewardsView, MyBasicInfoView,
  RetailerPromotionListView, RetailerPromotionActionView, WholesaleDealerPromotionListView, WholesaleDealerPromotionActionView, DistributorPromotionListView, DistributorPromotionActionView, SuperStockistPromotionListView, SuperStockistPromotionActionView, PromotionCustomerListView, PromotionCustomerListView, PromotionNodeListView,
- ReferrerInfoView, PublicCustomerRegisterView
+ ReferrerInfoView, PublicCustomerRegisterView,GenerateReferralLinkView
 
 
 )
@@ -72,7 +73,7 @@ urlpatterns = [
     path('promotion-nodes/', PromotionNodeListView.as_view(), name='promotion-nodes'),
     path('referrer-info/', ReferrerInfoView.as_view(), name='referrer-info'),
     path('public-register-customer/', PublicCustomerRegisterView.as_view(), name='public-register-customer'),
-
+    path('generate-referral-link/', GenerateReferralLinkView.as_view(), name='generate-referral-link'),
     
     
 ]

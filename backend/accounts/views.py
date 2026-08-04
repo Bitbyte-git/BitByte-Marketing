@@ -455,28 +455,43 @@ class MyBasicInfoView(APIView):
         info = get_user_display_info(user)   # already defined at the top of this file
         return Response({
             'role': user.role,
-            'db_id': user.id,          # ← NEW: actual numeric User id — Copy URL button-ku venum
             'id': info['user_id_str'],
             'name': info['name'],
             'phone': info['phone'],
         })
 
 
-# ── NEW: Public referral link system — anyone can share, only Customer registers ──
+# ── NEW: One-time-use public referral link system ──
+class GenerateReferralLinkView(APIView):
+    """IsAuthenticated — 'Copy URL' click pannумпோது idhu call aagும்.
+    Fresh unused token generate pannі return pannும்."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        import secrets
+        token = secrets.token_urlsafe(24)
+        ReferralLink.objects.create(token=token, referrer=request.user)
+        return Response({'token': token})
+
+
 class ReferrerInfoView(APIView):
-    """AllowAny — register page-la referral card-ku id/name/phone fetch panna."""
+    """AllowAny — register page load aagумпோது token valid-a, used-a nu check pannі
+    referrer id/name/phone return pannும்."""
     permission_classes = [AllowAny]
 
     def get(self, request):
-        ref_id = request.query_params.get('ref')
-        if not ref_id:
+        token = request.query_params.get('ref')
+        if not token:
             return Response({'error': 'ref required'}, status=400)
         try:
-            user = User.objects.get(id=ref_id)
-        except User.DoesNotExist:
+            link = ReferralLink.objects.select_related('referrer').get(token=token)
+        except ReferralLink.DoesNotExist:
             return Response({'error': 'Invalid referral link'}, status=404)
 
-        info = get_user_display_info(user)
+        if link.used:
+            return Response({'error': 'This link has already been used'}, status=410)
+
+        info = get_user_display_info(link.referrer)
         return Response({
             'id': info['user_id_str'],
             'name': info['name'],
@@ -485,21 +500,24 @@ class ReferrerInfoView(APIView):
 
 
 class PublicCustomerRegisterView(APIView):
-    """AllowAny — login illama, referral link vazhi vara customer registration.
-    created_by = referrer. assigned_promotor = referrer's promotor profile
-    (referrer promotor-a irundha mattum), illana null."""
+    """AllowAny — token-based one-time registration.
+    Token used=True aana udanE, andha link vera evarukum vela pannaadhu."""
     permission_classes = [AllowAny]
 
     def post(self, request):
         data = request.data
-        ref_id = data.get('ref')
-        if not ref_id:
+        token = data.get('ref')
+        if not token:
             return Response({'error': 'Invalid referral link'}, status=400)
         try:
-            referrer = User.objects.get(id=ref_id)
-        except User.DoesNotExist:
+            link = ReferralLink.objects.select_related('referrer').get(token=token)
+        except ReferralLink.DoesNotExist:
             return Response({'error': 'Invalid referral link'}, status=404)
 
+        if link.used:
+            return Response({'error': 'This link has already been used'}, status=410)
+
+        referrer = link.referrer
         email = data.get('email')
         password = data.get('password')
         if not email or not password:
@@ -535,8 +553,14 @@ class PublicCustomerRegisterView(APIView):
             user.delete()
             return Response({'error': str(e)}, status=400)
 
-        return Response({'message': 'Customer registered successfully'}, status=201)
+        # ── Mark the token as permanently used — link now dead ──
+        link.used = True
+        link.used_by = user
+        link.used_at = timezone.now()
+        link.save(update_fields=['used', 'used_by', 'used_at'])
 
+        return Response({'message': 'Customer registered successfully'}, status=201)
+    
 class CreatePromotorView(APIView):
     permission_classes = [IsAuthenticated]
 

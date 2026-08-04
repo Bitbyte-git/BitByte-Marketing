@@ -8,9 +8,9 @@ export default function CopyUrlButton({ style }) {
   const handleCopy = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/my-info/");
-      const userId = res.data.db_id;
-      const url = `${window.location.origin}/register?ref=${userId}`;
+      const res = await api.post("/generate-referral-link/");
+      const token = res.data.token;
+      const url = `${window.location.origin}/register?ref=${token}`;
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

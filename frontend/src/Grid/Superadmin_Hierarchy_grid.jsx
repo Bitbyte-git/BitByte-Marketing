@@ -549,8 +549,9 @@ const STATUS_COLOR = { red: '#C92035', orange: '#BB8958', yellow: '#CCA881', gre
 function LaneCard({ node, role, active, onClick, ancestors, superAdminEmail, dark, text, subtext, showChildCount, onMessage, onPrint, activeStatusFilter, onToggleStatusFilter }) {
   const navigate = useNavigate()
   const cfg = ROLE_CFG[role]
-  const c = cfg.color
-  const Icon = cfg.Icon
+const c = cfg.color
+const sc = node.status ? STATUS_COLOR[node.status] : c   // ← NEW
+const Icon = cfg.Icon
   const childRole = CHILD_ROLE[role]
   const childCount = childRole && showChildCount ? (node[CHILD_KEY[role]] || []).length : null
 
@@ -569,7 +570,7 @@ function LaneCard({ node, role, active, onClick, ancestors, superAdminEmail, dar
   return (
     <div
       className={`gcard ${active ? 'gcard-active' : 'gcard-dim'}`}
-      style={{ '--nc': c }}
+      style={{ '--nc': c, '--sc': sc }}
       onClick={onClick}
       onMouseEnter={e => showChainPopup(e.currentTarget, ancestors, { node, role }, dark, superAdminEmail)}
       title={role !== 'super_admin' && node.status ? `Target status: ${node.status?.toUpperCase()} (${node.order_count ?? 0}/10)` : undefined}
@@ -1004,7 +1005,7 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
 
         .gcard{
           background:#FFFFFF;
-          border:2.5px solid var(--nc); border-radius:16px; padding:14px 18px;
+          border:2.5px solid var(--sc); border-radius:16px; padding:14px 18px;
           min-width:172px; max-width:210px; cursor:pointer; position:relative;
           transition:opacity .2s ease, transform .2s cubic-bezier(0.22,1,0.36,1), box-shadow .2s ease;
           flex-shrink:0;
@@ -1018,7 +1019,7 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
           cursor:pointer; transition:background .2s ease, transform .2s ease;
         }
         .gcard-msg-btn:hover{ background:var(--nc); color:#FFFFFF; transform:scale(1.08); }
-        .gcard-active{ opacity:1; transform:translateY(-3px); box-shadow:0 0 0 2px var(--nc), 0 18px 36px rgba(7,59,63,0.20); }
+        .gcard-active{ opacity:1; transform:translateY(-3px); box-shadow:0 0 0 2px var(--sc), 0 18px 36px rgba(7,59,63,0.20); }
         .gcard-dim{ opacity:1; }
         .gcard-dim:hover{ opacity:1; }
         .gcard-badge{ display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:900; padding:2px 8px; border-radius:20px; margin-bottom:8px; color:var(--nc); background:#FFFFFF; border:1.5px solid var(--nc); }

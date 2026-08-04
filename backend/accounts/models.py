@@ -825,5 +825,18 @@ class CoinRewardLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.email} - {self.reward_type} - {self.coins} coins ({self.date})"        
+        return f"{self.user.email} - {self.reward_type} - {self.coins} coins ({self.date})"  
+
+class ReferralLink(models.Model):
+    """Each 'Copy URL' click generates a fresh token. Once a customer
+    registers using it, the token is marked used and can never be reused."""
+    token = models.CharField(max_length=64, unique=True)
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referral_links')
+    used = models.BooleanField(default=False)
+    used_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.token} — {self.referrer.email} (used={self.used})"              
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api";
 import CustomerFooter from "./CustomerFooter";
+import CopyUrlButton from "./CopyUrlButton";
 
 const OCCUPATIONS = ["employee", "business", "others"];
 
@@ -391,7 +392,10 @@ useEffect(() => {
         {msg && <div className={`cc-msg ${msgType}`}>{msg}</div>}
 
         <div className="cc-card">
-          <h2 className="cc-section-title">New Customer Details</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+            <h2 className="cc-section-title">New Customer Details</h2>
+            <CopyUrlButton />
+          </div>
 
           <form onSubmit={handleSubmit}>
             <p className="cc-sub-label">Personal Info</p>
