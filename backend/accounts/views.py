@@ -4005,8 +4005,8 @@ class UserLookupView(APIView):
 
 class SendCoinsView(APIView):
     """Super Admin directly ஒரு user ku coins credit pண்ணும் — commission chain
-    touch pண்ணadhu, idhu manual admin gift. Super Admin swanth wallet la irundhu
-    coins actual-a reduce aagum (customer balance mாтிri than)."""
+    touch pண்ணadhu, idhu manual admin gift. Super Admin ku unlimited coins —
+    swanth balance edhume check/deduct pண்ணadhu."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -4029,29 +4029,9 @@ class SendCoinsView(APIView):
             return Response({'error': 'User not found'}, status=404)
 
         coins = int(amount * COIN_RATE_PER_RUPEE)
-
-        # ── NEW: Super Admin swanth wallet la balance check pண்ணு ──
-        admin_wallet, _ = Wallet.objects.get_or_create(user=request.user)
-        if admin_wallet.balance_coins < coins:
-            return Response({
-                'error': 'Insufficient AUG coins in your own account',
-                'balance_coins': admin_wallet.balance_coins,
-                'coins_needed': coins,
-            }, status=400)
-
         txn_id = generate_transaction_id()
 
-        # ── Super Admin wallet la irundhu deduct pண்ணு ──
-        admin_wallet.balance_coins -= coins
-        admin_wallet.save(update_fields=['balance_coins'])
-        CoinRecharge.objects.create(
-            user=request.user, amount_paid=amount, coins_credited=coins,
-            payment_method='admin', status='success',
-            entry_type='debit', source='admin_credit',
-            transaction_id=txn_id,
-        )
-
-        # ── Target user wallet ku credit pண்ணு ──
+        # ── Target user wallet ku credit pண்ணு — Super Admin balance touch pண்ணadhu ──
         target_wallet, _ = Wallet.objects.get_or_create(user=target_user)
         target_wallet.balance_coins += coins
         target_wallet.save(update_fields=['balance_coins'])
@@ -4066,7 +4046,6 @@ class SendCoinsView(APIView):
             'status': 'success',
             'transaction_id': txn_id,
             'coins_sent': coins,
-            'admin_balance_coins': admin_wallet.balance_coins,
             'balance_coins': target_wallet.balance_coins,
         })
 
