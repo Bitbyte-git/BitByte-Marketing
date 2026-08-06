@@ -190,6 +190,7 @@ export default function SuperAdminNavbar({
               <MenuGroup label="Coins" items={coins} footer={{ label: 'View All Coins ->', action: () => navigate('/stored-coins') }} />
               <MenuGroup label="Reports" items={reports} footer={{ label: 'View All Reports ->', action: () => navigate('/sales-report') }} />
               <MenuGroup label="Promotion" items={promotion} footer={{ label: 'View All Promotion ->', action: () => navigate('/promotions/retailer') }} />
+              <MenuGroup label="Payment" items={payment} footer={{ label: 'View Revenue & Payments ->', action: () => navigate('/superadmin-payments') }} />  
             </div>
             <div className="san-actions">
               <button className="san-action" type="button" onClick={() => run(onTodayRates, '/super-admin')}><Icon name="rate" />Today Rates</button>

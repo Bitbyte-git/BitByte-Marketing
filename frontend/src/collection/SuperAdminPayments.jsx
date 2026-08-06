@@ -11,8 +11,15 @@ const styles = `
   .sp-main{width:min(1300px,calc(100% - 48px));margin:0 auto;padding:36px 0 90px}
   .sp-kicker{margin:0 0 6px;color:${GOLD};font-size:12px;font-weight:900;letter-spacing:2.4px;text-transform:uppercase}
   .sp-title{margin:0 0 8px;color:${RED};font-family:"Playfair Display",serif;font-size:clamp(26px,4vw,36px)}
-  .sp-note{color:${MUTED};font-size:12.5px;margin:0 0 28px;max-width:720px;line-height:1.6}
-  .sp-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+  .sp-note{color:${MUTED};font-size:12.5px;margin:0 0 22px;max-width:760px;line-height:1.6}
+  .sp-filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+  .sp-filter-tab{padding:9px 18px;border-radius:20px;border:1.5px solid #D1DFDE;background:#fff;color:${DARK};font-weight:800;font-size:12px;cursor:pointer;transition:.15s ease;white-space:nowrap}
+  .sp-filter-tab.active{border-color:${RED};background:${RED};color:#fff}
+  .sp-custom-date{padding:8px 12px;border-radius:8px;border:1.5px solid #D1DFDE;font-size:12px;font-weight:700;color:${DARK};height:38px;box-sizing:border-box}
+  .sp-date-to{color:${MUTED};font-weight:800;font-size:12px}
+  .sp-apply-btn{height:38px;padding:0 18px;border-radius:20px;border:none;background:${GOLD};color:#fff;font-weight:900;font-size:12px;cursor:pointer}
+  .sp-apply-btn:hover{background:#9F6130}
+  .sp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
   .sp-card{border:1px solid rgba(189,207,206,.8);border-radius:12px;background:#fff;padding:20px;box-shadow:0 12px 30px rgba(12,64,68,.06)}
   .sp-card-label{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:${MUTED};margin-bottom:8px}
   .sp-card-value{font-family:"Playfair Display",serif;font-size:26px;color:${RED};font-weight:700}
@@ -26,39 +33,58 @@ const styles = `
   .sp-bar{width:100%;max-width:52px;background:linear-gradient(180deg,${GOLD},#9F6130);border-radius:6px 6px 0 0;transition:height .4s ease}
   .sp-bar-value{font-size:10.5px;font-weight:800;color:${RED};margin-bottom:6px}
   .sp-bar-label{font-size:10.5px;font-weight:700;color:${MUTED};margin-top:8px}
-  .sp-order-row{display:flex;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid rgba(189,207,206,.4)}
-  .sp-order-row:last-child{border-bottom:none}
-  .sp-order-id{font-weight:800;color:${DARK};font-size:13px}
-  .sp-order-buyer{color:${MUTED};font-size:11.5px;margin-top:2px}
-  .sp-order-amount{font-weight:900;color:${RED};font-size:14px;margin-left:auto}
-  .sp-order-tag{font-size:10px;font-weight:900;padding:4px 11px;border-radius:20px;text-transform:uppercase;background:rgba(7,59,63,.08);color:${RED};margin-left:14px;white-space:nowrap}
+  .sp-txn-row{display:flex;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid rgba(189,207,206,.4)}
+  .sp-txn-row:last-child{border-bottom:none}
+  .sp-txn-id{font-weight:800;color:${DARK};font-size:12.5px;font-family:monospace}
+  .sp-txn-buyer{color:${MUTED};font-size:11.5px;margin-top:2px}
+  .sp-txn-amounts{margin-left:auto;text-align:right}
+  .sp-txn-amount{font-weight:900;color:${RED};font-size:14px}
+  .sp-txn-coins{color:${GOLD};font-size:11px;font-weight:700;margin-top:2px}
+  .sp-txn-tag{font-size:10px;font-weight:900;padding:4px 11px;border-radius:20px;text-transform:uppercase;margin-left:14px;white-space:nowrap}
+  .sp-txn-tag.wallet{background:rgba(13,148,136,.12);color:#0d9488}
+  .sp-txn-tag.upi{background:rgba(147,51,234,.12);color:#9333ea}
+  .sp-txn-tag.card{background:rgba(37,99,235,.12);color:#2563eb}
+  .sp-txn-tag.netbanking{background:rgba(234,88,12,.12);color:#ea580c}
+  .sp-txn-tag.other{background:rgba(7,59,63,.08);color:${RED}}
   .sp-loadmore{width:100%;margin-top:14px;padding:12px;border-radius:8px;border:1.5px solid #D1DFDE;background:#FDFDFC;color:${RED};font-weight:800;font-size:13px;cursor:pointer}
   .sp-loadmore:hover{border-color:${RED};background:rgba(7,59,63,.04)}
   .sp-loadmore:disabled{opacity:.6;cursor:not-allowed}
   .sp-empty{color:${MUTED};font-size:13px;text-align:center;padding:24px 0}
-  @media(max-width:900px){.sp-cards{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:900px){.sp-cards{grid-template-columns:1fr}}
 `
+
+const FILTERS = [
+  { key: 'today', label: 'Today' },
+  { key: 'month', label: 'This Month' },
+  { key: '6month', label: '6 Months' },
+  { key: 'year', label: 'This Year' },
+  { key: 'custom', label: 'Custom' },
+]
 
 export default function SuperAdminPayments() {
   const [summary, setSummary] = useState(null)
-  const [orders, setOrders] = useState([])
+  const [txns, setTxns] = useState([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [activeFilter, setActiveFilter] = useState('today')
+  const [customFrom, setCustomFrom] = useState('')
+  const [customTo, setCustomTo] = useState('')
 
-  const fetchData = async (p = 1) => {
+  const fetchData = async (p = 1, period = activeFilter, from = customFrom, to = customTo) => {
     try {
       const { default: api } = await import('../api')
-      const res = await api.get(`/superadmin/payments/?page=${p}`)
+      let url = `/superadmin/payments/?page=${p}&period=${period}`
+      if (period === 'custom' && from && to) url += `&start_date=${from}&end_date=${to}`
+      const res = await api.get(url)
       setSummary({
         total_revenue: res.data.total_revenue,
-        total_commission: res.data.total_commission,
-        company_share: res.data.company_share,
-        total_orders: res.data.total_orders,
+        total_coins_sold: res.data.total_coins_sold,
+        total_transactions: res.data.total_transactions,
         monthly_trend: res.data.monthly_trend,
       })
-      setOrders(prev => p === 1 ? res.data.orders : [...prev, ...res.data.orders])
+      setTxns(prev => p === 1 ? res.data.transactions : [...prev, ...res.data.transactions])
       setHasMore(res.data.has_more)
       setPage(p)
     } catch {
@@ -69,15 +95,33 @@ export default function SuperAdminPayments() {
     }
   }
 
-  useEffect(() => { fetchData(1) }, [])
+  useEffect(() => { fetchData(1, 'today', '', '') }, [])
+
+  const handleFilterClick = key => {
+    setActiveFilter(key)
+    if (key !== 'custom') {
+      setLoading(true)
+      fetchData(1, key, '', '')
+    } else if (customFrom && customTo) {
+      setLoading(true)
+      fetchData(1, 'custom', customFrom, customTo)
+    }
+  }
+
+  const applyCustomRange = () => {
+    if (!customFrom || !customTo) return
+    setLoading(true)
+    fetchData(1, 'custom', customFrom, customTo)
+  }
 
   const loadMore = () => {
     setLoadingMore(true)
-    fetchData(page + 1)
+    fetchData(page + 1, activeFilter, customFrom, customTo)
   }
 
   const inr = n => `Rs. ${Math.round(n || 0).toLocaleString('en-IN')}`
   const fmtDate = d => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  const fmtMethod = m => (m || 'other').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
   const trend = summary?.monthly_trend || []
   const maxRevenue = Math.max(...trend.map(t => t.revenue), 1)
@@ -89,10 +133,35 @@ export default function SuperAdminPayments() {
         <p className="sp-kicker">Super Admin</p>
         <h1 className="sp-title">Revenue &amp; Payments</h1>
         <p className="sp-note">
-          Real payments settle automatically to the business bank account via Razorpay — this page is
-          a visibility report only. Commission shown here is the internal AUG Coin reward distributed
-          across the referral chain, not a separate money transfer.
+          Real money enters the business only when a user recharges AUG Coin via Razorpay — this
+          list shows every such recharge transaction (payment method + Razorpay transaction ID).
+          Spending coins on jewelry orders does not create new revenue, it just uses coins already paid for.
         </p>
+
+        <div className="sp-filter-row">
+          {FILTERS.map(f => (
+            <button
+              key={f.key}
+              type="button"
+              className={`sp-filter-tab ${activeFilter === f.key ? 'active' : ''}`}
+              onClick={() => handleFilterClick(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
+          {activeFilter === 'custom' && (
+            <>
+              <input type="date" className="sp-custom-date" value={customFrom}
+                max={customTo || new Date().toISOString().split('T')[0]}
+                onChange={e => setCustomFrom(e.target.value)} />
+              <span className="sp-date-to">to</span>
+              <input type="date" className="sp-custom-date" value={customTo}
+                min={customFrom} max={new Date().toISOString().split('T')[0]}
+                onChange={e => setCustomTo(e.target.value)} />
+              <button className="sp-apply-btn" onClick={applyCustomRange}>Apply</button>
+            </>
+          )}
+        </div>
 
         {loading ? (
           <div className="sp-empty">Loading...</div>
@@ -100,20 +169,16 @@ export default function SuperAdminPayments() {
           <>
             <div className="sp-cards">
               <div className="sp-card revenue">
-                <div className="sp-card-label">Total Revenue</div>
+                <div className="sp-card-label">Real Revenue Collected</div>
                 <div className="sp-card-value">{inr(summary.total_revenue)}</div>
               </div>
               <div className="sp-card">
-                <div className="sp-card-label">Total Commission Paid</div>
-                <div className="sp-card-value">{inr(summary.total_commission)}</div>
+                <div className="sp-card-label">Coins Sold</div>
+                <div className="sp-card-value">{(summary.total_coins_sold || 0).toLocaleString('en-IN')}</div>
               </div>
               <div className="sp-card">
-                <div className="sp-card-label">Company Share</div>
-                <div className="sp-card-value">{inr(summary.company_share)}</div>
-              </div>
-              <div className="sp-card">
-                <div className="sp-card-label">Total Orders</div>
-                <div className="sp-card-value">{summary.total_orders}</div>
+                <div className="sp-card-label">Transactions</div>
+                <div className="sp-card-value">{summary.total_transactions}</div>
               </div>
             </div>
 
@@ -135,18 +200,21 @@ export default function SuperAdminPayments() {
             </section>
 
             <section className="sp-panel">
-              <h3 className="sp-panel-title">All Orders</h3>
-              {orders.length === 0 ? (
-                <div className="sp-empty">No orders yet</div>
+              <h3 className="sp-panel-title">Recharge Transactions {activeFilter !== 'custom' ? `— ${FILTERS.find(f => f.key === activeFilter)?.label}` : ''}</h3>
+              {txns.length === 0 ? (
+                <div className="sp-empty">No transactions in this period</div>
               ) : (
-                orders.map(o => (
-                  <div key={o.order_id} className="sp-order-row">
+                txns.map((t, i) => (
+                  <div key={i} className="sp-txn-row">
                     <div>
-                      <div className="sp-order-id">{o.order_id}</div>
-                      <div className="sp-order-buyer">{o.buyer} · {fmtDate(o.created_at)}</div>
+                      <div className="sp-txn-id">{t.transaction_id}</div>
+                      <div className="sp-txn-buyer">{t.buyer} · {fmtDate(t.created_at)}</div>
                     </div>
-                    <div className="sp-order-amount">{inr(o.amount)}</div>
-                    <span className="sp-order-tag">{o.payment_method}</span>
+                    <div className="sp-txn-amounts">
+                      <div className="sp-txn-amount">{inr(t.amount)}</div>
+                      <div className="sp-txn-coins">{t.coins.toLocaleString('en-IN')} coins</div>
+                    </div>
+                    <span className={`sp-txn-tag ${t.payment_method}`}>{fmtMethod(t.payment_method)}</span>
                   </div>
                 ))
               )}

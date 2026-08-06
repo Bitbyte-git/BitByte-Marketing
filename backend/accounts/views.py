@@ -3802,7 +3802,7 @@ class PayWithCoinsView(APIView):
             quantity=int(data.get('quantity', 1)),
             unit_price=float(data.get('unit_price', 0)),
             total_price=float(total_price),
-            payment_method='upi',
+            payment_method='wallet',   # ── FIX: AUG Coin mூlam pay pண்ணினа, "wallet" nு correct-a store pண்ணு ──
             payment_status='paid',
             status='confirmed',
         )
@@ -3822,12 +3822,11 @@ class PayWithCoinsView(APIView):
         except Exception as e:
             print(f'❌ Debit log FAILED for {request.user.email}:', repr(e))
 
-        # ── Commission distribute pண்ணு ──
+        # ── Commission distribute pண்ணு (FIX: oru தடவை mattum call pண்ணு, rendு தடவை illa) ──
         try:
             distribute_commission(order)
         except Exception as e:
             print('❌ distribute_commission FAILED:', repr(e))
-        distribute_commission(order)
 
         return Response({
             'status': 'success',
@@ -3838,9 +3837,10 @@ class PayWithCoinsView(APIView):
 
 
 class PaymentsSummaryView(APIView):
-    """Super Admin ku mattum — ella customer payment/revenue um oru place la kaamikkum.
-    Real paisa ella um Razorpay settlement mூlam already business bank account ku pogum —
-    idhu report/visibility page mattum than, money move pண்ணادhu."""
+    """Super Admin ku mattum — REAL payment revenue kaamikkum.
+    Real money customer Recharge pண்ணும்போது than Razorpay mூlam varum (card/upi/netbanking).
+    Order pண்ணும்போது coins spend aaguthu mattum — puthu money varadhu, adhala idhu
+    CoinRecharge table (source='recharge') vachi than build pண்ணuறோm, JewelryOrder illa."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -3849,26 +3849,24 @@ class PaymentsSummaryView(APIView):
 
         page = max(int(request.query_params.get('page', 1)), 1)
         page_size = 15
+        period = request.query_params.get('period', 'today')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
 
-        paid_orders = JewelryOrder.objects.filter(payment_status='paid')
+        # ── Real revenue = ella user (customer/promotor/etc) um Razorpay mூlam recharge pண்ணின paisa ──
+        recharges_all = CoinRecharge.objects.filter(status='success', source='recharge')
+        recharges_period = _apply_period_filter(recharges_all, period, start_date, end_date)
 
-        total_revenue = paid_orders.aggregate(total=Sum('total_price'))['total'] or 0
+        total_revenue = recharges_period.aggregate(total=Sum('amount_paid'))['total'] or 0
+        total_coins_sold = recharges_period.aggregate(total=Sum('coins_credited'))['total'] or 0
 
-        total_commission = CoinRecharge.objects.filter(
-            status='success', source='commission'
-        ).aggregate(total=Sum('amount_paid'))['total'] or 0
-
-        company_share = CoinRecharge.objects.filter(
-            status='success', source='commission', user=request.user
-        ).aggregate(total=Sum('amount_paid'))['total'] or 0
-
-        # ── Last 6 months revenue, month-wise — chart ku ──
+        # ── Chart — evllovadhu period select pண்ணினalum, kadaisi 6 months trend fixed-a kaamikkum ──
         six_months_ago = timezone.now().date() - timedelta(days=180)
         trend_qs = (
-            paid_orders.filter(created_at__date__gte=six_months_ago)
+            recharges_all.filter(created_at__date__gte=six_months_ago)
             .annotate(month=TruncMonth('created_at'))
             .values('month')
-            .annotate(revenue=Sum('total_price'))
+            .annotate(revenue=Sum('amount_paid'))
             .order_by('month')
         )
         monthly_trend = [
@@ -3876,27 +3874,28 @@ class PaymentsSummaryView(APIView):
             for t in trend_qs
         ]
 
-        orders_qs = paid_orders.select_related('user').order_by('-created_at')
-        total_orders = orders_qs.count()
+        txn_qs = recharges_period.select_related('user').order_by('-created_at')
+        total_transactions = txn_qs.count()
         start = (page - 1) * page_size
-        page_orders = orders_qs[start:start + page_size]
+        page_txns = txn_qs[start:start + page_size]
 
         return Response({
+            'period': period,
             'total_revenue': float(total_revenue),
-            'total_commission': float(total_commission),
-            'company_share': float(company_share),
-            'total_orders': total_orders,
+            'total_coins_sold': total_coins_sold,
+            'total_transactions': total_transactions,
             'monthly_trend': monthly_trend,
             'page': page,
-            'has_more': start + page_size < total_orders,
-            'orders': [
+            'has_more': start + page_size < total_transactions,
+            'transactions': [
                 {
-                    'order_id': o.order_id,
-                    'buyer': get_user_profile_id(o.user) or o.user.email,
-                    'amount': float(o.total_price),
-                    'payment_method': o.payment_method,
-                    'created_at': o.created_at,
-                } for o in page_orders
+                    'transaction_id': r.razorpay_payment_id or '—',
+                    'buyer': get_user_profile_id(r.user) or r.user.email,
+                    'amount': float(r.amount_paid),
+                    'coins': r.coins_credited,
+                    'payment_method': r.payment_method,
+                    'created_at': r.created_at,
+                } for r in page_txns
             ],
         })
 
