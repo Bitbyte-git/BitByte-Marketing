@@ -3836,6 +3836,28 @@ class PayWithCoinsView(APIView):
         })
 
 
+def _apply_period_filter(qs, period, start_date, end_date, date_field='created_at'):
+    """Today/Month/6Month/Year/Custom — ella report kum share pண்ணும் common filter."""
+    today = timezone.now().date()
+    f = f'{date_field}__date'
+
+    if period == 'today':
+        qs = qs.filter(**{f: today})
+    elif period == 'month':
+        month_start = today.replace(day=1)
+        qs = qs.filter(**{f'{f}__gte': month_start, f'{f}__lte': today})
+    elif period == '6month':
+        six_months_ago = today - timedelta(days=180)
+        qs = qs.filter(**{f'{f}__gte': six_months_ago, f'{f}__lte': today})
+    elif period == 'year':
+        year_start = today.replace(month=1, day=1)
+        qs = qs.filter(**{f'{f}__gte': year_start, f'{f}__lte': today})
+    elif period == 'custom' and start_date and end_date:
+        qs = qs.filter(**{f'{f}__gte': start_date, f'{f}__lte': end_date})
+
+    return qs        
+
+
 class PaymentsSummaryView(APIView):
     """Super Admin ku mattum — REAL payment revenue kaamikkum.
     Real money customer Recharge pண்ணும்போது than Razorpay mூlam varum (card/upi/netbanking).
