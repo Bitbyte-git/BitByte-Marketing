@@ -4127,49 +4127,54 @@ class AutoPayCreateView(APIView):
         if amount <= 0 or not (1 <= recharge_day <= 31):
             return Response({'error': 'Invalid amount or day'}, status=400)
 
-        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        try:
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
-        # ── Plan create (idhu amount + monthly cycle define pண்ணும்) ──
-        plan = client.plan.create({
-            "period": "monthly",
-            "interval": 1,
-            "item": {
-                "name": f"BitByte Wallet Autopay ₹{amount}",
-                "amount": int(amount * 100),
-                "currency": "INR",
-            }
-        })
+            plan = client.plan.create({
+                "period": "monthly",
+                "interval": 1,
+                "item": {
+                    "name": f"BitByte Wallet Autopay ₹{amount}",
+                    "amount": int(amount * 100),
+                    "currency": "INR",
+                }
+            })
 
-        next_date = _next_occurrence(recharge_day)
-        start_at = int(timezone.datetime.combine(next_date, timezone.datetime.min.time()).timestamp())
+            next_date = _next_occurrence(recharge_day)
+            start_at = int(timezone.datetime.combine(next_date, timezone.datetime.min.time()).timestamp())
 
-        subscription = client.subscription.create({
-            "plan_id": plan['id'],
-            "customer_notify": 1,
-            "total_count": 120,   # 10 years worth of monthly cycles
-            "start_at": start_at,
-            "notes": {"user_id": str(request.user.id)},
-        })
+            subscription = client.subscription.create({
+                "plan_id": plan['id'],
+                "customer_notify": 1,
+                "total_count": 120,
+                "start_at": start_at,
+                "notes": {"user_id": str(request.user.id)},
+            })
 
-        mandate, _ = AutoPayMandate.objects.update_or_create(
-            user=request.user,
-            defaults={
+            mandate, _ = AutoPayMandate.objects.update_or_create(
+                user=request.user,
+                defaults={
+                    'amount': amount,
+                    'recharge_day': recharge_day,
+                    'razorpay_plan_id': plan['id'],
+                    'razorpay_subscription_id': subscription['id'],
+                    'status': 'created',
+                    'is_active': False,
+                    'next_charge_date': next_date,
+                }
+            )
+
+            return Response({
+                'subscription_id': subscription['id'],
+                'key': settings.RAZORPAY_KEY_ID,
                 'amount': amount,
-                'recharge_day': recharge_day,
-                'razorpay_plan_id': plan['id'],
-                'razorpay_subscription_id': subscription['id'],
-                'status': 'created',
-                'is_active': False,
-                'next_charge_date': next_date,
-            }
-        )
+                'mandate_id': mandate.id,
+            }, status=201)
 
-        return Response({
-            'subscription_id': subscription['id'],
-            'key': settings.RAZORPAY_KEY_ID,
-            'amount': amount,
-            'mandate_id': mandate.id,
-        }, status=201)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({'error': str(e)}, status=400)
 
 
 class AutoPayConfirmView(APIView):

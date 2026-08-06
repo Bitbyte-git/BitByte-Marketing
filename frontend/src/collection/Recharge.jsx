@@ -173,7 +173,7 @@ export default function Recharge() {
   const [downloading, setDownloading] = useState(false)
   const [autopay, setAutopay] = useState({ exists: false, is_active: false, amount: 1000, recharge_day: 5 })
 const [showAutopayModal, setShowAutopayModal] = useState(false)
-const [autopayAmount, setAutopayAmount] = useState(1000)
+const [autopayAmount, setAutopayAmount] = useState('')
 const [autopayDay, setAutopayDay] = useState(5)
 const [autopayLoading, setAutopayLoading] = useState(false)
 
@@ -192,6 +192,10 @@ const fetchAutopayStatus = async () => {
 }
 
 const handleEnableAutopay = async () => {
+  if (!autopayAmount || autopayAmount <= 0) {
+    setBanner({ type: 'error', text: 'Please enter a valid amount' })
+    return
+  }
   setAutopayLoading(true)
   try {
     const loaded = await loadRazorpay()
@@ -644,10 +648,10 @@ const handleToggleAutopay = async () => {
 
       <p style={{ fontSize: 12, fontWeight: 800, color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Monthly amount (₹)</p>
       <input
-        type="number" min="1" value={autopayAmount}
-        onChange={e => setAutopayAmount(Number(e.target.value))}
-        style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', border: '1px solid #D1DFDE', borderRadius: 8, fontSize: 15, fontWeight: 700, marginBottom: 16 }}
-      />
+  type="number" min="1" placeholder="Enter amount (₹)" value={autopayAmount}
+  onChange={e => setAutopayAmount(e.target.value === '' ? '' : Number(e.target.value))}
+  style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', border: '1px solid #D1DFDE', borderRadius: 8, fontSize: 15, fontWeight: 700, marginBottom: 16 }}
+/>
 
       <p style={{ fontSize: 12, fontWeight: 800, color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Charge day, every month</p>
       <select
