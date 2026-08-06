@@ -171,6 +171,83 @@ export default function Recharge() {
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [downloading, setDownloading] = useState(false)
+  const [autopay, setAutopay] = useState({ exists: false, is_active: false, amount: 1000, recharge_day: 5 })
+const [showAutopayModal, setShowAutopayModal] = useState(false)
+const [autopayAmount, setAutopayAmount] = useState(1000)
+const [autopayDay, setAutopayDay] = useState(5)
+const [autopayLoading, setAutopayLoading] = useState(false)
+
+const fetchAutopayStatus = async () => {
+  try {
+    const { default: api } = await import('../api')
+    const res = await api.get('/autopay/status/')
+    if (res.data.exists) {
+      setAutopay(res.data)
+      setAutopayAmount(res.data.amount)
+      setAutopayDay(res.data.recharge_day)
+    }
+  } catch {
+    // silent
+  }
+}
+
+const handleEnableAutopay = async () => {
+  setAutopayLoading(true)
+  try {
+    const loaded = await loadRazorpay()
+    if (!loaded) {
+      setBanner({ type: 'error', text: 'Payment could not load. Check your internet connection.' })
+      setAutopayLoading(false)
+      return
+    }
+    const { default: api } = await import('../api')
+    const res = await api.post('/autopay/create/', { amount: autopayAmount, recharge_day: autopayDay })
+    const { subscription_id, key } = res.data
+
+    const options = {
+      key,
+      subscription_id,
+      name: 'BitByte Wallet Autopay',
+      description: `₹${autopayAmount} every month on day ${autopayDay}`,
+      handler: async response => {
+        try {
+          const confirmRes = await api.post('/autopay/confirm/', {
+            razorpay_subscription_id: response.razorpay_subscription_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          })
+          setBanner({ type: 'success', text: confirmRes.data.message })
+          setShowAutopayModal(false)
+          fetchAutopayStatus()
+        } catch {
+          setBanner({ type: 'error', text: 'Autopay confirmation failed. Please try again.' })
+        }
+        setAutopayLoading(false)
+      },
+      modal: { ondismiss: () => setAutopayLoading(false) },
+      theme: { color: '#073B3F' },
+    }
+    const rzp = new window.Razorpay(options)
+    rzp.open()
+  } catch {
+    setBanner({ type: 'error', text: 'Unable to start autopay setup. Please try again.' })
+    setAutopayLoading(false)
+  }
+}
+
+const handleToggleAutopay = async () => {
+  setAutopayLoading(true)
+  try {
+    const { default: api } = await import('../api')
+    const action = autopay.is_active ? 'off' : 'on'
+    await api.post('/autopay/toggle/', { action })
+    fetchAutopayStatus()
+    setBanner({ type: 'success', text: `Autopay turned ${action.toUpperCase()}` })
+  } catch {
+    setBanner({ type: 'error', text: 'Unable to update autopay. Please try again.' })
+  }
+  setAutopayLoading(false)
+}
 
   const fetchHistory = async (page = 1, filter = activeFilter, from = customFrom, to = customTo) => {
     try {
@@ -237,7 +314,7 @@ export default function Recharge() {
     }
   }
 
-  useEffect(() => { fetchWallet(); fetchHistory(1, 'today', '', '') }, [])
+  useEffect(() => { fetchWallet(); fetchHistory(1, 'today', '', ''); fetchAutopayStatus() }, [])
 
   const loadRazorpay = () => new Promise(resolve => {
     if (window.Razorpay) { resolve(true); return }
@@ -325,8 +402,25 @@ export default function Recharge() {
     <div className="rc-page">
       <style>{rechargeStyles}</style>
       <main className="rc-main">
-        <p className="rc-kicker">Wallet</p>
-        <h1 className="rc-title">Recharge &amp; Coins</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+  <div>
+    <p className="rc-kicker">Wallet</p>
+    <h1 className="rc-title" style={{ marginBottom: 0 }}>Recharge &amp; Coins</h1>
+  </div>
+  <button
+    type="button"
+    className="rc-autopay-btn"
+    onClick={() => setShowAutopayModal(true)}
+    style={{
+      display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 20,
+      border: `1.5px solid ${autopay.is_active ? '#16a34a' : '#D1DFDE'}`,
+      background: autopay.is_active ? 'rgba(22,163,74,.08)' : '#FDFDFC',
+      color: autopay.is_active ? '#16a34a' : DARK, fontWeight: 800, fontSize: 12, cursor: 'pointer'
+    }}
+  >
+    Autopay: {autopay.is_active ? 'ON' : 'OFF'}
+  </button>
+</div>
 
         <div className="rc-grid">
           {/* LEFT: Buy Recharge */}
@@ -524,6 +618,66 @@ export default function Recharge() {
           )}
         </section>
       </main>
+
+      {showAutopayModal && (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
+    <div style={{ background: '#fff', borderRadius: 10, padding: 24, width: 'min(420px, 90vw)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: RED }}>Autopay settings</h3>
+        {autopay.exists && (
+          <button
+            type="button"
+            onClick={handleToggleAutopay}
+            disabled={autopayLoading}
+            style={{
+              width: 42, height: 24, borderRadius: 20, border: 'none', cursor: 'pointer',
+              background: autopay.is_active ? RED : '#D1DFDE', position: 'relative'
+            }}
+          >
+            <div style={{
+              width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute',
+              top: 3, left: autopay.is_active ? 21 : 3, transition: '.15s ease'
+            }} />
+          </button>
+        )}
+      </div>
+
+      <p style={{ fontSize: 12, fontWeight: 800, color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Monthly amount (₹)</p>
+      <input
+        type="number" min="1" value={autopayAmount}
+        onChange={e => setAutopayAmount(Number(e.target.value))}
+        style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', border: '1px solid #D1DFDE', borderRadius: 8, fontSize: 15, fontWeight: 700, marginBottom: 16 }}
+      />
+
+      <p style={{ fontSize: 12, fontWeight: 800, color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Charge day, every month</p>
+      <select
+        value={autopayDay}
+        onChange={e => setAutopayDay(Number(e.target.value))}
+        style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', border: '1px solid #D1DFDE', borderRadius: 8, fontSize: 14, fontWeight: 700, marginBottom: 20 }}
+      >
+        {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
+          <option key={d} value={d}>{d}</option>
+        ))}
+      </select>
+
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          type="button" onClick={() => setShowAutopayModal(false)}
+          style={{ flex: 1, minHeight: 46, borderRadius: 999, border: '1.5px solid #D1DFDE', background: '#fff', fontWeight: 800, fontSize: 12, cursor: 'pointer' }}
+        >
+          Cancel
+        </button>
+        <button
+          type="button" onClick={handleEnableAutopay} disabled={autopayLoading || autopay.is_active}
+          style={{ flex: 2, minHeight: 46, borderRadius: 999, border: 'none', background: RED, color: '#fff', fontWeight: 900, fontSize: 12, textTransform: 'uppercase', cursor: 'pointer' }}
+        >
+          {autopayLoading ? 'Processing...' : autopay.exists ? 'Update mandate' : 'Authorize UPI mandate'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       <CustomerFooter />
     </div>
   )

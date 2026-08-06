@@ -43,7 +43,8 @@ const styles = `
   .sc-banner{margin-bottom:18px;padding:13px 16px;border-radius:8px;font-size:13px;font-weight:700}
   .sc-banner.success{background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.3)}
   .sc-banner.error{background:rgba(229,62,62,.1);color:#e53e3e;border:1px solid rgba(229,62,62,.3)}
-  .sc-section-title{margin:0 0 16px;font-size:14px;font-weight:900;color:${RED}}
+  .sc-section-title{margin:0 0 4px;font-size:14px;font-weight:900;color:${RED}}
+  .sc-section-sub{color:${MUTED};font-size:11px;margin:0 0 16px}
   .sc-history-row{display:flex;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid rgba(189,207,206,.4)}
   .sc-history-row:last-child{border-bottom:none}
   .sc-history-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
@@ -81,7 +82,7 @@ function HistoryRow({ h }) {
         <div className="sc-history-date">{fmtDate(h.created_at)}</div>
         {h.type === 'commission' && <div className="sc-history-source">From {h.source} · Level {h.level} · {h.order_id}</div>}
         {h.type === 'debit' && <div className="sc-history-source">Used for order {h.order_id}</div>}
-        {h.type === 'admin_credit' && <div className="sc-history-source">Sent by {h.source}</div>}
+        {h.type === 'admin_credit' && <div className="sc-history-source">Send to {h.source}</div>}
       </div>
       <span className="sc-method-tag" style={{ background: METHOD_TAG_BG[h.payment_method] || METHOD_TAG_BG.other, color: METHOD_COLORS[h.payment_method] || RED }}>
         {methodLabel}
@@ -108,17 +109,61 @@ export default function SuperAdminSendCoins() {
   const [banner, setBanner] = useState(null)
   const debounceRef = useRef(null)
 
-  const [fullHistory, setFullHistory] = useState([])
+  // ── recentList / historyList — ID search pண்ணாma "All Sent" data, search pண்ணின apram andha user-oda data ──
+  const [recentList, setRecentList] = useState([])
+  const [historyList, setHistoryList] = useState([])
   const [historyPage, setHistoryPage] = useState(1)
   const [hasMoreHistory, setHasMoreHistory] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [loadingHistory, setLoadingHistory] = useState(true)
   const [activeFilter, setActiveFilter] = useState('all')
+
+  const fetchDefaultHistory = async (page = 1, period = 'all') => {
+    setLoadingHistory(page === 1)
+    try {
+      const { default: api } = await import('../api')
+      const res = await api.get(`/admin/sent-history/?page=${page}&period=${period}`)
+      setHistoryList(prev => page === 1 ? res.data.items : [...prev, ...res.data.items])
+      if (page === 1) setRecentList(res.data.items.slice(0, 5))
+      setHasMoreHistory(res.data.has_more)
+      setHistoryPage(page)
+    } catch {
+      // silent
+    } finally {
+      setLoadingHistory(false)
+      setLoadingMore(false)
+    }
+  }
+
+  const fetchUserHistory = async (userPk, page = 1, period = 'all') => {
+    setLoadingHistory(page === 1)
+    try {
+      const { default: api } = await import('../api')
+      const res = await api.get(`/admin/user-history/?user_pk=${userPk}&page=${page}&period=${period}`)
+      setHistoryList(prev => page === 1 ? res.data.items : [...prev, ...res.data.items])
+      setHasMoreHistory(res.data.has_more)
+      setHistoryPage(page)
+    } catch {
+      // silent
+    } finally {
+      setLoadingHistory(false)
+      setLoadingMore(false)
+    }
+  }
+
+  // ── Page open aana odane — ID edhume search pண்ணாma, default "All Sent" data ──
+  useEffect(() => { fetchDefaultHistory(1, 'all') }, [])
 
   useEffect(() => {
     setFoundUser(null)
     setSearchError('')
-    setFullHistory([])
-    if (!userId.trim()) return
+
+    if (!userId.trim()) {
+      // ── ID box empty pண்ணinaa, thirumba default "All Sent" view ku poyidum ──
+      setActiveFilter('all')
+      fetchDefaultHistory(1, 'all')
+      return
+    }
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
@@ -127,7 +172,9 @@ export default function SuperAdminSendCoins() {
         const { default: api } = await import('../api')
         const res = await api.get(`/users/lookup/?id=${encodeURIComponent(userId.trim())}`)
         setFoundUser(res.data)
-        fetchFullHistory(res.data.user_pk, 1, 'all')
+        setRecentList(res.data.recent_history || [])
+        setActiveFilter('all')
+        fetchUserHistory(res.data.user_pk, 1, 'all')
       } catch (err) {
         setSearchError(err.response?.data?.error || 'No user found with this ID')
       } finally {
@@ -138,29 +185,16 @@ export default function SuperAdminSendCoins() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [userId])
 
-  const fetchFullHistory = async (userPk, page = 1, period = activeFilter) => {
-    try {
-      const { default: api } = await import('../api')
-      const res = await api.get(`/admin/user-history/?user_pk=${userPk}&page=${page}&period=${period}`)
-      setFullHistory(prev => page === 1 ? res.data.items : [...prev, ...res.data.items])
-      setHasMoreHistory(res.data.has_more)
-      setHistoryPage(page)
-    } catch {
-      // silent
-    } finally {
-      setLoadingMore(false)
-    }
-  }
-
   const handleFilterClick = key => {
     setActiveFilter(key)
-    if (foundUser) fetchFullHistory(foundUser.user_pk, 1, key)
+    if (foundUser) fetchUserHistory(foundUser.user_pk, 1, key)
+    else fetchDefaultHistory(1, key)
   }
 
   const loadMore = () => {
-    if (!foundUser) return
     setLoadingMore(true)
-    fetchFullHistory(foundUser.user_pk, historyPage + 1, activeFilter)
+    if (foundUser) fetchUserHistory(foundUser.user_pk, historyPage + 1, activeFilter)
+    else fetchDefaultHistory(historyPage + 1, activeFilter)
   }
 
   const coinsPreview = amount > 0 ? Math.floor(Number(amount) * COIN_RATE) : 0
@@ -174,10 +208,11 @@ export default function SuperAdminSendCoins() {
       const res = await api.post('/admin/send-coins/', { user_pk: foundUser.user_pk, amount: Number(amount) })
       setBanner({ type: 'success', text: `${res.data.coins_sent.toLocaleString('en-IN')} coins sent to ${foundUser.name}!` })
       setAmount('')
-      fetchFullHistory(foundUser.user_pk, 1, activeFilter)
+      fetchUserHistory(foundUser.user_pk, 1, activeFilter)
       const { default: api2 } = await import('../api')
       const refreshed = await api2.get(`/users/lookup/?id=${encodeURIComponent(userId.trim())}`)
       setFoundUser(refreshed.data)
+      setRecentList(refreshed.data.recent_history || [])
     } catch (err) {
       setBanner({ type: 'error', text: err.response?.data?.error || 'Unable to send coins. Please try again.' })
     } finally {
@@ -243,44 +278,48 @@ export default function SuperAdminSendCoins() {
           </section>
         </div>
 
-        {foundUser && (
-          <>
-            <section className="sc-card" style={{ marginBottom: 20 }}>
-              <h3 className="sc-section-title">Recent Recharges</h3>
-              {(foundUser.recent_history || []).length === 0 ? (
-                <div className="sc-empty">No transactions yet</div>
-              ) : (
-                foundUser.recent_history.map(h => <HistoryRow key={h.id} h={h} />)
-              )}
-            </section>
+        {/* ── Recent Recharges + Transaction History — evllovadhum kaamikkum,
+            ID search pண்ணadha "All Sent", search pண்ணina andha user-oda data ── */}
+        <section className="sc-card" style={{ marginBottom: 20 }}>
+          <h3 className="sc-section-title">Recent Recharges</h3>
+          <p className="sc-section-sub">{foundUser ? `${foundUser.name}'s recent activity` : 'All coins sent, across every user'}</p>
+          {loadingHistory ? (
+            <div className="sc-empty">Loading...</div>
+          ) : recentList.length === 0 ? (
+            <div className="sc-empty">No transactions yet</div>
+          ) : (
+            recentList.slice(0, 5).map(h => <HistoryRow key={h.id} h={h} />)
+          )}
+        </section>
 
-            <section className="sc-card">
-              <h3 className="sc-section-title">Transaction History</h3>
-              <div className="sc-filter-tabs">
-                {FILTERS.map(f => (
-                  <button
-                    key={f.key}
-                    type="button"
-                    className={`sc-filter-tab ${activeFilter === f.key ? 'active' : ''}`}
-                    onClick={() => handleFilterClick(f.key)}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-              {fullHistory.length === 0 ? (
-                <div className="sc-empty">No transactions in this period</div>
-              ) : (
-                fullHistory.map(h => <HistoryRow key={h.id} h={h} />)
-              )}
-              {hasMoreHistory && (
-                <button className="sc-loadmore" onClick={loadMore} disabled={loadingMore}>
-                  {loadingMore ? 'Loading...' : 'Load More'}
-                </button>
-              )}
-            </section>
-          </>
-        )}
+        <section className="sc-card">
+          <h3 className="sc-section-title">Transaction History</h3>
+          <p className="sc-section-sub">{foundUser ? `${foundUser.name}'s full history` : 'All coins sent, across every user'}</p>
+          <div className="sc-filter-tabs">
+            {FILTERS.map(f => (
+              <button
+                key={f.key}
+                type="button"
+                className={`sc-filter-tab ${activeFilter === f.key ? 'active' : ''}`}
+                onClick={() => handleFilterClick(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          {loadingHistory ? (
+            <div className="sc-empty">Loading...</div>
+          ) : historyList.length === 0 ? (
+            <div className="sc-empty">No transactions in this period</div>
+          ) : (
+            historyList.map(h => <HistoryRow key={h.id} h={h} />)
+          )}
+          {hasMoreHistory && (
+            <button className="sc-loadmore" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? 'Loading...' : 'Load More'}
+            </button>
+          )}
+        </section>
       </main>
     </div>
   )

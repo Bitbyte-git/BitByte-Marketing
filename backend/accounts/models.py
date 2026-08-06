@@ -858,7 +858,31 @@ class CoinRecharge(models.Model):
         sign = '+' if self.entry_type == 'credit' else '-'
         return f"{self.user.email} - {sign}₹{self.amount_paid} - {self.coins_credited} coins ({self.source})"
 
+# ── AUTOPAY / RECURRING MANDATE SYSTEM (Razorpay Subscriptions) ──
+class AutoPayMandate(models.Model):
+    STATUS_CHOICES = [
+        ('created', 'Created'),        # subscription created, waiting for user authorize
+        ('authenticated', 'Authenticated'),  # user authorized UPI mandate
+        ('active', 'Active'),          # mandate active, charges will happen
+        ('paused', 'Paused'),          # user turned OFF
+        ('cancelled', 'Cancelled'),
+        ('halted', 'Halted'),          # razorpay halted due to failure
+    ]
 
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='autopay_mandate')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)   # ₹ per cycle
+    recharge_day = models.PositiveIntegerField()   # 1-31, day of month for charge
+    razorpay_plan_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='created')
+    is_active = models.BooleanField(default=False)   # true only when status == 'active'
+    next_charge_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.email} — ₹{self.amount} on day {self.recharge_day} ({self.status})"
+    
 # ── COIN REWARDS SYSTEM ──
 class DailyLoginLog(models.Model):
     """Every day user login pannumbodhu, oru entry create aagum. Streak calculate panna idhu than base."""

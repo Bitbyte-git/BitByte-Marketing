@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge, AutoPayMandate
 from django.db.models import Prefetch, Count, Q, Sum
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
 from .serializers import *
@@ -4086,6 +4086,209 @@ class AdminUserHistoryView(APIView):
             'items': [_serialize_coin_entry(r) for r in items],
         })
 
+
+# ── AUTOPAY / RECURRING MANDATE SYSTEM ──
+
+def _next_occurrence(day):
+    """Given day-of-month, return the next date this month/next month it falls on."""
+    from datetime import date
+    import calendar
+    today = timezone.now().date()
+    last_day_this_month = calendar.monthrange(today.year, today.month)[1]
+    safe_day = min(day, last_day_this_month)
+    candidate = today.replace(day=safe_day)
+    if candidate <= today:
+        # move to next month
+        if today.month == 12:
+            ny, nm = today.year + 1, 1
+        else:
+            ny, nm = today.year, today.month + 1
+        last_day_next_month = calendar.monthrange(ny, nm)[1]
+        safe_day = min(day, last_day_next_month)
+        candidate = date(ny, nm, safe_day)
+    return candidate
+
+
+class AutoPayCreateView(APIView):
+    """Autopay ON pண்ண — Razorpay Plan + Subscription create pண்ணி, frontend-ku
+    subscription_id anuppுவோம். User idha vechi Razorpay checkout-la UPI mandate authorize pண்ணுவாரு."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        amount = request.data.get('amount')
+        recharge_day = request.data.get('recharge_day')
+
+        try:
+            amount = float(amount)
+            recharge_day = int(recharge_day)
+        except (TypeError, ValueError):
+            return Response({'error': 'Valid amount and recharge_day required'}, status=400)
+
+        if amount <= 0 or not (1 <= recharge_day <= 31):
+            return Response({'error': 'Invalid amount or day'}, status=400)
+
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+        # ── Plan create (idhu amount + monthly cycle define pண்ணும்) ──
+        plan = client.plan.create({
+            "period": "monthly",
+            "interval": 1,
+            "item": {
+                "name": f"BitByte Wallet Autopay ₹{amount}",
+                "amount": int(amount * 100),
+                "currency": "INR",
+            }
+        })
+
+        next_date = _next_occurrence(recharge_day)
+        start_at = int(timezone.datetime.combine(next_date, timezone.datetime.min.time()).timestamp())
+
+        subscription = client.subscription.create({
+            "plan_id": plan['id'],
+            "customer_notify": 1,
+            "total_count": 120,   # 10 years worth of monthly cycles
+            "start_at": start_at,
+            "notes": {"user_id": str(request.user.id)},
+        })
+
+        mandate, _ = AutoPayMandate.objects.update_or_create(
+            user=request.user,
+            defaults={
+                'amount': amount,
+                'recharge_day': recharge_day,
+                'razorpay_plan_id': plan['id'],
+                'razorpay_subscription_id': subscription['id'],
+                'status': 'created',
+                'is_active': False,
+                'next_charge_date': next_date,
+            }
+        )
+
+        return Response({
+            'subscription_id': subscription['id'],
+            'key': settings.RAZORPAY_KEY_ID,
+            'amount': amount,
+            'mandate_id': mandate.id,
+        }, status=201)
+
+
+class AutoPayConfirmView(APIView):
+    """Frontend-la user UPI mandate authorize pண்ணி Razorpay handler success aana odane
+    idha call pண்ணி status update pண்ணும்."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        subscription_id = request.data.get('razorpay_subscription_id')
+        payment_id = request.data.get('razorpay_payment_id')
+        signature = request.data.get('razorpay_signature')
+
+        try:
+            mandate = AutoPayMandate.objects.get(user=request.user, razorpay_subscription_id=subscription_id)
+        except AutoPayMandate.DoesNotExist:
+            return Response({'error': 'Mandate not found'}, status=404)
+
+        body = payment_id + "|" + subscription_id
+        expected_sig = hmac.new(
+            settings.RAZORPAY_KEY_SECRET.encode(), body.encode(), hashlib.sha256
+        ).hexdigest()
+        if expected_sig != signature:
+            return Response({'error': 'Invalid signature'}, status=400)
+
+        mandate.status = 'active'
+        mandate.is_active = True
+        mandate.save(update_fields=['status', 'is_active'])
+
+        return Response({'message': 'Autopay enabled successfully!', 'status': mandate.status})
+
+
+class AutoPayStatusView(APIView):
+    """Current user oda autopay mandate fetch pண்ணும் (button/modal state ku)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        mandate = AutoPayMandate.objects.filter(user=request.user).first()
+        if not mandate:
+            return Response({'exists': False})
+        return Response({'exists': True, **AutoPayMandateSerializer(mandate).data})
+
+
+class AutoPayToggleView(APIView):
+    """ON → resume pண்ணும். OFF → pause pண்ணும். Razorpay API mூலம்."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        action = request.data.get('action')   # 'on' or 'off'
+        try:
+            mandate = AutoPayMandate.objects.get(user=request.user)
+        except AutoPayMandate.DoesNotExist:
+            return Response({'error': 'No autopay mandate found'}, status=404)
+
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+        if action == 'off':
+            client.subscription.pause(mandate.razorpay_subscription_id, {"pause_at": "now"})
+            mandate.status = 'paused'
+            mandate.is_active = False
+        elif action == 'on':
+            client.subscription.resume(mandate.razorpay_subscription_id, {"resume_at": "now"})
+            mandate.status = 'active'
+            mandate.is_active = True
+        else:
+            return Response({'error': 'action must be on or off'}, status=400)
+
+        mandate.save(update_fields=['status', 'is_active'])
+        return Response({'message': f'Autopay turned {action}', 'status': mandate.status})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def autopay_webhook(request):
+    """Razorpay webhook — subscription.charged event vந்தா wallet ku coins credit pண்ணும்.
+    Razorpay Dashboard la webhook URL: https://yourdomain.com/api/autopay/webhook/
+    Event: subscription.charged"""
+    payload = request.body
+    signature = request.headers.get('X-Razorpay-Signature', '')
+
+    try:
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        client.utility.verify_webhook_signature(
+            payload.decode(), signature, settings.RAZORPAY_WEBHOOK_SECRET
+        )
+    except Exception:
+        return Response({'error': 'Invalid webhook signature'}, status=400)
+
+    data = request.data
+    event = data.get('event')
+
+    if event == 'subscription.charged':
+        sub_entity = data['payload']['subscription']['entity']
+        payment_entity = data['payload']['payment']['entity']
+        subscription_id = sub_entity['id']
+
+        try:
+            mandate = AutoPayMandate.objects.get(razorpay_subscription_id=subscription_id)
+        except AutoPayMandate.DoesNotExist:
+            return Response({'status': 'ignored'})
+
+        amount = Decimal(payment_entity['amount']) / 100
+        coins = int(amount * COIN_RATE_PER_RUPEE)
+
+        wallet, _ = Wallet.objects.get_or_create(user=mandate.user)
+        wallet.balance_coins += coins
+        wallet.save(update_fields=['balance_coins'])
+
+        CoinRecharge.objects.create(
+            user=mandate.user, amount_paid=amount, coins_credited=coins,
+            payment_method='upi', status='success',
+            entry_type='credit', source='recharge',
+            razorpay_payment_id=payment_entity['id'],
+            transaction_id=generate_transaction_id(),
+        )
+
+        mandate.next_charge_date = _next_occurrence(mandate.recharge_day)
+        mandate.save(update_fields=['next_charge_date'])
+
+    return Response({'status': 'ok'})
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
