@@ -15,6 +15,8 @@ from django.db.models.functions import TruncMonth
 import razorpay
 import hmac
 import hashlib
+import random
+import string
 from django.conf import settings
 from io import BytesIO
 from django.http import FileResponse
@@ -3492,7 +3494,19 @@ class PromotionNodeListView(APIView):
 
 
 # ── WALLET RECHARGE SYSTEM ──
-COIN_RATE_PER_RUPEE = 100   # 1 Rs = 100 coins
+COIN_RATE_PER_RUPEE = 100
+
+
+def generate_transaction_id():
+    """BB + YYMMDD + 6 random alphanumeric chars — example: BB260806A3F9K2"""
+    date_part = timezone.now().strftime('%y%m%d')
+    rand_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    txn_id = f'BB{date_part}{rand_part}'
+    # ── Unique-a confirm pண்ணு, romba rare-a collision aana retry pண்ணு ──
+    while CoinRecharge.objects.filter(transaction_id=txn_id).exists():
+        rand_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        txn_id = f'BB{date_part}{rand_part}'
+    return txn_id
 
 
 class RechargeCreateOrderView(APIView):
@@ -3570,7 +3584,8 @@ class RechargeVerifyPaymentView(APIView):
         recharge.razorpay_payment_id = data['razorpay_payment_id']
         recharge.payment_method = method
         recharge.status = 'success'
-        recharge.save(update_fields=['razorpay_payment_id', 'payment_method', 'status'])
+        recharge.transaction_id = generate_transaction_id()   # ── NEW ──
+        recharge.save(update_fields=['razorpay_payment_id', 'payment_method', 'status', 'transaction_id'])
 
         wallet, _ = Wallet.objects.get_or_create(user=request.user)
         wallet.balance_coins += recharge.coins_credited
@@ -3706,13 +3721,14 @@ def _serialize_coin_entry(r):
         'source': None,
         'level': r.commission_level,
         'order_id': r.related_order.order_id if r.related_order else None,
+        'transaction_id': r.transaction_id,   # ── NEW ──
         'created_at': r.created_at,
     }
     if r.source == 'commission' and r.related_order:
         buyer = r.related_order.user
         entry['source'] = get_user_profile_id(buyer) or buyer.email
-    elif r.source == 'BBTEAM Credit':
-        entry['source'] = 'Super Admin'
+    elif r.source == 'admin_credit' and r.entry_type == 'credit':
+        entry['source'] = 'BBTEAM'   # ── mattum credit (receiver) side la kaamikkum ──
     return entry
 
 
@@ -3913,7 +3929,7 @@ class PaymentsSummaryView(APIView):
             'has_more': start + page_size < total_transactions,
             'transactions': [
                 {
-                    'transaction_id': r.razorpay_payment_id or '—',
+                    'transaction_id': r.transaction_id or r.razorpay_payment_id or '—',
                     'buyer': get_user_profile_id(r.user) or r.user.email,
                     'amount': float(r.amount_paid),
                     'coins': r.coins_credited,
@@ -3925,8 +3941,8 @@ class PaymentsSummaryView(APIView):
 
 
 def _find_user_by_public_id(public_id):
-    """Customer/Promotor/SubDealer/Dealer/Admin ID (BBCUS20260001 mாதிri) vачி User-ஐ kண்டுpiடிக்கும்.
-    Field names app convention padi assume pண்ணிருக்கேன் — wrong-a irundha fix pண்ணனum."""
+    """Customer/Promotor/SubDealer/Dealer/Admin ID (BBCUS20260001 mாதிri) vачி User + Profile
+    rendும் return pண்ணும் — name/phone Profile model la than irukku, User model la illa."""
     lookups = [
         (CustomerProfile, 'customer_id'),
         (PromotorProfile, 'promotor_id'),
@@ -3937,14 +3953,16 @@ def _find_user_by_public_id(public_id):
     for model, field in lookups:
         try:
             profile = model.objects.select_related('user').get(**{field: public_id})
-            return profile.user
-        except (model.DoesNotExist, Exception):
+            return profile.user, profile
+        except model.DoesNotExist:
             continue
-    return None
+        except Exception:
+            continue
+    return None, None
 
 
 class UserLookupView(APIView):
-    """Super Admin ID type pண்ணும்போது, andha person-oda details fetch pண்ணும்."""
+    """Super Admin ID type pண்ணும்போது, andha person-oda details + recent history fetch pண்ணும்."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -3955,26 +3973,40 @@ class UserLookupView(APIView):
         if not public_id:
             return Response({'error': 'ID required'}, status=400)
 
-        target_user = _find_user_by_public_id(public_id)
+        target_user, profile = _find_user_by_public_id(public_id)
         if not target_user:
             return Response({'error': 'No user found with this ID'}, status=404)
 
+        # ── Name/phone Profile model la irundhu than fetch pண்ணрадhு, User model la illa ──
+        first = getattr(profile, 'first_name', '') or ''
+        last = getattr(profile, 'last_name', '') or ''
+        name = f'{first} {last}'.strip() or target_user.email
+        phone = (
+            getattr(profile, 'phone', '') or getattr(profile, 'phone_number', '')
+            or getattr(profile, 'mobile', '') or getattr(profile, 'mobile_number', '') or '—'
+        )
+
         wallet, _ = Wallet.objects.get_or_create(user=target_user)
+        history = CoinRecharge.objects.filter(
+            user=target_user, status='success'
+        ).select_related('related_order__user').order_by('-created_at')[:5]
 
         return Response({
             'user_pk': target_user.id,
             'public_id': public_id,
-            'name': f'{getattr(target_user, "first_name", "")} {getattr(target_user, "last_name", "")}'.strip() or target_user.email,
+            'name': name,
             'email': target_user.email,
-            'phone': getattr(target_user, 'phone', '') or getattr(target_user, 'phone_number', '') or '—',
+            'phone': phone,
             'role': target_user.role,
             'balance_coins': wallet.balance_coins,
+            'recent_history': [_serialize_coin_entry(r) for r in history],
         })
 
 
 class SendCoinsView(APIView):
     """Super Admin directly ஒரு user ku coins credit pண்ணும் — commission chain
-    touch pண்ணadhu, idhu manual admin gift."""
+    touch pண்ணadhu, idhu manual admin gift. Super Admin swanth wallet la irundhu
+    coins actual-a reduce aagum (customer balance mாтிri than)."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -3998,20 +4030,81 @@ class SendCoinsView(APIView):
 
         coins = int(amount * COIN_RATE_PER_RUPEE)
 
-        wallet, _ = Wallet.objects.get_or_create(user=target_user)
-        wallet.balance_coins += coins
-        wallet.save(update_fields=['balance_coins'])
+        # ── NEW: Super Admin swanth wallet la balance check pண்ணு ──
+        admin_wallet, _ = Wallet.objects.get_or_create(user=request.user)
+        if admin_wallet.balance_coins < coins:
+            return Response({
+                'error': 'Insufficient AUG coins in your own account',
+                'balance_coins': admin_wallet.balance_coins,
+                'coins_needed': coins,
+            }, status=400)
 
+        txn_id = generate_transaction_id()
+
+        # ── Super Admin wallet la irundhu deduct pண்ணு ──
+        admin_wallet.balance_coins -= coins
+        admin_wallet.save(update_fields=['balance_coins'])
+        CoinRecharge.objects.create(
+            user=request.user, amount_paid=amount, coins_credited=coins,
+            payment_method='admin', status='success',
+            entry_type='debit', source='admin_credit',
+            transaction_id=txn_id,
+        )
+
+        # ── Target user wallet ku credit pண்ணு ──
+        target_wallet, _ = Wallet.objects.get_or_create(user=target_user)
+        target_wallet.balance_coins += coins
+        target_wallet.save(update_fields=['balance_coins'])
         CoinRecharge.objects.create(
             user=target_user, amount_paid=amount, coins_credited=coins,
             payment_method='admin', status='success',
             entry_type='credit', source='admin_credit',
+            transaction_id=txn_id,
         )
 
         return Response({
             'status': 'success',
+            'transaction_id': txn_id,
             'coins_sent': coins,
-            'balance_coins': wallet.balance_coins,
+            'admin_balance_coins': admin_wallet.balance_coins,
+            'balance_coins': target_wallet.balance_coins,
+        })
+
+
+class AdminUserHistoryView(APIView):
+    """Super Admin ku — edho oru target user oda full coin transaction history,
+    paginated + period filter kூட (Recharge.jsx Transaction History mாтிри)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Not authorized'}, status=403)
+
+        user_pk = request.query_params.get('user_pk')
+        try:
+            target_user = User.objects.get(id=user_pk)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
+        page = max(int(request.query_params.get('page', 1)), 1)
+        page_size = 10
+        period = request.query_params.get('period', 'all')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        qs = CoinRecharge.objects.filter(user=target_user, status='success')
+        qs = _apply_period_filter(qs, period, start_date, end_date)
+        qs = qs.select_related('related_order__user').order_by('-created_at')
+
+        total = qs.count()
+        start = (page - 1) * page_size
+        items = qs[start:start + page_size]
+
+        return Response({
+            'page': page,
+            'total': total,
+            'has_more': start + page_size < total,
+            'items': [_serialize_coin_entry(r) for r in items],
         })
 
 

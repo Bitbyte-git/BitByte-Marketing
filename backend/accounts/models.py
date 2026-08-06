@@ -851,6 +851,7 @@ class CoinRecharge(models.Model):
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='recharge')
     related_order = models.ForeignKey('JewelryOrder', on_delete=models.SET_NULL, null=True, blank=True, related_name='coin_entries')
     commission_level = models.PositiveIntegerField(null=True, blank=True)
+    transaction_id = models.CharField(max_length=20, unique=True, blank=True, null=True)   # ── NEW: BB+YYMMDD+6chars ──
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
