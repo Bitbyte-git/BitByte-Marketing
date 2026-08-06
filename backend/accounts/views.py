@@ -1518,12 +1518,15 @@ def distribute_commission(order):
         wallet.balance_coins += coins
         wallet.save(update_fields=['balance_coins'])
 
-        CoinRecharge.objects.create(
-            user=creator_user, amount_paid=amount, coins_credited=coins,
-            payment_method='commission', status='success',
-            entry_type='credit', source='commission',
-            related_order=order, commission_level=level,
-        )
+        try:
+            CoinRecharge.objects.create(
+                user=creator_user, amount_paid=amount, coins_credited=coins,
+                payment_method='commission', status='success',
+                entry_type='credit', source='commission',
+                related_order=order, commission_level=level,
+            )
+        except Exception as e:
+            print(f'❌ Commission log FAILED for {creator_user.email}:', repr(e))
         remaining_percent -= pct
 
     # ── Balance percent (evlo mudியalaiyோ) — direct Super Admin ku ──
@@ -1537,12 +1540,15 @@ def distribute_commission(order):
             wallet.balance_coins += coins
             wallet.save(update_fields=['balance_coins'])
 
-            CoinRecharge.objects.create(
-                user=super_admin, amount_paid=amount, coins_credited=coins,
-                payment_method='commission', status='success',
-                entry_type='credit', source='commission',
-                related_order=order, commission_level=0,
-            )
+            try:
+                CoinRecharge.objects.create(
+                    user=super_admin, amount_paid=amount, coins_credited=coins,
+                    payment_method='commission', status='success',
+                    entry_type='credit', source='commission',
+                    related_order=order, commission_level=0,
+                )
+            except Exception as e:
+                print('❌ Super Admin commission log FAILED:', repr(e))
 
 
 # ── VIEW 1: Razorpay Order Create ──
@@ -3805,14 +3811,21 @@ class PayWithCoinsView(APIView):
         wallet.save(update_fields=['balance_coins'])
 
         # ── NEW: debit entry — history la "DEBIT" ah kaamikkanum, adhே CoinRecharge table la ──
-        CoinRecharge.objects.create(
-            user=request.user, amount_paid=total_price, coins_credited=coins_needed,
-            payment_method='purchase', status='success',
-            entry_type='debit', source='purchase',
-            related_order=order,
-        )
+        try:
+            CoinRecharge.objects.create(
+                user=request.user, amount_paid=total_price, coins_credited=coins_needed,
+                payment_method='purchase', status='success',
+                entry_type='debit', source='purchase',
+                related_order=order,
+            )
+        except Exception as e:
+            print(f'❌ Debit log FAILED for {request.user.email}:', repr(e))
 
         # ── Commission distribute pண்ணு ──
+        try:
+            distribute_commission(order)
+        except Exception as e:
+            print('❌ distribute_commission FAILED:', repr(e))
         distribute_commission(order)
 
         return Response({
