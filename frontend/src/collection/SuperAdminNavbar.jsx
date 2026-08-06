@@ -78,6 +78,7 @@ export default function SuperAdminNavbar({
   ]
   const payment = [
     ['Revenue & Payments', () => navigate('/superadmin-payments')],
+    ['Add AUG Coins', () => navigate('/superadmin-send-coins')],
   ]
 
   const MenuGroup = ({ label, items, footer }) => (

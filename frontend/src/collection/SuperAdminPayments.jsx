@@ -72,6 +72,8 @@ export default function SuperAdminPayments() {
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
 
+  const [loadError, setLoadError] = useState(false)
+
   const fetchData = async (p = 1, period = activeFilter, from = customFrom, to = customTo) => {
     try {
       const { default: api } = await import('../api')
@@ -87,8 +89,9 @@ export default function SuperAdminPayments() {
       setTxns(prev => p === 1 ? res.data.transactions : [...prev, ...res.data.transactions])
       setHasMore(res.data.has_more)
       setPage(p)
+      setLoadError(false)
     } catch {
-      // silent
+      setLoadError(true)
     } finally {
       setLoading(false)
       setLoadingMore(false)

@@ -820,6 +820,7 @@ class CoinRecharge(models.Model):
         ('wallet', 'Wallet'),
         ('commission', 'Commission'),
         ('purchase', 'Purchase'),
+        ('admin', 'BBTEAM'),
         ('other', 'Other'),
     ]
     STATUS_CHOICES = [
@@ -836,6 +837,7 @@ class CoinRecharge(models.Model):
         ('recharge', 'Recharge'),
         ('commission', 'Commission'),
         ('purchase', 'Purchase'),
+        ('admin_credit', 'BBTEAM Credit'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='coin_recharges')

@@ -409,8 +409,11 @@ export default function Recharge() {
                         {h.type === 'debit' && (
                           <div className="rc-history-source">Used for order {h.order_id}</div>
                         )}
+                        {h.type === 'admin_credit' && (
+                          <div className="rc-history-source">Sent by {h.source}</div>
+                        )}
                       </div>
-                      <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
+                      <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method === 'admin' ? 'BBTEAM' : h.payment_method}</span>
                     </div>
                   )
                 })
@@ -503,8 +506,11 @@ export default function Recharge() {
                         {h.type === 'debit' && (
                           <div className="rc-history-source">Used for order {h.order_id}</div>
                         )}
+                        {h.type === 'admin_credit' && (
+                          <div className="rc-history-source">Sent by {h.source}</div>
+                        )}
                       </div>
-                      <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method}</span>
+                      <span className={`rc-method-tag ${h.payment_method}`}>{h.payment_method === 'admin' ? 'BBTEAM' : h.payment_method}</span>
                     </div>
                   </div>
                 )

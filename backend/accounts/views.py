@@ -3711,6 +3711,8 @@ def _serialize_coin_entry(r):
     if r.source == 'commission' and r.related_order:
         buyer = r.related_order.user
         entry['source'] = get_user_profile_id(buyer) or buyer.email
+    elif r.source == 'BBTEAM Credit':
+        entry['source'] = 'Super Admin'
     return entry
 
 
@@ -3919,6 +3921,97 @@ class PaymentsSummaryView(APIView):
                     'created_at': r.created_at,
                 } for r in page_txns
             ],
+        })
+
+
+def _find_user_by_public_id(public_id):
+    """Customer/Promotor/SubDealer/Dealer/Admin ID (BBCUS20260001 mாதிri) vачி User-ஐ kண்டுpiடிக்கும்.
+    Field names app convention padi assume pண்ணிருக்கேன் — wrong-a irundha fix pண்ணனum."""
+    lookups = [
+        (CustomerProfile, 'customer_id'),
+        (PromotorProfile, 'promotor_id'),
+        (SubDealerProfile, 'sub_dealer_id'),
+        (DealerProfile, 'dealer_id'),
+        (AdminProfile, 'admin_id'),
+    ]
+    for model, field in lookups:
+        try:
+            profile = model.objects.select_related('user').get(**{field: public_id})
+            return profile.user
+        except (model.DoesNotExist, Exception):
+            continue
+    return None
+
+
+class UserLookupView(APIView):
+    """Super Admin ID type pண்ணும்போது, andha person-oda details fetch pண்ணும்."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Not authorized'}, status=403)
+
+        public_id = request.query_params.get('id', '').strip()
+        if not public_id:
+            return Response({'error': 'ID required'}, status=400)
+
+        target_user = _find_user_by_public_id(public_id)
+        if not target_user:
+            return Response({'error': 'No user found with this ID'}, status=404)
+
+        wallet, _ = Wallet.objects.get_or_create(user=target_user)
+
+        return Response({
+            'user_pk': target_user.id,
+            'public_id': public_id,
+            'name': f'{getattr(target_user, "first_name", "")} {getattr(target_user, "last_name", "")}'.strip() or target_user.email,
+            'email': target_user.email,
+            'phone': getattr(target_user, 'phone', '') or getattr(target_user, 'phone_number', '') or '—',
+            'role': target_user.role,
+            'balance_coins': wallet.balance_coins,
+        })
+
+
+class SendCoinsView(APIView):
+    """Super Admin directly ஒரு user ku coins credit pண்ணும் — commission chain
+    touch pண்ணadhu, idhu manual admin gift."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Not authorized'}, status=403)
+
+        data = request.data
+        user_pk = data.get('user_pk')
+        try:
+            amount = Decimal(str(data.get('amount', 0)))
+        except Exception:
+            return Response({'error': 'Invalid amount'}, status=400)
+
+        if amount <= 0:
+            return Response({'error': 'Enter a valid amount'}, status=400)
+
+        try:
+            target_user = User.objects.get(id=user_pk)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
+        coins = int(amount * COIN_RATE_PER_RUPEE)
+
+        wallet, _ = Wallet.objects.get_or_create(user=target_user)
+        wallet.balance_coins += coins
+        wallet.save(update_fields=['balance_coins'])
+
+        CoinRecharge.objects.create(
+            user=target_user, amount_paid=amount, coins_credited=coins,
+            payment_method='admin', status='success',
+            entry_type='credit', source='admin_credit',
+        )
+
+        return Response({
+            'status': 'success',
+            'coins_sent': coins,
+            'balance_coins': wallet.balance_coins,
         })
 
 
