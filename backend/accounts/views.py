@@ -3728,7 +3728,7 @@ def _serialize_coin_entry(r):
         buyer = r.related_order.user
         entry['source'] = get_user_profile_id(buyer) or buyer.email
     elif r.source == 'admin_credit' and r.entry_type == 'credit':
-        entry['source'] = 'BBTEAM'   # ── mattum credit (receiver) side la kaamikkum ──
+        entry['source'] = get_user_profile_id(r.user) or r.user.email
     return entry
 
 
@@ -4074,6 +4074,35 @@ class AdminUserHistoryView(APIView):
         qs = CoinRecharge.objects.filter(user=target_user, status='success', source='admin_credit')
         qs = _apply_period_filter(qs, period, start_date, end_date)
         qs = qs.select_related('related_order__user').order_by('-created_at')
+
+        total = qs.count()
+        start = (page - 1) * page_size
+        items = qs[start:start + page_size]
+
+        return Response({
+            'page': page,
+            'total': total,
+            'has_more': start + page_size < total,
+            'items': [_serialize_coin_entry(r) for r in items],
+        })
+
+
+class AdminSentHistoryView(APIView):
+    """Super Admin ku — ID edhுவும் search pண்ணாthapothு default-a kaamikkும் view.
+    Ella users-ku-um naan (super admin) kudutha coins (admin_credit) mattum, paginated."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Not authorized'}, status=403)
+
+        page = max(int(request.query_params.get('page', 1)), 1)
+        page_size = 10
+        period = request.query_params.get('period', 'all')
+
+        qs = CoinRecharge.objects.filter(status='success', source='admin_credit').select_related('user')
+        qs = _apply_period_filter(qs, period, None, None)
+        qs = qs.order_by('-created_at')
 
         total = qs.count()
         start = (page - 1) * page_size
