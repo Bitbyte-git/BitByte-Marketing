@@ -39,6 +39,7 @@ const OrderConfirm = lazy(() => import('./Orders/Orderconfirm'))
 const OrderSummary = lazy(() => import('./Orders/Ordersummary'))
 const Recharge = lazy(() => import('./collection/Recharge'))
 const OrderPayment = lazy(() => import('./Orders/OrderPayment'))
+const SuperAdminPayments = lazy(() => import('./collection/SuperAdminPayments'))
 const AdminOrdersPage = lazy(() => import('./Orders/Adminorderspage'))
 const Report = lazy(() => import('./Orders/Report'))
 const LoginActive = lazy(() => import('./Orders/login_active'))
@@ -227,6 +228,7 @@ export default function App() {
           <Route path="/order-summary" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><OrderSummary /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/recharge" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><Recharge /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/order-payment" element={<WithCustomerNavbar><OrderPayment /></WithCustomerNavbar>} />
+          <Route path="/superadmin-payments" element={<ProtectedRoute role={["super_admin"]}><WithSuperAdminNavbar><SuperAdminPayments /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/admin-orders" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AdminOrdersPage /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/sales-report" element={<ProtectedRoute><WithInternalRoleNavbar><Report /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/hierarchy-sales-count" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperAdminHierarchySalesCount /></WithSuperAdminNavbar></ProtectedRoute>} />

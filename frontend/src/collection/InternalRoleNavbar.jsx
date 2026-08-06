@@ -52,7 +52,7 @@ export default function InternalRoleNavbar({
       ]
     : []
 
-  const myRewardsItems = [{ label: 'My Rewards (AUG Coin)', path: '/recharge' }]
+  const myRewardsItems = [{ label: 'AUG Coin', path: '/recharge' }]
 
   const groups = [
     { label: 'Management', items: managementItems },
@@ -80,18 +80,30 @@ export default function InternalRoleNavbar({
             </button>
             <nav className="irn-menu">
               {groups.map(group => (
-                <div className="irn-group" key={group.label}>
-                  <button className="irn-trigger" type="button">{group.label}<NavIcon type="chevron" size={15} /></button>
-                  <div className="irn-drop">
-                    <div className="irn-title"><span>D</span>{group.label}</div>
-                    {group.items.map(item => (
-                      <button key={item.label} type="button" className="irn-link" onClick={() => runItem(item)}>
-                        <span>{item.label}</span>
-                        {item.badge ? <span className="irn-badge">{item.badge > 99 ? '99+' : item.badge}</span> : <b>-&gt;</b>}
-                      </button>
-                    ))}
+                group.label === 'My Rewards' ? (
+                  // ── NEW: dropdown illama, direct click-able button ── 
+                  <button
+                    key={group.label}
+                    type="button"
+                    className="irn-trigger"
+                    onClick={() => runItem(group.items[0])}
+                  >
+                    {group.items[0].label}
+                  </button>
+                ) : (
+                  <div className="irn-group" key={group.label}>
+                    <button className="irn-trigger" type="button">{group.label}<NavIcon type="chevron" size={15} /></button>
+                    <div className="irn-drop">
+                      <div className="irn-title"><span>D</span>{group.label}</div>
+                      {group.items.map(item => (
+                        <button key={item.label} type="button" className="irn-link" onClick={() => runItem(item)}>
+                          <span>{item.label}</span>
+                          {item.badge ? <span className="irn-badge">{item.badge > 99 ? '99+' : item.badge}</span> : <b>-&gt;</b>}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )
               ))}
             </nav>
             <div className="irn-actions">

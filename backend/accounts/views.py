@@ -11,6 +11,7 @@ from .serializers import *
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
+from django.db.models.functions import TruncMonth
 import razorpay
 import hmac
 import hashlib
@@ -3833,6 +3834,70 @@ class PayWithCoinsView(APIView):
             'order_id': order.order_id,
             'coins_used': coins_needed,
             'balance_coins': wallet.balance_coins,
+        })
+
+
+class PaymentsSummaryView(APIView):
+    """Super Admin ku mattum — ella customer payment/revenue um oru place la kaamikkum.
+    Real paisa ella um Razorpay settlement mூlam already business bank account ku pogum —
+    idhu report/visibility page mattum than, money move pண்ணادhu."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Not authorized'}, status=403)
+
+        page = max(int(request.query_params.get('page', 1)), 1)
+        page_size = 15
+
+        paid_orders = JewelryOrder.objects.filter(payment_status='paid')
+
+        total_revenue = paid_orders.aggregate(total=Sum('total_price'))['total'] or 0
+
+        total_commission = CoinRecharge.objects.filter(
+            status='success', source='commission'
+        ).aggregate(total=Sum('amount_paid'))['total'] or 0
+
+        company_share = CoinRecharge.objects.filter(
+            status='success', source='commission', user=request.user
+        ).aggregate(total=Sum('amount_paid'))['total'] or 0
+
+        # ── Last 6 months revenue, month-wise — chart ku ──
+        six_months_ago = timezone.now().date() - timedelta(days=180)
+        trend_qs = (
+            paid_orders.filter(created_at__date__gte=six_months_ago)
+            .annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(revenue=Sum('total_price'))
+            .order_by('month')
+        )
+        monthly_trend = [
+            {'month': t['month'].strftime('%b %Y'), 'revenue': float(t['revenue'])}
+            for t in trend_qs
+        ]
+
+        orders_qs = paid_orders.select_related('user').order_by('-created_at')
+        total_orders = orders_qs.count()
+        start = (page - 1) * page_size
+        page_orders = orders_qs[start:start + page_size]
+
+        return Response({
+            'total_revenue': float(total_revenue),
+            'total_commission': float(total_commission),
+            'company_share': float(company_share),
+            'total_orders': total_orders,
+            'monthly_trend': monthly_trend,
+            'page': page,
+            'has_more': start + page_size < total_orders,
+            'orders': [
+                {
+                    'order_id': o.order_id,
+                    'buyer': get_user_profile_id(o.user) or o.user.email,
+                    'amount': float(o.total_price),
+                    'payment_method': o.payment_method,
+                    'created_at': o.created_at,
+                } for o in page_orders
+            ],
         })
 
 

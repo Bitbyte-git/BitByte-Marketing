@@ -76,6 +76,9 @@ export default function SuperAdminNavbar({
     ['Distributor', () => navigate('/promotions/distributor')],
     ['Super Stockist', () => navigate('/promotions/super-stockist')],
   ]
+  const payment = [
+    ['Revenue & Payments', () => navigate('/superadmin-payments')],
+  ]
 
   const MenuGroup = ({ label, items, footer }) => (
     <div className="san-menu-group">
