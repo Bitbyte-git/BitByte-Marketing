@@ -114,10 +114,10 @@ export default function SuperAdminNavbar({
 .san-secure strong { display: block; font-size: 16px; margin-bottom: 8px; }
 .san-secure span { display: block; color: #D1DFDE; font-size: 13px; line-height: 1.6; }
 .san-top-shell { position: sticky; top: 0; z-index: 65; background: rgba(253,253,252,.98); border-bottom: 1px solid rgba(189,207,206,.74); box-shadow: 0 16px 38px rgba(7,59,63,.055); backdrop-filter: blur(16px); }
-.san-top-inner { min-height: 104px; display: flex; align-items: stretch; gap: 24px; padding: 0 32px; }
-.san-navbar-brand { width: 260px; border: 0; background: transparent; display: flex; align-items: center; gap: 14px; padding: 0 30px; cursor: pointer; }
+.san-top-inner { min-height: 104px; display: flex; align-items: stretch; gap: 60px; padding: 0 14px; }
+.san-navbar-brand { width: auto; min-width: 0; flex-shrink: 0; border: 0; background: transparent; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 0; cursor: pointer; }
 .san-navbar-brand img { width: 54px; height: 54px; object-fit: contain; }
-.san-navbar-brand strong { display: block; font-family: Georgia, 'Times New Roman', serif; font-size: 31px; line-height: .95; font-weight: 850; letter-spacing: .04em; color: #073B3F; }
+.san-navbar-brand strong { display: block; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; line-height: .95; font-weight: 850; letter-spacing: .02em; color: #073B3F; }
 .san-navbar-brand small { display: block; margin-top: 5px; color: #BB8958; font-size: 10px; font-weight: 900; letter-spacing: .24em; text-transform: uppercase; }
 .san-search-block { width: 260px; display: flex; align-items: center; padding: 0 18px; }
 .san-search { height: 48px; width: 100%; border: 1px solid rgba(189,207,206,.95); border-radius: 10px; background: #FDFDFC; color: #073B3F; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 14px; font-weight: 700; }

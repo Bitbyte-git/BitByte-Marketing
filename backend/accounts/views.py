@@ -4071,7 +4071,7 @@ class AdminUserHistoryView(APIView):
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
 
-        qs = CoinRecharge.objects.filter(user=target_user, status='success')
+        qs = CoinRecharge.objects.filter(user=target_user, status='success', source='admin_credit')
         qs = _apply_period_filter(qs, period, start_date, end_date)
         qs = qs.select_related('related_order__user').order_by('-created_at')
 

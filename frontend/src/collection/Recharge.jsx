@@ -233,8 +233,9 @@ const handleEnableAutopay = async () => {
     }
     const rzp = new window.Razorpay(options)
     rzp.open()
-  } catch {
-    setBanner({ type: 'error', text: 'Unable to start autopay setup. Please try again.' })
+  } catch (err) {
+    const msg = err?.response?.data?.error || 'Unable to start autopay setup. Please try again.'
+    setBanner({ type: 'error', text: msg })
     setAutopayLoading(false)
   }
 }
