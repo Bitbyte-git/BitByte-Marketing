@@ -4341,6 +4341,29 @@ def autopay_webhook(request):
 
     return Response({'status': 'ok'})
 
+class AutoPayMandateListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+        mandates = AutoPayMandate.objects.select_related('user').order_by('-created_at')
+        results = []
+        for m in mandates:
+            info = get_user_display_info(m.user)
+            results.append({
+                'customer_id': info['user_id_str'],
+                'name': info['name'],
+                'phone': info['phone'],
+                'amount': float(m.amount),
+                'frequency': m.frequency,
+                'recharge_day': m.recharge_day,
+                'status': m.status,
+                'is_active': m.is_active,
+                'next_charge_date': m.next_charge_date,
+            })
+        return Response(results)
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def ping(request):

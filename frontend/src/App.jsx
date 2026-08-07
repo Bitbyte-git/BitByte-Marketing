@@ -39,8 +39,9 @@ const OrderConfirm = lazy(() => import('./Orders/Orderconfirm'))
 const OrderSummary = lazy(() => import('./Orders/Ordersummary'))
 const Recharge = lazy(() => import('./collection/Recharge'))
 const OrderPayment = lazy(() => import('./Orders/OrderPayment'))
-const SuperAdminPayments = lazy(() => import('./collection/SuperAdminPayments'))
-const SuperAdminSendCoins = lazy(() => import('./collection/SuperAdminSendCoins'))
+const SuperAdminPayments = lazy(() => import('./payments/SuperAdminPayments'))
+const SuperAdminSendCoins = lazy(() => import('./payments/SuperAdminSendCoins'))
+const SuperAdminAutopayList = lazy(() => import('./payments/SuperAdminAutopayList'))
 const AdminOrdersPage = lazy(() => import('./Orders/Adminorderspage'))
 const Report = lazy(() => import('./Orders/Report'))
 const LoginActive = lazy(() => import('./Orders/login_active'))
@@ -231,6 +232,7 @@ export default function App() {
           <Route path="/order-payment" element={<WithCustomerNavbar><OrderPayment /></WithCustomerNavbar>} />
           <Route path="/superadmin-payments" element={<ProtectedRoute role={["super_admin"]}><WithSuperAdminNavbar><SuperAdminPayments /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/superadmin-send-coins" element={<ProtectedRoute role={["super_admin"]}><WithSuperAdminNavbar><SuperAdminSendCoins /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/superadmin-autopay-list" element={<ProtectedRoute role={["super_admin"]}><WithSuperAdminNavbar><SuperAdminAutopayList /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/admin-orders" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AdminOrdersPage /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/sales-report" element={<ProtectedRoute><WithInternalRoleNavbar><Report /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/hierarchy-sales-count" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperAdminHierarchySalesCount /></WithSuperAdminNavbar></ProtectedRoute>} />
