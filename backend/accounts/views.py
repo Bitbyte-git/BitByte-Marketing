@@ -4164,7 +4164,11 @@ class AutoPayCreateView(APIView):
 
         try:
             client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-            print('🔑 RAZORPAY KEY (first 8 chars):', settings.RAZORPAY_KEY_ID[:8])
+            print('RAZORPAY KEY (first 8 chars):', settings.RAZORPAY_KEY_ID[:8])
+            print('KEY_ID repr:', repr(settings.RAZORPAY_KEY_ID))
+            print('KEY_ID length:', len(settings.RAZORPAY_KEY_ID))
+            print('SECRET repr masked:', repr(settings.RAZORPAY_KEY_SECRET[:4] + '...' + settings.RAZORPAY_KEY_SECRET[-4:]))
+            print('SECRET length:', len(settings.RAZORPAY_KEY_SECRET))
 
             # ── DEBUG: raw request to see actual Razorpay response ──
             import requests as raw_requests
