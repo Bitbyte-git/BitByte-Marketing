@@ -90,7 +90,7 @@ urlpatterns = [
     path('autopay/status/', AutoPayStatusView.as_view()),
     path('autopay/toggle/', AutoPayToggleView.as_view()),
     path('autopay/webhook/', autopay_webhook),
-    path('api/autopay/mandates/', AutoPayMandateListView.as_view()),
+    path('autopay/mandates/', AutoPayMandateListView.as_view()),
 
     
 
