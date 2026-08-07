@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import SuperAdminNavbar from './SuperAdminNavbar'
+import SuperAdminNavbar from '../collection/SuperAdminNavbar'
 
 export default function SuperAdminAutopayList() {
   const [mandates, setMandates] = useState([])
