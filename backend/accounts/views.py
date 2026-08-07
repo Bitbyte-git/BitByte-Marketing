@@ -4166,11 +4166,29 @@ class AutoPayCreateView(APIView):
             client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
             print('🔑 RAZORPAY KEY (first 8 chars):', settings.RAZORPAY_KEY_ID[:8])
 
+            # ── DEBUG: raw request to see actual Razorpay response ──
+            import requests as raw_requests
+            debug_resp = raw_requests.post(
+                "https://api.razorpay.com/v1/plans",
+                auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET),
+                json={
+                    "period": frequency,
+                    "interval": 1,
+                    "item": {
+                        "name": f"BitByte Wallet Autopay Rs.{amount}",
+                        "amount": int(amount * 100),
+                        "currency": "INR",
+                    }
+                }
+            )
+            print('🐛 DEBUG STATUS:', debug_resp.status_code)
+            print('🐛 DEBUG BODY:', debug_resp.text)
+
             plan = client.plan.create({
                 "period": frequency,
                 "interval": 1,
                 "item": {
-                    "name": f"BitByte Wallet Autopay ₹{amount}",
+                    "name": f"BitByte Wallet Autopay Rs.{amount}",
                     "amount": int(amount * 100),
                     "currency": "INR",
                 }
