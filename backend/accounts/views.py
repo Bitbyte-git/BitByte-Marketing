@@ -4164,33 +4164,12 @@ class AutoPayCreateView(APIView):
 
         try:
             client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-            print('RAZORPAY KEY (first 8 chars):', settings.RAZORPAY_KEY_ID[:8])
-            print('KEY_ID repr:', repr(settings.RAZORPAY_KEY_ID))
-            print('KEY_ID length:', len(settings.RAZORPAY_KEY_ID))
-            print('SECRET repr masked:', repr(settings.RAZORPAY_KEY_SECRET[:4] + '...' + settings.RAZORPAY_KEY_SECRET[-4:]))
-            print('SECRET length:', len(settings.RAZORPAY_KEY_SECRET))
 
-            # ── DEBUG: raw request to see actual Razorpay response ──
-            import requests as raw_requests
-            debug_resp = raw_requests.post(
-                "https://api.razorpay.com/v1/plans",
-                auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET),
-                json={
-                    "period": frequency,
-                    "interval": 1,
-                    "item": {
-                        "name": f"BitByte Wallet Autopay Rs.{amount}",
-                        "amount": int(amount * 100),
-                        "currency": "INR",
-                    }
-                }
-            )
-            print('🐛 DEBUG STATUS:', debug_resp.status_code)
-            print('🐛 DEBUG BODY:', debug_resp.text)
+            plan_interval = 7 if frequency == 'daily' else 1
 
             plan = client.plan.create({
                 "period": frequency,
-                "interval": 1,
+                "interval": plan_interval,
                 "item": {
                     "name": f"BitByte Wallet Autopay Rs.{amount}",
                     "amount": int(amount * 100),
@@ -4292,16 +4271,21 @@ class AutoPayToggleView(APIView):
 
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
-        if action == 'off':
-            client.subscription.pause(mandate.razorpay_subscription_id, {"pause_at": "now"})
-            mandate.status = 'paused'
-            mandate.is_active = False
-        elif action == 'on':
-            client.subscription.resume(mandate.razorpay_subscription_id, {"resume_at": "now"})
-            mandate.status = 'active'
-            mandate.is_active = True
-        else:
-            return Response({'error': 'action must be on or off'}, status=400)
+        try:
+            if action == 'off':
+                client.subscription.pause(mandate.razorpay_subscription_id, {"pause_at": "now"})
+                mandate.status = 'paused'
+                mandate.is_active = False
+            elif action == 'on':
+                client.subscription.resume(mandate.razorpay_subscription_id, {"resume_at": "now"})
+                mandate.status = 'active'
+                mandate.is_active = True
+            else:
+                return Response({'error': 'action must be on or off'}, status=400)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({'error': str(e)}, status=400)
 
         mandate.save(update_fields=['status', 'is_active'])
         return Response({'message': f'Autopay turned {action}', 'status': mandate.status})

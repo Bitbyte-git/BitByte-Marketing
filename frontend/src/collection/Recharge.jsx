@@ -657,18 +657,18 @@ const handleToggleAutopay = async () => {
 
       <p style={{ fontSize: 12, fontWeight: 800, color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Frequency</p>
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-        {['daily', 'monthly'].map(f => (
+        {[{ value: 'daily', label: 'Weekly' }, { value: 'monthly', label: 'Monthly' }].map(f => (
           <button
-            key={f} type="button"
-            onClick={() => setAutopayFrequency(f)}
+            key={f.value} type="button"
+            onClick={() => setAutopayFrequency(f.value)}
             style={{
               flex: 1, padding: '12px 0', borderRadius: 8, cursor: 'pointer', fontWeight: 800, fontSize: 13, textTransform: 'capitalize',
-              border: autopayFrequency === f ? `1.5px solid ${RED}` : '1.5px solid #D1DFDE',
-              background: autopayFrequency === f ? 'rgba(7,59,63,.06)' : '#fff',
-              color: autopayFrequency === f ? RED : DARK,
+              border: autopayFrequency === f.value ? `1.5px solid ${RED}` : '1.5px solid #D1DFDE',
+              background: autopayFrequency === f.value ? 'rgba(7,59,63,.06)' : '#fff',
+              color: autopayFrequency === f.value ? RED : DARK,
             }}
           >
-            {f}
+            {f.label}
           </button>
         ))}
       </div>
