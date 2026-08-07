@@ -4273,11 +4273,11 @@ class AutoPayToggleView(APIView):
 
         try:
             if action == 'off':
-                client.subscription.pause(mandate.razorpay_subscription_id, {"pause_at": "now"})
+                client.subscription.pause(mandate.razorpay_subscription_id)
                 mandate.status = 'paused'
                 mandate.is_active = False
             elif action == 'on':
-                client.subscription.resume(mandate.razorpay_subscription_id, {"resume_at": "now"})
+                client.subscription.resume(mandate.razorpay_subscription_id)
                 mandate.status = 'active'
                 mandate.is_active = True
             else:
