@@ -871,6 +871,11 @@ class AutoPayMandate(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='autopay_mandate')
     amount = models.DecimalField(max_digits=10, decimal_places=2)   # ₹ per cycle
+    FREQUENCY_CHOICES = [
+        ('daily', 'Daily'),
+        ('monthly', 'Monthly'),
+    ]
+    frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, default='monthly')
     recharge_day = models.PositiveIntegerField()   # 1-31, day of month for charge
     razorpay_plan_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_subscription_id = models.CharField(max_length=100, blank=True, null=True)

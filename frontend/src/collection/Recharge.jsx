@@ -175,6 +175,7 @@ export default function Recharge() {
 const [showAutopayModal, setShowAutopayModal] = useState(false)
 const [autopayAmount, setAutopayAmount] = useState('')
 const [autopayDay, setAutopayDay] = useState(5)
+const [autopayFrequency, setAutopayFrequency] = useState('monthly')
 const [autopayLoading, setAutopayLoading] = useState(false)
 
 const fetchAutopayStatus = async () => {
@@ -205,7 +206,7 @@ const handleEnableAutopay = async () => {
       return
     }
     const { default: api } = await import('../api')
-    const res = await api.post('/autopay/create/', { amount: autopayAmount, recharge_day: autopayDay })
+    const res = await api.post('/autopay/create/', { amount: autopayAmount, frequency: autopayFrequency, recharge_day: autopayDay })
     const { subscription_id, key } = res.data
 
     const options = {
@@ -654,16 +655,38 @@ const handleToggleAutopay = async () => {
   style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', border: '1px solid #D1DFDE', borderRadius: 8, fontSize: 15, fontWeight: 700, marginBottom: 16 }}
 />
 
-      <p style={{ fontSize: 12, fontWeight: 800, color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Charge day, every month</p>
-      <select
-        value={autopayDay}
-        onChange={e => setAutopayDay(Number(e.target.value))}
-        style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', border: '1px solid #D1DFDE', borderRadius: 8, fontSize: 14, fontWeight: 700, marginBottom: 20 }}
-      >
-        {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
-          <option key={d} value={d}>{d}</option>
+      <p style={{ fontSize: 12, fontWeight: 800, color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Frequency</p>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+        {['daily', 'monthly'].map(f => (
+          <button
+            key={f} type="button"
+            onClick={() => setAutopayFrequency(f)}
+            style={{
+              flex: 1, padding: '12px 0', borderRadius: 8, cursor: 'pointer', fontWeight: 800, fontSize: 13, textTransform: 'capitalize',
+              border: autopayFrequency === f ? `1.5px solid ${RED}` : '1.5px solid #D1DFDE',
+              background: autopayFrequency === f ? 'rgba(7,59,63,.06)' : '#fff',
+              color: autopayFrequency === f ? RED : DARK,
+            }}
+          >
+            {f}
+          </button>
         ))}
-      </select>
+      </div>
+
+      {autopayFrequency === 'monthly' && (
+        <>
+          <p style={{ fontSize: 12, fontWeight: 800, color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Charge day, every month</p>
+          <select
+            value={autopayDay}
+            onChange={e => setAutopayDay(Number(e.target.value))}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', border: '1px solid #D1DFDE', borderRadius: 8, fontSize: 14, fontWeight: 700, marginBottom: 20 }}
+          >
+            {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        </>
+      )}
 
       <div style={{ display: 'flex', gap: 10 }}>
         <button

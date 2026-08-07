@@ -4145,7 +4145,11 @@ class AutoPayCreateView(APIView):
 
     def post(self, request):
         amount = request.data.get('amount')
-        recharge_day = request.data.get('recharge_day')
+        frequency = request.data.get('frequency', 'monthly')
+        recharge_day = request.data.get('recharge_day', 1)
+
+        if frequency not in ('daily', 'monthly'):
+            return Response({'error': 'frequency must be daily or monthly'}, status=400)
 
         try:
             amount = float(amount)
@@ -4153,14 +4157,17 @@ class AutoPayCreateView(APIView):
         except (TypeError, ValueError):
             return Response({'error': 'Valid amount and recharge_day required'}, status=400)
 
-        if amount <= 0 or not (1 <= recharge_day <= 31):
-            return Response({'error': 'Invalid amount or day'}, status=400)
+        if amount <= 0:
+            return Response({'error': 'Invalid amount'}, status=400)
+        if frequency == 'monthly' and not (1 <= recharge_day <= 31):
+            return Response({'error': 'Invalid day'}, status=400)
 
         try:
             client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            print('🔑 RAZORPAY KEY (first 8 chars):', settings.RAZORPAY_KEY_ID[:8])
 
             plan = client.plan.create({
-                "period": "monthly",
+                "period": frequency,
                 "interval": 1,
                 "item": {
                     "name": f"BitByte Wallet Autopay ₹{amount}",
@@ -4169,7 +4176,10 @@ class AutoPayCreateView(APIView):
                 }
             })
 
-            next_date = _next_occurrence(recharge_day)
+            if frequency == 'daily':
+                next_date = timezone.now().date() + timedelta(days=1)
+            else:
+                next_date = _next_occurrence(recharge_day)
             start_at = int(timezone.datetime.combine(next_date, timezone.datetime.min.time()).timestamp())
 
             subscription = client.subscription.create({
@@ -4184,6 +4194,7 @@ class AutoPayCreateView(APIView):
                 user=request.user,
                 defaults={
                     'amount': amount,
+                    'frequency': frequency,
                     'recharge_day': recharge_day,
                     'razorpay_plan_id': plan['id'],
                     'razorpay_subscription_id': subscription['id'],

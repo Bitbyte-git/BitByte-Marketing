@@ -151,9 +151,7 @@ export default function SuperAdminSendCoins() {
     }
   }
 
-useEffect(() => {
-    setLoadingHistory(false)
-  }, [])
+useEffect(() => { fetchDefaultHistory(1, 'all') }, [])
 
   useEffect(() => {
     setFoundUser(null)
@@ -161,10 +159,7 @@ useEffect(() => {
 
     if (!userId.trim()) {
       setActiveFilter('all')
-      setHistoryList([])
-      setRecentList([])
-      setHasMoreHistory(false)
-      setLoadingHistory(false)
+      fetchDefaultHistory(1, 'all')
       return
     }
 
@@ -191,12 +186,13 @@ useEffect(() => {
   const handleFilterClick = key => {
     setActiveFilter(key)
     if (foundUser) fetchUserHistory(foundUser.user_pk, 1, key)
+    else fetchDefaultHistory(1, key)
   }
 
   const loadMore = () => {
-    if (!foundUser) return
     setLoadingMore(true)
-    fetchUserHistory(foundUser.user_pk, historyPage + 1, activeFilter)
+    if (foundUser) fetchUserHistory(foundUser.user_pk, historyPage + 1, activeFilter)
+    else fetchDefaultHistory(historyPage + 1, activeFilter)
   }
 
   const coinsPreview = amount > 0 ? Math.floor(Number(amount) * COIN_RATE) : 0
@@ -281,50 +277,46 @@ useEffect(() => {
         </div>
 
 
-        {foundUser && (
-          <>
-            <section className="sc-card" style={{ marginBottom: 20 }}>
-              <h3 className="sc-section-title">Recent Recharges</h3>
-              <p className="sc-section-sub">{foundUser.name}'s recent activity</p>
-              {loadingHistory ? (
-                <div className="sc-empty">Loading...</div>
-              ) : recentList.length === 0 ? (
-                <div className="sc-empty">No transactions yet</div>
-              ) : (
-                recentList.slice(0, 5).map(h => <HistoryRow key={h.id} h={h} />)
-              )}
-            </section>
+        <section className="sc-card" style={{ marginBottom: 20 }}>
+          <h3 className="sc-section-title">Recent Recharges</h3>
+          <p className="sc-section-sub">{foundUser ? `${foundUser.name}'s recent activity` : 'Coins you sent, across every user'}</p>
+          {loadingHistory ? (
+            <div className="sc-empty">Loading...</div>
+          ) : recentList.length === 0 ? (
+            <div className="sc-empty">No transactions yet</div>
+          ) : (
+            recentList.slice(0, 5).map(h => <HistoryRow key={h.id} h={h} />)
+          )}
+        </section>
 
-            <section className="sc-card">
-              <h3 className="sc-section-title">Transaction History</h3>
-              <p className="sc-section-sub">{foundUser.name}'s full history</p>
-              <div className="sc-filter-tabs">
-                {FILTERS.map(f => (
-                  <button
-                    key={f.key}
-                    type="button"
-                    className={`sc-filter-tab ${activeFilter === f.key ? 'active' : ''}`}
-                    onClick={() => handleFilterClick(f.key)}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-              {loadingHistory ? (
-                <div className="sc-empty">Loading...</div>
-              ) : historyList.length === 0 ? (
-                <div className="sc-empty">No transactions in this period</div>
-              ) : (
-                historyList.map(h => <HistoryRow key={h.id} h={h} />)
-              )}
-              {hasMoreHistory && (
-                <button className="sc-loadmore" onClick={loadMore} disabled={loadingMore}>
-                  {loadingMore ? 'Loading...' : 'Load More'}
-                </button>
-              )}
-            </section>
-          </>
-        )}
+        <section className="sc-card">
+          <h3 className="sc-section-title">Transaction History</h3>
+          <p className="sc-section-sub">{foundUser ? `${foundUser.name}'s full history` : 'Coins you sent, across every user'}</p>
+          <div className="sc-filter-tabs">
+            {FILTERS.map(f => (
+              <button
+                key={f.key}
+                type="button"
+                className={`sc-filter-tab ${activeFilter === f.key ? 'active' : ''}`}
+                onClick={() => handleFilterClick(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          {loadingHistory ? (
+            <div className="sc-empty">Loading...</div>
+          ) : historyList.length === 0 ? (
+            <div className="sc-empty">No transactions in this period</div>
+          ) : (
+            historyList.map(h => <HistoryRow key={h.id} h={h} />)
+          )}
+          {hasMoreHistory && (
+            <button className="sc-loadmore" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? 'Loading...' : 'Load More'}
+            </button>
+          )}
+        </section>
       </main>
     </div>
   )
