@@ -4311,6 +4311,17 @@ def autopay_webhook(request):
     data = request.data
     event = data.get('event')
 
+    # ── Human-readable mapping for Razorpay failure reasons ──
+    FAILURE_REASON_MAP = {
+        'insufficient_funds': 'Insufficient balance',
+        'card_expired': 'Card expired',
+        'authentication_failed': 'Authentication failed',
+        'payment_cancelled': 'Payment cancelled',
+        'bank_declined': 'Bank declined',
+        'invalid_account': 'Invalid account details',
+        'processing_error': 'Processing error',
+    }
+
     if event == 'subscription.charged':
         sub_entity = data['payload']['subscription']['entity']
         payment_entity = data['payload']['payment']['entity']
@@ -4340,7 +4351,31 @@ def autopay_webhook(request):
             mandate.next_charge_date = timezone.now().date() + timedelta(days=7)
         else:
             mandate.next_charge_date = _next_occurrence(mandate.recharge_day)
-        mandate.save(update_fields=['next_charge_date'])
+
+        # ── NEW: record success ──
+        mandate.last_charge_status = 'success'
+        mandate.last_charge_date = timezone.now().date()
+        mandate.last_charge_error = None
+        mandate.save(update_fields=['next_charge_date', 'last_charge_status', 'last_charge_date', 'last_charge_error'])
+
+    # ── NEW: handle failed charge ──
+    elif event == 'subscription.payment.failed':
+        payment_entity = data['payload']['payment']['entity']
+        sub_entity = data['payload'].get('subscription', {}).get('entity', {})
+        subscription_id = sub_entity.get('id') or payment_entity.get('subscription_id')
+
+        try:
+            mandate = AutoPayMandate.objects.get(razorpay_subscription_id=subscription_id)
+        except AutoPayMandate.DoesNotExist:
+            return Response({'status': 'ignored'})
+
+        raw_reason = payment_entity.get('error_reason', 'processing_error')
+        readable_reason = FAILURE_REASON_MAP.get(raw_reason, 'Payment failed')
+
+        mandate.last_charge_status = 'failed'
+        mandate.last_charge_date = timezone.now().date()
+        mandate.last_charge_error = readable_reason
+        mandate.save(update_fields=['last_charge_status', 'last_charge_date', 'last_charge_error'])
 
     return Response({'status': 'ok'})
 
@@ -4358,12 +4393,16 @@ class AutoPayMandateListView(APIView):
                 'customer_id': info['user_id_str'],
                 'name': info['name'],
                 'phone': info['phone'],
+                'email': m.user.email,
                 'amount': float(m.amount),
                 'frequency': m.frequency,
                 'recharge_day': m.recharge_day,
                 'status': m.status,
                 'is_active': m.is_active,
                 'next_charge_date': m.next_charge_date,
+                'last_charge_status': m.last_charge_status,
+                'last_charge_date': m.last_charge_date,
+                'last_charge_error': m.last_charge_error,
             })
         return Response(results)
 

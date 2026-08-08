@@ -882,6 +882,10 @@ class AutoPayMandate(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='created')
     is_active = models.BooleanField(default=False)   # true only when status == 'active'
     next_charge_date = models.DateField(null=True, blank=True)
+    # ── NEW: Last payment tracking ──
+    last_charge_status = models.CharField(max_length=10, blank=True, null=True)   # 'success' or 'failed'
+    last_charge_date = models.DateField(null=True, blank=True)
+    last_charge_error = models.CharField(max_length=200, blank=True, null=True)   # human-readable reason
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
