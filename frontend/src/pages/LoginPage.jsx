@@ -238,8 +238,8 @@ localStorage.removeItem('email')
 
         <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
           <div>
-            <label style={{ display:'block', color: subtext, fontSize:'12px', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.06em' }}>Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Enter your email"
+            <label style={{ display:'block', color: subtext, fontSize:'12px', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.06em' }}>Email / Phone / ID</label>
+            <input type="text" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Email, phone number or ID"
               style={{ width:'100%', background: inpBg, border:`1px solid ${inpBorder}`, borderRadius:'12px', padding:'13px 16px', color: text, fontSize:'14px', outline:'none', transition:'border .2s', boxSizing:'border-box' }}
               onFocus={e => e.target.style.borderColor = accent} onBlur={e => e.target.style.borderColor = inpBorder} />
           </div>

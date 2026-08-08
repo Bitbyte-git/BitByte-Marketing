@@ -147,20 +147,60 @@ def is_user_mentioned_in_title(title, user):
 
     
 
+def find_user_by_login_identifier(identifier):
+    """Email, phone number, or public ID (admin_id/dealer_id/sub_dealer_id/
+    promotor_id/customer_id) — edhை vechi login pannanaalum User-a find pannum."""
+    if not identifier:
+        return None
+
+    # 1) Email match
+    user = User.objects.filter(email=identifier).first()
+    if user:
+        return user
+
+    profile_lookups = [
+        (AdminProfile, 'admin_id'),
+        (DealerProfile, 'dealer_id'),
+        (SubDealerProfile, 'sub_dealer_id'),
+        (PromotorProfile, 'promotor_id'),
+        (CustomerProfile, 'customer_id'),
+    ]
+
+    # 2) Public ID match
+    for model, field in profile_lookups:
+        try:
+            profile = model.objects.select_related('user').get(**{field: identifier})
+            return profile.user
+        except model.DoesNotExist:
+            continue
+
+    # 3) Phone number match
+    for model, _ in profile_lookups:
+        try:
+            profile = model.objects.select_related('user').get(mobile_number=identifier)
+            return profile.user
+        except model.DoesNotExist:
+            continue
+        except model.MultipleObjectsReturned:
+            continue
+
+    return None
+
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get('email')
+        identifier = request.data.get('email')  # email/phone/ID — moonu vidhamum accept pannum
         password = request.data.get('password')
 
-        # Step 1: Email exist ஆ இல்லையா check pannu
-        user_obj = User.objects.filter(email=email).first()
+        # Step 1: identifier vachi user find pannu
+        user_obj = find_user_by_login_identifier(identifier)
         if not user_obj:
-            return Response({'error': 'No account found with this email'}, status=400)
+            return Response({'error': 'No account found with this email, phone or ID'}, status=400)
 
-        # Step 2: Email correct — password check pannu
-        user = authenticate(request, username=email, password=password)
+        # Step 2: authenticate always email vechithaan pannanum (USERNAME_FIELD='email')
+        user = authenticate(request, username=user_obj.email, password=password)
         if not user:
             return Response({'error': 'Incorrect password'}, status=400)
 
