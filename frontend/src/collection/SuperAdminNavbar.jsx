@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useState, useRef } from 'react'
 import logo from '../assets/logo.png'
 
 function Icon({ name, size = 17 }) {
@@ -10,6 +11,7 @@ function Icon({ name, size = 17 }) {
     rate: <><path d="M4 19V5" /><path d="M4 19h16" /><path d="m7 15 4-4 3 3 5-7" /></>,
     settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06A2 2 0 1 1 7.03 3.84l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.38.5.7.9.9.34.18.72.27 1.1.27H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15Z" /></>,
     logout: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></>,
+    mic: <><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><path d="M12 18v4" /><path d="M9 22h6" /></>,
     chevron: <path d="m6 9 6 6 6-6" />,
   }
   return <svg {...common}>{icons[name]}</svg>
@@ -26,8 +28,78 @@ export default function SuperAdminNavbar({
   onWorkAnniversaries,
   onSendAnnouncement,
   onMyAnnouncements,
+  onVoiceSearch,
 }) {
   const navigate = useNavigate()
+  const [voiceQuery, setVoiceQuery] = useState('')
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef(null)
+
+  const submitVoiceSearch = (query) => {
+    const q = (query || '').trim()
+    if (!q) return
+    if (onVoiceSearch) onVoiceSearch(q)
+    setVoiceQuery('')
+  }
+
+  const toggleMic = () => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+      return
+    }
+
+    // ── NEW: HTTPS check — Web Speech API needs https:// or localhost ──
+    const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost'
+    if (!isSecure) {
+      alert('Voice search only works on HTTPS. Please use localhost or an https:// site.')
+      return
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert('Voice search is not supported in this browser. Please use Chrome.')
+      return
+    }
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'en-IN'
+    recognition.interimResults = true
+    recognition.continuous = false
+    recognition.onstart = () => { setIsListening(true); console.log('🎤 recognition started') }
+    recognition.onaudiostart = () => console.log('🎤 audio capture started')
+    recognition.onsoundstart = () => console.log('🎤 sound detected')
+    recognition.onspeechstart = () => console.log('🎤 speech detected')
+    recognition.onspeechend = () => console.log('🎤 speech ended')
+    recognition.onsoundend = () => console.log('🎤 sound ended')
+    recognition.onaudioend = () => console.log('🎤 audio capture ended')
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error)
+      setIsListening(false)
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        alert('Microphone permission is blocked. Click the mic icon in the browser address bar and allow access.')
+      } else if (event.error === 'no-speech') {
+        alert('No speech detected. Please speak clearly.')
+      } else if (event.error === 'language-not-supported') {
+        alert('This language is not supported.')
+      } else {
+        alert('Voice error: ' + event.error)
+      }
+    }
+    recognition.onend = () => setIsListening(false)
+    recognition.onresult = (event) => {
+      let transcript = ''
+      for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript
+      setVoiceQuery(transcript)
+      if (event.results[event.results.length - 1].isFinal) submitVoiceSearch(transcript)
+    }
+    recognitionRef.current = recognition
+    try {
+      recognition.start()
+    } catch (err) {
+      console.error('Speech recognition start failed:', err)
+      alert('Failed to start microphone: ' + err.message)
+    }
+  }
+
   const run = (handler, fallback) => {
     if (handler) {
       handler()
@@ -115,13 +187,19 @@ export default function SuperAdminNavbar({
 .san-secure strong { display: block; font-size: 16px; margin-bottom: 8px; }
 .san-secure span { display: block; color: #D1DFDE; font-size: 13px; line-height: 1.6; }
 .san-top-shell { position: sticky; top: 0; z-index: 65; background: rgba(253,253,252,.98); border-bottom: 1px solid rgba(189,207,206,.74); box-shadow: 0 16px 38px rgba(7,59,63,.055); backdrop-filter: blur(16px); }
-.san-top-inner { min-height: 104px; display: flex; align-items: stretch; gap: 60px; padding: 0 14px; }
+.san-top-inner { min-height: 104px; display: flex; align-items: center; gap: 24px; padding: 0 14px; }
 .san-navbar-brand { width: auto; min-width: 0; flex-shrink: 0; border: 0; background: transparent; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 0; cursor: pointer; }
 .san-navbar-brand img { width: 54px; height: 54px; object-fit: contain; }
 .san-navbar-brand strong { display: block; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; line-height: .95; font-weight: 850; letter-spacing: .02em; color: #073B3F; }
 .san-navbar-brand small { display: block; margin-top: 5px; color: #BB8958; font-size: 10px; font-weight: 900; letter-spacing: .24em; text-transform: uppercase; }
-.san-search-block { width: 260px; display: flex; align-items: center; padding: 0 18px; }
+.san-search-block { width: 240px; flex-shrink: 0; display: flex; align-items: center; padding: 0 14px 0 0; margin-right: 44px; }
 .san-search { height: 48px; width: 100%; border: 1px solid rgba(189,207,206,.95); border-radius: 10px; background: #FDFDFC; color: #073B3F; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 14px; font-weight: 700; }
+.san-search-input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #073B3F; font-size: 14px; font-weight: 650; }
+.san-search-input::placeholder { color: #7A8987; font-weight: 550; }
+.san-mic-btn { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #0C4044; background: transparent; color: #0C4044; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s ease; }
+.san-mic-btn:hover { background: #0C4044; color: #FDFDFC; }
+.san-mic-btn.is-listening { background: #C92035; border-color: #C92035; color: #FDFDFC; animation: san-mic-pulse 1.1s ease-in-out infinite; }
+@keyframes san-mic-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(201,32,53,.5); } 50% { box-shadow: 0 0 0 8px rgba(201,32,53,0); } }
 .san-menu-center { flex: 1; display: flex; justify-content: center; align-items: stretch; gap: 6px; min-width: 0; }
 .san-menu-group { position: relative; display: flex; }
 .san-menu-trigger { border: 0; background: transparent; min-width: auto; padding: 0 16px; color: #073B3F; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; white-space: nowrap; }
@@ -185,6 +263,27 @@ export default function SuperAdminNavbar({
           <div className="san-mobile-logo" onClick={() => navigate('/super-admin')}><img src={logo} alt="Luxiva" /><div><strong>LUXIVA</strong><small>SUPER ADMIN</small></div></div>
           <div className="san-top-inner">
             <button className="san-navbar-brand" type="button" onClick={() => navigate('/super-admin')} title="Go to dashboard"><img src={logo} alt="Luxiva" /><span><strong>LUXIVA</strong><small>SUPER ADMIN</small></span></button>
+            <div className="san-search-block">
+              <div className="san-search">
+                <input
+                  value={voiceQuery}
+                  onChange={e => setVoiceQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && submitVoiceSearch(voiceQuery)}
+                  placeholder="Search or speak..."
+                  aria-label="Voice or text search"
+                  className="san-search-input"
+                />
+                <button
+                  type="button"
+                  className={`san-mic-btn ${isListening ? 'is-listening' : ''}`}
+                  onClick={toggleMic}
+                  title={isListening ? 'Listening... click to stop' : 'Click to speak'}
+                  aria-label="Voice search"
+                >
+                  <Icon name="mic" size={16} />
+                </button>
+              </div>
+            </div>
             <div className="san-menu-center">
               <MenuGroup label="Management" items={management} footer={{ label: 'View All Management ->', action: () => navigate('/superadmin-hierarchy-grid') }} />
               <MenuGroup label="Celebrations" items={celebrations} footer={{ label: 'View All Celebrations ->', action: () => run(onBirthdays, '/super-admin') }} />

@@ -2510,10 +2510,10 @@ export default function CustomerNavbar() {
             border: '1.5px solid #D1DFDE', background: '#fff', cursor: 'pointer',
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="9" stroke="#073B3F" strokeWidth="1.8"/>
-            <path d="M9 15c0 1.1 1.34 2 3 2s3-.9 3-2-1.34-2-3-2-3-.9-3-2 1.34-2 3-2 3 .9 3 2" stroke="#073B3F" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12 7v1.5M12 15.5V17" stroke="#073B3F" strokeWidth="1.6" strokeLinecap="round"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="9.5" fill="#F0C767" stroke="#B5842F" strokeWidth="1.4"/>
+            <circle cx="12" cy="12" r="7" fill="none" stroke="#B5842F" strokeWidth="1" opacity="0.55"/>
+            <text x="12" y="15.8" textAnchor="middle" fontSize="9" fontWeight="900" fill="#B5842F" fontFamily="Inter, sans-serif">$</text>
           </svg>
         </button>
 

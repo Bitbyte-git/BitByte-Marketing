@@ -2093,6 +2093,52 @@ class SalesReportView(APIView):
                 return Response({'role': role, 'data': [], 'ancestors': []})
 
 
+class HierarchyPersonSearchView(APIView):
+    """Search a person by public ID, name, or phone number across every
+    hierarchy role (admin/dealer/sub_dealer/promotor/customer). Used by the
+    SuperAdmin navbar search bar to jump straight to a person's hierarchy
+    grid view or sales report."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+
+        query = request.query_params.get('q', '').strip()
+        if not query:
+            return Response({'error': 'q (search query) is required'}, status=400)
+
+        role_models = [
+            ('admin', AdminProfile, 'admin_id'),
+            ('dealer', DealerProfile, 'dealer_id'),
+            ('sub_dealer', SubDealerProfile, 'sub_dealer_id'),
+            ('promotor', PromotorProfile, 'promotor_id'),
+            ('customer', CustomerProfile, 'customer_id'),
+        ]
+
+        results = []
+        for role_key, model, id_field in role_models:
+            matches = model.objects.filter(
+                Q(**{f'{id_field}__icontains': query}) |
+                Q(first_name__icontains=query) |
+                Q(last_name__icontains=query) |
+                Q(mobile_number__icontains=query)
+            ).select_related('user')[:10]
+
+            for m in matches:
+                results.append({
+                    'role': role_key,
+                    'id': m.id,
+                    'user_id': m.user_id,
+                    'public_id': getattr(m, id_field, None),
+                    'first_name': m.first_name,
+                    'last_name': m.last_name,
+                    'mobile_number': m.mobile_number,
+                    'city_name': getattr(m, 'city_name', None),
+                })
+
+        return Response({'query': query, 'results': results})
+
 class OrderTimeSeriesView(APIView):
     permission_classes = [IsAuthenticated]
 

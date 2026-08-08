@@ -1527,6 +1527,79 @@ useEffect(() => {
   fetchHierarchy()
 }
 
+// Every navbar page mapped to keywords — checked top to bottom, first match wins
+  const PAGE_ROUTES = [
+    { keywords: ['inactive'], action: () => navigate('/login-inactive') },
+    { keywords: ['active list', 'active users', 'login active'], action: () => navigate('/login-active') },
+    { keywords: ['today birthday', 'birthday'], action: () => setShowBirthdayList(true) },
+    { keywords: ['work anniversary', 'join date', 'join anniversary'], action: () => setShowJoinDateList(true) },
+    { keywords: ['anniversary'], action: () => setShowAnniversaryList(true) },
+    { keywords: ['add product'], action: () => navigate('/add-product') },
+    { keywords: ['orders', 'admin orders'], action: () => navigate('/admin-orders') },
+    { keywords: ['gold rate', 'today rate'], action: () => setShowRatePopup(true) },
+    { keywords: ['requests', 'profile request'], action: () => { setShowRequests(true); setRequestMsg('') } },
+    { keywords: ['hierarchy tree'], action: () => navigate('/superadmin-hierarchy') },
+    { keywords: ['hierarchy grid', 'hierarchy'], action: () => navigate('/superadmin-hierarchy-grid') },
+    { keywords: ['hierarchy sales report', 'sales count'], action: () => navigate('/hierarchy-sales-count') },
+    { keywords: ['sales report'], action: () => navigate('/sales-report') },
+    { keywords: ['send announcement'], action: () => { setShowAnnouncement(true); setAnnouncementMsg('') } },
+    { keywords: ['my announcements'], action: () => { setShowMyAnnouncements(true); fetchMyAnnouncements() } },
+    { keywords: ['buy coin'], action: () => navigate('/buy-coin') },
+    { keywords: ['stored coin'], action: () => navigate('/stored-coins') },
+    { keywords: ['coin requests'], action: () => navigate('/coin-requests-page') },
+    { keywords: ['coin transactions'], action: () => navigate('/coin-transactions') },
+    { keywords: ['retailer'], action: () => navigate('/promotions/retailer') },
+    { keywords: ['wholesale dealer'], action: () => navigate('/promotions/wholesale-dealer') },
+    { keywords: ['distributor'], action: () => navigate('/promotions/distributor') },
+    { keywords: ['super stockist'], action: () => navigate('/promotions/super-stockist') },
+    { keywords: ['revenue', 'payments'], action: () => navigate('/superadmin-payments') },
+    { keywords: ['add aug coin', 'send coin'], action: () => navigate('/superadmin-send-coins') },
+    { keywords: ['autopay'], action: () => navigate('/superadmin-autopay-list') },
+  ]
+
+  // Command router: page keywords first, then person search (DB fetch) as fallback
+  const handleVoiceSearch = async (rawQuery) => {
+    const q = rawQuery.toLowerCase().trim()
+
+    for (const page of PAGE_ROUTES) {
+      if (page.keywords.some(k => q.includes(k))) {
+        page.action()
+        return
+      }
+    }
+
+    const nameOnly = q
+      .replace(/sales report|sales|report|hierarchy grid|hierarchy|show|open|of/gi, '')
+      .trim()
+
+    if (!nameOnly) {
+      alert(`"${rawQuery}" ku match edhuvum kidaikala bro. Vera mari try pannunga.`)
+      return
+    }
+
+    try {
+      const res = await api.get('/hierarchy/search-person/', { params: { q: nameOnly } })
+      const results = res.data.results || []
+
+      if (results.length === 0) {
+        alert(`"${nameOnly}" nu evarum kidaikala bro.`)
+        return
+      }
+
+      const match = results[0]
+
+      if (q.includes('sales report')) {
+        navigate(`/sales-report?role=${match.role}&id=${match.id}`)
+      } else if (q.includes('hierarchy')) {
+        navigate(`/superadmin-hierarchy-grid?role=${match.role}&id=${match.id}`)
+      } else {
+        navigate(`/hierarchy-sales-count?role=${match.role}&id=${match.id}`)
+      }
+    } catch (err) {
+      alert('Search failed bro: ' + (err.response?.data?.error || err.message))
+    }
+  }
+
   const handleChange = e => {
     const { name, value } = e.target
 
@@ -1830,6 +1903,7 @@ const fetchCoinStock = async () => {
         onWorkAnniversaries={() => setShowJoinDateList(true)}
         onSendAnnouncement={() => { setShowAnnouncement(true); setAnnouncementMsg('') }}
         onMyAnnouncements={() => { setShowMyAnnouncements(true); fetchMyAnnouncements() }}
+        onVoiceSearch={handleVoiceSearch}
       />
       <style>{`
         .lux-display{font-family:"Cormorant Garamond",Georgia,serif;letter-spacing:0;color:#073B3F}
@@ -2059,7 +2133,7 @@ const fetchCoinStock = async () => {
       </aside>
 
       {/* Super Admin Navbar */}
-      <header className="sa-top-shell">
+      {/* <header className="sa-top-shell">
         <div className="sa-menu-bar">
           <div className="sa-menu-center">
             <div className="sa-menu-group">
@@ -2144,11 +2218,11 @@ const fetchCoinStock = async () => {
             </button>
           </div>
         </div>
-      </header>
+      </header> */}
 
 
       {/* Legacy Navbar */}
-      <div className="sa-navbar sa-main-offset" style={{ position: 'sticky', top: 0, marginLeft: 286, zIndex: 20, background: glass, borderBottom: `1px solid ${border}`, padding: '20px 34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, backdropFilter: 'blur(16px)', transition: 'background 0.8s ease', boxShadow: '0 16px 34px rgba(7,59,63,0.04)' }}>
+      {/* <div className="sa-navbar sa-main-offset" style={{ position: 'sticky', top: 0, marginLeft: 286, zIndex: 20, background: glass, borderBottom: `1px solid ${border}`, padding: '20px 34px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, backdropFilter: 'blur(16px)', transition: 'background 0.8s ease', boxShadow: '0 16px 34px rgba(7,59,63,0.04)' }}>
         <div className="sa-search" style={{ flex: 1, maxWidth: 520, height: 56, borderRadius: 16, border: '1px solid rgba(189,207,206,0.82)', background: '#FDFDFC', display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px', boxShadow: 'inset 0 1px 0 rgba(253,253,252,0.9)' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2">
             <circle cx="11" cy="11" r="7" />
@@ -2166,7 +2240,7 @@ const fetchCoinStock = async () => {
 </span>
 
 
-          {/*Rate Entry Button */}
+
           <div
             className="sa-command-btn"
             onClick={() => {
@@ -2208,7 +2282,7 @@ const fetchCoinStock = async () => {
 
 
 
-            {/*Add Product Button */}
+        
           <div
             className="sa-command-btn"
             onClick={() => navigate('/add-product')}
@@ -2230,7 +2304,6 @@ const fetchCoinStock = async () => {
             <span style={{ fontSize: '12px', fontWeight: 900, color: '#FFFFFF' }}>Add Product</span>
           </div>
 
-          {/*Orders ButtonNEW */}
 <div
   className="sa-command-btn"
   onClick={() => navigate('/admin-orders')}
@@ -2257,7 +2330,7 @@ const fetchCoinStock = async () => {
             className="sa-icon-action"
             onClick={() => { setShowRequests(true); setRequestMsg('') }}
             style={{
-              position: 'relative',          // â† badge-ku base
+              position: 'relative',          
               cursor: 'pointer',
               padding: '6px',
               borderRadius: '10px',
@@ -2298,7 +2371,7 @@ const fetchCoinStock = async () => {
             )}
           </div>
 
-          {/*Birthday Icon */}
+          
           <div
             className="sa-icon-action"
             onClick={() => { setShowBirthdayList(true) }}
@@ -2319,7 +2392,7 @@ const fetchCoinStock = async () => {
             )}
           </div>
 
-          {/*Anniversary Icon */}
+          
           <div
             className="sa-icon-action"
             onClick={() => { setShowAnniversaryList(true) }}
@@ -2338,7 +2411,7 @@ const fetchCoinStock = async () => {
             )}
           </div>
 
-          {/*Join Date Icon */}
+         
           <div
             className="sa-icon-action"
             onClick={() => { setShowJoinDateList(true) }}
@@ -2360,7 +2433,7 @@ const fetchCoinStock = async () => {
           </div>
 
 
-          {/* Announcement Icon */}
+          
           <div
             className="sa-icon-action"
             onClick={() => {
@@ -2385,7 +2458,7 @@ const fetchCoinStock = async () => {
             )}
           </div>
 
-          {/*Super Admin View Announcements */}
+         
           <div
             className="sa-icon-action"
             onClick={() => {
@@ -2421,7 +2494,7 @@ const fetchCoinStock = async () => {
 </svg>
           </div>
 
-          {/*Today Rates Icon */}
+         
           <div
             className="sa-icon-action"
             onClick={() => setShowTodayRates(true)}
@@ -2471,7 +2544,7 @@ const fetchCoinStock = async () => {
             Logout
           </button>
         </div>
-      </div>
+      </div> */}
 
             <div className="sa-main-offset sa-dashboard-row" style={{ display: 'flex', width: 'calc(100% - 286px)', marginLeft: 286, gap: 22, padding: '24px 34px 0', boxSizing: 'border-box', alignItems: 'stretch' }}>
         <div className="sa-dashboard-grid">
@@ -2495,10 +2568,10 @@ const fetchCoinStock = async () => {
         </div>
         <OrderTrendChart dark={dark} />
 
-        {/* â”€â”€ RIGHT SIDE: Role Distribution + Login Status Pies â”€â”€ */}
+   
         <div className="sa-pie-row" style={{ flex: '0 0 38%', minWidth: 360, display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-          {/* Role Distribution Pie */}
+    
           <div className="sa-pie-card" style={{ background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 20, padding: '24px 26px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
             <div className="sa-pie-title" style={{ fontSize: 14, fontWeight: 800, color: '#0C4044', marginBottom: 4 }}>Role Distribution</div>
             <div className="lux-display sa-pie-total" style={{ fontSize: 28, fontWeight: 800, color: '#111817', marginBottom: 10 }}>
