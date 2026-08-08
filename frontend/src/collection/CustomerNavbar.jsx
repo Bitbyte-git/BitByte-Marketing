@@ -2499,6 +2499,24 @@ export default function CustomerNavbar() {
                 <span className="summary-text">AUG Coin</span>
               </button>
 
+              
+
+              <button
+          onClick={() => navigate('/coin-shop')}
+          title="Shop with Coins"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 36, height: 36, borderRadius: '50%',
+            border: '1.5px solid #D1DFDE', background: '#fff', cursor: 'pointer',
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="9" stroke="#073B3F" strokeWidth="1.8"/>
+            <path d="M9 15c0 1.1 1.34 2 3 2s3-.9 3-2-1.34-2-3-2-3-.9-3-2 1.34-2 3-2 3 .9 3 2" stroke="#073B3F" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 7v1.5M12 15.5V17" stroke="#073B3F" strokeWidth="1.6" strokeLinecap="round"/>
+          </svg>
+        </button>
+
               <button
                 className="exact-icon"
                 type="button"

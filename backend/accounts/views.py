@@ -4446,6 +4446,38 @@ class AutoPayMandateListView(APIView):
             })
         return Response(results)
 
+class AffordableProductsView(APIView):
+    """Customer wallet balance-oda budget-ku ulla products mattum return pannum"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        wallet, _ = Wallet.objects.get_or_create(user=request.user)
+        max_price_rupees = wallet.balance_coins / COIN_RATE_PER_RUPEE
+
+        products = JewelryProduct.objects.filter(
+            is_active=True,
+            price__lte=max_price_rupees
+        ).order_by('-price')
+
+        results = []
+        for p in products:
+            first_image = p.images.first()
+            results.append({
+                'id': p.id,
+                'name': p.name,
+                'category': p.category,
+                'metal': p.metal,
+                'price': float(p.price) if p.price else 0,
+                'original_price': float(p.original_price) if p.original_price else None,
+                'image': first_image.image.url if first_image else None,
+            })
+
+        return Response({
+            'wallet_coins': wallet.balance_coins,
+            'max_affordable_price': round(max_price_rupees, 2),
+            'products': results,
+        })        
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def ping(request):
