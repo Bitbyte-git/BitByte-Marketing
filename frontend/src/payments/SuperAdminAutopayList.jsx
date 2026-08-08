@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import SuperAdminNavbar from '../collection/SuperAdminNavbar'
 
 export default function SuperAdminAutopayList() {
   const [mandates, setMandates] = useState([])
@@ -22,8 +21,7 @@ export default function SuperAdminAutopayList() {
 
   return (
     <div>
-      <SuperAdminNavbar showSidebar />
-      <div style={{ marginLeft: 286, padding: 32 }}>
+      <div style={{ padding: 32 }}>
         <h2 style={{ color: '#073B3F', fontFamily: 'Georgia, serif' }}>Autopay List</h2>
         {loading ? (
           <p>Loading...</p>
@@ -38,7 +36,7 @@ export default function SuperAdminAutopayList() {
                 <th style={{ padding: 12, textAlign: 'left' }}>Phone</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>Amount</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>Frequency</th>
-                <th style={{ padding: 12, textAlign: 'left' }}>Day</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>week</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>Status</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>Next Charge</th>
               </tr>
@@ -50,8 +48,8 @@ export default function SuperAdminAutopayList() {
                   <td style={{ padding: 12 }}>{m.name || '—'}</td>
                   <td style={{ padding: 12 }}>{m.phone || '—'}</td>
                   <td style={{ padding: 12 }}>₹{m.amount}</td>
-                  <td style={{ padding: 12 }}>{m.frequency}</td>
-                  <td style={{ padding: 12 }}>{m.recharge_day}</td>
+                  <td style={{ padding: 12 }}>{m.frequency === 'daily' ? 'Weekly' : 'Monthly'}</td>
+                  <td style={{ padding: 12 }}>{m.frequency === 'daily' ? '—' : m.recharge_day}</td>
                   <td style={{ padding: 12 }}>{m.status}</td>
                   <td style={{ padding: 12 }}>{m.next_charge_date || '—'}</td>
                 </tr>

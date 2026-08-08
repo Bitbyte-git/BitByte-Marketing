@@ -213,7 +213,9 @@ const handleEnableAutopay = async () => {
       key,
       subscription_id,
       name: 'BitByte Wallet Autopay',
-      description: `₹${autopayAmount} every month on day ${autopayDay}`,
+      description: autopayFrequency === 'daily'
+        ? `₹${autopayAmount} every week`
+        : `₹${autopayAmount} every month on day ${autopayDay}`, 
       handler: async response => {
         try {
           const confirmRes = await api.post('/autopay/confirm/', {

@@ -4149,7 +4149,7 @@ class AutoPayCreateView(APIView):
         recharge_day = request.data.get('recharge_day', 1)
 
         if frequency not in ('daily', 'monthly'):
-            return Response({'error': 'frequency must be daily or monthly'}, status=400)
+            return Response({'error': 'frequency must be weekly or monthly'}, status=400)
 
         try:
             amount = float(amount)
@@ -4178,7 +4178,7 @@ class AutoPayCreateView(APIView):
             })
 
             if frequency == 'daily':
-                next_date = timezone.now().date() + timedelta(days=1)
+                next_date = timezone.now().date() + timedelta(days=7)
             else:
                 next_date = _next_occurrence(recharge_day)
             start_at = int(timezone.datetime.combine(next_date, timezone.datetime.min.time()).timestamp())
@@ -4336,7 +4336,10 @@ def autopay_webhook(request):
             transaction_id=generate_transaction_id(),
         )
 
-        mandate.next_charge_date = _next_occurrence(mandate.recharge_day)
+        if mandate.frequency == 'daily':
+            mandate.next_charge_date = timezone.now().date() + timedelta(days=7)
+        else:
+            mandate.next_charge_date = _next_occurrence(mandate.recharge_day)
         mandate.save(update_fields=['next_charge_date'])
 
     return Response({'status': 'ok'})

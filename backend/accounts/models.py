@@ -872,7 +872,7 @@ class AutoPayMandate(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='autopay_mandate')
     amount = models.DecimalField(max_digits=10, decimal_places=2)   # ₹ per cycle
     FREQUENCY_CHOICES = [
-        ('daily', 'Daily'),
+        ('daily', 'Weekly'),
         ('monthly', 'Monthly'),
     ]
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, default='monthly')
