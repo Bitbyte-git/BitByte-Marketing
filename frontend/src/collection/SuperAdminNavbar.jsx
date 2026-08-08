@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useRef } from 'react'
 import logo from '../assets/logo.png'
+import api from '../api'
 
 function Icon({ name, size = 17 }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
@@ -35,11 +36,76 @@ export default function SuperAdminNavbar({
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef(null)
 
-  const submitVoiceSearch = (query) => {
+  const PAGE_ROUTES = [
+    { keywords: ['inactive'], path: '/login-inactive' },
+    { keywords: ['active list', 'active users', 'login active'], path: '/login-active' },
+    { keywords: ['add product'], path: '/add-product' },
+    { keywords: ['orders', 'admin orders'], path: '/admin-orders' },
+    { keywords: ['hierarchy tree'], path: '/superadmin-hierarchy' },
+    { keywords: ['hierarchy grid', 'hierarchy'], path: '/superadmin-hierarchy-grid' },
+    { keywords: ['hierarchy sales report', 'sales count'], path: '/hierarchy-sales-count' },
+    { keywords: ['sales report'], path: '/sales-report' },
+    { keywords: ['buy coin'], path: '/buy-coin' },
+    { keywords: ['stored coin'], path: '/stored-coins' },
+    { keywords: ['coin requests'], path: '/coin-requests-page' },
+    { keywords: ['coin transactions'], path: '/coin-transactions' },
+    { keywords: ['retailer'], path: '/promotions/retailer' },
+    { keywords: ['wholesale dealer'], path: '/promotions/wholesale-dealer' },
+    { keywords: ['distributor'], path: '/promotions/distributor' },
+    { keywords: ['super stockist'], path: '/promotions/super-stockist' },
+    { keywords: ['revenue', 'payments'], path: '/superadmin-payments' },
+    { keywords: ['add aug coin', 'send coin'], path: '/superadmin-send-coins' },
+    { keywords: ['autopay'], path: '/superadmin-autopay-list' },
+    { keywords: ['today birthday', 'birthday'], path: '/super-admin' },
+    { keywords: ['work anniversary', 'join date', 'join anniversary'], path: '/super-admin' },
+    { keywords: ['anniversary'], path: '/super-admin' },
+    { keywords: ['gold rate', 'today rate'], path: '/super-admin' },
+    { keywords: ['requests', 'profile request'], path: '/super-admin' },
+    { keywords: ['send announcement'], path: '/super-admin' },
+    { keywords: ['my announcements'], path: '/super-admin' },
+  ]
+
+  const submitVoiceSearch = async (query) => {
     const q = (query || '').trim()
     if (!q) return
-    if (onVoiceSearch) onVoiceSearch(q)
     setVoiceQuery('')
+
+    const lower = q.toLowerCase()
+
+    for (const page of PAGE_ROUTES) {
+      if (page.keywords.some(k => lower.includes(k))) {
+        navigate(page.path)
+        return
+      }
+    }
+
+    const nameOnly = lower
+      .replace(/sales report|sales|report|hierarchy grid|hierarchy|show|open|of/gi, '')
+      .trim()
+
+    if (!nameOnly) {
+      alert(`"${q}" ku match edhuvum kidaikala bro. Vera mari try pannunga.`)
+      return
+    }
+
+    try {
+      const res = await api.get('/hierarchy/search-person/', { params: { q: nameOnly } })
+      const results = res.data.results || []
+      if (results.length === 0) {
+        alert(`"${nameOnly}" nu evarum kidaikala bro.`)
+        return
+      }
+      const match = results[0]
+      if (lower.includes('sales report')) {
+        navigate(`/sales-report?role=${match.role}&id=${match.id}`)
+      } else if (lower.includes('hierarchy')) {
+        navigate(`/superadmin-hierarchy-grid?role=${match.role}&id=${match.id}`)
+      } else {
+        navigate(`/hierarchy-sales-count?role=${match.role}&id=${match.id}`)
+      }
+    } catch (err) {
+      alert('Search failed bro: ' + (err.response?.data?.error || err.message))
+    }
   }
 
   const toggleMic = () => {

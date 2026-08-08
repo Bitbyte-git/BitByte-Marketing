@@ -1527,79 +1527,6 @@ useEffect(() => {
   fetchHierarchy()
 }
 
-// Every navbar page mapped to keywords — checked top to bottom, first match wins
-  const PAGE_ROUTES = [
-    { keywords: ['inactive'], action: () => navigate('/login-inactive') },
-    { keywords: ['active list', 'active users', 'login active'], action: () => navigate('/login-active') },
-    { keywords: ['today birthday', 'birthday'], action: () => setShowBirthdayList(true) },
-    { keywords: ['work anniversary', 'join date', 'join anniversary'], action: () => setShowJoinDateList(true) },
-    { keywords: ['anniversary'], action: () => setShowAnniversaryList(true) },
-    { keywords: ['add product'], action: () => navigate('/add-product') },
-    { keywords: ['orders', 'admin orders'], action: () => navigate('/admin-orders') },
-    { keywords: ['gold rate', 'today rate'], action: () => setShowRatePopup(true) },
-    { keywords: ['requests', 'profile request'], action: () => { setShowRequests(true); setRequestMsg('') } },
-    { keywords: ['hierarchy tree'], action: () => navigate('/superadmin-hierarchy') },
-    { keywords: ['hierarchy grid', 'hierarchy'], action: () => navigate('/superadmin-hierarchy-grid') },
-    { keywords: ['hierarchy sales report', 'sales count'], action: () => navigate('/hierarchy-sales-count') },
-    { keywords: ['sales report'], action: () => navigate('/sales-report') },
-    { keywords: ['send announcement'], action: () => { setShowAnnouncement(true); setAnnouncementMsg('') } },
-    { keywords: ['my announcements'], action: () => { setShowMyAnnouncements(true); fetchMyAnnouncements() } },
-    { keywords: ['buy coin'], action: () => navigate('/buy-coin') },
-    { keywords: ['stored coin'], action: () => navigate('/stored-coins') },
-    { keywords: ['coin requests'], action: () => navigate('/coin-requests-page') },
-    { keywords: ['coin transactions'], action: () => navigate('/coin-transactions') },
-    { keywords: ['retailer'], action: () => navigate('/promotions/retailer') },
-    { keywords: ['wholesale dealer'], action: () => navigate('/promotions/wholesale-dealer') },
-    { keywords: ['distributor'], action: () => navigate('/promotions/distributor') },
-    { keywords: ['super stockist'], action: () => navigate('/promotions/super-stockist') },
-    { keywords: ['revenue', 'payments'], action: () => navigate('/superadmin-payments') },
-    { keywords: ['add aug coin', 'send coin'], action: () => navigate('/superadmin-send-coins') },
-    { keywords: ['autopay'], action: () => navigate('/superadmin-autopay-list') },
-  ]
-
-  // Command router: page keywords first, then person search (DB fetch) as fallback
-  const handleVoiceSearch = async (rawQuery) => {
-    const q = rawQuery.toLowerCase().trim()
-
-    for (const page of PAGE_ROUTES) {
-      if (page.keywords.some(k => q.includes(k))) {
-        page.action()
-        return
-      }
-    }
-
-    const nameOnly = q
-      .replace(/sales report|sales|report|hierarchy grid|hierarchy|show|open|of/gi, '')
-      .trim()
-
-    if (!nameOnly) {
-      alert(`"${rawQuery}" ku match edhuvum kidaikala bro. Vera mari try pannunga.`)
-      return
-    }
-
-    try {
-      const res = await api.get('/hierarchy/search-person/', { params: { q: nameOnly } })
-      const results = res.data.results || []
-
-      if (results.length === 0) {
-        alert(`"${nameOnly}" nu evarum kidaikala bro.`)
-        return
-      }
-
-      const match = results[0]
-
-      if (q.includes('sales report')) {
-        navigate(`/sales-report?role=${match.role}&id=${match.id}`)
-      } else if (q.includes('hierarchy')) {
-        navigate(`/superadmin-hierarchy-grid?role=${match.role}&id=${match.id}`)
-      } else {
-        navigate(`/hierarchy-sales-count?role=${match.role}&id=${match.id}`)
-      }
-    } catch (err) {
-      alert('Search failed bro: ' + (err.response?.data?.error || err.message))
-    }
-  }
-
   const handleChange = e => {
     const { name, value } = e.target
 
@@ -1903,7 +1830,6 @@ const fetchCoinStock = async () => {
         onWorkAnniversaries={() => setShowJoinDateList(true)}
         onSendAnnouncement={() => { setShowAnnouncement(true); setAnnouncementMsg('') }}
         onMyAnnouncements={() => { setShowMyAnnouncements(true); fetchMyAnnouncements() }}
-        onVoiceSearch={handleVoiceSearch}
       />
       <style>{`
         .lux-display{font-family:"Cormorant Garamond",Georgia,serif;letter-spacing:0;color:#073B3F}
