@@ -4134,7 +4134,7 @@ class PaymentsSummaryView(APIView):
                 'has_more': start + page_size < total_transactions,
                 'transactions': [
                     {
-                        'transaction_id': r.transaction_id or '—',
+                        'transaction_id': r.related_order.order_id if r.related_order else (r.transaction_id or '—'),
                         'buyer': get_user_profile_id(r.related_order.user) if r.related_order else '—',
                         'amount': float(r.amount_paid),
                         'coins': r.coins_credited,

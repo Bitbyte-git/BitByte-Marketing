@@ -140,9 +140,25 @@ export default function SuperAdminPayments() {
   return (
     <div className="sp-page">
       <style>{styles}</style>
-      <main className="sp-main">
-        <p className="sp-kicker">Super Admin</p>
-        <h1 className="sp-title">Revenue &amp; Payments</h1>
+     <main className="sp-main">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <p className="sp-kicker">Super Admin</p>
+            <h1 className="sp-title" style={{ marginBottom: 8 }}>Revenue &amp; Payments</h1>
+          </div>
+          <select
+            value={activeView}
+            onChange={handleViewChange}
+            style={{
+              padding: '10px 16px', borderRadius: 20, border: `1.5px solid ${RED}`,
+              background: '#fff', color: RED, fontWeight: 800, fontSize: 12.5, cursor: 'pointer'
+            }}
+          >
+            <option value="all_sales">All Sales</option>
+            <option value="super_admin_commission">Super Admin Commission</option>
+            <option value="my_commission">My Commission</option>
+          </select>
+        </div>
         <p className="sp-note">
           Real money enters the business only when a user recharges AUG Coin via Razorpay — this
           list shows every such recharge transaction (payment method + Razorpay transaction ID).
