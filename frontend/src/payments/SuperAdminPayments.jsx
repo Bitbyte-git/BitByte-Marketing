@@ -71,13 +71,14 @@ export default function SuperAdminPayments() {
   const [activeFilter, setActiveFilter] = useState('today')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
+  const [activeView, setActiveView] = useState('super_admin_commission')
 
   const [loadError, setLoadError] = useState(false)
 
-  const fetchData = async (p = 1, period = activeFilter, from = customFrom, to = customTo) => {
+  const fetchData = async (p = 1, period = activeFilter, from = customFrom, to = customTo, view = activeView) => {
     try {
       const { default: api } = await import('../api')
-      let url = `/superadmin/payments/?page=${p}&period=${period}`
+      let url = `/superadmin/payments/?page=${p}&period=${period}&view=${view}`
       if (period === 'custom' && from && to) url += `&start_date=${from}&end_date=${to}`
       const res = await api.get(url)
       setSummary({
@@ -98,28 +99,35 @@ export default function SuperAdminPayments() {
     }
   }
 
-  useEffect(() => { fetchData(1, 'today', '', '') }, [])
+  useEffect(() => { fetchData(1, 'today', '', '', 'super_admin_commission') }, [])
 
   const handleFilterClick = key => {
     setActiveFilter(key)
     if (key !== 'custom') {
       setLoading(true)
-      fetchData(1, key, '', '')
+      fetchData(1, key, '', '', activeView)
     } else if (customFrom && customTo) {
       setLoading(true)
-      fetchData(1, 'custom', customFrom, customTo)
+      fetchData(1, 'custom', customFrom, customTo, activeView)
     }
   }
 
   const applyCustomRange = () => {
     if (!customFrom || !customTo) return
     setLoading(true)
-    fetchData(1, 'custom', customFrom, customTo)
+    fetchData(1, 'custom', customFrom, customTo, activeView)
   }
 
   const loadMore = () => {
     setLoadingMore(true)
-    fetchData(page + 1, activeFilter, customFrom, customTo)
+    fetchData(page + 1, activeFilter, customFrom, customTo, activeView)
+  }
+
+  const handleViewChange = e => {
+    const view = e.target.value
+    setActiveView(view)
+    setLoading(true)
+    fetchData(1, activeFilter, customFrom, customTo, view)
   }
 
   const inr = n => `Rs. ${Math.round(n || 0).toLocaleString('en-IN')}`
@@ -215,7 +223,9 @@ export default function SuperAdminPayments() {
                     </div>
                     <div className="sp-txn-amounts">
                       <div className="sp-txn-amount">{inr(t.amount)}</div>
-                      <div className="sp-txn-coins">{t.coins.toLocaleString('en-IN')} coins</div>
+                      {t.coins != null && (
+                        <div className="sp-txn-coins">{t.coins.toLocaleString('en-IN')} coins</div>
+                      )}
                     </div>
                     <span className={`sp-txn-tag ${t.payment_method}`}>{fmtMethod(t.payment_method)}</span>
                   </div>

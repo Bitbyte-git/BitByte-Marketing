@@ -1490,6 +1490,7 @@ class JewelryOrderView(APIView):
 COMMISSION_POOL_PERCENT = Decimal('27.00')
 COMMISSION_LEVEL1_PERCENT = Decimal('7.00')
 COMMISSION_LEVEL_PERCENT = Decimal('1.00')
+SUPER_ADMIN_OWN_PERCENT = Decimal('1.00')   # ── NEW: Super Admin's fixed "My Commission" share ──
 
 _ROLE_PROFILE_MAP = {
     'customer': CustomerProfile,
@@ -1531,10 +1532,10 @@ def build_commission_chain(buyer_user):
 
 def distribute_commission(order):
     """Order success aana odane call pண்ணனும் — 27% chain ku distribute pண்ணும்,
-    balance Super Admin ku pogும்."""
+    balance Super Admin ku pogும். Role edhுவும் irundhalும் (customer/promotor/
+    sub_dealer/dealer/admin) buyer order pannalum commission chain trigger aagum."""
     buyer = order.user
-    if buyer.role != 'customer':
-        return
+    # ── role restriction REMOVED — evaru order pannalum commission poogum ──
 
     total_amount = Decimal(str(order.total_price))
     chain = build_commission_chain(buyer)
@@ -1572,26 +1573,49 @@ def distribute_commission(order):
             print(f'❌ Commission log FAILED for {creator_user.email}:', repr(e))
         remaining_percent -= pct
 
-    # ── Balance percent (evlo mudியalaiyோ) — direct Super Admin ku ──
-    if remaining_percent > 0:
-        super_admin = User.objects.filter(role='super_admin').first()
-        if super_admin:
-            amount = (total_amount * remaining_percent / Decimal('100')).quantize(Decimal('0.01'))
-            coins = int(amount * COIN_RATE_PER_RUPEE)
+    # ── NEW: Super Admin — split into "My Commission" (fixed 1%) + "Balance" (remainder) ──
+    super_admin = User.objects.filter(role='super_admin').first()
+    if super_admin and remaining_percent > 0:
+        my_commission_pct = min(SUPER_ADMIN_OWN_PERCENT, remaining_percent)
+        balance_pct = remaining_percent - my_commission_pct
+
+        # ── My Commission — Super Admin's own fixed 1% share, commission_level=-1 ──
+        if my_commission_pct > 0:
+            my_amount = (total_amount * my_commission_pct / Decimal('100')).quantize(Decimal('0.01'))
+            my_coins = int(my_amount * COIN_RATE_PER_RUPEE)
 
             wallet, _ = Wallet.objects.get_or_create(user=super_admin)
-            wallet.balance_coins += coins
+            wallet.balance_coins += my_coins
             wallet.save(update_fields=['balance_coins'])
 
             try:
                 CoinRecharge.objects.create(
-                    user=super_admin, amount_paid=amount, coins_credited=coins,
+                    user=super_admin, amount_paid=my_amount, coins_credited=my_coins,
+                    payment_method='commission', status='success',
+                    entry_type='credit', source='commission',
+                    related_order=order, commission_level=-1,
+                )
+            except Exception as e:
+                print('❌ Super Admin MY COMMISSION log FAILED:', repr(e))
+
+        # ── Balance — leftover percent (Super Admin Commission), commission_level=0 ──
+        if balance_pct > 0:
+            bal_amount = (total_amount * balance_pct / Decimal('100')).quantize(Decimal('0.01'))
+            bal_coins = int(bal_amount * COIN_RATE_PER_RUPEE)
+
+            wallet, _ = Wallet.objects.get_or_create(user=super_admin)
+            wallet.balance_coins += bal_coins
+            wallet.save(update_fields=['balance_coins'])
+
+            try:
+                CoinRecharge.objects.create(
+                    user=super_admin, amount_paid=bal_amount, coins_credited=bal_coins,
                     payment_method='commission', status='success',
                     entry_type='credit', source='commission',
                     related_order=order, commission_level=0,
                 )
             except Exception as e:
-                print('❌ Super Admin commission log FAILED:', repr(e))
+                print('❌ Super Admin BALANCE COMMISSION log FAILED:', repr(e))
 
 
 # ── VIEW 1: Razorpay Order Create ──
@@ -4010,10 +4034,8 @@ def _apply_period_filter(qs, period, start_date, end_date, date_field='created_a
 
 
 class PaymentsSummaryView(APIView):
-    """Super Admin ku mattum — REAL payment revenue kaamikkum.
-    Real money customer Recharge pண்ணும்போது than Razorpay mூlam varum (card/upi/netbanking).
-    Order pண்ணும்போது coins spend aaguthu mattum — puthu money varadhu, adhala idhu
-    CoinRecharge table (source='recharge') vachi than build pண்ணuறோm, JewelryOrder illa."""
+    """Super Admin ku mattum — dropdown vachi 3 views: All Sales / Super Admin
+    Commission (balance) / My Commission (fixed 1%)."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -4025,15 +4047,110 @@ class PaymentsSummaryView(APIView):
         period = request.query_params.get('period', 'today')
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
+        view = request.query_params.get('view', 'super_admin_commission')   # ── NEW: all_sales | super_admin_commission | my_commission
 
-        # ── Real revenue = ella user (customer/promotor/etc) um Razorpay mூlam recharge pண்ணின paisa ──
+        if view == 'all_sales':
+            # ── Full order value, commission edhுவும் illama ──
+            base_qs = JewelryOrder.objects.all()
+            period_qs = _apply_period_filter(base_qs, period, start_date, end_date)
+
+            total_revenue = period_qs.aggregate(total=Sum('total_price'))['total'] or 0
+            total_transactions = period_qs.count()
+
+            six_months_ago = timezone.now().date() - timedelta(days=180)
+            trend_qs = (
+                base_qs.filter(created_at__date__gte=six_months_ago)
+                .annotate(month=TruncMonth('created_at'))
+                .values('month')
+                .annotate(revenue=Sum('total_price'))
+                .order_by('month')
+            )
+            monthly_trend = [
+                {'month': t['month'].strftime('%b %Y'), 'revenue': float(t['revenue'])}
+                for t in trend_qs
+            ]
+
+            txn_qs = period_qs.select_related('user').order_by('-created_at')
+            start = (page - 1) * page_size
+            page_txns = txn_qs[start:start + page_size]
+
+            return Response({
+                'view': view,
+                'period': period,
+                'total_revenue': float(total_revenue),
+                'total_coins_sold': None,
+                'total_transactions': total_transactions,
+                'monthly_trend': monthly_trend,
+                'page': page,
+                'has_more': start + page_size < total_transactions,
+                'transactions': [
+                    {
+                        'transaction_id': o.order_id,
+                        'buyer': get_user_profile_id(o.user) or o.user.email,
+                        'amount': float(o.total_price),
+                        'coins': None,
+                        'payment_method': o.payment_method,
+                        'created_at': o.created_at,
+                    } for o in page_txns
+                ],
+            })
+
+        elif view in ('super_admin_commission', 'my_commission'):
+            level_filter = 0 if view == 'super_admin_commission' else -1
+            base_qs = CoinRecharge.objects.filter(
+                status='success', source='commission', commission_level=level_filter
+            )
+            period_qs = _apply_period_filter(base_qs, period, start_date, end_date)
+
+            total_revenue = period_qs.aggregate(total=Sum('amount_paid'))['total'] or 0
+            total_coins_sold = period_qs.aggregate(total=Sum('coins_credited'))['total'] or 0
+
+            six_months_ago = timezone.now().date() - timedelta(days=180)
+            trend_qs = (
+                base_qs.filter(created_at__date__gte=six_months_ago)
+                .annotate(month=TruncMonth('created_at'))
+                .values('month')
+                .annotate(revenue=Sum('amount_paid'))
+                .order_by('month')
+            )
+            monthly_trend = [
+                {'month': t['month'].strftime('%b %Y'), 'revenue': float(t['revenue'])}
+                for t in trend_qs
+            ]
+
+            txn_qs = period_qs.select_related('related_order__user').order_by('-created_at')
+            total_transactions = txn_qs.count()
+            start = (page - 1) * page_size
+            page_txns = txn_qs[start:start + page_size]
+
+            return Response({
+                'view': view,
+                'period': period,
+                'total_revenue': float(total_revenue),
+                'total_coins_sold': total_coins_sold,
+                'total_transactions': total_transactions,
+                'monthly_trend': monthly_trend,
+                'page': page,
+                'has_more': start + page_size < total_transactions,
+                'transactions': [
+                    {
+                        'transaction_id': r.transaction_id or '—',
+                        'buyer': get_user_profile_id(r.related_order.user) if r.related_order else '—',
+                        'amount': float(r.amount_paid),
+                        'coins': r.coins_credited,
+                        'payment_method': r.payment_method,
+                        'created_at': r.created_at,
+                    } for r in page_txns
+                ],
+            })
+
+        # ── Legacy default (real Razorpay revenue) — old behavior fallback ──
         recharges_all = CoinRecharge.objects.filter(status='success', source='recharge')
         recharges_period = _apply_period_filter(recharges_all, period, start_date, end_date)
 
         total_revenue = recharges_period.aggregate(total=Sum('amount_paid'))['total'] or 0
         total_coins_sold = recharges_period.aggregate(total=Sum('coins_credited'))['total'] or 0
 
-        # ── Chart — evllovadhu period select pண்ணினalum, kadaisi 6 months trend fixed-a kaamikkum ──
         six_months_ago = timezone.now().date() - timedelta(days=180)
         trend_qs = (
             recharges_all.filter(created_at__date__gte=six_months_ago)
@@ -4053,6 +4170,7 @@ class PaymentsSummaryView(APIView):
         page_txns = txn_qs[start:start + page_size]
 
         return Response({
+            'view': 'razorpay_revenue',
             'period': period,
             'total_revenue': float(total_revenue),
             'total_coins_sold': total_coins_sold,
@@ -4071,7 +4189,6 @@ class PaymentsSummaryView(APIView):
                 } for r in page_txns
             ],
         })
-
 
 def _find_user_by_public_id(public_id):
     """Customer/Promotor/SubDealer/Dealer/Admin ID (BBCUS20260001 mாதிri) vачி User + Profile
