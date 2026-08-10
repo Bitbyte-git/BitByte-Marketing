@@ -736,6 +736,7 @@ class JewelryOrder(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['user_id', 'created_at']),
+            models.Index(fields=['created_at']),
         ]
     
     def save(self, *args, **kwargs):
