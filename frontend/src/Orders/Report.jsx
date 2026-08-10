@@ -1,5 +1,5 @@
-﻿import { useState, useEffect, useMemo, startTransition } from 'react'
-import { useNavigate } from 'react-router-dom'
+﻿import { useState, useEffect, useMemo, startTransition, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
 import logo from '../assets/logo.png'
 import * as XLSX from 'xlsx'
@@ -679,8 +679,35 @@ const nodesForSelectedLevel = useMemo(() => {
   return all
 }, [selectedLevel, treeData])
 
-// reset node selection whenever level changes
+const [urlParams] = useSearchParams()
+const skipLevelResetRef = useRef(false)
+
 useEffect(() => {
+  const urlRole = urlParams.get('role')
+  const urlId = urlParams.get('id')
+  if (!urlRole || !urlId || !treeData.length) return
+  skipLevelResetRef.current = true
+  setSelectedLevel(urlRole)
+}, [urlParams, treeData])
+
+useEffect(() => {
+  const urlRole = urlParams.get('role')
+  const urlId = urlParams.get('id')
+  if (!urlRole || !urlId || !nodesForSelectedLevel.length) return
+  const node = nodesForSelectedLevel.find(n => n.id?.toString() === urlId)
+  if (node) {
+    const publicId = node.customer_id || node[`${node.type}_id`] || node.id
+    setSelectedNodeId(publicId.toString())
+  }
+}, [urlParams, nodesForSelectedLevel])
+
+// reset node selection whenever level changes — but skip once when the
+// change came from a URL-driven search (see skipLevelResetRef above)
+useEffect(() => {
+  if (skipLevelResetRef.current) {
+    skipLevelResetRef.current = false
+    return
+  }
   setSelectedNodeId('')
   setNodeSearch('')
 }, [selectedLevel])

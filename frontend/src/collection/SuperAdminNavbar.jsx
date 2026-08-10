@@ -3,6 +3,7 @@ import { useState, useRef } from 'react'
 import logo from '../assets/logo.png'
 import api from '../api'
 
+
 function Icon({ name, size = 17 }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
   const icons = {
@@ -56,13 +57,27 @@ export default function SuperAdminNavbar({
     { keywords: ['revenue', 'payments'], path: '/superadmin-payments' },
     { keywords: ['add aug coin', 'send coin'], path: '/superadmin-send-coins' },
     { keywords: ['autopay'], path: '/superadmin-autopay-list' },
-    { keywords: ['today birthday', 'birthday'], path: '/super-admin' },
-    { keywords: ['work anniversary', 'join date', 'join anniversary'], path: '/super-admin' },
-    { keywords: ['anniversary'], path: '/super-admin' },
-    { keywords: ['gold rate', 'today rate'], path: '/super-admin' },
-    { keywords: ['requests', 'profile request'], path: '/super-admin' },
-    { keywords: ['send announcement'], path: '/super-admin' },
-    { keywords: ['my announcements'], path: '/super-admin' },
+    { keywords: ['today birthday', 'birthday'], path: '/super-admin?open=birthday' },
+    { keywords: ['work anniversary', 'join date', 'join anniversary'], path: '/super-admin?open=joindate' },
+    { keywords: ['anniversary'], path: '/super-admin?open=anniversary' },
+    { keywords: ['gold rate', 'today rate'], path: '/super-admin?open=rate' },
+    { keywords: ['requests', 'profile request'], path: '/super-admin?open=requests' },
+    { keywords: ['send announcement'], path: '/super-admin?open=announcement' },
+    { keywords: ['my announcements'], path: '/super-admin?open=myannouncements' },
+    -    { keywords: ['today birthday', 'birthday'], path: '/super-admin' },
+-    { keywords: ['work anniversary', 'join date', 'join anniversary'], path: '/super-admin' },
+-    { keywords: ['anniversary'], path: '/super-admin' },
+-    { keywords: ['gold rate', 'today rate'], path: '/super-admin' },
+-    { keywords: ['requests', 'profile request'], path: '/super-admin' },
+-    { keywords: ['send announcement'], path: '/super-admin' },
+-    { keywords: ['my announcements'], path: '/super-admin' },
++    { keywords: ['today birthday', 'birthday'], path: '/super-admin?open=birthday' },
++    { keywords: ['work anniversary', 'join date', 'join anniversary'], path: '/super-admin?open=joindate' },
++    { keywords: ['anniversary'], path: '/super-admin?open=anniversary' },
++    { keywords: ['gold rate', 'today rate'], path: '/super-admin?open=rate' },
++    { keywords: ['requests', 'profile request'], path: '/super-admin?open=requests' },
++    { keywords: ['send announcement'], path: '/super-admin?open=announcement' },
++    { keywords: ['my announcements'], path: '/super-admin?open=myannouncements' },
   ]
 
   const submitVoiceSearch = async (query) => {
@@ -73,7 +88,7 @@ export default function SuperAdminNavbar({
     const lower = q.toLowerCase()
 
     for (const page of PAGE_ROUTES) {
-      if (page.keywords.some(k => lower.includes(k))) {
+      if (page?.keywords?.some(k => lower.includes(k))) {
         navigate(page.path)
         return
       }

@@ -2021,9 +2021,18 @@ class SalesReportView(APIView):
             admins = list(AdminProfile.objects.all().prefetch_related(
                 'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
             ))
-            all_ids = []
-            for a in admins:
-                all_ids.extend(_collect_user_ids_admin(a))
+
+            # ── FAST: 5 flat DB queries (one per role) instead of walking the
+            # whole tree in Python — covers admin/dealer/sub_dealer/promotor/
+            # customer own_orders too, not just customers. ──
+            admin_ids = list(AdminProfile.objects.values_list('user_id', flat=True))
+            dealer_ids = list(DealerProfile.objects.filter(assigned_admin__isnull=False).values_list('user_id', flat=True))
+            sub_dealer_ids = list(SubDealerProfile.objects.filter(assigned_dealer__isnull=False).values_list('user_id', flat=True))
+            promotor_ids = list(PromotorProfile.objects.filter(assigned_sub_dealer__isnull=False).values_list('user_id', flat=True))
+            customer_ids = list(CustomerProfile.objects.filter(assigned_promotor__isnull=False).values_list('user_id', flat=True))
+
+            all_ids = admin_ids + dealer_ids + sub_dealer_ids + promotor_ids + customer_ids
+
             orders_by_user = _orders_by_user_map(all_ids)
             monthly_counts = _monthly_order_counts_map(all_ids)
             return Response({

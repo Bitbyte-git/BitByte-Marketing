@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
 import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import logo from '../assets/logo.png'
@@ -1043,6 +1043,7 @@ function OrderTrendChart({ dark }) {
 }
 export default function SuperAdminDashboard() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const dark = false
   const [admins, setAdmins] = useState([])
   const [hierarchyData, setHierarchyData] = useState(null)
@@ -1526,6 +1527,18 @@ useEffect(() => {
   setHierarchySearch('')
   fetchHierarchy()
 }
+
+  useEffect(() => {
+    const open = searchParams.get('open')
+    if (!open) return
+    if (open === 'birthday') setShowBirthdayList(true)
+    else if (open === 'anniversary') setShowAnniversaryList(true)
+    else if (open === 'joindate') setShowJoinDateList(true)
+    else if (open === 'rate') setShowRatePopup(true)
+    else if (open === 'requests') { setShowRequests(true); setRequestMsg('') }
+    else if (open === 'announcement') { setShowAnnouncement(true); setAnnouncementMsg('') }
+    else if (open === 'myannouncements') { setShowMyAnnouncements(true); fetchMyAnnouncements() }
+  }, [searchParams])
 
   const handleChange = e => {
     const { name, value } = e.target

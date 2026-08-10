@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
 
 // ══════════════════════════════════════════════════════════════════
@@ -817,6 +817,42 @@ useEffect(() => {
   hasFetchedRef.current = true
   fetchHierarchy()
 }, [])
+
+const [urlParams] = useSearchParams()
+
+useEffect(() => {
+  const urlRole = urlParams.get('role')
+  const urlId = urlParams.get('id')
+  if (!urlRole || !urlId || !hierarchyData) return
+
+  for (const admin of hierarchyData.admins) {
+    if (urlRole === 'admin' && admin.id.toString() === urlId) {
+      setSelAdmin(admin.id); return
+    }
+    for (const dealer of admin.dealers) {
+      if (urlRole === 'dealer' && dealer.id.toString() === urlId) {
+        setSelAdmin(admin.id); setSelDealer(dealer.id); return
+      }
+      for (const sd of dealer.sub_dealers) {
+        if (urlRole === 'sub_dealer' && sd.id.toString() === urlId) {
+          setSelAdmin(admin.id); setSelDealer(dealer.id); setSelSubDealer(sd.id); return
+        }
+        for (const pr of sd.promotors) {
+          if (urlRole === 'promotor' && pr.id.toString() === urlId) {
+            setSelAdmin(admin.id); setSelDealer(dealer.id); setSelSubDealer(sd.id); setSelPromotor(pr.id); return
+          }
+          for (const cus of pr.customers) {
+            if (urlRole === 'customer' && cus.id.toString() === urlId) {
+              setSelAdmin(admin.id); setSelDealer(dealer.id); setSelSubDealer(sd.id); setSelPromotor(pr.id)
+              setCustomerChain([cus.id])
+              return
+            }
+          }
+        }
+      }
+    }
+  }
+}, [urlParams, hierarchyData])
 
   useEffect(() => {
     return () => {
