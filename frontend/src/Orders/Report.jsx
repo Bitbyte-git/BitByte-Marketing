@@ -86,6 +86,7 @@ function getChildren(node) {
   if (node.type === 'dealer') return { key: 'sub_dealers', childType: 'sub_dealer' }
   if (node.type === 'sub_dealer') return { key: 'promotors', childType: 'promotor' }
   if (node.type === 'promotor') return { key: 'customers', childType: 'customer' }
+  if (node.type === 'customer') return { key: 'customers', childType: 'customer' }
   return { key: null, childType: null }
 }
 

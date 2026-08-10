@@ -87,6 +87,36 @@ export default function SuperAdminNavbar({
 
     const lower = q.toLowerCase()
 
+    // Strip page keywords first — whatever text remains is treated as a
+    // person name/ID to search for (checked BEFORE generic page routing,
+    // so "BBCUS123 sales report" finds the person, not the generic page).
+    const nameOnly = lower
+      .replace(/sales report|sales|report|hierarchy grid|hierarchy|show|open|of/gi, '')
+      .trim()
+
+    if (nameOnly) {
+      try {
+        const res = await api.get('/hierarchy/search-person/', { params: { q: nameOnly } })
+        const results = res.data.results || []
+        if (results.length > 0) {
+          const match = results[0]
+          if (lower.includes('sales report')) {
+            navigate(`/sales-report?role=${match.role}&id=${match.id}`)
+          } else if (lower.includes('hierarchy')) {
+            navigate(`/superadmin-hierarchy-grid?role=${match.role}&id=${match.id}`)
+          } else {
+            navigate(`/hierarchy-sales-count?role=${match.role}&id=${match.id}`)
+          }
+          return
+        }
+        // no person match found — fall through to page-keyword routing below
+      } catch (err) {
+        alert('Search failed bro: ' + (err.response?.data?.error || err.message))
+        return
+      }
+    }
+
+    // No leftover name text, or no person matched — treat as a plain page command
     for (const page of PAGE_ROUTES) {
       if (page?.keywords?.some(k => lower.includes(k))) {
         navigate(page.path)
@@ -94,33 +124,7 @@ export default function SuperAdminNavbar({
       }
     }
 
-    const nameOnly = lower
-      .replace(/sales report|sales|report|hierarchy grid|hierarchy|show|open|of/gi, '')
-      .trim()
-
-    if (!nameOnly) {
-      alert(`"${q}" ku match edhuvum kidaikala bro. Vera mari try pannunga.`)
-      return
-    }
-
-    try {
-      const res = await api.get('/hierarchy/search-person/', { params: { q: nameOnly } })
-      const results = res.data.results || []
-      if (results.length === 0) {
-        alert(`"${nameOnly}" nu evarum kidaikala bro.`)
-        return
-      }
-      const match = results[0]
-      if (lower.includes('sales report')) {
-        navigate(`/sales-report?role=${match.role}&id=${match.id}`)
-      } else if (lower.includes('hierarchy')) {
-        navigate(`/superadmin-hierarchy-grid?role=${match.role}&id=${match.id}`)
-      } else {
-        navigate(`/hierarchy-sales-count?role=${match.role}&id=${match.id}`)
-      }
-    } catch (err) {
-      alert('Search failed bro: ' + (err.response?.data?.error || err.message))
-    }
+    alert(`"${q}" ku match edhuvum kidaikala bro. Vera mari try pannunga.`)
   }
 
   const toggleMic = () => {

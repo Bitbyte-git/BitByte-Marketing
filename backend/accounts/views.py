@@ -1778,9 +1778,42 @@ def _monthly_order_counts_map(user_ids):
     return counts
 
 
-def _build_customer(c, orders_by_user, monthly_counts):
+def _get_children_by_creator():
+    """Map: creator user_id -> list of CustomerProfile objects directly
+    referred by them (the customer-refers-customer chain)."""
+    from collections import defaultdict
+    children_by_creator = defaultdict(list)
+    for cust in CustomerProfile.objects.all().only(
+        'id', 'user_id', 'created_by_id', 'customer_id',
+        'first_name', 'last_name', 'mobile_number', 'city_name'
+    ):
+        children_by_creator[cust.created_by_id].append(cust)
+    return children_by_creator
+
+
+def _collect_nested_customer_ids(user_id, children_by_creator, seen=None):
+    """Every descendant customer's user_id under this user, any depth."""
+    if seen is None:
+        seen = set()
+    ids = []
+    for child in children_by_creator.get(user_id, []):
+        if child.user_id in seen:
+            continue
+        seen.add(child.user_id)
+        ids.append(child.user_id)
+        ids.extend(_collect_nested_customer_ids(child.user_id, children_by_creator, seen))
+    return ids
+
+
+def _build_customer(c, orders_by_user, monthly_counts, children_by_creator=None):
     orders = orders_by_user.get(c.user_id, [])
     monthly_count = monthly_counts.get(c.user_id, 0)   # ← O(1) dict lookup, loop illa
+    nested_customers = []
+    if children_by_creator:
+        nested_customers = [
+            _build_customer(sc, orders_by_user, monthly_counts, children_by_creator)
+            for sc in children_by_creator.get(c.user_id, [])
+        ]
     return {
         'type': 'customer', 'id': c.id, 'customer_id': c.customer_id,
         'first_name': c.first_name, 'last_name': c.last_name,
@@ -1788,10 +1821,11 @@ def _build_customer(c, orders_by_user, monthly_counts):
         'orders': orders,
         'order_count': monthly_count,
         'status': get_target_status(monthly_count),
+        'customers': nested_customers,
     }
 
-def _build_promotor(p, orders_by_user, monthly_counts):
-    customers = [_build_customer(c, orders_by_user, monthly_counts) for c in p.assigned_customers.all()]
+def _build_promotor(p, orders_by_user, monthly_counts, children_by_creator=None):
+    customers = [_build_customer(c, orders_by_user, monthly_counts, children_by_creator) for c in p.assigned_customers.all()]
     own_orders = orders_by_user.get(p.user_id, [])
     own_monthly = monthly_counts.get(p.user_id, 0)
     return {
@@ -1804,8 +1838,8 @@ def _build_promotor(p, orders_by_user, monthly_counts):
         'status': worst_status([c['status'] for c in customers] + [get_target_status(own_monthly)]),
     }
 
-def _build_sub_dealer(sd, orders_by_user, monthly_counts):
-    promotors = [_build_promotor(p, orders_by_user, monthly_counts) for p in sd.assigned_promotors.all()]
+def _build_sub_dealer(sd, orders_by_user, monthly_counts, children_by_creator=None):
+    promotors = [_build_promotor(p, orders_by_user, monthly_counts, children_by_creator) for p in sd.assigned_promotors.all()]
     own_orders = orders_by_user.get(sd.user_id, [])
     own_monthly = monthly_counts.get(sd.user_id, 0)
     return {
@@ -1818,8 +1852,8 @@ def _build_sub_dealer(sd, orders_by_user, monthly_counts):
         'status': worst_status([p['status'] for p in promotors] + [get_target_status(own_monthly)]),
     }
 
-def _build_dealer(d, orders_by_user, monthly_counts):
-    sub_dealers = [_build_sub_dealer(sd, orders_by_user, monthly_counts) for sd in d.assigned_sub_dealers.all()]
+def _build_dealer(d, orders_by_user, monthly_counts, children_by_creator=None):
+    sub_dealers = [_build_sub_dealer(sd, orders_by_user, monthly_counts, children_by_creator) for sd in d.assigned_sub_dealers.all()]
     own_orders = orders_by_user.get(d.user_id, [])
     own_monthly = monthly_counts.get(d.user_id, 0)
     return {
@@ -1832,8 +1866,8 @@ def _build_dealer(d, orders_by_user, monthly_counts):
         'status': worst_status([sd['status'] for sd in sub_dealers] + [get_target_status(own_monthly)]),
     }
 
-def _build_admin(a, orders_by_user, monthly_counts):
-    dealers = [_build_dealer(d, orders_by_user, monthly_counts) for d in a.assigned_dealers.all()]
+def _build_admin(a, orders_by_user, monthly_counts, children_by_creator=None):
+    dealers = [_build_dealer(d, orders_by_user, monthly_counts, children_by_creator) for d in a.assigned_dealers.all()]
     own_orders = orders_by_user.get(a.user_id, [])
     own_monthly = monthly_counts.get(a.user_id, 0)
     return {
@@ -2022,22 +2056,26 @@ class SalesReportView(APIView):
                 'assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers'
             ))
 
-            # ── FAST: 5 flat DB queries (one per role) instead of walking the
-            # whole tree in Python — covers admin/dealer/sub_dealer/promotor/
-            # customer own_orders too, not just customers. ──
             admin_ids = list(AdminProfile.objects.values_list('user_id', flat=True))
             dealer_ids = list(DealerProfile.objects.filter(assigned_admin__isnull=False).values_list('user_id', flat=True))
             sub_dealer_ids = list(SubDealerProfile.objects.filter(assigned_dealer__isnull=False).values_list('user_id', flat=True))
             promotor_ids = list(PromotorProfile.objects.filter(assigned_sub_dealer__isnull=False).values_list('user_id', flat=True))
             customer_ids = list(CustomerProfile.objects.filter(assigned_promotor__isnull=False).values_list('user_id', flat=True))
 
-            all_ids = admin_ids + dealer_ids + sub_dealer_ids + promotor_ids + customer_ids
+            # ── NEW: customer-refers-customer chain — every nested customer
+            # under a direct customer, any depth, so their orders/sales show up too ──
+            children_by_creator = _get_children_by_creator()
+            nested_customer_ids = []
+            for cid in customer_ids:
+                nested_customer_ids.extend(_collect_nested_customer_ids(cid, children_by_creator))
+
+            all_ids = admin_ids + dealer_ids + sub_dealer_ids + promotor_ids + customer_ids + nested_customer_ids
 
             orders_by_user = _orders_by_user_map(all_ids)
             monthly_counts = _monthly_order_counts_map(all_ids)
             return Response({
                 'role': role,
-                'data': [_build_admin(a, orders_by_user, monthly_counts) for a in admins],
+                'data': [_build_admin(a, orders_by_user, monthly_counts, children_by_creator) for a in admins],
                 'ancestors': [],
             })
 
