@@ -1573,7 +1573,9 @@ def distribute_commission(order):
             print(f'❌ Commission log FAILED for {creator_user.email}:', repr(e))
         remaining_percent -= pct
 
-    # ── NEW: Super Admin — split into "My Commission" (fixed 1%) + "Balance" (remainder) ──
+    # ── Super Admin — split into "My Commission" (fixed 1%) + "Balance" (remainder).
+    # Entry mattum than create aagum evlo actual amount kidaicha — zero na entry ye illa,
+    # adhunala "Today" list-la evlo orders-ku real-a commission kidaichucho, adhu mattum varum. ──
     super_admin = User.objects.filter(role='super_admin').first()
     if super_admin and remaining_percent > 0:
         my_commission_pct = min(SUPER_ADMIN_OWN_PERCENT, remaining_percent)
