@@ -4140,6 +4140,7 @@ class PaymentsSummaryView(APIView):
                         'coins': r.coins_credited,
                         'payment_method': r.payment_method,
                         'created_at': r.created_at,
+                        'percent': round(float(r.amount_paid) / float(r.related_order.total_price) * 100, 2) if r.related_order and r.related_order.total_price else None,
                     } for r in page_txns
                 ],
             })

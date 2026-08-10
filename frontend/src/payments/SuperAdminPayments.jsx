@@ -242,6 +242,9 @@ export default function SuperAdminPayments() {
                       {t.coins != null && (
                         <div className="sp-txn-coins">{t.coins.toLocaleString('en-IN')} coins</div>
                       )}
+                      {t.percent != null && (
+                        <div className="sp-txn-coins" style={{ color: GOLD, fontWeight: 900 }}>{t.percent}%</div>
+                      )}
                     </div>
                     <span className={`sp-txn-tag ${t.payment_method}`}>{fmtMethod(t.payment_method)}</span>
                   </div>
