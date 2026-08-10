@@ -1448,6 +1448,12 @@ class JewelryOrderView(APIView):
             status='pending',
         )
 
+        # ── NEW: commission chain ku pogum — "Place Order" vachi pannina orders-kum trigger aagum ──
+        try:
+            distribute_commission(order)
+        except Exception as e:
+            print('❌ distribute_commission FAILED (JewelryOrderView):', repr(e))
+
         serializer = JewelryOrderSerializer(order, context={'request': request})
         return Response({
             'message': 'Order placed successfully!',
