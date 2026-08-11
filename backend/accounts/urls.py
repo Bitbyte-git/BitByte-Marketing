@@ -9,7 +9,7 @@ from .views import (
 HierarchySubtreeOrdersView, HierarchyAdminsView, HierarchyChildrenView, SalesReportView, OrderTimeSeriesView, TodayLoginStatusView,OrderTimeSeriesView, CoinRequestView, CoinRequestApproveView, CoinRequestRejectView, CoinRequestApproveAllView, CoinStockView, SuperAdminAddCoinsView, CoinStockForUserView, MyHierarchyView, TodayRewardsView, MyBasicInfoView,
  RetailerPromotionListView, RetailerPromotionActionView, WholesaleDealerPromotionListView, WholesaleDealerPromotionActionView, DistributorPromotionListView, DistributorPromotionActionView, SuperStockistPromotionListView, SuperStockistPromotionActionView, PromotionCustomerListView, PromotionCustomerListView, PromotionNodeListView,
  ReferrerInfoView, PublicCustomerRegisterView,GenerateReferralLinkView, RechargeCreateOrderView, RechargeVerifyPaymentView, WalletView, RechargeHistoryView, RechargeStatementView, PayWithCoinsView, PaymentsSummaryView, UserLookupView, SendCoinsView, AdminUserHistoryView, AdminSentHistoryView, AutoPayCreateView, AutoPayConfirmView, AutoPayStatusView, AutoPayToggleView, autopay_webhook,AutoPayMandateListView, AffordableProductsView,
- HierarchyPersonSearchView
+ HierarchyPersonSearchView, SalesSummaryView, SalesTrendView
 
 
 
@@ -97,6 +97,8 @@ urlpatterns = [
     path('autopay/mandates/', AutoPayMandateListView.as_view()),
     path('products/affordable/', AffordableProductsView.as_view()),
     path('hierarchy/search-person/', HierarchyPersonSearchView.as_view()),
+    path('sales-report/summary/', SalesSummaryView.as_view()),
+    path('sales-report/trend/', SalesTrendView.as_view()),
 
     
 

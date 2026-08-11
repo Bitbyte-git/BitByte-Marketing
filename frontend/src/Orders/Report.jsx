@@ -625,8 +625,14 @@ const [timeRange, setTimeRange] = useState('Week')
 // â”€â”€ NEW: Network breakdown grid la click pannina node â”€â”€
 const [gridSelectedNode, setGridSelectedNode] = useState(null)
 
-// â”€â”€ NEW: full active/inactive login list (super_admin only) â”€â”€
-const [loginStatusFull, setLoginStatusFull] = useState({ active: [], inactive: [] })
+// ── NEW: summary cards (Total Sales / Orders / Customers) — DB aggregate mattum ──
+const [summaryData, setSummaryData] = useState({ total_sales: 0, total_orders: 0, customers_with_orders: 0 })
+
+// ── NEW: trend graph data — period-wise thani API call ──
+const [trendData, setTrendData] = useState([])
+
+// ── NEW: scoped active/inactive login list (super_admin only) — backend scope pண்ணும் ──
+const [scopedLoginStats, setScopedLoginStats] = useState({ active: [], inactive: [] })
 
 // â”€â”€ NEW: coin stock for scoped node (or own account) â”€â”€
 const [coinStock, setCoinStock] = useState([])
@@ -660,14 +666,6 @@ useEffect(() => {
     }
     fetchReport()
   }, [])
-
-// â”€â”€ NEW: super_admin ku mattum login status fetch pannu â”€â”€
-  useEffect(() => {
-    if (role !== 'super_admin') return
-    api.get('/today-login-status/')
-      .then(res => setLoginStatusFull({ active: res.data.active || [], inactive: res.data.inactive || [] }))
-      .catch(() => {})
-  }, [role])
 
   const cfg = ROLE_CFG[role] || { label: role, color: '#0E5A57' }
   const availableLevels = DRILL_LEVELS[role] || ['own']
@@ -765,14 +763,34 @@ useEffect(() => {
   }
 }, [scopedNode])
 
-const scopedLoginStats = useMemo(() => {
-  if (!scopedNode) return loginStatusFull
-  const ids = collectSubtreeRoleIds(scopedNode)
-  return {
-    active: loginStatusFull.active.filter(e => ids.has(e.id)),
-    inactive: loginStatusFull.inactive.filter(e => ids.has(e.id)),
-  }
-}, [scopedNode, loginStatusFull])
+// ── NEW: Summary cards — scopedNode select pண்ணின role+id vachi thani API call ──
+useEffect(() => {
+  const params = {}
+  if (scopedNode) { params.role = scopedNode.type; params.id = scopedNode.id }
+  api.get('/sales-report/summary/', { params })
+    .then(res => setSummaryData(res.data))
+    .catch(() => {})
+}, [scopedNode])
+
+// ── NEW: Trend graph — timeRange (Today/Week/Month/Year) button click pண்ணும்போது
+// thani thani API call pண்ணும். scopedNode select pண்ணினாலும் andha scope-ku mattum ──
+useEffect(() => {
+  const params = { period: timeRange.toLowerCase() }
+  if (scopedNode) { params.role = scopedNode.type; params.id = scopedNode.id }
+  api.get('/sales-report/trend/', { params })
+    .then(res => setTrendData(res.data.data || []))
+    .catch(() => {})
+}, [scopedNode, timeRange])
+
+// ── NEW: Login Status — scopedNode select pண்ணின role+id vachi backend-லேயே scope pண்ணும் ──
+useEffect(() => {
+  if (role !== 'super_admin') return
+  const params = {}
+  if (scopedNode) { params.scope_role = scopedNode.type; params.scope_id = scopedNode.id }
+  api.get('/today-login-status/', { params })
+    .then(res => setScopedLoginStats({ active: res.data.active || [], inactive: res.data.inactive || [] }))
+    .catch(() => {})
+}, [role, scopedNode])
 
 const goToActiveLogin = () => navigate('/login-active', { state: { ids: scopedNode ? Array.from(collectSubtreeRoleIds(scopedNode)) : null, scopeLabel: scopedLoginLabel } })
 const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scopedNode ? Array.from(collectSubtreeRoleIds(scopedNode)) : null, scopeLabel: scopedLoginLabel } })
@@ -792,9 +810,9 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
   return rows
 }, [statsTree, isMultiAdminViewStats])
 
-  const totalSales = allRows.reduce((s, r) => s + r.amount, 0)
-  const totalOrders = allRows.reduce((s, r) => s + r.orders, 0)
-  const totalCustomers = allRows.length
+  const totalSales = summaryData.total_sales
+  const totalOrders = summaryData.total_orders
+  const totalCustomers = summaryData.customers_with_orders
 
   const columns = gridSelectedNode
   ? (COLUMN_MAP[gridSelectedNode.type] || [])
@@ -802,7 +820,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
       ? COLUMN_MAP.super_admin_view
       : (activeTree[0] ? (COLUMN_MAP[activeTree[0].type] || []) : []))
 
-  const trendBuckets = useMemo(() => buildTrendBuckets(allRows, timeRange), [allRows, timeRange])
+  const trendBuckets = trendData
 
   const handleExportExcel = () => {
     const wb = XLSX.utils.book_new()

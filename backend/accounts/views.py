@@ -2313,6 +2313,9 @@ class SalesReportView(APIView):
 
 
 class HierarchyPersonSearchView(APIView):
+
+
+
     """Search a person by public ID, name, or phone number across every
     hierarchy role (admin/dealer/sub_dealer/promotor/customer). Used by the
     SuperAdmin navbar search bar to jump straight to a person's hierarchy
@@ -2357,6 +2360,134 @@ class HierarchyPersonSearchView(APIView):
                 })
 
         return Response({'query': query, 'results': results})
+
+
+def _resolve_scope_user_ids(user, role, node_id):
+    """role+node_id (DB pk) kொடுத்தா andha subtree oda user_ids list return pண்ணும்.
+    role illama na, logged-in user oda own network return pண்ணும்."""
+    if role == 'admin':
+        node = AdminProfile.objects.prefetch_related('assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers').get(id=node_id)
+        return _collect_user_ids_admin(node) + [node.user_id]
+    elif role == 'dealer':
+        node = DealerProfile.objects.prefetch_related('assigned_sub_dealers__assigned_promotors__assigned_customers').get(id=node_id)
+        return _collect_user_ids_dealer(node) + [node.user_id]
+    elif role == 'sub_dealer':
+        node = SubDealerProfile.objects.prefetch_related('assigned_promotors__assigned_customers').get(id=node_id)
+        return _collect_user_ids_sub_dealer(node) + [node.user_id]
+    elif role == 'promotor':
+        node = PromotorProfile.objects.prefetch_related('assigned_customers').get(id=node_id)
+        return [c.user_id for c in node.assigned_customers.all()] + [node.user_id]
+    elif role == 'customer':
+        node = CustomerProfile.objects.get(id=node_id)
+        children_by_creator = _get_children_by_creator()
+        return _collect_nested_customer_ids(node.user_id, children_by_creator) + [node.user_id]
+    else:
+        u_role = user.role
+        if u_role == 'super_admin':
+            return list(User.objects.values_list('id', flat=True))
+        elif u_role == 'admin':
+            admin = AdminProfile.objects.prefetch_related('assigned_dealers__assigned_sub_dealers__assigned_promotors__assigned_customers').get(user=user)
+            return _collect_user_ids_admin(admin) + [admin.user_id]
+        elif u_role == 'dealer':
+            dealer = DealerProfile.objects.prefetch_related('assigned_sub_dealers__assigned_promotors__assigned_customers').get(user=user)
+            return _collect_user_ids_dealer(dealer) + [dealer.user_id]
+        elif u_role == 'sub_dealer':
+            sd = SubDealerProfile.objects.prefetch_related('assigned_promotors__assigned_customers').get(user=user)
+            return _collect_user_ids_sub_dealer(sd) + [sd.user_id]
+        elif u_role == 'promotor':
+            p = PromotorProfile.objects.prefetch_related('assigned_customers').get(user=user)
+            return [c.user_id for c in p.assigned_customers.all()] + [p.user_id]
+        return [user.id]
+
+
+class SalesSummaryView(APIView):
+    """Total Sales / Total Orders / Customers with Orders — DB aggregate mattum,
+    full tree walk illama fast ah."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        role = request.query_params.get('role')
+        node_id = request.query_params.get('id')
+        try:
+            user_ids = _resolve_scope_user_ids(request.user, role, node_id)
+        except Exception as e:
+            return Response({'error': str(e)}, status=404)
+
+        qs = JewelryOrder.objects.filter(user_id__in=user_ids)
+        agg = qs.aggregate(total_sales=Sum('total_price'), total_orders=Count('id'))
+        customers_with_orders = qs.values('user_id').distinct().count()
+
+        return Response({
+            'total_sales': float(agg['total_sales'] or 0),
+            'total_orders': agg['total_orders'] or 0,
+            'customers_with_orders': customers_with_orders,
+        })
+
+
+class SalesTrendView(APIView):
+    """Sales trend graph — period query param (today/week/month/year) vachi
+    call pண்ணும், ovvoru button click-கும் thani API call pண்ணும்."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        role = request.query_params.get('role')
+        node_id = request.query_params.get('id')
+        period = request.query_params.get('period', 'week')
+        try:
+            user_ids = _resolve_scope_user_ids(request.user, role, node_id)
+        except Exception as e:
+            return Response({'error': str(e)}, status=404)
+
+        now = timezone.now()
+        qs = JewelryOrder.objects.filter(user_id__in=user_ids)
+
+        if period == 'today':
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            step = timedelta(hours=4)
+            num_buckets = 6
+        elif period == 'week':
+            start = (now - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
+            step = timedelta(days=1)
+            num_buckets = 7
+        elif period == 'month':
+            start = (now - timedelta(days=27)).replace(hour=0, minute=0, second=0, microsecond=0)
+            step = timedelta(weeks=1)
+            num_buckets = 4
+        else:  # year
+            start = (now - timedelta(days=365)).replace(hour=0, minute=0, second=0, microsecond=0)
+            step = None
+            num_buckets = 12
+
+        data = []
+        if period == 'year':
+            months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+            cursor = start.replace(day=1)
+            for i in range(12):
+                if cursor.month == 12:
+                    next_cursor = cursor.replace(year=cursor.year + 1, month=1)
+                else:
+                    next_cursor = cursor.replace(month=cursor.month + 1)
+                agg = qs.filter(created_at__gte=cursor, created_at__lt=next_cursor).aggregate(total=Sum('total_price'), count=Count('id'))
+                data.append({'label': months[cursor.month - 1], 'total': float(agg['total'] or 0), 'count': agg['count'] or 0})
+                cursor = next_cursor
+        elif period == 'month':
+            cursor = start
+            for i in range(4):
+                next_cursor = cursor + timedelta(weeks=1)
+                agg = qs.filter(created_at__gte=cursor, created_at__lt=next_cursor).aggregate(total=Sum('total_price'), count=Count('id'))
+                data.append({'label': f'Week {i+1}', 'total': float(agg['total'] or 0), 'count': agg['count'] or 0})
+                cursor = next_cursor
+        else:  # today / week
+            cursor = start
+            for i in range(num_buckets):
+                next_cursor = cursor + step
+                agg = qs.filter(created_at__gte=cursor, created_at__lt=next_cursor).aggregate(total=Sum('total_price'), count=Count('id'))
+                label = f'{cursor.hour}:00' if period == 'today' else cursor.strftime('%a')
+                data.append({'label': label, 'total': float(agg['total'] or 0), 'count': agg['count'] or 0})
+                cursor = next_cursor
+
+        return Response({'period': period, 'data': data})
+
 
 class OrderTimeSeriesView(APIView):
     permission_classes = [IsAuthenticated]
@@ -2519,6 +2650,14 @@ class TodayLoginStatusView(APIView):
             return Response({'error': 'Permission denied'}, status=403)
 
         period = request.query_params.get('period', 'today')   # ── NEW
+        scope_role = request.query_params.get('scope_role')
+        scope_id = request.query_params.get('scope_id')
+        scope_user_ids = None
+        if scope_role and scope_id:
+            try:
+                scope_user_ids = set(_resolve_scope_user_ids(request.user, scope_role, scope_id))
+            except Exception:
+                scope_user_ids = set()
         today = timezone.now().date()
         rollup_counts = _today_rollup_counts()   # ← NEW: (role, profile_id) -> today's rolled-up count
 
@@ -2566,6 +2705,10 @@ class TodayLoginStatusView(APIView):
             all_entries.append(build_entry(p, 'promotor_id', 'Promotor', 5, 'promotor'))
         for p in CustomerProfile.objects.select_related('user'):
             all_entries.append(build_entry(p, 'customer_id', 'Customer', 6, 'customer'))
+
+        # ── NEW: scope pண்ணின na, andha subtree user_ids mattum filter pண்ணும் ──
+        if scope_user_ids is not None:
+            all_entries = [e for e in all_entries if e.get('_user_id') in scope_user_ids]
 
         active_list = [e for e in all_entries if e['active']]
         inactive_list = [e for e in all_entries if not e['active']]

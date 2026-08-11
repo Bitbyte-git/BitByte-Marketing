@@ -780,16 +780,6 @@ useLayoutEffect(() => {
       </div>
 
      <div ref={treeWrapperRef} style={{ background: '#FFFFFF', border: `1.5px solid ${border}`, borderRadius: '20px', padding: '28px 0', overflow: 'hidden', minHeight: '100vh', position: 'relative', boxShadow: '0 18px 42px rgba(7,59,63,0.08)' }}>
-        {!loading && hierarchyData && !debouncedSearch && !filter && (
-          <div className="hierarchy-floating-zoom">
-            <button className="hierarchy-zoom-btn" onClick={zoomOut} disabled={treeZoom <= 0.4} title="Zoom out"><IconMinus color="currentColor" /></button>
-            <span className="hierarchy-zoom-chip">{zoomPercent}%</span>
-            <button className="hierarchy-zoom-btn" onClick={zoomIn} disabled={treeZoom >= 1.4} title="Zoom in"><IconPlus color="currentColor" /></button>
-            <button className="hierarchy-zoom-btn" onClick={fitHierarchy} title="Fit more hierarchy on screen"><IconFit color="currentColor" /> Fit</button>
-            <button className="hierarchy-zoom-btn" onClick={resetZoom} title="Reset hierarchy zoom">Reset</button>
-          </div>
-        )}
-
         <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 200, zIndex: 40, background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 20 }}>
                     <div className="otree-card" data-role="super_admin" style={{ '--nc': ROLE_CFG.super_admin.color, minWidth: 150, cursor: 'default' }}>
 

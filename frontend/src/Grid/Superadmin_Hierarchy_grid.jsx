@@ -1181,9 +1181,10 @@ const selectAdmin = (node) => {
       <div style={{ background: '#FFFFFF', border: `1.5px solid ${border}`, borderRadius: '20px', padding: '24px 28px', minHeight: '70vh', boxShadow: '0 18px 42px rgba(7,59,63,0.08)' }}>
 
         {loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', gap: '16px' }}>
-            <div style={{ width: 32, height: 32, border: '3px solid rgba(189,207,206,0.65)', borderTop: '3px solid #0C4044', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            <span style={{ color: subtext, fontSize: '14px' }}>Hold on, pulling up your team tree...</span>
+          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+            <SkeletonCard color={ROLE_CFG.admin.color} />
+            <SkeletonCard color={ROLE_CFG.admin.color} />
+            <SkeletonCard color={ROLE_CFG.admin.color} />
           </div>
         )}
 
