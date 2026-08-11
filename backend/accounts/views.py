@@ -1962,6 +1962,132 @@ class HierarchySubtreeOrdersView(APIView):
             return Response({'error': str(e)}, status=404)
 
         return Response({'root': root})
+
+
+# ── NEW: Lightweight — Level 1 mattum. Full tree venaam ──
+class HierarchyAdminsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['super_admin', 'admin', 'dealer', 'sub_dealer', 'promotor']:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        admins = AdminProfile.objects.all().only(
+            'id', 'user_id', 'admin_id', 'first_name', 'last_name', 'mobile_number', 'city_name'
+        )
+        admin_ids = [a.user_id for a in admins]
+
+        dealer_counts = dict(
+            DealerProfile.objects.filter(assigned_admin__user_id__in=admin_ids)
+            .values('assigned_admin_id').annotate(c=Count('id')).values_list('assigned_admin_id', 'c')
+        )
+
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        order_counts = dict(
+            JewelryOrder.objects.filter(user_id__in=admin_ids, created_at__gte=month_start)
+            .values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
+        )
+
+        results = []
+        for a in admins:
+            oc = order_counts.get(a.user_id, 0)
+            results.append({
+                'id': a.id, 'user_id': a.user_id, 'admin_id': a.admin_id,
+                'first_name': a.first_name, 'last_name': a.last_name,
+                'mobile_number': a.mobile_number, 'city_name': a.city_name,
+                'dealer_count': dealer_counts.get(a.id, 0),
+                'order_count': oc, 'status': get_target_status(oc),
+            })
+        return Response({'super_admin_email': User.objects.filter(role='super_admin').first().email, 'admins': results})
+
+
+# ── NEW: Generic — ஒரு node-oda DIRECT children mattum. role+id vachi call pண்ணுவாங்க ──
+class HierarchyChildrenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    ROLE_CONFIG = {
+        'admin':      {'model': DealerProfile,   'filter': 'assigned_admin_id',      'id_field': 'dealer_id',      'child_role': 'dealer'},
+        'dealer':     {'model': SubDealerProfile,'filter': 'assigned_dealer_id',     'id_field': 'sub_dealer_id',  'child_role': 'sub_dealer'},
+        'sub_dealer': {'model': PromotorProfile, 'filter': 'assigned_sub_dealer_id', 'id_field': 'promotor_id',    'child_role': 'promotor'},
+        'promotor':   {'model': CustomerProfile, 'filter': 'assigned_promotor_id',   'id_field': 'customer_id',    'child_role': 'customer'},
+    }
+
+    def get(self, request):
+        role = request.query_params.get('role')
+        node_id = request.query_params.get('id')
+        if role == 'customer':
+            return self._customer_children(request)
+
+        cfg = self.ROLE_CONFIG.get(role)
+        if not cfg or not node_id:
+            return Response({'error': 'invalid role/id'}, status=400)
+
+        children = cfg['model'].objects.filter(**{cfg['filter']: node_id}).only(
+            'id', 'user_id', cfg['id_field'], 'first_name', 'last_name', 'mobile_number', 'city_name'
+        )
+        child_ids = [c.user_id for c in children]
+
+        grandchild_counts = {}
+        next_cfg = self.ROLE_CONFIG.get(cfg['child_role'])
+        if next_cfg:
+            gc = dict(
+                next_cfg['model'].objects.filter(**{f"{next_cfg['filter'].replace('_id','')}__id__in": [c.id for c in children]})
+                .values(next_cfg['filter']).annotate(c=Count('id')).values_list(next_cfg['filter'], 'c')
+            )
+            grandchild_counts = gc
+
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        order_counts = dict(
+            JewelryOrder.objects.filter(user_id__in=child_ids, created_at__gte=month_start)
+            .values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
+        )
+
+        results = []
+        for c in children:
+            oc = order_counts.get(c.user_id, 0)
+            results.append({
+                'id': c.id, 'user_id': c.user_id, cfg['id_field']: getattr(c, cfg['id_field']),
+                'first_name': c.first_name, 'last_name': c.last_name,
+                'mobile_number': c.mobile_number, 'city_name': c.city_name,
+                'child_count': grandchild_counts.get(c.id, 0),
+                'order_count': oc, 'status': get_target_status(oc),
+            })
+        return Response({'role': cfg['child_role'], 'items': results})
+
+    def _customer_children(self, request):
+        node_id = request.query_params.get('id')
+        try:
+            parent = CustomerProfile.objects.get(id=node_id)
+        except CustomerProfile.DoesNotExist:
+            return Response({'error': 'not found'}, status=404)
+
+        children = CustomerProfile.objects.filter(created_by_id=parent.user_id).only(
+            'id', 'user_id', 'customer_id', 'first_name', 'last_name', 'mobile_number', 'city_name'
+        )
+        child_ids = [c.user_id for c in children]
+        sub_child_counts = dict(
+            CustomerProfile.objects.filter(created_by_id__in=child_ids)
+            .values('created_by_id').annotate(c=Count('id')).values_list('created_by_id', 'c')
+        )
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        order_counts = dict(
+            JewelryOrder.objects.filter(user_id__in=child_ids, created_at__gte=month_start)
+            .values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
+        )
+        results = []
+        for c in children:
+            oc = order_counts.get(c.user_id, 0)
+            results.append({
+                'id': c.id, 'user_id': c.user_id, 'customer_id': c.customer_id,
+                'first_name': c.first_name, 'last_name': c.last_name,
+                'mobile_number': c.mobile_number, 'city_name': c.city_name,
+                'child_count': sub_child_counts.get(c.user_id, 0),
+                'order_count': oc, 'status': get_target_status(oc),
+            })
+        return Response({'role': 'customer', 'items': results})        
 # ── NEW: role-scoped hierarchy for Admin / Dealer / Sub Dealer / Promotor logins.
 # Ovvoruthar their own subtree mattum kaanpanum — SuperAdmin mari full tree venaam. ──
 class MyHierarchyView(APIView):

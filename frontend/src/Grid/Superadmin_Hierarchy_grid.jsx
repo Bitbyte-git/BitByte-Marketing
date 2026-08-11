@@ -732,6 +732,13 @@ const [selPromotor, setSelPromotor] = useState(null)
 
   const [customerChain, setCustomerChain] = useState([])
 
+  // ── NEW: lazy-load caches — key = parent node's DB id, value = fetched children array ──
+  const [dealerCache, setDealerCache] = useState({})       // { adminId: [dealers] }
+  const [subDealerCache, setSubDealerCache] = useState({}) // { dealerId: [subDealers] }
+  const [promotorCache, setPromotorCache] = useState({})   // { subDealerId: [promotors] }
+  const [customerCache, setCustomerCache] = useState({})   // { 'p_<promotorId>' or 'c_<customerId>': [customers] }
+  const [loadingChildren, setLoadingChildren] = useState(null) // 'admin_5', 'dealer_12' etc — spinner ku
+
   const [activeStatusFilter, setActiveStatusFilter] = useState(null)
 
   // ── NEW: Direct message popup state ──
@@ -804,10 +811,21 @@ setMessageSending(false)
   const fetchHierarchy = async () => {
     setLoading(true)
     try {
-      const res = await api.get('/hierarchy/full/')
-      setHierarchyData(res.data)
+      const res = await api.get('/hierarchy/admins/')
+      // ── NEW: admin objects la 'dealers' array illa, 'dealer_count' mattum irukkum ──
+      setHierarchyData({ super_admin_email: res.data.super_admin_email, admins: res.data.admins })
     } catch (err) { console.error(err) }
     setLoading(false)
+  }
+
+  // ── NEW: generic fetch-and-cache helper — role + parentId vachi children edukkum ──
+  const fetchChildren = async (role, parentId, cacheKey, setCache) => {
+    setLoadingChildren(`${role}_${parentId}`)
+    try {
+      const res = await api.get(`/hierarchy/children/?role=${role}&id=${parentId}`)
+      setCache(prev => ({ ...prev, [cacheKey]: res.data.items }))
+    } catch (err) { console.error(err) }
+    setLoadingChildren(null)
   }
 
   // ── NEW: useRef guard — StrictMode double-invoke aanaalum, API call ONE time mattum pogum ──
@@ -825,32 +843,12 @@ useEffect(() => {
   const urlId = urlParams.get('id')
   if (!urlRole || !urlId || !hierarchyData) return
 
-  for (const admin of hierarchyData.admins) {
-    if (urlRole === 'admin' && admin.id.toString() === urlId) {
-      setSelAdmin(admin.id); return
-    }
-    for (const dealer of admin.dealers) {
-      if (urlRole === 'dealer' && dealer.id.toString() === urlId) {
-        setSelAdmin(admin.id); setSelDealer(dealer.id); return
-      }
-      for (const sd of dealer.sub_dealers) {
-        if (urlRole === 'sub_dealer' && sd.id.toString() === urlId) {
-          setSelAdmin(admin.id); setSelDealer(dealer.id); setSelSubDealer(sd.id); return
-        }
-        for (const pr of sd.promotors) {
-          if (urlRole === 'promotor' && pr.id.toString() === urlId) {
-            setSelAdmin(admin.id); setSelDealer(dealer.id); setSelSubDealer(sd.id); setSelPromotor(pr.id); return
-          }
-          for (const cus of pr.customers) {
-            if (urlRole === 'customer' && cus.id.toString() === urlId) {
-              setSelAdmin(admin.id); setSelDealer(dealer.id); setSelSubDealer(sd.id); setSelPromotor(pr.id)
-              setCustomerChain([cus.id])
-              return
-            }
-          }
-        }
-      }
-    }
+  // Admin role mattum direct select pannalam, data already irukku.
+  // Dealer/sub_dealer/promotor/customer deep-link ku parent chain theriyathu,
+  // adhukku backend la separate ancestors endpoint venum.
+  if (urlRole === 'admin') {
+    const admin = hierarchyData.admins.find(a => a.id.toString() === urlId)
+    if (admin) selectAdmin(admin)
   }
 }, [urlParams, hierarchyData])
 
@@ -872,25 +870,25 @@ useEffect(() => {
     return admins.find(a => a.id === selAdmin) || null
   }, [admins, selAdmin])
 
-  const dealers = currentAdmin?.dealers || []
+  const dealers = currentAdmin ? (dealerCache[currentAdmin.id] || []) : []
   const currentDealer = useMemo(() => {
     if (!selDealer) return null
     return dealers.find(d => d.id === selDealer) || null
   }, [dealers, selDealer])
 
-  const subDealers = currentDealer?.sub_dealers || []
+  const subDealers = currentDealer ? (subDealerCache[currentDealer.id] || []) : []
   const currentSubDealer = useMemo(() => {
     if (!selSubDealer) return null
     return subDealers.find(sd => sd.id === selSubDealer) || null
   }, [subDealers, selSubDealer])
 
-  const promotors = currentSubDealer?.promotors || []
+  const promotors = currentSubDealer ? (promotorCache[currentSubDealer.id] || []) : []
   const currentPromotor = useMemo(() => {
     if (!selPromotor) return null
     return promotors.find(p => p.id === selPromotor) || null
   }, [promotors, selPromotor])
 
-const customers = currentPromotor?.customers || []
+const customers = currentPromotor ? (customerCache[`p_${currentPromotor.id}`] || []) : []
 
 // ── ancestor chains per level — idha MUNNADIYE move pannanum, customerLanes ku thevai ──
 const adminAncestors = []
@@ -904,18 +902,18 @@ const customerAncestors = currentPromotor ? [...promotorAncestors, { node: curre
 const customerLanes = useMemo(() => {
   if (!currentPromotor) return []
   const lanes = []
-  let levelItems = currentPromotor.customers || []
+  let levelItems = customerCache[`p_${currentPromotor.id}`] || []
   let levelAncestors = promotorAncestors.concat([{ node: currentPromotor, role: 'promotor' }])
   lanes.push({ depth: 0, items: levelItems, activeId: customerChain[0] ?? null, ancestors: levelAncestors })
   for (let d = 0; d < customerChain.length; d++) {
     const selectedNode = levelItems.find(c => c.id === customerChain[d])
     if (!selectedNode) break
-    levelItems = selectedNode.customers || []
+    levelItems = customerCache[`c_${selectedNode.id}`] || []
     levelAncestors = levelAncestors.concat([{ node: selectedNode, role: 'customer' }])
     lanes.push({ depth: d + 1, items: levelItems, activeId: customerChain[d + 1] ?? null, ancestors: levelAncestors })
   }
   return lanes
-}, [currentPromotor, customerChain, promotorAncestors])
+}, [currentPromotor, customerChain, promotorAncestors, customerCache])
 
 // ── NEW: filter scoped per-parent — dealers filter only when the active dot
   // belongs to currentAdmin, sub_dealers only when it belongs to currentDealer, etc. ──
@@ -949,15 +947,28 @@ const customerLanes = useMemo(() => {
 
   // ── click handlers — select this level, reset everything BELOW it
   // (so the next rows auto-fall-back to their own "first" item) ──
-const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSelSubDealer(null); setSelPromotor(null) }
-  const selectDealer = (node) => { setSelDealer(node.id); setSelSubDealer(null); setSelPromotor(null) }
- const selectSubDealer = (node) => { setSelSubDealer(node.id); setSelPromotor(null); setCustomerChain([]) }
-  const selectPromotor = (node) => { setSelPromotor(node.id); setCustomerChain([]) }
+const selectAdmin = (node) => {
+    setSelAdmin(node.id); setSelDealer(null); setSelSubDealer(null); setSelPromotor(null); setCustomerChain([])
+    if (!dealerCache[node.id]) fetchChildren('admin', node.id, node.id, setDealerCache)
+  }
+  const selectDealer = (node) => {
+    setSelDealer(node.id); setSelSubDealer(null); setSelPromotor(null); setCustomerChain([])
+    if (!subDealerCache[node.id]) fetchChildren('dealer', node.id, node.id, setSubDealerCache)
+  }
+  const selectSubDealer = (node) => {
+    setSelSubDealer(node.id); setSelPromotor(null); setCustomerChain([])
+    if (!promotorCache[node.id]) fetchChildren('sub_dealer', node.id, node.id, setPromotorCache)
+  }
+  const selectPromotor = (node) => {
+    setSelPromotor(node.id); setCustomerChain([])
+    if (!customerCache[`p_${node.id}`]) fetchChildren('promotor', node.id, `p_${node.id}`, setCustomerCache)
+  }
 
   // ── NEW: customer-ah oru specific depth-la click panninaal, adha varaikkum chain vaichi
-  // apparam andha customer-oda id-ah chain-la add pannும். Adhu than adutha row-ah open pannும். ──
+  // apparam andha customer-oda id-ah chain-la add pannும். Cache illana fetch pண்ணும். ──
   const selectCustomerAtDepth = (depth, node) => {
     setCustomerChain(prev => [...prev.slice(0, depth), node.id])
+    if (!customerCache[`c_${node.id}`]) fetchChildren('customer', node.id, `c_${node.id}`, setCustomerCache)
   }
 
   // ── NEW: dot click = (1) select that card so its children lane opens,
@@ -972,38 +983,23 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
   }
 
   // ── search across the whole hierarchy (unchanged from before) ──
-  const searchAllHierarchy = (query) => {
-    if (!hierarchyData || !query.trim()) return []
-    const q = query.trim().toLowerCase()
-    const result = []
-    const checkMatch = (node, idKey) => {
-      const idVal = (node[idKey] || '').toString().toLowerCase()
-      const nameVal = `${node.first_name || ''} ${node.last_name || ''}`.toLowerCase()
-      const phoneVal = (node.mobile_number || '').toString().toLowerCase()
-      return idVal.includes(q) || nameVal.includes(q) || phoneVal.includes(q)
-    }
-    hierarchyData.admins.forEach(admin => {
-      if (checkMatch(admin, 'admin_id')) result.push({ node: admin, role: 'admin', ancestors: [] })
-      admin.dealers.forEach(dealer => {
-        if (checkMatch(dealer, 'dealer_id')) result.push({ node: dealer, role: 'dealer', ancestors: [{ node: admin, role: 'admin' }] })
-        dealer.sub_dealers.forEach(sd => {
-          if (checkMatch(sd, 'sub_dealer_id')) result.push({ node: sd, role: 'sub_dealer', ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }] })
-          sd.promotors.forEach(pr => {
-            if (checkMatch(pr, 'promotor_id')) result.push({ node: pr, role: 'promotor', ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }, { node: sd, role: 'sub_dealer' }] })
-            pr.customers.forEach(cus => {
-              if (checkMatch(cus, 'customer_id')) result.push({ node: cus, role: 'customer', ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }, { node: sd, role: 'sub_dealer' }, { node: pr, role: 'promotor' }] })
-            })
-          })
-        })
+  // ── NEW: local search removed — full nested tree backend la illama idhu work aagathu.
+  // Backend already /hierarchy/search-person/ endpoint irukku, adha use pண்ணுறோம். ──
+  const [searchResults, setSearchResults] = useState([])
+  useEffect(() => {
+    if (!debouncedSearch) { setSearchResults([]); return }
+    api.get(`/hierarchy/search-person/?q=${encodeURIComponent(debouncedSearch)}`)
+      .then(res => {
+        // ── backend returns flat {role, id, user_id, public_id, first_name, last_name, mobile_number, city_name} ──
+        const mapped = res.data.results.map(r => ({
+          node: { id: r.id, user_id: r.user_id, first_name: r.first_name, last_name: r.last_name, mobile_number: r.mobile_number, city_name: r.city_name, [ROLE_CFG[r.role]?.idKey]: r.public_id },
+          role: r.role,
+          ancestors: [],   // ── search result la ancestors kaanpikkathu, direct jump mattum ──
+        }))
+        setSearchResults(mapped)
       })
-    })
-    return result
-  }
-
-  const searchResults = useMemo(() => {
-    if (!debouncedSearch) return []
-    return searchAllHierarchy(debouncedSearch)
-  }, [debouncedSearch, hierarchyData])
+      .catch(err => console.error(err))
+  }, [debouncedSearch])
 
   // clicking a search result jumps the whole grid to that node's chain
   const jumpToSearchResult = (item) => {
@@ -1017,21 +1013,10 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
     setSearch('')
   }
 
-  const totalStats = hierarchyData ? {
-    admins: hierarchyData.admins.length,
-    dealers: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.length, 0),
-    subDealers: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.reduce((b, d) => b + d.sub_dealers.length, 0), 0),
-    promotors: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.reduce((b, d) => b + d.sub_dealers.reduce((c, sd) => c + sd.promotors.length, 0), 0), 0),
-    customers: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.reduce((b, d) => b + d.sub_dealers.reduce((c, sd) => c + sd.promotors.reduce((e, pr) => e + pr.customers.length, 0), 0), 0), 0),
-  } : null
+  // ── NEW: full counts backend la illama, admin count mattum kaamikkும். Rest badges hide pண்ணும். ──
+  const totalStats = hierarchyData ? { admins: hierarchyData.admins.length } : null
 
-  const statPills = totalStats ? [
-    { label: 'Admins', roleKey: 'admin', count: totalStats.admins },
-    { label: 'Dealers', roleKey: 'dealer', count: totalStats.dealers },
-    { label: 'Sub Dealers', roleKey: 'sub_dealer', count: totalStats.subDealers },
-    { label: 'Promotors', roleKey: 'promotor', count: totalStats.promotors },
-    { label: 'Customers', roleKey: 'customer', count: totalStats.customers },
-  ] : []
+  const statPills = []   // ── NEW: dealer/subdealer/promotor/customer totals backend la illama, hide pண்ணுறோம் ──
 
   return (
     <>
@@ -1212,7 +1197,8 @@ const selectAdmin = (node) => { setSelAdmin(node.id); setSelDealer(null); setSel
               {currentAdmin && (
                 <LaneRow role="dealer" items={filteredDealers} activeId={currentDealer?.id} onSelect={selectDealer}
                   ancestors={dealerAncestors} superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
-                  emptyText={`No dealers match this filter under ${currentAdmin.first_name}.`} onMessage={openMessagePopup} onPrint={openPrintPopup}
+                  emptyText={loadingChildren === `admin_${currentAdmin.id}` ? 'Loading dealers...' : `No dealers under ${currentAdmin.first_name}.`}
+                  onMessage={openMessagePopup} onPrint={openPrintPopup}
                   activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
               )}
 

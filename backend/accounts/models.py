@@ -35,7 +35,7 @@ OCCUPATION_CHOICES = [
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='dealer')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='dealer', db_index=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -87,6 +87,9 @@ class AdminProfile(models.Model):
     admin_name = models.CharField(max_length=100, blank=True)       # = first_name
     admin_id = models.CharField(max_length=25, unique=True, blank=True)  # BBADM20261001
     admin_contact_no = models.CharField(max_length=10, blank=True)  # = mobile_number
+
+    class Meta:
+        indexes = [models.Index(fields=['created_by'])]
 
     def save(self, *args, **kwargs):
         # Auto-set admin_name from first_name
@@ -155,6 +158,9 @@ class DealerProfile(models.Model):
     dealer_name = models.CharField(max_length=50, blank=True)
     dealer_id = models.CharField(max_length=20, unique=True, blank=True)
     dealer_contact_no = models.CharField(max_length=10, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=['assigned_admin'])]
 
     SUPER_STOCKIST_STATUS_CHOICES = [
         ('none', 'Not Eligible'),
@@ -225,6 +231,9 @@ class SubDealerProfile(models.Model):
     annual_salary = models.CharField(max_length=10, blank=True, null=True)
 
     sub_dealer_id = models.CharField(max_length=20, unique=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=['assigned_dealer'])]
 
     DISTRIBUTOR_STATUS_CHOICES = [
         ('none', 'Not Eligible'),
@@ -298,6 +307,9 @@ class PromotorProfile(models.Model):
     promotor_id = models.CharField(max_length=20, unique=True, blank=True)
     promotor_contact_no = models.CharField(max_length=10, blank=True)
 
+    class Meta:
+        indexes = [models.Index(fields=['assigned_sub_dealer'])]
+
     WHOLESALE_STATUS_CHOICES = [
         ('none', 'Not Eligible'),
         ('pending', 'Pending'),
@@ -365,9 +377,14 @@ class CustomerProfile(models.Model):
     occupation = models.CharField(max_length=20, choices=OCCUPATION_CHOICES, blank=True, null=True)
     occupation_detail = models.CharField(max_length=25, blank=True, null=True)
     annual_salary = models.CharField(max_length=10, blank=True, null=True)
-
-    # Customer Info
+# Customer Info
     customer_id = models.CharField(max_length=20, unique=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['assigned_promotor']),
+            models.Index(fields=['created_by']),
+        ]
 
     # ── NEW: Retailer promotion tracking ──
     RETAILER_STATUS_CHOICES = [
@@ -467,7 +484,7 @@ class ProfileUpdateRequest(models.Model):
     message = models.TextField(blank=True)
     proof_document = models.FileField(upload_to='profile_update_proofs/', null=True, blank=True)
 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -852,8 +869,14 @@ class CoinRecharge(models.Model):
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='recharge')
     related_order = models.ForeignKey('JewelryOrder', on_delete=models.SET_NULL, null=True, blank=True, related_name='coin_entries')
     commission_level = models.PositiveIntegerField(null=True, blank=True)
-    transaction_id = models.CharField(max_length=20, unique=True, blank=True, null=True)   # ── NEW: BB+YYMMDD+6chars ──
+    transaction_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['status', 'source', 'commission_level']),
+            models.Index(fields=['user', 'status', 'source']),
+        ]
 
     def __str__(self):
         sign = '+' if self.entry_type == 'credit' else '-'
@@ -879,7 +902,7 @@ class AutoPayMandate(models.Model):
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, default='monthly')
     recharge_day = models.PositiveIntegerField()   # 1-31, day of month for charge
     razorpay_plan_id = models.CharField(max_length=100, blank=True, null=True)
-    razorpay_subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_subscription_id = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='created')
     is_active = models.BooleanField(default=False)   # true only when status == 'active'
     next_charge_date = models.DateField(null=True, blank=True)

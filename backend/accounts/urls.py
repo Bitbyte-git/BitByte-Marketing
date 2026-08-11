@@ -6,7 +6,7 @@ from .views import (
     CreateSubDealerView, CreatePromotorView, CreateCustomerView,
     DashboardView, AdminListForAdminView, DealerListForDealerView,
     SubDealerListForView, PromotorListForView,  FullHierarchyView, AnnouncementView, AnnouncementReplyView, ProfileUpdateRequestView, ProfileUpdateApproveView,MetalRateView,MetalOrderView, MetalOrderSummaryView, JewelryProductView, JewelryProductDetailView, JewelryProductImageDeleteView, HomeBannerView, HomeBannerDetailView, CartView, CartItemQtyView, WishlistView, JewelryOrderView, create_razorpay_order, verify_payment, ping,
-HierarchySubtreeOrdersView, SalesReportView, OrderTimeSeriesView, TodayLoginStatusView,OrderTimeSeriesView, CoinRequestView, CoinRequestApproveView, CoinRequestRejectView, CoinRequestApproveAllView, CoinStockView, SuperAdminAddCoinsView, CoinStockForUserView, MyHierarchyView, TodayRewardsView, MyBasicInfoView,
+HierarchySubtreeOrdersView, HierarchyAdminsView, HierarchyChildrenView, SalesReportView, OrderTimeSeriesView, TodayLoginStatusView,OrderTimeSeriesView, CoinRequestView, CoinRequestApproveView, CoinRequestRejectView, CoinRequestApproveAllView, CoinStockView, SuperAdminAddCoinsView, CoinStockForUserView, MyHierarchyView, TodayRewardsView, MyBasicInfoView,
  RetailerPromotionListView, RetailerPromotionActionView, WholesaleDealerPromotionListView, WholesaleDealerPromotionActionView, DistributorPromotionListView, DistributorPromotionActionView, SuperStockistPromotionListView, SuperStockistPromotionActionView, PromotionCustomerListView, PromotionCustomerListView, PromotionNodeListView,
  ReferrerInfoView, PublicCustomerRegisterView,GenerateReferralLinkView, RechargeCreateOrderView, RechargeVerifyPaymentView, WalletView, RechargeHistoryView, RechargeStatementView, PayWithCoinsView, PaymentsSummaryView, UserLookupView, SendCoinsView, AdminUserHistoryView, AdminSentHistoryView, AutoPayCreateView, AutoPayConfirmView, AutoPayStatusView, AutoPayToggleView, autopay_webhook,AutoPayMandateListView, AffordableProductsView,
  HierarchyPersonSearchView
@@ -31,6 +31,8 @@ urlpatterns = [
     path('my-info/', MyBasicInfoView.as_view()),          # NEW
     path('hierarchy/full/', FullHierarchyView.as_view()),  # ✅ correct
     path('hierarchy/subtree-orders/', HierarchySubtreeOrdersView.as_view()),  # ← NEW
+    path('hierarchy/admins/', HierarchyAdminsView.as_view()),
+    path('hierarchy/children/', HierarchyChildrenView.as_view()),
     path('dashboard/', DashboardView.as_view()),
     path('announcements/', AnnouncementView.as_view()),
     path('announcements/<int:pk>/replies/', AnnouncementReplyView.as_view()),
