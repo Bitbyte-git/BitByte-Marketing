@@ -236,17 +236,21 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="rg-grid cols-3">
-                  <div className={`rg-field ${passwordError ? "error" : ""}`}>
-                    <label>Confirm Password *</label>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(""); }}
-                      required
-                    />
-                    {passwordError && <div className="rg-field-error">{passwordError}</div>}
-                  </div>
-                </div>
+  <div className={`rg-field ${passwordError ? "error" : ""}`}>
+    <label>Confirm Password *</label>
+    <input
+      type="password"
+      value={confirmPassword}
+      onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(""); }}
+      required
+    />
+    {passwordError && <div className="rg-field-error">{passwordError}</div>}
+  </div>
+  <div className="rg-field readonly">
+    <label>Referred By (ID)</label>
+    <input value={referrer?.id || ""} readOnly />
+  </div>
+</div>
 
                 <div className="rg-grid cols-3">
                   <div className="rg-field">
@@ -309,25 +313,6 @@ export default function RegisterPage() {
                   </div>
                   <div className="rg-field"><label>Detail</label><input name="occupation_detail" value={form.occupation_detail} onChange={handleChange} /></div>
                   <div className="rg-field"><label>Annual Salary *</label><input name="annual_salary" value={form.annual_salary} onChange={handleChange} required /></div>
-                </div>
-
-                <p className="rg-sub-label">Referral Info</p>
-                <div className="rg-referral-card">
-                  <p className="rg-referral-note">You were referred by this person.</p>
-                  <div className="rg-grid cols-3">
-                    <div className="rg-field readonly">
-                      <label>ID</label>
-                      <input value={referrer?.id || ""} readOnly />
-                    </div>
-                    <div className="rg-field readonly">
-                      <label>Name</label>
-                      <input value={referrer?.name || ""} readOnly />
-                    </div>
-                    <div className="rg-field readonly">
-                      <label>Phone Number</label>
-                      <input value={referrer?.phone || ""} readOnly />
-                    </div>
-                  </div>
                 </div>
 
                 <div className="rg-actions">

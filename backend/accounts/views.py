@@ -544,8 +544,6 @@ class ReferrerInfoView(APIView):
         info = get_user_display_info(link.referrer)
         return Response({
             'id': info['user_id_str'],
-            'name': info['name'],
-            'phone': info['phone'],
         })
 
 

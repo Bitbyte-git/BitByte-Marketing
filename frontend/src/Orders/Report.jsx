@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
 import logo from '../assets/logo.png'
 import * as XLSX from 'xlsx'
+import { SkeletonCard } from '../components/Skeleton'
 
 // â”€â”€ Role display config â”€â”€
 const ROLE_ICONS = {
@@ -300,7 +301,11 @@ rows.forEach(r => r.rawOrders.forEach(o => {
 
 // â”€â”€ Simple inline SVG line chart (no external library needed) â”€â”€
 function TrendLineChart({ buckets, color }) {
-  const [hoverIdx, setHoverIdx] = useState(null)   // â”€â”€ NEW
+  const [hoverIdx, setHoverIdx] = useState(null)
+  // ── NEW: buckets empty ah irundha (data varum munnadi), crash aagama guard pannurom ──
+  if (!buckets || buckets.length === 0) {
+    return <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B6B6B', fontSize: '13px' }}>Loading trend...</div>
+  }
   const width = 700, height = 220, padding = 36
   const max = Math.max(1, ...buckets.map(b => b.total))
   const stepX = (width - padding * 2) / Math.max(1, buckets.length - 1)
@@ -381,111 +386,138 @@ function nodeColor(node) {
 // roots = top-level nodes (admin list, or single dealer/sub_dealer/promotor
 // depending on login role / selected drill-down node). Click a card to open
 // its children lane below, exactly like the main hierarchy grid page. â”€â”€
-function HierarchyBreakdownGrid({ roots, cardBg, border, text, subtext, selectedNode, onSelectNode }) {
+const LAZY_CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer', customer: 'customer' }
+
+function HierarchyBreakdownGrid({ scopedNode, cardBg, border, text, subtext, selectedNode, onSelectNode }) {
+  const [cache, setCache] = useState({})
+  const [loadingKey, setLoadingKey] = useState(null)
   const [selChain, setSelChain] = useState([])
 
-  useEffect(() => { setSelChain([]) }, [roots])
+  useEffect(() => { setCache({}); setSelChain([]) }, [scopedNode])
 
-  const levels = []
-  let currentNodes = roots
-  let depth = 0
-  while (currentNodes && currentNodes.length > 0) {
-    levels.push(currentNodes)
-    const selId = selChain[depth]
+  const fetchLevel = async (fetchRole, fetchId, key) => {
+    setLoadingKey(key)
+    try {
+      let items
+      if (fetchRole === null) {
+        const res = await api.get('/hierarchy/admins/')
+        items = (res.data.admins || []).map(a => ({ ...a, type: 'admin' }))
+      } else {
+        const res = await api.get(`/hierarchy/children/?role=${fetchRole}&id=${fetchId}`)
+        items = (res.data.items || []).map(it => ({ ...it, type: res.data.role }))
+      }
+      setCache(prev => ({ ...prev, [key]: items }))
+    } catch (err) { console.error(err) }
+    setLoadingKey(null)
+  }
+
+  useEffect(() => {
+    const key = scopedNode ? `${scopedNode.type}_${scopedNode.id}` : 'root'
+    if (!cache[key]) fetchLevel(scopedNode ? scopedNode.type : null, scopedNode ? scopedNode.id : null, key)
+  }, [scopedNode])
+
+  // ── NEW: drill-down fetch-ah render body-la irundhu useEffect-ku maathurom.
+  // Render function-la neradiya API call/setState pannuradhu React rule violate
+  // pannum, "Maximum update depth exceeded" crash → blank screen tharum. ──
+  useEffect(() => {
+    let curKey = scopedNode ? `${scopedNode.type}_${scopedNode.id}` : 'root'
+    let curRole = scopedNode ? LAZY_CHILD_ROLE[scopedNode.type] : 'admin'
+    let depth = 0
+    while (curRole) {
+      const items = cache[curKey]
+      if (!items) break
+      const selId = selChain[depth]
+      if (!selId) break
+      const selNode = items.find(n => n.id.toString() === selId)
+      if (!selNode) break
+      const nextKey = `${curRole}_${selNode.id}`
+      if (!cache[nextKey]) { fetchLevel(curRole, selNode.id, nextKey); break }
+      curKey = nextKey
+      curRole = LAZY_CHILD_ROLE[curRole]
+      depth++
+    }
+  }, [scopedNode, selChain, cache])
+
+  // ── Idhu ippo render-la mattum data assemble pannum, fetch pannaathu ──
+  const lanes = []
+  if (scopedNode) lanes.push({ role: scopedNode.type, items: [scopedNode], depth: -1, single: true })
+  let curKey2 = scopedNode ? `${scopedNode.type}_${scopedNode.id}` : 'root'
+  let curRole2 = scopedNode ? LAZY_CHILD_ROLE[scopedNode.type] : 'admin'
+  let depth2 = 0
+  while (curRole2) {
+    const items = cache[curKey2]
+    lanes.push({ role: curRole2, items: items ?? null, depth: depth2 })
+    if (!items) break
+    const selId = selChain[depth2]
     if (!selId) break
-    const selectedNode = currentNodes.find(n => nodeIdVal(n).toString() === selId)
-    if (!selectedNode) break
-    const { key, childType } = getChildren(selectedNode)
-    if (!key) break
-    const children = (selectedNode[key] || []).map(c => ({ ...c, type: childType }))
-    if (children.length === 0) { levels.push(children); break }
-    currentNodes = children
-    depth++
+    const selNode = items.find(n => n.id.toString() === selId)
+    if (!selNode) break
+    curKey2 = `${curRole2}_${selNode.id}`
+    curRole2 = LAZY_CHILD_ROLE[curRole2]
+    depth2++
   }
 
-  const selectAt = (depthIdx, node) => {
-    setSelChain(prev => {
-      const next = prev.slice(0, depthIdx)
-      next[depthIdx] = nodeIdVal(node).toString()
-      return next
-    })
-  }
-
-  if (!roots || roots.length === 0) {
-    return <div style={{ color: subtext, textAlign: 'center', padding: '50px 0' }}>No sales found yet.</div>
+  const selectAt = (depthIdx, node, role) => {
+    onSelectNode?.({ ...node, type: role })
+    setSelChain(prev => { const next = prev.slice(0, depthIdx); next[depthIdx] = node.id.toString(); return next })
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {levels.map((nodes, depthIdx) => {
-       
-        const laneColor = nodes[0] ? (ROLE_CFG[nodes[0].type]?.color || subtext) : subtext
+      {lanes.map((lane, depthIdx) => {
+        const laneColor = ROLE_CFG[lane.role]?.color || subtext
         return (
-        <div key={depthIdx}>
-          <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', color: subtext, marginBottom: '10px', textTransform: 'uppercase' }}>
-            {nodes[0] ? `${LEVEL_LABELS[nodes[0].type] || nodes[0].type}${nodes.length}` : 'No matches'}
-          </div>
-          <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '14px' }}>
-            {nodes.map(node => {
-  const c = nodeColor(node)
-  const idVal = nodeIdVal(node)
-  const { key, childType } = getChildren(node)
-  const childCount = key ? (node[key] || []).length : null
-  const active = selChain[depthIdx] === idVal.toString()
-  const isDim = selChain[depthIdx] && !active
-  
-  const isStatsSelected = selectedNode
-    && selectedNode.type === node.type
-    && nodeIdVal(selectedNode).toString() === idVal.toString()
-  return (
-    <div
-      className="report-lane-card"
-      key={idVal}
-      onClick={() => {
-        onSelectNode?.(node)                                 
-        if (childCount !== null) selectAt(depthIdx, node)     // existing drill-down
-      }}
-      style={{
-        minWidth: '176px', maxWidth: '210px', flexShrink: 0,
-        cursor: childCount !== null ? 'pointer' : 'default',
-        background: 'linear-gradient(145deg,#FFFFFF,#FFFCF8)',
-        border: `1.5px solid ${c}`, borderRadius: '14px', padding: '13px 16px',
-        opacity: isDim ? 0.45 : 1,
-        boxShadow: isStatsSelected
-          ? `0 0 0 2px #C99A3A, 0 16px 32px rgba(14,90,87,0.16)`   // â”€â”€ NEW: yellow ring for stats-selected
-          : (active ? `0 0 0 1.5px ${c}, 0 14px 28px rgba(14,90,87,0.14)` : '0 10px 22px rgba(14,90,87,0.07)'),
-        transition: 'opacity .15s ease, box-shadow .15s ease',
-      }}
-    >
-                  <div style={{ fontSize: '9px', fontWeight: 800, color: c, letterSpacing: '1.2px', marginBottom: '7px' }}>
-                    {(LEVEL_LABELS[node.type] || node.type).toUpperCase()}
+          <div key={depthIdx}>
+            <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', color: subtext, marginBottom: '10px', textTransform: 'uppercase' }}>
+              {LEVEL_LABELS[lane.role] || lane.role} {lane.items ? lane.items.length : ''}
+            </div>
+            <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '14px' }}>
+              {lane.items === null ? (
+                <>
+                  <SkeletonCard color={laneColor} />
+                  <SkeletonCard color={laneColor} />
+                </>
+              ) : lane.items.length === 0 ? (
+                <div style={{ color: subtext, fontSize: '13px', padding: '10px 0' }}>No {(LEVEL_LABELS[lane.role] || lane.role).toLowerCase()} found.</div>
+              ) : lane.items.map(node => {
+                const c = nodeColor(node)
+                const idVal = nodeIdVal(node)
+                const childCount = node.dealer_count ?? node.child_count ?? null
+                const active = lane.single || selChain[depthIdx] === idVal.toString()
+                const isDim = !lane.single && selChain[depthIdx] && !active
+                const isStatsSelected = selectedNode && selectedNode.type === node.type && nodeIdVal(selectedNode).toString() === idVal.toString()
+                return (
+                  <div
+                    className="report-lane-card" key={idVal}
+                    onClick={() => selectAt(depthIdx, node, lane.role)}
+                    style={{
+                      minWidth: '176px', maxWidth: '210px', flexShrink: 0, cursor: 'pointer',
+                      background: 'linear-gradient(145deg,#FFFFFF,#FFFCF8)',
+                      border: `1.5px solid ${c}`, borderRadius: '14px', padding: '13px 16px',
+                      opacity: isDim ? 0.45 : 1,
+                      boxShadow: isStatsSelected ? `0 0 0 2px #C99A3A, 0 16px 32px rgba(14,90,87,0.16)` : (active ? `0 0 0 1.5px ${c}, 0 14px 28px rgba(14,90,87,0.14)` : '0 10px 22px rgba(14,90,87,0.07)'),
+                      transition: 'opacity .15s ease, box-shadow .15s ease',
+                    }}
+                  >
+                    <div style={{ fontSize: '9px', fontWeight: 800, color: c, letterSpacing: '1.2px', marginBottom: '7px' }}>{(LEVEL_LABELS[lane.role] || lane.role).toUpperCase()}</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: '10px', color: c, marginBottom: '4px' }}>{idVal}</div>
+                    <div style={{ fontWeight: 700, fontSize: '13px', color: text, marginBottom: '5px' }}>{nodeName(node)}</div>
+                    {node.mobile_number && <div style={{ fontSize: '11px', color: subtext, marginBottom: '2px' }}>{node.mobile_number}</div>}
+                    {node.city_name && <div style={{ fontSize: '11px', color: subtext }}>{node.city_name}</div>}
+                    <div style={{ marginTop: '8px', fontSize: '11px', fontWeight: 700, color: c }}>{node.order_count ?? 0} orders</div>
+                    {childCount !== null && (
+                      <div style={{ marginTop: '4px', fontSize: '10px', fontWeight: 800, color: c }}>
+                        {childCount} {(LEVEL_LABELS[LAZY_CHILD_ROLE[lane.role]] || '').toLowerCase()}{childCount === 1 ? '' : 's'}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontFamily: 'monospace', fontSize: '10px', color: c, marginBottom: '4px' }}>{idVal}</div>
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: text, marginBottom: '5px' }}>{nodeName(node)}</div>
-                  {node.mobile_number && (
-                    <div style={{ fontSize: '11px', color: subtext, marginBottom: '2px' }}>{node.mobile_number}</div>
-                  )}
-                  {node.city_name && (
-                    <div style={{ fontSize: '11px', color: subtext }}>{node.city_name}</div>
-                  )}
-                  {node.type === 'customer' && (
-                    <div style={{ marginTop: '8px', fontSize: '11px', fontWeight: 700, color: c }}>
-                      {(node.orders || []).length} orders
-                    </div>
-                  )}
-                  {childCount !== null && (
-                    <div style={{ marginTop: '8px', fontSize: '10px', fontWeight: 800, color: c }}>
-                      {childCount} {(LEVEL_LABELS[childType] || childType).toLowerCase()}{childCount === 1 ? '' : 's'}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
+            <div style={{ height: '3px', borderRadius: '3px', background: laneColor, opacity: 0.55, margin: '0 4px 22px 4px' }} />
           </div>
-          
-          <div style={{ height: '3px', borderRadius: '3px', background: laneColor, opacity: 0.55, margin: '0 4px 22px 4px' }} />
-        </div>
-      )})}
+        )
+      })}
     </div>
   )
 }
@@ -653,101 +685,66 @@ useEffect(() => {
   const cardBg = 'linear-gradient(145deg,rgba(255,255,255,0.96),rgba(255,252,248,0.90))'
 
   useEffect(() => {
-    const fetchReport = async () => {
+    const fetchRole = async () => {
       try {
-        const res = await api.get('/sales-report/')
+        const res = await api.get('/my-info/')
         setRole(res.data.role)
-        setTreeData(res.data.data || [])
-        setAncestors(res.data.ancestors || [])
       } catch (err) {
-        setError(err.response?.data?.error || 'Failed to load report')
+        setError('Failed to load report')
       }
       setLoading(false)
     }
-    fetchReport()
+    fetchRole()
   }, [])
+
+  // ── NEW: Excel export mattum full tree venum — on-demand fetch, page load-ku block pannaathu ──
+  const fetchFullTreeForExport = async () => {
+    const res = await api.get('/sales-report/')
+    return res.data.data || []
+  }
 
   const cfg = ROLE_CFG[role] || { label: role, color: '#0E5A57' }
   const availableLevels = DRILL_LEVELS[role] || ['own']
 
-  // â”€â”€ nodes available for the second dropdown (only when level !== 'own') â”€â”€
-const nodesForSelectedLevel = useMemo(() => {
-  if (selectedLevel === 'own' || !treeData.length) return []
-  let all = []
-  treeData.forEach(root => { all = all.concat(collectNodesOfType(root, selectedLevel)) })
-  return all
-}, [selectedLevel, treeData])
-
-const [urlParams] = useSearchParams()
-const skipLevelResetRef = useRef(false)
-
+// ── NEW: URL-based deep-link (?role=admin&id=5) feature remove pannirom —
+// old full-tree data base panni irundhadhu, adhu ippo illa. Level maarina
+// simple ah node selection reset pannurom mattum. ──
 useEffect(() => {
-  const urlRole = urlParams.get('role')
-  const urlId = urlParams.get('id')
-  if (!urlRole || !urlId || !treeData.length) return
-  skipLevelResetRef.current = true
-  setSelectedLevel(urlRole)
-}, [urlParams, treeData])
-
-useEffect(() => {
-  const urlRole = urlParams.get('role')
-  const urlId = urlParams.get('id')
-  if (!urlRole || !urlId || !nodesForSelectedLevel.length) return
-  const node = nodesForSelectedLevel.find(n => n.id?.toString() === urlId)
-  if (node) {
-    const publicId = node.customer_id || node[`${node.type}_id`] || node.id
-    setSelectedNodeId(publicId.toString())
-  }
-}, [urlParams, nodesForSelectedLevel])
-
-// reset node selection whenever level changes — but skip once when the
-// change came from a URL-driven search (see skipLevelResetRef above)
-useEffect(() => {
-  if (skipLevelResetRef.current) {
-    skipLevelResetRef.current = false
-    return
-  }
   setSelectedNodeId('')
   setNodeSearch('')
+  setGridSelectedNode(null)
 }, [selectedLevel])
 
-//filtered nodes based on search (id / name / phone)
-const filteredNodes = useMemo(() => {
-  if (!debouncedNodeSearch.trim()) return nodesForSelectedLevel.slice(0, 50)
-  const q = debouncedNodeSearch.trim().toLowerCase()
-  const results = []
-  for (let i = 0; i < nodesForSelectedLevel.length; i++) {
-    const n = nodesForSelectedLevel[i]
-    const id = (n.customer_id || n[`${n.type}_id`] || n.id || '').toString().toLowerCase()
-    const name = (n.first_name ? `${n.first_name} ${n.last_name || ''}` : (n.dealer_name || n.promotor_name || '')).toLowerCase()
-    const phone = (n.mobile_number || '').toString().toLowerCase()
-    if (id.includes(q) || name.includes(q) || phone.includes(q)) {
-      results.push(n)
-      if (results.length >= 50) break
-    }
-  }
-  return results
-}, [debouncedNodeSearch, nodesForSelectedLevel])
+// ── NEW: backend search — old full-tree walk vendaam, /hierarchy/search-person/
+// endpoint use pannurom. Debounced text vachi mattum call pogum. ──
+const [filteredNodes, setFilteredNodes] = useState([])
 
-  // â”€â”€ the actual tree we render: full network OR a single selected node's subtree â”€â”€
-  const activeTree = useMemo(() => {
-    if (selectedLevel === 'own' || !selectedNodeId) return treeData
-    const node = nodesForSelectedLevel.find(n =>
-      (n.customer_id || n[`${n.type}_id`] || n.id)?.toString() === selectedNodeId
-    )
-    return node ? [node] : treeData
-  }, [selectedLevel, selectedNodeId, nodesForSelectedLevel, treeData])
+useEffect(() => {
+  if (selectedLevel === 'own') { setFilteredNodes([]); return }
+  const query = debouncedNodeSearch.trim()
+  if (!query) { setFilteredNodes([]); return }
+  api.get(`/hierarchy/search-person/?q=${encodeURIComponent(query)}`)
+    .then(res => {
+      const matches = (res.data.results || [])
+        .filter(r => r.role === selectedLevel)
+        .map(r => ({
+          id: r.id, user_id: r.user_id, type: r.role,
+          first_name: r.first_name, last_name: r.last_name,
+          mobile_number: r.mobile_number, city_name: r.city_name,
+          [`${r.role}_id`]: r.public_id,
+        }))
+      setFilteredNodes(matches)
+    })
+    .catch(() => setFilteredNodes([]))
+}, [debouncedNodeSearch, selectedLevel])
 
-  const isMultiAdminView = role === 'super_admin' && selectedLevel === 'own' && activeTree.length > 1
+  // ── NEW: old full-tree "activeTree" logic remove pannirom — full-tree data
+  // ippo fetch pannaathu. scopedNode mattum than "eppo edha kaatanum" nu decide pannum:
+  // dropdown-la oru node select pannina, illa grid card click pannina. ──
+  const isMultiAdminView = false   // full-tree illama idha calculate panna mudiyathu
+  const isMultiAdminViewStats = false
 
-// â”€â”€ NEW: top dropdown maathaanum grid selection clear pannidanum â”€â”€
-useEffect(() => { setGridSelectedNode(null) }, [activeTree])
-
-// â”€â”€ NEW: card click pannirundha andha node mattum, illana existing activeTree â”€â”€
-const statsTree = gridSelectedNode ? [gridSelectedNode] : activeTree
-const isMultiAdminViewStats = !gridSelectedNode && isMultiAdminView
-
-const scopedNode = gridSelectedNode || (selectedLevel !== 'own' && activeTree.length === 1 ? activeTree[0] : null)
+  const scopedNode = gridSelectedNode
 const scopedLoginLabel = scopedNode ? `${LEVEL_LABELS[scopedNode.type] || scopedNode.type}${nodeName(scopedNode)}` : 'Full Network'
 
 useEffect(() => {
@@ -775,11 +772,13 @@ useEffect(() => {
 // ── NEW: Trend graph — timeRange (Today/Week/Month/Year) button click pண்ணும்போது
 // thani thani API call pண்ணும். scopedNode select pண்ணினாலும் andha scope-ku mattum ──
 useEffect(() => {
+  let cancelled = false   // ── NEW: stale response-ah ignore pannurom, latest click mattum win aagum ──
   const params = { period: timeRange.toLowerCase() }
   if (scopedNode) { params.role = scopedNode.type; params.id = scopedNode.id }
   api.get('/sales-report/trend/', { params })
-    .then(res => setTrendData(res.data.data || []))
+    .then(res => { if (!cancelled) setTrendData(res.data.data || []) })
     .catch(() => {})
+  return () => { cancelled = true }
 }, [scopedNode, timeRange])
 
 // ── NEW: Login Status — scopedNode select pண்ணின role+id vachi backend-லேயே scope pண்ணும் ──
@@ -795,34 +794,21 @@ useEffect(() => {
 const goToActiveLogin = () => navigate('/login-active', { state: { ids: scopedNode ? Array.from(collectSubtreeRoleIds(scopedNode)) : null, scopeLabel: scopedLoginLabel } })
 const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scopedNode ? Array.from(collectSubtreeRoleIds(scopedNode)) : null, scopeLabel: scopedLoginLabel } })
 
- const allRows = useMemo(() => {
-  let rows = []
-  statsTree.forEach(root => {
-    const rootRows = flattenToRows(root)
-    if (isMultiAdminViewStats) {
-      const adminId = root.admin_id || root.id || 'â€”'
-      const adminName = `${root.first_name || ''} ${root.last_name || ''}`.trim() || adminId
-      const adminColor = root.status ? STATUS_COLOR[root.status] : null
-      rootRows.forEach(r => { r.chain = [{ id: adminId, name: adminName, color: adminColor }, ...r.chain] })
-    }
-    rows = rows.concat(rootRows)
-  })
-  return rows
-}, [statsTree, isMultiAdminViewStats])
-
-  const totalSales = summaryData.total_sales
+ const totalSales = summaryData.total_sales
   const totalOrders = summaryData.total_orders
   const totalCustomers = summaryData.customers_with_orders
 
   const columns = gridSelectedNode
-  ? (COLUMN_MAP[gridSelectedNode.type] || [])
-  : (isMultiAdminView
-      ? COLUMN_MAP.super_admin_view
-      : (activeTree[0] ? (COLUMN_MAP[activeTree[0].type] || []) : []))
+    ? (COLUMN_MAP[gridSelectedNode.type] || [])
+    : COLUMN_MAP.super_admin_view
 
   const trendBuckets = trendData
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    const fullTree = await fetchFullTreeForExport()
+    const exportRows = []
+    fullTree.forEach(root => { exportRows.push(...flattenToRows(root)) })
+
     const wb = XLSX.utils.book_new()
 
     const summaryRows = [
@@ -851,7 +837,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
     const headerLabels = columns.flatMap(c => [`${c} ID`, `${c} Name`]).concat(['Orders', 'Sales'])
     const breakdownRows = [
       headerLabels,
-      ...allRows.map(row => [...row.chain.flatMap(item => [item.id, item.name]), row.orders, row.amount]),
+      ...exportRows.map(row => [...row.chain.flatMap(item => [item.id, item.name]), row.orders, row.amount]),
     ]
     const detailSheet = XLSX.utils.aoa_to_sheet(breakdownRows)
     detailSheet['!cols'] = headerLabels.map(h => ({ wch: h.includes('Name') ? 24 : 16 }))
@@ -872,7 +858,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
       const children = node[key] || []
       children.forEach(child => addHierarchyRows({ ...child, type: childType }, depth + 1))
     }
-    activeTree.forEach(root => addHierarchyRows(root))
+    fullTree.forEach(root => addHierarchyRows(root))
     const hierarchySheet = XLSX.utils.aoa_to_sheet(hierarchyRows)
     hierarchySheet['!cols'] = [{ wch: 12 }, { wch: 18 }, { wch: 24 }, { wch: 16 }, { wch: 22 }]
     XLSX.utils.book_append_sheet(wb, hierarchySheet, 'Hierarchy')
@@ -1011,11 +997,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
       value={
         showNodeDropdown
           ? nodeSearch
-          : (() => {
-              const sel = nodesForSelectedLevel.find(n => (n.customer_id || n[`${n.type}_id`] || n.id)?.toString() === selectedNodeId)
-              if (!sel) return ''
-              return sel.first_name ? `${sel.first_name} ${sel.last_name || ''}`.trim() : (sel.dealer_name || sel.promotor_name || '')
-            })()
+          : (gridSelectedNode ? nodeName(gridSelectedNode) : '')
       }
       onChange={e => { setNodeSearch(e.target.value); setShowNodeDropdown(true) }}
       onFocus={() => { setShowNodeDropdown(true); setNodeSearch('') }}
@@ -1040,6 +1022,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
               key={id}
               onMouseDown={() => {
                 setSelectedNodeId(id.toString())
+                setGridSelectedNode(n)   // ── NEW: direct ah scoped node set pannurom, summary/trend/login/coin ella-um udane update aagum ──
                 setShowNodeDropdown(false)
                 setNodeSearch('')
               }}
@@ -1151,7 +1134,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
               Network breakdown
             </div>
             <HierarchyBreakdownGrid
-  roots={activeTree}
+  scopedNode={scopedNode}
   cardBg={cardBg} border={border} text={text} subtext={subtext}
   selectedNode={gridSelectedNode}
   onSelectNode={setGridSelectedNode}
