@@ -221,7 +221,7 @@ export default function SuperAdminNavbar({
     ['Coin Transactions', () => navigate('/coin-transactions')],
   ]
   const reports = [
-    ['Hierarchy', () => navigate('/superadmin-hierarchy-grid')],
+    ['Login Reward', () => navigate('/coins-reward')],
     ['Hierarchy Sales Report', () => navigate('/hierarchy-sales-count')],
     ['Sales Report', () => navigate('/sales-report')],
     ['Login Active', () => navigate('/login-active')],
@@ -272,12 +272,12 @@ export default function SuperAdminNavbar({
 .san-secure strong { display: block; font-size: 16px; margin-bottom: 8px; }
 .san-secure span { display: block; color: #D1DFDE; font-size: 13px; line-height: 1.6; }
 .san-top-shell { position: sticky; top: 0; z-index: 65; background: rgba(253,253,252,.98); border-bottom: 1px solid rgba(189,207,206,.74); box-shadow: 0 16px 38px rgba(7,59,63,.055); backdrop-filter: blur(16px); }
-.san-top-inner { min-height: 104px; display: flex; align-items: center; gap: 24px; padding: 0 14px; }
+.san-top-inner { min-height: 104px; display: flex; align-items: center; gap: 12px; padding: 0 14px; flex-wrap: nowrap; }
 .san-navbar-brand { width: auto; min-width: 0; flex-shrink: 0; border: 0; background: transparent; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 0; cursor: pointer; }
 .san-navbar-brand img { width: 54px; height: 54px; object-fit: contain; }
 .san-navbar-brand strong { display: block; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; line-height: .95; font-weight: 850; letter-spacing: .02em; color: #073B3F; }
 .san-navbar-brand small { display: block; margin-top: 5px; color: #BB8958; font-size: 10px; font-weight: 900; letter-spacing: .24em; text-transform: uppercase; }
-.san-search-block { width: 240px; flex-shrink: 0; display: flex; align-items: center; padding: 0 14px 0 0; margin-right: 44px; }
+.san-search-block { width: 190px; flex-shrink: 0; display: flex; align-items: center; padding: 0 10px 0 0; margin-right: 8px; }
 .san-search { height: 48px; width: 100%; border: 1px solid rgba(189,207,206,.95); border-radius: 10px; background: #FDFDFC; color: #073B3F; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 14px; font-weight: 700; }
 .san-search-input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #073B3F; font-size: 14px; font-weight: 650; }
 .san-search-input::placeholder { color: #7A8987; font-weight: 550; }
@@ -285,9 +285,9 @@ export default function SuperAdminNavbar({
 .san-mic-btn:hover { background: #0C4044; color: #FDFDFC; }
 .san-mic-btn.is-listening { background: #C92035; border-color: #C92035; color: #FDFDFC; animation: san-mic-pulse 1.1s ease-in-out infinite; }
 @keyframes san-mic-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(201,32,53,.5); } 50% { box-shadow: 0 0 0 8px rgba(201,32,53,0); } }
-.san-menu-center { flex: 1; display: flex; justify-content: center; align-items: stretch; gap: 6px; min-width: 0; }
+.san-menu-center { flex: 0 0 auto; display: flex; justify-content: center; align-items: stretch; gap: 0; }
 .san-menu-group { position: relative; display: flex; }
-.san-menu-trigger { border: 0; background: transparent; min-width: auto; padding: 0 16px; color: #073B3F; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; white-space: nowrap; }
+.san-menu-trigger { border: 0; background: transparent; min-width: auto; flex-shrink: 0; padding: 0 9px; color: #073B3F; font-family: Georgia, 'Times New Roman', serif; font-size: 12.5px; font-weight: 800; letter-spacing: .01em; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; white-space: nowrap; }
 .san-menu-trigger:hover { background: #F3F3F0; border-radius: 999px; }
 .san-menu-dropdown { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 0; padding: 32px 28px 24px; min-width: 286px; background: rgba(253,253,252,.98); border: 1px solid rgba(189,207,206,.8); box-shadow: 0 26px 68px rgba(7,59,63,.14); border-radius: 8px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .18s ease, visibility .18s ease; z-index: 90; }
 .san-menu-group:hover .san-menu-dropdown { opacity: 1; visibility: visible; pointer-events: auto; transform: translateX(-50%); }
@@ -297,8 +297,8 @@ export default function SuperAdminNavbar({
 .san-menu-link:hover { color: #0C4044; transform: translateX(3px); }
 .san-menu-link b, .san-menu-foot { color: #0C4044; }
 .san-menu-foot { margin-top: 22px; border: 0; background: transparent; font-size: 13px; font-weight: 900; letter-spacing: .02em; cursor: pointer; }
-.san-actions { display: flex; align-items: center; border-left: 0; gap: 18px; padding-left: 8px; }
-.san-action { min-width: auto; padding: 0 12px; border: 0; background: transparent; color: #0C4044; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+.san-actions { display: flex; align-items: center; border-left: 0; gap: 6px; padding-left: 4px; flex-shrink: 0; }
+.san-action { min-width: auto; flex-shrink: 0; padding: 0 8px; border: 0; background: transparent; color: #0C4044; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; white-space: nowrap; }
 .san-action:hover { background: #F3F3F0; box-shadow: 0 12px 28px rgba(7,59,63,.08); transform: translateY(-1px); }
 .san-action.logout { color: #C92035; }
 .san-mobile-logo { display: none; }

@@ -721,9 +721,9 @@ function LaneRow({ role, items, activeId, onSelect, ancestors, superAdminEmail, 
       <div className="glane-track" style={{ '--nc': cfg.color, scrollbarColor: `${cfg.color} rgba(231,237,236,0.62)` }}>
         {isLoading ? (
           <>
-            <SkeletonCard color={cfg.color} />
-            <SkeletonCard color={cfg.color} />
-            <SkeletonCard color={cfg.color} />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={i} color={cfg.color} />
+            ))}
           </>
         ) : items.length === 0 ? (
           <div className="glane-empty-pro" style={{ '--nc': cfg.color }}>
@@ -1181,10 +1181,10 @@ const selectAdmin = (node) => {
       <div style={{ background: '#FFFFFF', border: `1.5px solid ${border}`, borderRadius: '20px', padding: '24px 28px', minHeight: '70vh', boxShadow: '0 18px 42px rgba(7,59,63,0.08)' }}>
 
         {loading && (
-          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-            <SkeletonCard color={ROLE_CFG.admin.color} />
-            <SkeletonCard color={ROLE_CFG.admin.color} />
-            <SkeletonCard color={ROLE_CFG.admin.color} />
+          <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '10px' }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <SkeletonCard key={i} color={ROLE_CFG.admin.color} />
+            ))}
           </div>
         )}
 

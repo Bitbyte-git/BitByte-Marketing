@@ -2709,12 +2709,31 @@ class TodayLoginStatusView(APIView):
             all_entries = [e for e in all_entries if e.get('_user_id') in scope_user_ids]
 
         active_list = [e for e in all_entries if e['active']]
+        active_list = [e for e in all_entries if e['active']]
         inactive_list = [e for e in all_entries if not e['active']]
+
+        # ── NEW: role filter — level_role vachi filter pண்ணும் (Admin/Dealer/Sub Dealer/Promotor/Customer) ──
+        role_filter = request.query_params.get('role')
+        if role_filter and role_filter != 'all':
+            active_list = [e for e in active_list if e['level_role'] == role_filter]
+            inactive_list = [e for e in inactive_list if e['level_role'] == role_filter]
+
+        # ── NEW: limit — Load More pagination. 20/50/100/... mattum anuppuvom, total count um anuppuvom ──
+        limit_param = request.query_params.get('limit')
+        active_total = len(active_list)
+        inactive_total = len(inactive_list)
+        if limit_param:
+            try:
+                limit = int(limit_param)
+                active_list = active_list[:limit]
+                inactive_list = inactive_list[:limit]
+            except ValueError:
+                pass
 
         return Response({
             'period': period,          # ── NEW
-            'active_count': len(active_list),
-            'inactive_count': len(inactive_list),
+            'active_count': active_total,
+            'inactive_count': inactive_total,
             'active': active_list,
             'inactive': inactive_list,
         })

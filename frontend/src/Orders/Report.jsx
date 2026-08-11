@@ -388,12 +388,18 @@ function nodeColor(node) {
 // its children lane below, exactly like the main hierarchy grid page. â”€â”€
 const LAZY_CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer', customer: 'customer' }
 
-function HierarchyBreakdownGrid({ scopedNode, cardBg, border, text, subtext, selectedNode, onSelectNode }) {
+// ── NEW: professional "no children" empty state icon ──
+const IconEmptyEnd = ({ color, size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" strokeDasharray="3 3" />
+    <path d="M9 12l2 2 4-4" />
+  </svg>
+)
+
+function HierarchyBreakdownGrid({ cardBg, border, text, subtext, selectedNode, onSelectNode }) {
   const [cache, setCache] = useState({})
   const [loadingKey, setLoadingKey] = useState(null)
   const [selChain, setSelChain] = useState([])
-
-  useEffect(() => { setCache({}); setSelChain([]) }, [scopedNode])
 
   const fetchLevel = async (fetchRole, fetchId, key) => {
     setLoadingKey(key)
@@ -411,17 +417,16 @@ function HierarchyBreakdownGrid({ scopedNode, cardBg, border, text, subtext, sel
     setLoadingKey(null)
   }
 
+  // ── NEW: root (admin list) ஒரே தடவை mattum fetch pண்ணும், card click பண்ணினாலும்
+  // idhை clear pண்ணாthু — top lane always full list ah irukkும். ──
   useEffect(() => {
-    const key = scopedNode ? `${scopedNode.type}_${scopedNode.id}` : 'root'
-    if (!cache[key]) fetchLevel(scopedNode ? scopedNode.type : null, scopedNode ? scopedNode.id : null, key)
-  }, [scopedNode])
+    if (!cache['root']) fetchLevel(null, null, 'root')
+  }, [])
 
-  // ── NEW: drill-down fetch-ah render body-la irundhu useEffect-ku maathurom.
-  // Render function-la neradiya API call/setState pannuradhu React rule violate
-  // pannum, "Maximum update depth exceeded" crash → blank screen tharum. ──
+  // ── drill-down fetch — selChain maarina, adhுкku аடுத்த level fetch pண்ணும் ──
   useEffect(() => {
-    let curKey = scopedNode ? `${scopedNode.type}_${scopedNode.id}` : 'root'
-    let curRole = scopedNode ? LAZY_CHILD_ROLE[scopedNode.type] : 'admin'
+    let curKey = 'root'
+    let curRole = 'admin'
     let depth = 0
     while (curRole) {
       const items = cache[curKey]
@@ -436,18 +441,17 @@ function HierarchyBreakdownGrid({ scopedNode, cardBg, border, text, subtext, sel
       curRole = LAZY_CHILD_ROLE[curRole]
       depth++
     }
-  }, [scopedNode, selChain, cache])
+  }, [selChain, cache])
 
-  // ── Idhu ippo render-la mattum data assemble pannum, fetch pannaathu ──
+  // ── render lanes — top lane always root list, adhுкku கீழ selChain follow pண்ணி build aagும் ──
   const lanes = []
-  if (scopedNode) lanes.push({ role: scopedNode.type, items: [scopedNode], depth: -1, single: true })
-  let curKey2 = scopedNode ? `${scopedNode.type}_${scopedNode.id}` : 'root'
-  let curRole2 = scopedNode ? LAZY_CHILD_ROLE[scopedNode.type] : 'admin'
+  let curKey2 = 'root'
+  let curRole2 = 'admin'
   let depth2 = 0
   while (curRole2) {
     const items = cache[curKey2]
     lanes.push({ role: curRole2, items: items ?? null, depth: depth2 })
-    if (!items) break
+    if (!items || items.length === 0) break
     const selId = selChain[depth2]
     if (!selId) break
     const selNode = items.find(n => n.id.toString() === selId)
@@ -478,14 +482,19 @@ function HierarchyBreakdownGrid({ scopedNode, cardBg, border, text, subtext, sel
                   <SkeletonCard color={laneColor} />
                 </>
               ) : lane.items.length === 0 ? (
-                <div style={{ color: subtext, fontSize: '13px', padding: '10px 0' }}>No {(LEVEL_LABELS[lane.role] || lane.role).toLowerCase()} found.</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 18px', border: `1.5px dashed ${laneColor}`, borderRadius: '14px', opacity: 0.85 }}>
+                  <IconEmptyEnd color={laneColor} />
+                  <span style={{ color: subtext, fontSize: '12.5px', fontWeight: 600 }}>No {(LEVEL_LABELS[lane.role] || lane.role).toLowerCase()} under this one.</span>
+                </div>
               ) : lane.items.map(node => {
                 const c = nodeColor(node)
                 const idVal = nodeIdVal(node)
                 const childCount = node.dealer_count ?? node.child_count ?? null
-                const active = lane.single || selChain[depthIdx] === idVal.toString()
-                const isDim = !lane.single && selChain[depthIdx] && !active
-                const isStatsSelected = selectedNode && selectedNode.type === node.type && nodeIdVal(selectedNode).toString() === idVal.toString()
+                // ── FIX: selChain la node.id (DB number) save pண்ணிருக்கோம், idVal (public ID string)
+                // illa — so node.id.toString() vachi than compare pண்ணனும், idVal illa. ──
+                const active = selChain[depthIdx] === node.id.toString()
+                const isDim = selChain[depthIdx] && !active
+                const isStatsSelected = selectedNode && selectedNode.type === node.type && selectedNode.id === node.id
                 return (
                   <div
                     className="report-lane-card" key={idVal}
@@ -662,6 +671,7 @@ const [summaryData, setSummaryData] = useState({ total_sales: 0, total_orders: 0
 
 // ── NEW: trend graph data — period-wise thani API call ──
 const [trendData, setTrendData] = useState([])
+const [trendLoading, setTrendLoading] = useState(true)   // ── NEW: period switch pண்ணும்போது skeleton kாட்ட ──
 
 // ── NEW: scoped active/inactive login list (super_admin only) — backend scope pண்ணும் ──
 const [scopedLoginStats, setScopedLoginStats] = useState({ active: [], inactive: [] })
@@ -773,11 +783,12 @@ useEffect(() => {
 // thani thani API call pண்ணும். scopedNode select pண்ணினாலும் andha scope-ku mattum ──
 useEffect(() => {
   let cancelled = false   // ── NEW: stale response-ah ignore pannurom, latest click mattum win aagum ──
+  setTrendLoading(true)
   const params = { period: timeRange.toLowerCase() }
   if (scopedNode) { params.role = scopedNode.type; params.id = scopedNode.id }
   api.get('/sales-report/trend/', { params })
-    .then(res => { if (!cancelled) setTrendData(res.data.data || []) })
-    .catch(() => {})
+    .then(res => { if (!cancelled) { setTrendData(res.data.data || []); setTrendLoading(false) } })
+    .catch(() => { if (!cancelled) setTrendLoading(false) })
   return () => { cancelled = true }
 }, [scopedNode, timeRange])
 
@@ -953,27 +964,17 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
       {/* Navbar */}
       <div className="no-print report-topbar" style={{ padding: '18px 40px', borderBottom: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          
-        
-          <img src={logo} alt="Team 369" style={{ width: '54px', height: '54px', borderRadius: '50%', flexShrink: 0 }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{
-              fontSize: '18px',
-              fontWeight: 900,
-              letterSpacing: '0.02em',
-              marginLeft: '-14px',
-              background: 'linear-gradient(90deg, #dc2626, #ef4444, #fca5a5)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontFamily: '"Manrope", "Segoe UI", system-ui, sans-serif',
-            }}>
-              TEAM369
-            </div>
-            <span style={{ fontWeight: 700, fontSize: '15px', color: cfg.color, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ color: cfg.color, display: 'inline-flex' }}>{ROLE_ICONS[role]}</span>
-              {cfg.label} - Sales Report
-            </span>
-          </div>
+          <button
+            onClick={() => { setGridSelectedNode(null); setSelectedLevel('own'); setSelectedNodeId('') }}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              fontWeight: 700, fontSize: '18px', color: cfg.color, display: 'inline-flex', alignItems: 'center', gap: '8px'
+            }}
+            title="Back to full network"
+          >
+            <span style={{ color: cfg.color, display: 'inline-flex' }}>{ROLE_ICONS[role]}</span>
+            {cfg.label} - Sales Report
+          </button>
         </div>
 
         {/* Drill-down dropdowns + export buttons */}
@@ -1125,7 +1126,15 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
                 ))}
               </div>
             </div>
-            <TrendLineChart buckets={trendBuckets} color={cfg.color} />
+            {trendLoading ? (
+              <div style={{ height: '220px', display: 'flex', alignItems: 'flex-end', gap: '10px', padding: '0 20px 10px' }}>
+                {[0.5, 0.8, 0.4, 0.9, 0.6, 0.7, 0.3].map((h, i) => (
+                  <div key={i} className="skel-line" style={{ flex: 1, height: `${h * 180}px`, marginBottom: 0, borderRadius: '6px 6px 0 0' }} />
+                ))}
+              </div>
+            ) : (
+              <TrendLineChart buckets={trendBuckets} color={cfg.color} />
+            )}
           </div>
 
           {/* Breakdown grid â€” same lane style as the hierarchy grid page */}
@@ -1134,7 +1143,6 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
               Network breakdown
             </div>
             <HierarchyBreakdownGrid
-  scopedNode={scopedNode}
   cardBg={cardBg} border={border} text={text} subtext={subtext}
   selectedNode={gridSelectedNode}
   onSelectNode={setGridSelectedNode}

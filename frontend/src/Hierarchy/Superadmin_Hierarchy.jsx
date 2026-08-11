@@ -215,6 +215,110 @@ function printPersonCard(node, role, cfg, color, ancestors, superAdminEmail) {
   printWindow.document.close()
 }
 
+// ── NEW: shared dark print theme for the full-hierarchy print mode ──
+function getPrintStyles(accent) {
+  return `
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    body { font-family:'Inter',system-ui,sans-serif; background:radial-gradient(circle at 20% 0%, #0b1a2e 0%, #020617 55%); color:#f8fafc; padding:40px; }
+    .header { text-align:center; margin-bottom:26px; }
+    .header h1 { font-size:20px; font-weight:800; background:linear-gradient(90deg,#22c55e,#38bdf8); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:0.3px; }
+    .header p { font-size:12px; color:#64748b; margin-top:4px; letter-spacing:0.5px; }
+    .org-tree-wrapper { overflow:visible; padding:20px 10px; position:relative; text-align:center; width:100%; }
+    #org-scale-inner { display:inline-block; }
+    .org-tree, .org-tree ul, .org-tree li { margin:0; padding:0; list-style:none; }
+    .org-tree { display:flex; justify-content:center; min-width:max-content; }
+    .org-tree ul { display:flex; padding-top:34px; position:relative; }
+    .org-tree li { display:flex; flex-direction:column; align-items:center; padding:34px 14px 0 14px; position:relative; }
+    .org-tree li::before, .org-tree li::after {
+      content:''; position:absolute; top:0; right:50%; width:50%; height:34px; border-top:2px solid #475569;
+    }
+    .org-tree li::after { right:auto; left:50%; border-left:2px solid #475569; }
+    .org-tree li:only-child::before, .org-tree li:only-child::after { display:none; }
+    .org-tree li:only-child { padding-top:0; }
+    .org-tree li:first-child::before { border:none; }
+    .org-tree li:last-child::after { border:none; }
+    .org-tree li:last-child::before { border-right:2px solid #475569; border-radius:0 8px 0 0; }
+    .org-tree li:first-child::after { border-radius:8px 0 0 0; }
+    .org-tree ul ul::before {
+      content:''; position:absolute; top:0; left:50%; border-left:2px solid #475569; width:0; height:34px;
+    }
+    .org-card { display:inline-block; background:linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)); border:1.5px solid; border-radius:12px; padding:10px 14px; min-width:150px; }
+    .org-role { font-size:9px; font-weight:800; letter-spacing:1.2px; margin-bottom:2px; }
+    .org-id { font-family:monospace; font-size:10px; margin-bottom:3px; }
+    .org-name { font-size:13px; font-weight:700; color:#f8fafc; margin-bottom:2px; }
+    .org-info { font-size:11px; color:#94a3b8; }
+    .footer { text-align:center; font-size:10px; color:#475569; margin-top:24px; letter-spacing:0.5px; }
+    @media print { body { padding:20px; } }
+  `
+}
+
+// ── NEW: single node card used inside the printed hierarchy tree ──
+function renderTreeNodeCard(node, role, extraStyle = '') {
+  const cfg = ROLE_CFG[role]
+  const idVal = node[cfg.idKey] || node.id || '—'
+  const name = [node.first_name, node.last_name].filter(Boolean).join(' ') || '—'
+  const phone = node.mobile_number || '—'
+  const city = node.city_name || ''
+  return `<div class="org-card" style="border-color:${cfg.color};${extraStyle}">
+    <div class="org-role" style="color:${cfg.color}">${cfg.label}</div>
+    <div class="org-id" style="color:${cfg.color}">${idVal}</div>
+    <div class="org-name">${name}</div>
+    <div class="org-info">Tel: ${phone}${city ? ' • ' + city : ''}</div>
+  </div>`
+}
+
+// ── NEW: real horizontal org-chart tree using nested <ul><li> + ::before/::after connectors ──
+function renderOrgTreeNode(node, role, extraStyle = '') {
+  const cardHtml = renderTreeNodeCard(node, role, extraStyle)
+  const childRole = CHILD_ROLE[role]
+  const children = childRole ? (node[CHILD_KEY[role]] || []) : []
+  const childrenHtml = children.length
+    ? `<ul>${children.map(ch => `<li>${renderOrgTreeNode(ch, childRole)}</li>`).join('')}</ul>`
+    : ''
+  return `${cardHtml}${childrenHtml}`
+}
+
+// ── NEW: prints the full downward hierarchy starting from this node ──
+function printHierarchyTree(node, role, ancestors, superAdminEmail) {
+  const cfg = ROLE_CFG[role]
+  const currentName = [node.first_name, node.last_name].filter(Boolean).join(' ') || '—'
+  const orgTreeHtml = `<div class="org-tree"><ul><li>${renderOrgTreeNode(node, role, `box-shadow:0 0 22px ${cfg.color}33;`)}</li></ul></div>`
+
+  const printWindow = window.open('', '_blank')
+  printWindow.document.write(`
+    <!DOCTYPE html><html><head><title>${cfg.label} Hierarchy — ${currentName}</title>
+    <style>${getPrintStyles(cfg.color)}</style>
+    <style id="page-size-style">@page { margin: 10mm; }</style>
+    </head>
+    <body>
+      <div class="header"><h1>BitByte — ${cfg.label} Hierarchy Report</h1><p>Full downward chain, every level</p></div>
+      <div id="org-scale-outer" class="org-tree-wrapper">
+        <div id="org-scale-inner">${orgTreeHtml}</div>
+      </div>
+    <script>
+      window.onload = () => {
+        const inner = document.getElementById('org-scale-inner')
+        const header = document.querySelector('.header')
+        const pxToMm = px => (px / 96) * 25.4
+
+        const treeWidthPx = inner.scrollWidth
+        const treeHeightPx = inner.scrollHeight
+        const headerHeightPx = header.offsetHeight
+
+        const pageWidthMm = Math.max(210, pxToMm(treeWidthPx) + 20)
+        const pageHeightMm = pxToMm(treeHeightPx + headerHeightPx) + 40
+
+        const styleTag = document.getElementById('page-size-style')
+        styleTag.textContent = '@page { size: ' + pageWidthMm.toFixed(0) + 'mm ' + pageHeightMm.toFixed(0) + 'mm; margin: 10mm; }'
+
+        setTimeout(() => window.print(), 200)
+      }
+    <\/script>
+    </body></html>
+  `)
+  printWindow.document.close()
+}
+
 function showChainPopup(anchorEl, ancestors, current, dark, text, subtext, superAdminEmail) {
   clearTimeout(_chainHideTimer)
   removeChainPopup()
@@ -406,7 +510,7 @@ function showChainPopup(anchorEl, ancestors, current, dark, text, subtext, super
   el.addEventListener('mouseleave', () => scheduleHideChainPopup())
 }
 
-function TreeNode({ node, role, depth = 0, dark, text, subtext, ancestors = [], superAdminEmail = '', flatMode = false, parentKey = null, openMap = {}, onToggle = () => {}, childrenCache = {}, loadingChildren = null }) {
+function TreeNode({ node, role, depth = 0, dark, text, subtext, ancestors = [], superAdminEmail = '', flatMode = false, parentKey = null, openMap = {}, onToggle = () => {}, childrenCache = {}, loadingChildren = null, onPrint = () => {} }) {
   const navigate = useNavigate()
   const cfg = ROLE_CFG[role]
   const c = cfg.color
@@ -445,7 +549,15 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, ancestors = [], 
 
         <div className="otree-actions">
           <button
-            onClick={e => { e.stopPropagation(); printPersonCard(node, role, cfg, c, ancestors, superAdminEmail) }}
+            onClick={e => {
+              e.stopPropagation()
+              // ── NEW: leaf role (customer) na direct print, mattra roles-ku "Only vs Full Hierarchy" popup ──
+              if (CHILD_ROLE[role]) {
+                onPrint({ node, role, cfg, color: c, ancestors })
+              } else {
+                printPersonCard(node, role, cfg, c, ancestors, superAdminEmail)
+              }
+            }}
             className="otree-btn" style={{ '--nc': c }}
           >
             <IconPrinter color={c} /> PRINT
@@ -494,6 +606,7 @@ function TreeNode({ node, role, depth = 0, dark, text, subtext, ancestors = [], 
             onToggle={onToggle}
             childrenCache={childrenCache}
             loadingChildren={loadingChildren}
+            onPrint={onPrint}
           />
         </div>
       ))
@@ -518,6 +631,20 @@ const [debouncedSearch, setDebouncedSearch] = useState('')
 const [openMap, setOpenMap] = useState({})
 const [childrenCache, setChildrenCache] = useState({})
 const [loadingChildren, setLoadingChildren] = useState(null)
+
+// ── NEW: Print choice popup state — "only this / full hierarchy" select panna ──
+const [printTarget, setPrintTarget] = useState(null) // { node, role, cfg, color, ancestors }
+const openPrintPopup = (target) => setPrintTarget(target)
+const handlePrintOnly = () => {
+  const { node, role, cfg, color, ancestors } = printTarget
+  printPersonCard(node, role, cfg, color, ancestors, superAdminEmail)
+  setPrintTarget(null)
+}
+const handlePrintHierarchy = () => {
+  const { node, role, ancestors } = printTarget
+  printHierarchyTree(node, role, ancestors, superAdminEmail)
+  setPrintTarget(null)
+}
 
 const fetchChildren = async (role, nodeId, cacheKey) => {
   setLoadingChildren(cacheKey)
@@ -852,7 +979,7 @@ useLayoutEffect(() => {
             return (
               <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', padding: '0 32px' }}>
                 {filteredResults.map((item, idx) => (
-                  <TreeNode key={item.node.id || idx} node={item.node} role={item.role} dark={dark} text={text} subtext={subtext} ancestors={item.ancestors} superAdminEmail={superAdminEmail} flatMode={true} />
+                  <TreeNode key={item.node.id || idx} node={item.node} role={item.role} dark={dark} text={text} subtext={subtext} ancestors={item.ancestors} superAdminEmail={superAdminEmail} flatMode={true} onPrint={openPrintPopup} />
                 ))}
               </div>
             )
@@ -868,7 +995,7 @@ useLayoutEffect(() => {
                 ) : (
                   <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     {flatList.map((item, idx) => (
-                      <TreeNode key={item.node.id || idx} node={item.node} role={filter} dark={dark} text={text} subtext={subtext} ancestors={item.ancestors} superAdminEmail={superAdminEmail} flatMode={true} />
+                      <TreeNode key={item.node.id || idx} node={item.node} role={filter} dark={dark} text={text} subtext={subtext} ancestors={item.ancestors} superAdminEmail={superAdminEmail} flatMode={true} onPrint={openPrintPopup} />
                     ))}
                   </div>
                 )}
@@ -892,6 +1019,7 @@ useLayoutEffect(() => {
       onToggle={handleToggle}
       childrenCache={childrenCache}
       loadingChildren={loadingChildren}
+      onPrint={openPrintPopup}
     />
   </div>
 ))}
@@ -917,6 +1045,69 @@ useLayoutEffect(() => {
               <span style={{ color: subtext, fontSize: '12px', fontWeight: 650 }}>{l.role}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── NEW: PRINT CHOICE POPUP — Only vs Full Hierarchy ── */}
+      {printTarget && (
+        <div
+          onClick={() => setPrintTarget(null)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 1400, display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)',
+              border: `1px solid ${printTarget.color}55`,
+              borderRadius: '20px', padding: '26px',
+              width: '95%', maxWidth: '380px',
+              boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+              <IconPrinter color={printTarget.color} size={22} />
+            </div>
+            <div style={{ color: '#111817', fontWeight: 800, fontSize: '15px', marginBottom: '4px' }}>
+              Print {printTarget.node.first_name}'s Profile
+            </div>
+            <div style={{ color: subtext, fontSize: '12px', marginBottom: '20px' }}>
+              Enna print pannanum nu select pannunga bro
+            </div>
+
+            <button
+              onClick={handlePrintOnly}
+              style={{
+                width: '100%', padding: '13px', marginBottom: '10px',
+                background: 'rgba(253,253,252,0.78)', border: `1.5px solid ${printTarget.color}`,
+                borderRadius: '12px', color: printTarget.color, fontWeight: 800, fontSize: '13px', cursor: 'pointer',
+              }}
+            >
+              {ROLE_CFG[printTarget.role]?.label} Only
+            </button>
+            <button
+              onClick={handlePrintHierarchy}
+              style={{
+                width: '100%', padding: '13px', marginBottom: '10px',
+                background: `linear-gradient(90deg, ${printTarget.color}, #0C4044)`,
+                border: 'none', borderRadius: '12px', color: '#FDFDFC', fontWeight: 800, fontSize: '13px', cursor: 'pointer',
+              }}
+            >
+              {ROLE_CFG[printTarget.role]?.label} Hierarchy (Full Tree)
+            </button>
+            <button
+              onClick={() => setPrintTarget(null)}
+              style={{
+                width: '100%', padding: '10px', background: 'none', border: 'none',
+                color: subtext, fontSize: '12px', cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </div>
