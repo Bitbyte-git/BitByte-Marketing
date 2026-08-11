@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
+import { SkeletonCard } from '../components/Skeleton'
 
 // ══════════════════════════════════════════════════════════════════
 // ICONS
@@ -546,6 +547,41 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
 // ══════════════════════════════════════════════════════════════════
 const STATUS_COLOR = { red: '#C92035', orange: '#BB8958', yellow: '#CCA881', green: '#16A34A' }
 
+
+// ── NEW: professional "end of chain" empty state icon ──
+const IconEmptyEnd = ({ color, size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" strokeDasharray="3 3" />
+    <path d="M9 12l2 2 4-4" />
+  </svg>
+)
+
+// ── NEW: role-aware professional empty messages — first-level empty (no data yet)
+// vs deeper-level empty (chain naturally ends here) ──
+const EMPTY_MESSAGES = {
+  dealer: { first: 'has no dealers assigned yet', deeper: null },
+  sub_dealer: { first: 'has no sub dealers assigned yet', deeper: null },
+  promotor: { first: 'has no promotors assigned yet', deeper: null },
+  customer: { first: 'has no customers assigned yet', deeper: 'This is the end of the referral chain' },
+}
+
+// ── NEW: Skeleton placeholder card — real card shape mattum, grey shimmer boxes ──
+// function SkeletonCard({ color }) {
+//   return (
+//     <div className="gcard gcard-skeleton" style={{ '--sc': color, borderStyle: 'dashed' }}>
+//       <div className="skel-badge" />
+//       <div className="skel-line" style={{ width: '70%' }} />
+//       <div className="skel-line" style={{ width: '90%', height: '16px', marginBottom: '10px' }} />
+//       <div className="skel-line" style={{ width: '60%' }} />
+//       <div className="skel-line" style={{ width: '50%' }} />
+//       <div className="skel-actions">
+//         <div className="skel-btn" />
+//         <div className="skel-btn" />
+//       </div>
+//     </div>
+//   )
+// }
+
 function LaneCard({ node, role, active, onClick, ancestors, superAdminEmail, dark, text, subtext, showChildCount, onMessage, onPrint, activeStatusFilter, onToggleStatusFilter }) {
   const navigate = useNavigate()
   const cfg = ROLE_CFG[role]
@@ -673,7 +709,7 @@ const Icon = cfg.Icon
 // ══════════════════════════════════════════════════════════════════
 // LANE ROW — a full horizontal level: label on the left, cards scroll right.
 // ══════════════════════════════════════════════════════════════════
-function LaneRow({ role, items, activeId, onSelect, ancestors, superAdminEmail, dark, text, subtext, emptyText, onMessage, onPrint, activeStatusFilter, onToggleStatusFilter }) {
+function LaneRow({ role, items, activeId, onSelect, ancestors, superAdminEmail, dark, text, subtext, emptyText, onMessage, onPrint, activeStatusFilter, onToggleStatusFilter, isLoading }) {
   const cfg = ROLE_CFG[role]
   return (
     <div className="glane">
@@ -683,9 +719,16 @@ function LaneRow({ role, items, activeId, onSelect, ancestors, superAdminEmail, 
         <span className="glane-total" style={{ color: subtext }}>{items.length}</span>
       </div>
       <div className="glane-track" style={{ '--nc': cfg.color, scrollbarColor: `${cfg.color} rgba(231,237,236,0.62)` }}>
-        {items.length === 0 ? (
-          <div className="glane-empty" style={{ color: subtext }}>
-            {emptyText}
+        {isLoading ? (
+          <>
+            <SkeletonCard color={cfg.color} />
+            <SkeletonCard color={cfg.color} />
+            <SkeletonCard color={cfg.color} />
+          </>
+        ) : items.length === 0 ? (
+          <div className="glane-empty-pro" style={{ '--nc': cfg.color }}>
+            <IconEmptyEnd color={cfg.color} />
+            <span style={{ color: subtext }}>{emptyText}</span>
           </div>
         ) : (
          items.map(item => (
@@ -1023,7 +1066,6 @@ const selectAdmin = (node) => {
     <div style={{ minHeight: '100vh', background: '#FFFFFF', color: text, fontFamily: '"Inter",system-ui,sans-serif', padding: '28px 32px' }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-
         .gcard{
           background:#FFFFFF;
           border:2.5px solid var(--sc); border-radius:16px; padding:14px 18px;
@@ -1067,6 +1109,7 @@ const selectAdmin = (node) => {
         .glane-track::-webkit-scrollbar-thumb{ background:var(--nc); border-radius:10px; opacity:0.7; }
         .glane-track::-webkit-scrollbar-thumb:hover{ background:var(--nc); opacity:1; }
         .glane-empty{ font-size:12px; padding:14px 4px; display:flex; align-items:center; gap:8px; opacity:0.75; }
+        .glane-empty-pro{ display:flex; align-items:center; gap:10px; padding:16px 18px; border:1.5px dashed var(--nc); border-radius:14px; opacity:0.85; font-size:12.5px; font-weight:600; }
         .glane-divider{ height:4px; border-radius:3px; margin:0 4px 4px 4px; opacity:0.9; }
 
         .gsa-card{
@@ -1195,43 +1238,56 @@ const selectAdmin = (node) => {
                 activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
 
               {currentAdmin && (
-                <LaneRow role="dealer" items={filteredDealers} activeId={currentDealer?.id} onSelect={selectDealer}
-                  ancestors={dealerAncestors} superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
-                  emptyText={loadingChildren === `admin_${currentAdmin.id}` ? 'Loading dealers...' : `No dealers under ${currentAdmin.first_name}.`}
-                  onMessage={openMessagePopup} onPrint={openPrintPopup}
-                  activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
-              )}
+  <LaneRow role="dealer" items={filteredDealers} activeId={currentDealer?.id} onSelect={selectDealer}
+    ancestors={dealerAncestors} superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
+    emptyText={`${currentAdmin.first_name} has no dealers assigned yet.`}
+    isLoading={loadingChildren === `admin_${currentAdmin.id}`}
+    onMessage={openMessagePopup} onPrint={openPrintPopup}
+    activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
+)}
 
               {currentDealer && (
-                <LaneRow role="sub_dealer" items={filteredSubDealers} activeId={currentSubDealer?.id} onSelect={selectSubDealer}
-                  ancestors={subDealerAncestors} superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
-                  emptyText={`No sub dealers match this filter under ${currentDealer.first_name}.`} onMessage={openMessagePopup} onPrint={openPrintPopup}
-                  activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
-              )}
+  <LaneRow role="sub_dealer" items={filteredSubDealers} activeId={currentSubDealer?.id} onSelect={selectSubDealer}
+    ancestors={subDealerAncestors} superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
+    emptyText={`${currentDealer.first_name} has no sub dealers assigned yet.`}
+    isLoading={loadingChildren === `dealer_${currentDealer.id}`}
+    onMessage={openMessagePopup} onPrint={openPrintPopup}
+    activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
+)}
 
               {currentSubDealer && (
-                <LaneRow role="promotor" items={filteredPromotors} activeId={currentPromotor?.id} onSelect={selectPromotor}
-                  ancestors={promotorAncestors} superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
-                  emptyText={`No promotors match this filter under ${currentSubDealer.first_name}.`} onMessage={openMessagePopup} onPrint={openPrintPopup}
-                  activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
-              )}
+  <LaneRow role="promotor" items={filteredPromotors} activeId={currentPromotor?.id} onSelect={selectPromotor}
+    ancestors={promotorAncestors} superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
+   emptyText={`${currentSubDealer.first_name} has no promotors assigned yet.`}
+    isLoading={loadingChildren === `sub_dealer_${currentSubDealer.id}`}
+    onMessage={openMessagePopup} onPrint={openPrintPopup}
+    activeStatusFilter={activeStatusFilter} onToggleStatusFilter={toggleStatusFilter} />
+)}
 
-              {currentPromotor && customerLanes.map((lane, idx) => (
-                <LaneRow
-                  key={`customer-lane-${idx}`}
-                  role="customer"
-                  items={lane.items}
-                  activeId={lane.activeId}
-                  onSelect={(node) => selectCustomerAtDepth(lane.depth, node)}
-                  ancestors={lane.ancestors}
-                  superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
-                  emptyText={idx === 0
-                    ? `No customers under ${currentPromotor.first_name}.`
-                    : `No further customers under this one.`}
-                  onMessage={openMessagePopup} onPrint={openPrintPopup}
-                  activeStatusFilter={null} onToggleStatusFilter={null}
-                />
-              ))}
+              {currentPromotor && customerLanes.map((lane, idx) => {
+  // ── NEW: lane 0 = promotor's direct customers (loading key: promotor_<id>)
+  // lane idx>0 = customer-refers-customer chain (loading key: customer_<parentId>) ──
+  const loadingKey = idx === 0
+    ? `promotor_${currentPromotor.id}`
+    : `customer_${customerChain[idx - 1]}`
+  return (
+    <LaneRow
+      key={`customer-lane-${idx}`}
+      role="customer"
+      items={lane.items}
+      activeId={lane.activeId}
+      onSelect={(node) => selectCustomerAtDepth(lane.depth, node)}
+      ancestors={lane.ancestors}
+      superAdminEmail={superAdminEmail} dark={dark} text={text} subtext={subtext}
+      emptyText={idx === 0
+  ? `${currentPromotor.first_name} has no customers assigned yet.`
+  : 'This is the end of the referral chain.'}
+      isLoading={loadingChildren === loadingKey}
+      onMessage={openMessagePopup} onPrint={openPrintPopup}
+      activeStatusFilter={null} onToggleStatusFilter={null}
+    />
+  )
+})}
             </>
           )
         )}

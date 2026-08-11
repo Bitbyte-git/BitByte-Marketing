@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
+import { SkeletonCard } from '../components/Skeleton'
 
 // ── SVG ICONS ──
 const IconShield = ({ color, size = 14 }) => (
@@ -116,8 +117,8 @@ const ROLE_CFG = {
   promotor: { color: '#CA8A04', Icon: IconStar, label: 'PROMOTOR', idKey: 'promotor_id' },
   customer: { color: '#DB2777', Icon: IconUser, label: 'CUSTOMER', idKey: 'customer_id' },
 }
-const CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer' }
-const CHILD_KEY = { admin: 'dealers', dealer: 'sub_dealers', sub_dealer: 'promotors', promotor: 'customers' }
+const CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer', customer: 'customer' }
+const CHILD_KEY = { admin: 'dealers', dealer: 'sub_dealers', sub_dealer: 'promotors', promotor: 'customers', customer: 'customers' }
 
 // ── raw SVG strings for innerHTML (DOM popup-ku react component use panna mudiyathu) ──
 function iconSvg(paths, color, size = 14) {
@@ -405,19 +406,18 @@ function showChainPopup(anchorEl, ancestors, current, dark, text, subtext, super
   el.addEventListener('mouseleave', () => scheduleHideChainPopup())
 }
 
-// ── TREE NODE — recursive, works for any number of children.
-// The `.otree-children` wrapper draws the curvy connector down to ITS children,
-// colored with that child role's own color (not the parent's), and every sibling
-// branch is a real, separate DOM subtree so no branch can ever cross another. ──
-function TreeNode({ node, role, depth = 0, dark, text, subtext, ancestors = [], superAdminEmail = '', flatMode = false, parentKey = null, openMap = {}, onToggle = () => {} }) {
+function TreeNode({ node, role, depth = 0, dark, text, subtext, ancestors = [], superAdminEmail = '', flatMode = false, parentKey = null, openMap = {}, onToggle = () => {}, childrenCache = {}, loadingChildren = null }) {
   const navigate = useNavigate()
   const cfg = ROLE_CFG[role]
   const c = cfg.color
   const Icon = cfg.Icon
   const childRole = CHILD_ROLE[role]
-  const children = childRole ? (node[CHILD_KEY[role]] || []) : []
-  const hasChildren = !flatMode && !!childRole && children.length > 0
-const isOpen = openMap[parentKey] === node.id
+  const cacheKey = role === 'customer' ? `c_${node.id}` : `${role}_${node.id}`
+  const children = childrenCache[cacheKey] || []
+  const childCount = role === 'admin' ? (node.dealer_count ?? 0) : (node.child_count ?? 0)
+  const hasChildren = !flatMode && !!childRole && childCount > 0
+  const isOpen = openMap[parentKey] === node.id
+  const isLoadingChildren = loadingChildren === cacheKey
 
   return (
     <div className="otree-node-wrap">
@@ -425,7 +425,7 @@ const isOpen = openMap[parentKey] === node.id
         className="otree-card"
         data-role={role}
         style={{ '--nc': c }}
-        onClick={() => hasChildren && onToggle(parentKey, node.id)}
+        onClick={() => hasChildren && onToggle(parentKey, node.id, role, cacheKey)}
         onMouseEnter={e => showChainPopup(e.currentTarget, ancestors, { node, role }, dark, text, subtext, superAdminEmail)}
         onMouseLeave={() => scheduleHideChainPopup()}
       >
@@ -470,26 +470,34 @@ const isOpen = openMap[parentKey] === node.id
         )}
         {hasChildren && (
           <div className="otree-count" style={{ background: c }}>
-            {children.length} {childRole.replace('_', ' ')}
+            {childCount} {childRole.replace('_', ' ')}
           </div>
         )}
       </div>
 
       {hasChildren && isOpen && (
   <div className="otree-children" style={{ '--lc': ROLE_CFG[childRole].color }}>
-    {children.map(child => (
-      <div className="otree-item" key={child.id}>
-        <TreeNode
-          node={child} role={childRole} depth={depth + 1}
-          dark={dark} text={text} subtext={subtext}
-          ancestors={[...ancestors, { node, role }]}
-          superAdminEmail={superAdminEmail}
-          parentKey={node.id}
-          openMap={openMap}
-          onToggle={onToggle}
-        />
+    {isLoadingChildren ? (
+      <div className="otree-item" style={{ paddingTop: 0 }}>
+        <SkeletonCard color={ROLE_CFG[childRole].color} />
       </div>
-    ))}
+    ) : (
+      children.map(child => (
+        <div className="otree-item" key={child.id}>
+          <TreeNode
+            node={child} role={childRole} depth={depth + 1}
+            dark={dark} text={text} subtext={subtext}
+            ancestors={[...ancestors, { node, role }]}
+            superAdminEmail={superAdminEmail}
+            parentKey={cacheKey}
+            openMap={openMap}
+            onToggle={onToggle}
+            childrenCache={childrenCache}
+            loadingChildren={loadingChildren}
+          />
+        </div>
+      ))
+    )}
   </div>
 )}
     </div>
@@ -506,12 +514,26 @@ const [search, setSearch] = useState('')
 const [debouncedSearch, setDebouncedSearch] = useState('')
 
 // oru parent-ku keela ore oru child mattum open aagum
+// oru parent-ku keela ore oru child mattum open aagum
 const [openMap, setOpenMap] = useState({})
-const handleToggle = (parentKey, nodeId) => {
+const [childrenCache, setChildrenCache] = useState({})
+const [loadingChildren, setLoadingChildren] = useState(null)
+
+const fetchChildren = async (role, nodeId, cacheKey) => {
+  setLoadingChildren(cacheKey)
+  try {
+    const res = await api.get(`/hierarchy/children/?role=${role}&id=${nodeId}`)
+    setChildrenCache(prev => ({ ...prev, [cacheKey]: res.data.items }))
+  } catch (err) { console.error(err) }
+  setLoadingChildren(null)
+}
+
+const handleToggle = (parentKey, nodeId, role, cacheKey) => {
   setOpenMap(prev => ({
     ...prev,
-    [parentKey]: prev[parentKey] === nodeId ? null : nodeId, // same node click pannaa close aagum
+    [parentKey]: prev[parentKey] === nodeId ? null : nodeId,
   }))
+  if (!childrenCache[cacheKey]) fetchChildren(role, nodeId, cacheKey)
 }
 
   // ADD this after your existing useState lines (near `const [debouncedSearch, ...]`)
@@ -601,8 +623,8 @@ useLayoutEffect(() => {
   const fetchHierarchy = async () => {
     setLoading(true)
     try {
-      const res = await api.get('/hierarchy/full/')
-      setHierarchyData(res.data)
+      const res = await api.get('/hierarchy/admins/')
+      setHierarchyData({ super_admin_email: res.data.super_admin_email, admins: res.data.admins })
     } catch (err) { console.error(err) }
     setLoading(false)
   }
@@ -637,54 +659,23 @@ useLayoutEffect(() => {
     return result
   }
 
-  const searchAllHierarchy = (query) => {
-    if (!hierarchyData || !query.trim()) return []
-    const q = query.trim().toLowerCase()
-    const result = []
-    const checkMatch = (node, idKey) => {
-      const idVal = (node[idKey] || '').toString().toLowerCase()
-      const nameVal = `${node.first_name || ''} ${node.last_name || ''}`.toLowerCase()
-      const phoneVal = (node.mobile_number || '').toString().toLowerCase()
-      return idVal.includes(q) || nameVal.includes(q) || phoneVal.includes(q)
-    }
-    hierarchyData.admins.forEach(admin => {
-      if (checkMatch(admin, 'admin_id')) result.push({ node: admin, role: 'admin', ancestors: [] })
-      admin.dealers.forEach(dealer => {
-        if (checkMatch(dealer, 'dealer_id')) result.push({ node: dealer, role: 'dealer', ancestors: [{ node: admin, role: 'admin' }] })
-        dealer.sub_dealers.forEach(sd => {
-          if (checkMatch(sd, 'sub_dealer_id')) result.push({ node: sd, role: 'sub_dealer', ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }] })
-          sd.promotors.forEach(pr => {
-            if (checkMatch(pr, 'promotor_id')) result.push({ node: pr, role: 'promotor', ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }, { node: sd, role: 'sub_dealer' }] })
-            pr.customers.forEach(cus => {
-              if (checkMatch(cus, 'customer_id')) result.push({ node: cus, role: 'customer', ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }, { node: sd, role: 'sub_dealer' }, { node: pr, role: 'promotor' }] })
-            })
-          })
-        })
+  const [searchResults, setSearchResults] = useState([])
+  useEffect(() => {
+    if (!debouncedSearch) { setSearchResults([]); return }
+    api.get(`/hierarchy/search-person/?q=${encodeURIComponent(debouncedSearch)}`)
+      .then(res => {
+        const mapped = res.data.results.map(r => ({
+          node: { id: r.id, user_id: r.user_id, first_name: r.first_name, last_name: r.last_name, mobile_number: r.mobile_number, city_name: r.city_name, [ROLE_CFG[r.role]?.idKey]: r.public_id },
+          role: r.role,
+          ancestors: [],
+        }))
+        setSearchResults(mapped)
       })
-    })
-    return result
-  }
+      .catch(err => console.error(err))
+  }, [debouncedSearch])
 
-  const searchResults = useMemo(() => {
-    if (!debouncedSearch) return []
-    return searchAllHierarchy(debouncedSearch)
-  }, [debouncedSearch, hierarchyData])
-
-  const totalStats = hierarchyData ? {
-    admins: hierarchyData.admins.length,
-    dealers: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.length, 0),
-    subDealers: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.reduce((b, d) => b + d.sub_dealers.length, 0), 0),
-    promotors: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.reduce((b, d) => b + d.sub_dealers.reduce((c, sd) => c + sd.promotors.length, 0), 0), 0),
-    customers: hierarchyData.admins.reduce((a, ad) => a + ad.dealers.reduce((b, d) => b + d.sub_dealers.reduce((c, sd) => c + sd.promotors.reduce((e, pr) => e + pr.customers.length, 0), 0), 0), 0),
-  } : null
-
-  const statPills = totalStats ? [
-    { label: 'Admins', roleKey: 'admin', count: totalStats.admins },
-    { label: 'Dealers', roleKey: 'dealer', count: totalStats.dealers },
-    { label: 'Sub Dealers', roleKey: 'sub_dealer', count: totalStats.subDealers },
-    { label: 'Promotors', roleKey: 'promotor', count: totalStats.promotors },
-    { label: 'Customers', roleKey: 'customer', count: totalStats.customers },
-  ] : []
+  const totalStats = hierarchyData ? { admins: hierarchyData.admins.length } : null
+  const statPills = []
 
   return (
     <div style={{ minHeight: '100vh', background: '#FFFFFF', color: text, fontFamily: '"Inter",system-ui,sans-serif', padding: '28px 32px' }}>
@@ -855,9 +846,10 @@ useLayoutEffect(() => {
 
 
         {loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', gap: '16px' }}>
-            <div style={{ width: 32, height: 32, border: '3px solid rgba(124,58,237,0.18)', borderTop: '3px solid #0C4044', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            <span style={{ color: subtext, fontSize: '14px' }}>Loading hierarchy...</span>
+          <div style={{ display: 'flex', gap: '16px', padding: '20px 32px 20px 220px', flexWrap: 'wrap' }}>
+            <SkeletonCard color={ROLE_CFG.admin.color} />
+            <SkeletonCard color={ROLE_CFG.admin.color} />
+            <SkeletonCard color={ROLE_CFG.admin.color} />
           </div>
         )}
 
@@ -908,6 +900,8 @@ useLayoutEffect(() => {
       parentKey="root"
       openMap={openMap}
       onToggle={handleToggle}
+      childrenCache={childrenCache}
+      loadingChildren={loadingChildren}
     />
   </div>
 ))}

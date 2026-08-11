@@ -2029,13 +2029,24 @@ class HierarchyChildrenView(APIView):
         child_ids = [c.user_id for c in children]
 
         grandchild_counts = {}
-        next_cfg = self.ROLE_CONFIG.get(cfg['child_role'])
-        if next_cfg:
+        # ── FIX: role == 'promotor' na, child_role == 'customer' — customer chain
+        # ROLE_CONFIG la illa (assigned_promotor_id illama, created_by_id vachi
+        # chain pogum), so idha separate ah handle pannanum. Illana andha customer
+        # kila innum customer irundhalum, toggle arrow kaamikkathu. ──
+        if cfg['child_role'] == 'customer':
             gc = dict(
-                next_cfg['model'].objects.filter(**{f"{next_cfg['filter'].replace('_id','')}__id__in": [c.id for c in children]})
-                .values(next_cfg['filter']).annotate(c=Count('id')).values_list(next_cfg['filter'], 'c')
+                CustomerProfile.objects.filter(created_by_id__in=child_ids)
+                .values('created_by_id').annotate(c=Count('id')).values_list('created_by_id', 'c')
             )
-            grandchild_counts = gc
+            grandchild_counts = gc  # ── key = user_id (created_by_id), not profile id ──
+        else:
+            next_cfg = self.ROLE_CONFIG.get(cfg['child_role'])
+            if next_cfg:
+                gc = dict(
+                    next_cfg['model'].objects.filter(**{f"{next_cfg['filter'].replace('_id','')}__id__in": [c.id for c in children]})
+                    .values(next_cfg['filter']).annotate(c=Count('id')).values_list(next_cfg['filter'], 'c')
+                )
+                grandchild_counts = gc
 
         now = timezone.now()
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -2044,6 +2055,9 @@ class HierarchyChildrenView(APIView):
             .values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
         )
 
+        # ── FIX: customer chain key = user_id, mattras roles key = profile id ──
+        count_key_attr = 'user_id' if cfg['child_role'] == 'customer' else 'id'
+
         results = []
         for c in children:
             oc = order_counts.get(c.user_id, 0)
@@ -2051,7 +2065,7 @@ class HierarchyChildrenView(APIView):
                 'id': c.id, 'user_id': c.user_id, cfg['id_field']: getattr(c, cfg['id_field']),
                 'first_name': c.first_name, 'last_name': c.last_name,
                 'mobile_number': c.mobile_number, 'city_name': c.city_name,
-                'child_count': grandchild_counts.get(c.id, 0),
+                'child_count': grandchild_counts.get(getattr(c, count_key_attr), 0),
                 'order_count': oc, 'status': get_target_status(oc),
             })
         return Response({'role': cfg['child_role'], 'items': results})
