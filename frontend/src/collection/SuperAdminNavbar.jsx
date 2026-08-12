@@ -36,6 +36,17 @@ export default function SuperAdminNavbar({
   const [voiceQuery, setVoiceQuery] = useState('')
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef(null)
+  const [openMenu, setOpenMenu] = useState(null)
+  const closeTimerRef = useRef(null)
+
+  const openMenuNow = (label) => {
+    clearTimeout(closeTimerRef.current)
+    setOpenMenu(label)
+  }
+  const scheduleCloseMenu = () => {
+    clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(() => setOpenMenu(null), 200)
+  }
 
   const PAGE_ROUTES = [
     { keywords: ['inactive'], path: '/login-inactive' },
@@ -239,13 +250,16 @@ export default function SuperAdminNavbar({
     ['Autopay List', () => navigate('/superadmin-autopay-list')],
   ]
 
-  const MenuGroup = ({ label, items, footer }) => (
-    <div className="san-menu-group">
+  const MenuGroup = ({ label, items }) => (
+    <div
+      className={`san-menu-group ${openMenu === label ? 'is-open' : ''}`}
+      onMouseEnter={() => openMenuNow(label)}
+      onMouseLeave={scheduleCloseMenu}
+    >
       <button className="san-menu-trigger" type="button">{label}<Icon name="chevron" size={15} /></button>
       <div className="san-menu-dropdown">
         <div className="san-menu-title"><span>D</span>{label}</div>
         {items.map(([text, action]) => <button key={text} type="button" className="san-menu-link" onClick={action}>{text}<b>-&gt;</b></button>)}
-        {footer && <button type="button" className="san-menu-foot" onClick={footer.action}>{footer.label}</button>}
       </div>
     </div>
   )
@@ -289,8 +303,8 @@ export default function SuperAdminNavbar({
 .san-menu-group { position: relative; display: flex; }
 .san-menu-trigger { border: 0; background: transparent; min-width: auto; flex-shrink: 0; padding: 0 9px; color: #073B3F; font-family: Georgia, 'Times New Roman', serif; font-size: 12.5px; font-weight: 800; letter-spacing: .01em; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; white-space: nowrap; }
 .san-menu-trigger:hover { background: #F3F3F0; border-radius: 999px; }
-.san-menu-dropdown { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 0; padding: 32px 28px 24px; min-width: 286px; background: rgba(253,253,252,.98); border: 1px solid rgba(189,207,206,.8); box-shadow: 0 26px 68px rgba(7,59,63,.14); border-radius: 8px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .18s ease, visibility .18s ease; z-index: 90; }
-.san-menu-group:hover .san-menu-dropdown { opacity: 1; visibility: visible; pointer-events: auto; transform: translateX(-50%); }
+.san-menu-dropdown { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 0; padding: 32px 28px 24px; min-width: 286px; background: #FDFDFC; border: 1px solid rgba(189,207,206,.8); box-shadow: 0 26px 68px rgba(7,59,63,.22); border-radius: 8px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .16s ease, visibility .16s ease; z-index: 200; }
+.san-menu-group.is-open .san-menu-dropdown { opacity: 1; visibility: visible; pointer-events: auto; transform: translateX(-50%); }
 .san-menu-title { display: flex; align-items: center; gap: 12px; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 900; color: #073B3F; margin-bottom: 18px; }
 .san-menu-title span { font-size: 24px; color: #BB8958; }
 .san-menu-link { width: 100%; border: 0; background: transparent; padding: 10px 0; text-align: left; color: #111817; font-size: 14px; font-weight: 750; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }

@@ -2057,16 +2057,11 @@ class HierarchyAdminsView(APIView):
             .values('assigned_admin_id').annotate(c=Count('id')).values_list('assigned_admin_id', 'c')
         )
 
-        now = timezone.now()
-        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        order_counts = dict(
-            JewelryOrder.objects.filter(user_id__in=admin_ids, created_at__gte=month_start)
-            .values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
-        )
+        rollup_counts = _month_rollup_counts()   # ── CHANGED: own order illa, entire subtree rollup ──
 
         results = []
         for a in admins:
-            oc = order_counts.get(a.user_id, 0)
+            oc = rollup_counts.get(('admin', a.id), 0)   # ── CHANGED: key = profile id, not user_id ──
             results.append({
                 'id': a.id, 'user_id': a.user_id, 'admin_id': a.admin_id,
                 'first_name': a.first_name, 'last_name': a.last_name,
@@ -2123,19 +2118,15 @@ class HierarchyChildrenView(APIView):
                 )
                 grandchild_counts = gc
 
-        now = timezone.now()
-        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        order_counts = dict(
-            JewelryOrder.objects.filter(user_id__in=child_ids, created_at__gte=month_start)
-            .values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
-        )
+        rollup_counts = _month_rollup_counts()   # ── CHANGED: subtree rollup
 
         # ── FIX: customer chain key = user_id, mattras roles key = profile id ──
         count_key_attr = 'user_id' if cfg['child_role'] == 'customer' else 'id'
 
         results = []
         for c in children:
-            oc = order_counts.get(c.user_id, 0)
+            key_val = c.user_id if cfg['child_role'] == 'customer' else c.id   # ── CHANGED
+            oc = rollup_counts.get((cfg['child_role'], key_val), 0)   # ── CHANGED
             results.append({
                 'id': c.id, 'user_id': c.user_id, cfg['id_field']: getattr(c, cfg['id_field']),
                 'first_name': c.first_name, 'last_name': c.last_name,
@@ -2160,15 +2151,10 @@ class HierarchyChildrenView(APIView):
             CustomerProfile.objects.filter(created_by_id__in=child_ids)
             .values('created_by_id').annotate(c=Count('id')).values_list('created_by_id', 'c')
         )
-        now = timezone.now()
-        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        order_counts = dict(
-            JewelryOrder.objects.filter(user_id__in=child_ids, created_at__gte=month_start)
-            .values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
-        )
+        rollup_counts = _month_rollup_counts()   # ── CHANGED
         results = []
         for c in children:
-            oc = order_counts.get(c.user_id, 0)
+            oc = rollup_counts.get(('customer', c.user_id), 0)   # ── CHANGED
             results.append({
                 'id': c.id, 'user_id': c.user_id, 'customer_id': c.customer_id,
                 'first_name': c.first_name, 'last_name': c.last_name,
@@ -2755,6 +2741,57 @@ def _today_rollup_counts():
         counts[('admin', r['user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin_id'])] = r['c']
 
     return counts
+
+
+def _month_rollup_counts():
+    """dict: (role, profile_id) -> this month's order count, rolled up from
+    the entire subtree kீழе. role keys: 'customer'(user_id), 'promotor','sub_dealer',
+    'dealer','admin' (profile id). DB aggregate queries mattum — Python loop illa."""
+    now = timezone.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    base = JewelryOrder.objects.filter(created_at__gte=month_start)
+    counts = {}
+
+    def add(key, c):
+        counts[key] = counts.get(key, 0) + c
+
+    for r in base.filter(user__customer_profile__isnull=False).values('user_id').annotate(c=Count('id')):
+        add(('customer', r['user_id']), r['c'])
+
+    for r in base.filter(user__customer_profile__assigned_promotor__isnull=False).values('user__customer_profile__assigned_promotor_id').annotate(c=Count('id')):
+        add(('promotor', r['user__customer_profile__assigned_promotor_id']), r['c'])
+    for r in base.filter(user__promotor_profile__isnull=False).values('user__promotor_profile_id').annotate(c=Count('id')):
+        add(('promotor', r['user__promotor_profile_id']), r['c'])
+
+    for r in base.filter(user__customer_profile__assigned_promotor__assigned_sub_dealer__isnull=False).values('user__customer_profile__assigned_promotor__assigned_sub_dealer_id').annotate(c=Count('id')):
+        add(('sub_dealer', r['user__customer_profile__assigned_promotor__assigned_sub_dealer_id']), r['c'])
+    for r in base.filter(user__promotor_profile__assigned_sub_dealer__isnull=False).values('user__promotor_profile__assigned_sub_dealer_id').annotate(c=Count('id')):
+        add(('sub_dealer', r['user__promotor_profile__assigned_sub_dealer_id']), r['c'])
+    for r in base.filter(user__sub_dealer_profile__isnull=False).values('user__sub_dealer_profile_id').annotate(c=Count('id')):
+        add(('sub_dealer', r['user__sub_dealer_profile_id']), r['c'])
+
+    for r in base.filter(user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__isnull=False).values('user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer_id').annotate(c=Count('id')):
+        add(('dealer', r['user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer_id']), r['c'])
+    for r in base.filter(user__promotor_profile__assigned_sub_dealer__assigned_dealer__isnull=False).values('user__promotor_profile__assigned_sub_dealer__assigned_dealer_id').annotate(c=Count('id')):
+        add(('dealer', r['user__promotor_profile__assigned_sub_dealer__assigned_dealer_id']), r['c'])
+    for r in base.filter(user__sub_dealer_profile__assigned_dealer__isnull=False).values('user__sub_dealer_profile__assigned_dealer_id').annotate(c=Count('id')):
+        add(('dealer', r['user__sub_dealer_profile__assigned_dealer_id']), r['c'])
+    for r in base.filter(user__dealer_profile__isnull=False).values('user__dealer_profile_id').annotate(c=Count('id')):
+        add(('dealer', r['user__dealer_profile_id']), r['c'])
+
+    for r in base.filter(user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin__isnull=False).values('user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin_id').annotate(c=Count('id')):
+        add(('admin', r['user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin_id']), r['c'])
+    for r in base.filter(user__promotor_profile__assigned_sub_dealer__assigned_dealer__assigned_admin__isnull=False).values('user__promotor_profile__assigned_sub_dealer__assigned_dealer__assigned_admin_id').annotate(c=Count('id')):
+        add(('admin', r['user__promotor_profile__assigned_sub_dealer__assigned_dealer__assigned_admin_id']), r['c'])
+    for r in base.filter(user__sub_dealer_profile__assigned_dealer__assigned_admin__isnull=False).values('user__sub_dealer_profile__assigned_dealer__assigned_admin_id').annotate(c=Count('id')):
+        add(('admin', r['user__sub_dealer_profile__assigned_dealer__assigned_admin_id']), r['c'])
+    for r in base.filter(user__dealer_profile__assigned_admin__isnull=False).values('user__dealer_profile__assigned_admin_id').annotate(c=Count('id')):
+        add(('admin', r['user__dealer_profile__assigned_admin_id']), r['c'])
+    for r in base.filter(user__admin_profile__isnull=False).values('user__admin_profile_id').annotate(c=Count('id')):
+        add(('admin', r['user__admin_profile_id']), r['c'])
+
+    return counts
+
 
 class TodayLoginStatusView(APIView):
     permission_classes = [IsAuthenticated]
