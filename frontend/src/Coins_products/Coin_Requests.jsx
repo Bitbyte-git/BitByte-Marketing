@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
+import { SkeletonText } from '../components/Skeleton'
 
 const COIN_METAL_LABELS_TEXT = { gold_22k: 'Gold 22K', gold_24k: 'Gold 24K', silver_999: 'Silver 999' }
 
@@ -105,14 +106,48 @@ export default function CoinRequests() {
           </div>
         </section>
 
-        <section className="cr-stats">
-          <div className="cr-stat"><small>Pending Requests</small><strong>{pending.length}</strong></div>
-          <div className="cr-stat"><small>Pending Pieces</small><strong>{pendingItems}</strong></div>
-          <div className="cr-stat"><small>Total Loaded</small><strong>{coinRequests.length}</strong></div>
-        </section>
+        {loading ? (
+          <section className="cr-stats">
+            {[0, 1, 2].map(i => (
+              <div className="cr-stat" key={i}>
+                <SkeletonText width="70%" height="10px" />
+                <div style={{ marginTop: 10 }}><SkeletonText width="40%" height="30px" /></div>
+              </div>
+            ))}
+          </section>
+        ) : (
+          <section className="cr-stats">
+            <div className="cr-stat"><small>Pending Requests</small><strong>{pending.length}</strong></div>
+            <div className="cr-stat"><small>Pending Pieces</small><strong>{pendingItems}</strong></div>
+            <div className="cr-stat"><small>Total Loaded</small><strong>{coinRequests.length}</strong></div>
+          </section>
+        )}
 
         {msg && <div className={`cr-msg ${msgType}`}>{msg}</div>}
-        {loading && <div className="cr-loading">Loading coin requests...</div>}
+
+        {loading && (
+          <section className="cr-list">
+            {[0, 1, 2].map(i => (
+              <article className="cr-card" key={i}>
+                <div className="cr-card-head">
+                  <div>
+                    <SkeletonText width="130px" height="15px" />
+                    <div style={{ marginTop: 6 }}><SkeletonText width="150px" height="10px" /></div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <SkeletonText width="80px" height="36px" />
+                    <SkeletonText width="70px" height="36px" />
+                  </div>
+                </div>
+                <div className="cr-item-list">
+                  <div className="cr-item"><SkeletonText width="60%" height="12px" /></div>
+                  <div className="cr-item"><SkeletonText width="50%" height="12px" /></div>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+
         {error && <div className="cr-error">{error}</div>}
         {!loading && !error && pending.length === 0 && <div className="cr-empty">No pending coin requests.</div>}
 

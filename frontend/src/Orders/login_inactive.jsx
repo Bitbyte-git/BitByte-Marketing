@@ -31,12 +31,20 @@ const [loadingMore, setLoadingMore] = useState(false)
   const fetchData = async () => {
     setLoading(true)
     try {
+      const isAdminOnly = roleFilter === 'Admin'   // ── NEW: Admin role konjam per mattum irukka, Load More venaam
+      const initialLimit = isAdminOnly ? 5000 : 20   // ── NEW: Admin na ella pere yum, illana 20 mattum
+
       const res = await api.get('/today-login-status/', {
-  params: { period: periodFilter, offset: 0, limit: 20, list_type: 'inactive' }
-})
+        params: {
+          period: periodFilter,
+          role: roleFilter,
+          offset: 0,
+          limit: initialLimit,
+        }
+      })
       let list = [...(res.data.inactive || [])]
       setTotalCount(res.data.total_count || 0)
-      setOffset(20)
+      setOffset(initialLimit)
       setLimit(50)
       if (scopeIds) list = list.filter(u => scopeIds.includes(u.id))
       const sorted = list.sort((a, b) => a.level - b.level)
@@ -47,7 +55,7 @@ const [loadingMore, setLoadingMore] = useState(false)
     setLoading(false)
   }
   fetchData()
-}, [periodFilter])
+}, [periodFilter, roleFilter])
 
   const formatTime = (iso) => {
     if (!iso) return 'Never logged in'
@@ -64,16 +72,17 @@ const [loadingMore, setLoadingMore] = useState(false)
 
   const periodLabel = PERIOD_OPTIONS.find(p => p.value === periodFilter)?.label || 'Today'
 
-  const filtered = roleFilter === 'all' ? data : data.filter(u => u.level_role === roleFilter)
+  const filtered = data
 
-const hasMore = data.length < totalCount
+const isAdminOnly = roleFilter === 'Admin'   // ── NEW
+const hasMore = !isAdminOnly && data.length < totalCount   // ── CHANGED: Admin na Load More button vena vendam
 
 const loadMore = async () => {
   setLoadingMore(true)
   try {
     const res = await api.get('/today-login-status/', {
-  params: { period: periodFilter, offset, limit, list_type: 'inactive' }
-})
+      params: { period: periodFilter, role: roleFilter, offset, limit }
+    })
     const newList = res.data.inactive || []
     setData(prev => [...prev, ...newList].sort((a, b) => a.level - b.level))
     setOffset(prev => prev + limit)
@@ -96,7 +105,11 @@ const loadMore = async () => {
           <div>
             <div className="ls-kicker">Login Status</div>
             <h1 className="ls-title">Inactive Today</h1>
-            <p className="ls-sub">{data.length} users not logged in today{scopeLabel ? ` - ${scopeLabel}` : ''}</p>
+            {loading ? (
+  <div className="skel-line" style={{ width: '180px', height: '13px', marginTop: 8 }} />
+) : (
+  <p className="ls-sub">{totalCount} users not logged in today{scopeLabel ? ` - ${scopeLabel}` : ''}</p>
+)}
           </div>
           <div className="ls-actions">
             <select className="ls-select" value={roleFilter} onChange={e => setRoleFilter(e.target.value)}>
@@ -123,9 +136,16 @@ const loadMore = async () => {
 
         <section className="ls-card">
           <div className="ls-summary">
-            <div><div className="ls-count">{filtered.length}</div><div className="ls-label">Shown users</div></div>
-            <div className="ls-status"><span className="ls-dot" /> Inactive · {periodLabel}</div>
-          </div>
+  <div>
+    {loading ? (
+      <div className="skel-line" style={{ width: '60px', height: '34px', marginBottom: 4 }} />
+    ) : (
+      <div className="ls-count">{totalCount}</div>
+    )}
+    <div className="ls-label">Shown users</div>
+  </div>
+  <div className="ls-status"><span className="ls-dot" /> Inactive · {periodLabel}</div>
+</div>
           {loading ? (
             // ── NEW: skeleton rows — table shape mattum, shimmer boxes ──
             <div className="ls-table-wrap">
@@ -156,25 +176,33 @@ const loadMore = async () => {
                     <tr>{['Level', 'Position', 'User ID', 'Name', 'Phone No', 'Last Inactive', 'Day'].map(h => <th key={h}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
-                    {filtered.map((u, i) => (
-                      <tr key={i}>
-                        <td className="ls-muted">{u.level}</td>
-                        <td className="ls-role">{u.level_role}</td>
-                        <td className="ls-id">{u.id || '-'}</td>
-                        <td>{u.name || 'Unknown'}</td>
-                        <td className="ls-muted">{u.phone || '-'}</td>
-                        <td className="ls-time">{formatTime(u.last_login)}</td>
-                        <td className="ls-day">{formatDays(u.days_inactive)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
+  {filtered.map((u, i) => (
+    <tr key={i}>
+      <td className="ls-muted">{u.level}</td>
+      <td className="ls-role">{u.level_role}</td>
+      <td className="ls-id">{u.id || '-'}</td>
+      <td>{u.name || 'Unknown'}</td>
+      <td className="ls-muted">{u.phone || '-'}</td>
+      <td className="ls-time">{formatTime(u.last_login)}</td>
+      <td className="ls-day">{formatDays(u.days_inactive)}</td>
+    </tr>
+  ))}
+  {/* ── NEW: Load More click pannும் pothu, keezhe skeleton rows append aagும் ── */}
+  {loadingMore && Array.from({ length: 5 }).map((_, i) => (
+    <tr key={`skel-${i}`}>
+      {Array.from({ length: 7 }).map((_, j) => (
+        <td key={j}><div className="skel-line" style={{ width: j === 3 ? '80%' : '60%', height: '12px', marginBottom: 0 }} /></td>
+      ))}
+    </tr>
+  ))}
+</tbody>
                 </table>
               </div>
               {/* ── NEW: Load More — 20 -> 50 -> 100 -> +100 ── */}
-              {hasMore && (
+              {hasMore && !loadingMore && (
   <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-    <button className="ls-btn" onClick={loadMore} disabled={loadingMore}>
-      {loadingMore ? 'Loading…' : `Load More (${data.length} of ${totalCount})`}
+    <button className="ls-btn" onClick={loadMore}>
+      Load More ({data.length} of {totalCount})
     </button>
   </div>
 )}

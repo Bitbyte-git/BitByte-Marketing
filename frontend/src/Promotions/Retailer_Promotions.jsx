@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { SkeletonText } from "../components/Skeleton";
 
 function money(value) {
   const n = Number(value);
@@ -421,21 +422,23 @@ export default function RetailerPromotions() {
         <div className="rp-stats">
           <div className="rp-stat">
             <div className="rp-stat-label">Total Candidates</div>
-            <div className="rp-stat-value">{rows.length}</div>
+            {loading ? <div style={{ marginTop: 6 }}><SkeletonText width="40px" height="26px" /></div> : <div className="rp-stat-value">{rows.length}</div>}
           </div>
           <div className="rp-stat">
             <div className="rp-stat-label">Pending Review</div>
-            <div className="rp-stat-value">
-              {rows.filter((r) => r.status === "pending" || r.status === "none").length}
-            </div>
+            {loading ? <div style={{ marginTop: 6 }}><SkeletonText width="40px" height="26px" /></div> : (
+              <div className="rp-stat-value">
+                {rows.filter((r) => r.status === "pending" || r.status === "none").length}
+              </div>
+            )}
           </div>
           <div className="rp-stat">
             <div className="rp-stat-label">Approved Retailers</div>
-            <div className="rp-stat-value">{rows.filter((r) => r.status === "approved").length}</div>
+            {loading ? <div style={{ marginTop: 6 }}><SkeletonText width="40px" height="26px" /></div> : <div className="rp-stat-value">{rows.filter((r) => r.status === "approved").length}</div>}
           </div>
           <div className="rp-stat">
             <div className="rp-stat-label">Rejected</div>
-            <div className="rp-stat-value">{rows.filter((r) => r.status === "rejected").length}</div>
+            {loading ? <div style={{ marginTop: 6 }}><SkeletonText width="40px" height="26px" /></div> : <div className="rp-stat-value">{rows.filter((r) => r.status === "rejected").length}</div>}
           </div>
         </div>
 
@@ -460,9 +463,22 @@ export default function RetailerPromotions() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr className="rp-loading-row">
-                    <td colSpan={7}>Loading...</td>
-                  </tr>
+                  [0, 1, 2, 3, 4].map(i => (
+                    <tr key={i}>
+                      <td><SkeletonText width="100px" height="12px" /></td>
+                      <td>
+                        <SkeletonText width="130px" height="13px" />
+                        <div style={{ marginTop: 4 }}>
+                          <SkeletonText width="150px" height="10px" />
+                        </div>
+                      </td>
+                      <td><SkeletonText width="100px" height="12px" /></td>
+                      <td><SkeletonText width="30px" height="20px" /></td>
+                      <td><SkeletonText width="30px" height="20px" /></td>
+                      <td><SkeletonText width="90px" height="12px" /></td>
+                      <td><SkeletonText width="120px" height="28px" /></td>
+                    </tr>
+                  ))
                 ) : rows.length === 0 ? (
                   <tr className="rp-loading-row">
                     <td colSpan={7}>

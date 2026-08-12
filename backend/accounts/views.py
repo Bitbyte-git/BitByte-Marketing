@@ -2831,13 +2831,40 @@ class CoinRequestView(APIView):
         box = request.query_params.get('box')  # optional override: 'sent', 'received', or 'history'
         receiver_roles = ['sub_dealer', 'dealer', 'admin', 'super_admin']
 
+        # ── NEW: history box — DB level pagination + status filter + aggregate counts ──
+        if box == 'history':
+            base_qs = CoinRequest.objects.filter(requested_to=request.user)
+
+            # ── status-wise counts — ONE DB aggregate query, million rows irundhalும் fast ──
+            status_counts = dict(
+                base_qs.values('status').annotate(c=Count('id')).values_list('status', 'c')
+            )
+
+            status_filter = request.query_params.get('status')
+            if status_filter and status_filter != 'all':
+                base_qs = base_qs.filter(status=status_filter)
+
+            total_count = base_qs.count()
+            offset = int(request.query_params.get('offset', 0))
+            limit = int(request.query_params.get('limit', 20))
+
+            reqs = base_qs.prefetch_related('items').order_by('-created_at')[offset:offset + limit]
+            serializer = CoinRequestSerializer(reqs, many=True)
+            return Response({
+                'items': serializer.data,
+                'total_count': total_count,
+                'status_counts': {
+                    'pending': status_counts.get('pending', 0),
+                    'sent': status_counts.get('sent', 0),
+                    'rejected': status_counts.get('rejected', 0),
+                    'total': sum(status_counts.values()),
+                },
+            })
+
         if box == 'sent':
             reqs = CoinRequest.objects.filter(requested_by=request.user)
         elif box == 'received':
             reqs = CoinRequest.objects.filter(requested_to=request.user, status='pending')
-        elif box == 'history':
-            # Full transaction history: every request ever sent TO me, any status
-            reqs = CoinRequest.objects.filter(requested_to=request.user)
         elif role in receiver_roles:
             reqs = CoinRequest.objects.filter(requested_to=request.user, status='pending')
         else:

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
+import { SkeletonText } from '../components/Skeleton'
 
 const COIN_METAL_LABELS_TEXT = { gold_22k: 'Gold 22K', gold_24k: 'Gold 24K', silver_999: 'Silver 999' }
 
@@ -10,36 +11,74 @@ const STATUS_CFG = {
   rejected: { color: '#C92035', bg: 'rgba(201,32,53,0.08)', border: 'rgba(201,32,53,0.28)', label: 'Rejected' },
 }
 
+const STATS_CACHE_KEY = 'ct_status_counts_cache'   // ── NEW: sessionStorage — count numbers mattum, PII illa
+
 export default function TransactionHistory() {
   const navigate = useNavigate()
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)   // ── NEW
   const [error, setError] = useState('')
   const [filter, setFilter] = useState('all')
+  const [offset, setOffset] = useState(0)                 // ── NEW
+  const [limit, setLimit] = useState(20)                  // ── NEW
+  const [totalCount, setTotalCount] = useState(0)         // ── NEW
+  const [statusCounts, setStatusCounts] = useState(() => {   // ── NEW: cached counts, instant-a kaatta
+    try {
+      const cached = sessionStorage.getItem(STATS_CACHE_KEY)
+      return cached ? JSON.parse(cached) : { pending: 0, sent: 0, rejected: 0, total: 0 }
+    } catch {
+      return { pending: 0, sent: 0, rejected: 0, total: 0 }
+    }
+  })
 
   useEffect(() => {
     const fetchHistory = async () => {
       setLoading(true)
       try {
-        const res = await api.get('/coin-requests/', { params: { box: 'history' } })
-        setRequests(res.data)
+        const res = await api.get('/coin-requests/', {
+          params: { box: 'history', status: filter, offset: 0, limit: 20 }
+        })
+        setRequests(res.data.items || [])
+        setTotalCount(res.data.total_count || 0)
+        setStatusCounts(res.data.status_counts || { pending: 0, sent: 0, rejected: 0, total: 0 })
+        // ── NEW: count numbers mattum cache pannурom, PII illa so safe ──
+        try {
+          sessionStorage.setItem(STATS_CACHE_KEY, JSON.stringify(res.data.status_counts))
+        } catch { /* storage full/unavailable — ignore, non-critical */ }
+        setOffset(20)
+        setLimit(50)
       } catch (err) {
         setError('Failed to load transaction history')
       }
       setLoading(false)
     }
     fetchHistory()
-  }, [])
+  }, [filter])   // ── CHANGED: filter maarina refetch aagும் — thani api call
 
-  const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter)
+  const loadMore = async () => {   // ── NEW
+    setLoadingMore(true)
+    try {
+      const res = await api.get('/coin-requests/', {
+        params: { box: 'history', status: filter, offset, limit }
+      })
+      const newItems = res.data.items || []
+      setRequests(prev => [...prev, ...newItems])
+      setOffset(prev => prev + limit)
+      setLimit(100)
+    } catch (err) {
+      setError('Failed to load more transactions')
+    }
+    setLoadingMore(false)
+  }
+
+  const hasMore = requests.length < totalCount   // ── NEW
 
   const formatTime = (iso) => {
     if (!iso) return '-'
     const d = new Date(iso)
     return d.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
   }
-
-  const countByStatus = status => requests.filter(r => r.status === status).length
 
   return (
     <main className="ct-page">
@@ -59,24 +98,22 @@ export default function TransactionHistory() {
           </div>
         </section>
 
+        {/* ── CHANGED: cached statusCounts vachi udane number kaattும், loading skeleton venaam ── */}
         <section className="ct-stats">
-          <div className="ct-stat"><small>Total Transactions</small><strong>{requests.length}</strong></div>
-          <div className="ct-stat"><small>Pending</small><strong>{countByStatus('pending')}</strong></div>
-          <div className="ct-stat"><small>Approved</small><strong>{countByStatus('sent')}</strong></div>
-          <div className="ct-stat"><small>Rejected</small><strong>{countByStatus('rejected')}</strong></div>
+          <div className="ct-stat"><small>Total Transactions</small><strong>{statusCounts.total}</strong></div>
+          <div className="ct-stat"><small>Pending</small><strong>{statusCounts.pending}</strong></div>
+          <div className="ct-stat"><small>Approved</small><strong>{statusCounts.sent}</strong></div>
+          <div className="ct-stat"><small>Rejected</small><strong>{statusCounts.rejected}</strong></div>
         </section>
 
+        {/* ── CHANGED: tab click => thani API call, client filter illa ── */}
         <div className="ct-filter">
           {[{ key: 'all', label: 'All' }, { key: 'pending', label: 'Pending' }, { key: 'sent', label: 'Approved' }, { key: 'rejected', label: 'Rejected' }].map(f => (
             <button key={f.key} className={filter === f.key ? 'active' : ''} onClick={() => setFilter(f.key)}>{f.label}</button>
           ))}
         </div>
 
-        {loading && <div className="ct-loading">Loading transaction history...</div>}
-        {error && <div className="ct-error">{error}</div>}
-        {!loading && !error && filtered.length === 0 && <div className="ct-empty">No transactions found.</div>}
-
-        {!loading && !error && filtered.length > 0 && (
+        {loading && (
           <section className="ct-table-wrap">
             <div className="ct-scroll">
               <table className="ct-table">
@@ -92,7 +129,43 @@ export default function TransactionHistory() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(req => {
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <tr key={i}>
+                      <td><SkeletonText width="90px" height="12px" /></td>
+                      <td><SkeletonText width="110px" height="12px" /></td>
+                      <td><SkeletonText width="90px" height="12px" /></td>
+                      <td><SkeletonText width="140px" height="12px" /></td>
+                      <td><SkeletonText width="150px" height="12px" /></td>
+                      <td><SkeletonText width="100px" height="12px" /></td>
+                      <td><SkeletonText width="70px" height="20px" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+        {error && <div className="ct-error">{error}</div>}
+        {!loading && !error && requests.length === 0 && <div className="ct-empty">No transactions found.</div>}
+
+        {!loading && !error && requests.length > 0 && (
+          <>
+          <section className="ct-table-wrap">
+            <div className="ct-scroll">
+              <table className="ct-table">
+                <thead>
+                  <tr>
+                    <th>Requester ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Items</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.map(req => {
                     const cfg = STATUS_CFG[req.status] || STATUS_CFG.pending
                     return (
                       <tr key={req.id}>
@@ -113,10 +186,31 @@ export default function TransactionHistory() {
                       </tr>
                     )
                   })}
+                  {/* ── NEW: Load More click pannும் pothu, keezhe skeleton rows ── */}
+                  {loadingMore && [0, 1, 2].map(i => (
+                    <tr key={`skel-${i}`}>
+                      <td><SkeletonText width="90px" height="12px" /></td>
+                      <td><SkeletonText width="110px" height="12px" /></td>
+                      <td><SkeletonText width="90px" height="12px" /></td>
+                      <td><SkeletonText width="140px" height="12px" /></td>
+                      <td><SkeletonText width="150px" height="12px" /></td>
+                      <td><SkeletonText width="100px" height="12px" /></td>
+                      <td><SkeletonText width="70px" height="20px" /></td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </section>
+          {/* ── NEW: Load More button — 20 -> 50 -> 100 -> +100 ── */}
+          {hasMore && !loadingMore && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+              <button className="ct-btn primary" onClick={loadMore}>
+                Load More ({requests.length} of {totalCount})
+              </button>
+            </div>
+          )}
+          </>
         )}
       </div>
     </main>

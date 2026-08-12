@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
+import { SkeletonText } from '../components/Skeleton'
 
 // ── SVG ICONS for reward types ──
 const IconSpark = ({ color = '#0C4044', size = 20 }) => (
@@ -148,7 +149,52 @@ export default function CoinsReward() {
         {error && <div className="rw-error">{error}</div>}
 
         {loading ? (
-          <div className="rw-state">Loading...</div>
+          <>
+            <div className="rw-total-card">
+              <div className="rw-total-label">Total Coins Given Today</div>
+              <div style={{ marginTop: 6 }}><SkeletonText width="90px" height="34px" /></div>
+            </div>
+
+            <div className="rw-summary-grid">
+              {[0, 1, 2, 3, 4].map(i => (
+                <div className="rw-summary-card" key={i} style={{ cursor: 'default' }}>
+                  <div className="rw-summary-icon">
+                    <div className="skel-line" style={{ width: 20, height: 20, borderRadius: '50%', marginBottom: 0 }} />
+                  </div>
+                  <div style={{ marginTop: 10, marginBottom: 8 }}><SkeletonText width="70%" height="10px" /></div>
+                  <div style={{ marginBottom: 6 }}><SkeletonText width="50%" height="24px" /></div>
+                  <SkeletonText width="60%" height="10px" />
+                </div>
+              ))}
+            </div>
+
+            <section className="rw-card">
+              <div className="rw-card-head">
+                <SkeletonText width="120px" height="14px" />
+                <SkeletonText width="70px" height="20px" />
+              </div>
+              <div className="rw-table-wrap">
+                <table className="rw-table">
+                  <thead>
+                    <tr>{['Level', 'Position', 'User ID', 'Name', 'Phone No', 'Reward', 'Date'].map(h => <th key={h}>{h}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {[0, 1, 2, 3, 4, 5].map(i => (
+                      <tr key={i}>
+                        <td><SkeletonText width="30px" height="12px" /></td>
+                        <td><SkeletonText width="70px" height="12px" /></td>
+                        <td><SkeletonText width="90px" height="12px" /></td>
+                        <td><SkeletonText width="100px" height="12px" /></td>
+                        <td><SkeletonText width="90px" height="12px" /></td>
+                        <td><SkeletonText width="80px" height="12px" /></td>
+                        <td><SkeletonText width="60px" height="12px" /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
         ) : data && (
           <>
             <div className="rw-total-card">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
+import { SkeletonText } from '../components/Skeleton'
 
 const COIN_METAL_LABELS_TEXT = { gold_22k: 'Gold 22K', gold_24k: 'Gold 24K', silver_999: 'Silver 999' }
 const METAL_COLORS = { gold_22k: '#CCA881', gold_24k: '#BB8958', silver_999: '#7A8987' }
@@ -52,6 +53,18 @@ export default function StoredCoins() {
           </div>
         </section>
 
+        {loading && (
+          <section className="sc-stats">
+            {[0, 1, 2, 3].map(i => (
+              <div className="sc-stat" key={i}>
+                <SkeletonText width="70%" height="10px" />
+                <div style={{ marginTop: 10, marginBottom: 6 }}><SkeletonText width="40%" height="30px" /></div>
+                <SkeletonText width="60%" height="10px" />
+              </div>
+            ))}
+          </section>
+        )}
+
         {!loading && !error && (
           <section className="sc-stats">
             <div className="sc-stat"><small>Total coins</small><strong>{totalCoins}</strong><span>{totalLines} stock lines</span></div>
@@ -59,7 +72,27 @@ export default function StoredCoins() {
           </section>
         )}
 
-        {loading && <div className="sc-loading">Loading stored coins...</div>}
+        {loading && (
+          <section className="sc-section">
+            <div className="sc-section-head" style={{ '--tone': '#CCA881' }}>
+              <span className="sc-dot" />
+              <SkeletonText width="120px" height="16px" />
+              <span className="sc-section-line" />
+            </div>
+            <div className="sc-grid">
+              {[0, 1, 2, 3].map(i => (
+                <article className="sc-card" key={i} style={{ '--rgb': '204,168,129' }}>
+                  <div className="sc-card-label">
+                    <SkeletonText width="60px" height="16px" />
+                    <div style={{ marginTop: 6 }}><SkeletonText width="80px" height="10px" /></div>
+                  </div>
+                  <SkeletonText width="34px" height="30px" />
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
         {error && <div className="sc-error">{error}</div>}
         {!loading && !error && coinStock.length === 0 && <div className="sc-empty">No stored coin stock available yet.</div>}
 

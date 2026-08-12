@@ -789,6 +789,10 @@ class CoinRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     sent_at = models.DateTimeField(null=True, blank=True)
 
+    # ── NEW: history query — requested_to + status vachi filter, created_at vachi sort ── idhu ella use pannும் combination-um cover pannும் ──
+    class Meta:
+        indexes = [models.Index(fields=['requested_to', 'status', 'created_at'])]
+
     def __str__(self):
         return f"Request #{self.id} — {self.requested_by} to {self.requested_to} ({self.status})"
 
