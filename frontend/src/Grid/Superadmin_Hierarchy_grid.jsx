@@ -657,7 +657,7 @@ const Icon = cfg.Icon
             e.stopPropagation()
             clearTimeout(_chainHideTimer)
             removeChainPopup()
-            navigate(`/hierarchy-sales-count?role=${role}&id=${node.id}`)
+            navigate(`/hierarchy-sales-count?role=${role}&id=${node.id}&period=month`)
           }}
           className="gcard-btn gcard-btn-sales"
         >

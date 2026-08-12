@@ -6,8 +6,7 @@ import { SkeletonText } from '../components/Skeleton'
 const API_BASE = 'https://bitbyte-backend-f66f.onrender.com'
 
 // ══════════════════════════════════════════════════════════════════
-// ICONS — same set as the hierarchy grid page, so the whole app feels
-// like one consistent product instead of two different styles.
+// ICONS
 // ══════════════════════════════════════════════════════════════════
 const IconShield = ({ color, size = 14 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -74,10 +73,6 @@ const IconEmpty = ({ color, size = 40 }) => (
   </svg>
 )
 
-// ══════════════════════════════════════════════════════════════════
-// ROLE CONFIG — matches the exact same colors as SuperAdminDashboard
-// (Luxiva theme), so this page feels like the same product.
-// ══════════════════════════════════════════════════════════════════
 const ROLE_CFG = {
   admin:      { color: '#53615F', label: 'ADMIN',      Icon: IconShield, idKey: 'admin_id',      childKey: 'dealers' },
   dealer:     { color: '#0C4044', label: 'DEALER',      Icon: IconStore,  idKey: 'dealer_id',     childKey: 'sub_dealers' },
@@ -101,8 +96,6 @@ function getImageUrl(url) {
 
 function collectOrders(node) {
   if (!node) return []
-  // ── NEW: ovvoru order-kum adha place panna customer node-a attach pannuvom,
-  // so product click pannina yaaru order pannanganu therinjukalam ──
   if (node.type === 'customer') return (node.orders || []).map(o => ({ ...o, _ownerNode: node }))
   const cfg = ROLE_CFG[node.type]
   const children = node[cfg.childKey] || []
@@ -116,7 +109,6 @@ function isSameDay(iso) {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
 }
 
-// ── NEW: today order illatha branch-ah tree-la irundhu prune pannum ──
 function filterTreeForToday(node) {
   if (!node) return null
   if (node.type === 'customer') {
@@ -131,34 +123,24 @@ function filterTreeForToday(node) {
   return { ...node, [cfg.childKey]: prunedChildren }
 }
 
-// ══════════════════════════════════════════════════════════════════
-// TREE ITEM — left panel, one node per row, indented by depth.
-// ══════════════════════════════════════════════════════════════════
-function TreeItem({ node, selectedId, onSelect, pulseId, period, expandedChildren, loadingNode, fetchChildren }) {
+function TreeItem({ node, selectedId, onSelect, isLast = true, pulseId, period }) {
   const cfg = ROLE_CFG[node.type]
   const Icon = cfg.Icon
   const isSelected = selectedId === `${node.type}-${node.id}`
   const isPulsing = pulseId === `${node.type}-${node.id}`
-  const nodeKey = `${node.type}-${node.id}`
-  // ── CHANGED: children ippo expandedChildren state la irundhu varum, node kula illa ──
-  const children = expandedChildren[nodeKey] || null   // null = innum fetch pannala, [] = fetch aagi customer-ku children illa
-  const isLoadingThis = loadingNode === nodeKey
+  const children = cfg.childKey ? (node[cfg.childKey] || []) : []
+  const nodeOrders = collectOrders(node)
+  const orderCount = period === 'today'
+    ? nodeOrders.filter(o => isSameDay(o.created_at)).length
+    : nodeOrders.length
   const rgb = hexToRgb(cfg.color)
-  const childColor = children && children.length > 0 ? ROLE_CFG[children[0].type].color : null
-
-  // ── CHANGED: order count ippo node mela irundhே direct varum (backend already anுppுthு) ──
-  const orderCount = node.order_count ?? 0
-
-  const handleClick = () => {
-    onSelect(node)
-    if (cfg.childKey && !children) fetchChildren(node)   // ── NEW: first click la mattum fetch, appuram cache
-  }
+  const childColor = children.length > 0 ? ROLE_CFG[children[0].type].color : null
 
   return (
     <div className="stree-node">
       <div
         id={`streeid-${node.type}-${node.id}`}
-        onClick={handleClick}
+        onClick={() => onSelect(node)}
         className={`stree-item ${isPulsing ? 'stree-item-pulse' : ''}`}
         style={{
           '--nc': cfg.color,
@@ -188,27 +170,13 @@ function TreeItem({ node, selectedId, onSelect, pulseId, period, expandedChildre
         <div className="stree-ordercount">
           <IconChart color="#0C4044" size={11} /> {orderCount} order{orderCount !== 1 ? 's' : ''}
         </div>
-        {/* ── NEW: children fetch aagும் pothு chinna loading text ── */}
-        {isLoadingThis && (
-          <div style={{ fontSize: 10, color: '#7A8987', marginTop: 6 }}>Loading...</div>
-        )}
       </div>
 
-      {/* ── CHANGED: children irundha mattum render pannум், node.customers mari nested data illa ── */}
-      {children && children.length > 0 && (
+      {children.length > 0 && (
         <div className="stree-children" style={{ '--cc': childColor }}>
-          {children.map((child) => (
+          {children.map((child, idx) => (
             <div className="stree-branch" key={`${child.type}-${child.id}`} style={{ '--cc': childColor }}>
-              <TreeItem
-                node={child}
-                selectedId={selectedId}
-                onSelect={onSelect}
-                pulseId={pulseId}
-                period={period}
-                expandedChildren={expandedChildren}
-                loadingNode={loadingNode}
-                fetchChildren={fetchChildren}
-              />
+              <TreeItem node={child} selectedId={selectedId} onSelect={onSelect} isLast={idx === children.length - 1} pulseId={pulseId} period={period} />
             </div>
           ))}
         </div>
@@ -216,17 +184,14 @@ function TreeItem({ node, selectedId, onSelect, pulseId, period, expandedChildre
     </div>
   )
 }
-// ══════════════════════════════════════════════════════════════════
-// MAIN PAGE
-// ══════════════════════════════════════════════════════════════════
+
 export default function SuperAdminHierarchySalesCount() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const role = searchParams.get('role')
   const id = searchParams.get('id')
-  const period = searchParams.get('period')   // ── NEW: 'today' na Login page-la irundhu vandhurukom
+  const period = searchParams.get('period')
 
-  // ── NEW: indha date "today"-va nu check pannurom ──
   const isToday = (iso) => {
     if (!iso) return false
     const d = new Date(iso)
@@ -234,69 +199,20 @@ export default function SuperAdminHierarchySalesCount() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
   }
 
- const [root, setRoot] = useState(null)          // ── CHANGED: root la mattum root node info, children KAALI
-const [loading, setLoading] = useState(true)
-const [selected, setSelected] = useState(null)
-const [pulseId, setPulseId] = useState(null)
-const [expandedChildren, setExpandedChildren] = useState({})   // ── NEW: { 'admin-5': [dealer1, dealer2...] }
-const [loadingNode, setLoadingNode] = useState(null)            // ── NEW: which node currently fetching children
+  const [root, setRoot] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState(null)
+  const [pulseId, setPulseId] = useState(null)
 
-// ── NEW: orders pagination (right panel) ──
-const [orderGroups, setOrderGroups] = useState([])
-const [ordersOffset, setOrdersOffset] = useState(0)
-const [ordersLimit, setOrdersLimit] = useState(20)
-const [ordersTotal, setOrdersTotal] = useState(0)
-const [overallCount, setOverallCount] = useState(0)
-const [overallAmount, setOverallAmount] = useState(0)
-const [ordersLoading, setOrdersLoading] = useState(false)
-const [ordersLoadingMore, setOrdersLoadingMore] = useState(false)
+  useEffect(() => {
+    if (!role || !id) return
+    setLoading(true)
+    api.get(`/hierarchy/subtree-orders/?role=${role}&id=${id}`)
+      .then(res => { setRoot(res.data.root); setSelected(res.data.root) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [role, id])
 
-
-  const CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer', customer: 'customer' }
-const TREE_CACHE_KEY = `stree_cache_${role}_${id}`   // ── NEW: sessionStorage key
-
-useEffect(() => {
-  if (!role || !id) return
-  setLoading(true)
-
-  // ── NEW: root node real info (name/phone/city) backend la irundhu vaangurom ──
-  api.get('/hierarchy/node-info/', { params: { role, id } })
-    .then(res => {
-      const rootNode = { type: role, ...res.data }
-      setRoot(rootNode)
-      setSelected(rootNode)
-    })
-    .catch(() => setRoot(null))
-    .finally(() => setLoading(false))
-}, [role, id])
-
-  // ── NEW: node expand pannும் pothு, children fetch pannும் (cache-first) ──
-  const fetchChildren = async (node) => {
-  const key = `${node.type}-${node.id}`
-  if (expandedChildren[key]) return   // already fetched
-
-  setLoadingNode(key)
-  try {
-    const cacheKey = `stree_children_${key}`
-    const cached = sessionStorage.getItem(cacheKey)
-    if (cached) {
-      setExpandedChildren(prev => ({ ...prev, [key]: JSON.parse(cached) }))
-      setLoadingNode(null)
-      return
-    }
-    const res = await api.get(`/hierarchy/children/?role=${node.type}&id=${node.id}`)
-    const children = (res.data.items || []).map(c => ({ ...c, type: CHILD_ROLE[node.type] }))
-    setExpandedChildren(prev => ({ ...prev, [key]: children }))
-    // ── NEW: non-sensitive summary mattum cache pannurom (id, name, role, order_count) ──
-    sessionStorage.setItem(cacheKey, JSON.stringify(children))
-  } catch (err) {
-    setExpandedChildren(prev => ({ ...prev, [key]: [] }))
-  }
-  setLoadingNode(null)
-}
-
- // ── NEW: product-la irundhu neraa antha customer-ku jump pannum —
-  // selected node-ah maathi, tree-la andha customer row-ku smooth scroll pannும் ──
   const jumpToCustomer = (custNode) => {
     setSelected(custNode)
     setPulseId(`customer-${custNode.id}`)
@@ -307,42 +223,34 @@ useEffect(() => {
     setTimeout(() => setPulseId(null), 1600)
   }
 
-  // ── NEW: selected node maarina, orders backend la irundhu offset=0, limit=20 fetch pannurom ──
-  useEffect(() => {
-    if (!selected) return
-    const fetchOrders = async () => {
-      setOrdersLoading(true)
-      try {
-        const res = await api.get('/hierarchy/node-orders/', {
-          params: { role: selected.type, id: selected.id, period, offset: 0, limit: 20 }
-        })
-        setOrderGroups(res.data.items || [])
-        setOrdersTotal(res.data.total_groups || 0)
-        setOverallCount(res.data.overall_count || 0)
-        setOverallAmount(res.data.overall_amount || 0)
-        setOrdersOffset(20)
-        setOrdersLimit(50)
-      } catch (err) { /* ignore */ }
-      setOrdersLoading(false)
+  const allOrders = selected ? collectOrders(selected) : []
+  const orders = period === 'today' ? allOrders.filter(o => isToday(o.created_at)) : allOrders
+
+  const grouped = {}
+  orders.forEach(o => {
+    const ownerId = o._ownerNode ? o._ownerNode.id : 'unknown'
+    const key = `${o.metal}__${o.grade}__${o.product_name}__${ownerId}`
+    if (!grouped[key]) {
+      grouped[key] = {
+        key,
+        metal: o.metal, grade: o.grade, product_name: o.product_name,
+        category: o.category, net_weight: o.net_weight,
+        image: o.product_image_url,
+        totalQty: 0, totalAmount: 0, lastRate: 0,
+        owner: o._ownerNode || null,
+        latestAt: o.created_at,
+      }
     }
-    fetchOrders()
-  }, [selected, period])
-
-  const loadMoreOrders = async () => {
-    setOrdersLoadingMore(true)
-    try {
-      const res = await api.get('/hierarchy/node-orders/', {
-        params: { role: selected.type, id: selected.id, period, offset: ordersOffset, limit: ordersLimit }
-      })
-      setOrderGroups(prev => [...prev, ...(res.data.items || [])])
-      setOrdersOffset(prev => prev + ordersLimit)
-      setOrdersLimit(100)
-    } catch (err) { /* ignore */ }
-    setOrdersLoadingMore(false)
-  }
-
-  const hasMoreOrders = orderGroups.length < ordersTotal
-  const groupedList = orderGroups   // ── CHANGED: backend already grouped ah anுppுthu, JSX same peraale use pannalam
+    grouped[key].totalQty += o.quantity
+    grouped[key].totalAmount += o.total_price
+    grouped[key].lastRate = o.unit_price
+    if (new Date(o.created_at) > new Date(grouped[key].latestAt)) {
+      grouped[key].latestAt = o.created_at
+    }
+  })
+  const groupedList = Object.values(grouped).sort((a, b) => new Date(b.latestAt) - new Date(a.latestAt))
+  const overallCount = orders.length
+  const overallAmount = orders.reduce((s, o) => s + o.total_price, 0)
 
   const text = '#111817'
   const subtext = '#7A8987'
@@ -370,7 +278,6 @@ useEffect(() => {
         <div style={{ padding: '28px 32px', paddingTop: 108 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 22, alignItems: 'start' }}>
 
-            {/* LEFT: tree skeleton */}
             <div style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 14 }}>
               <SkeletonText width="140px" height="12px" />
               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -385,7 +292,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* RIGHT: details skeleton */}
             <div style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(189,207,206,0.2)' }} />
@@ -447,7 +353,7 @@ useEffect(() => {
 
   const selCfg = selected ? ROLE_CFG[selected.type] : null
 
-  const displayRoot = root   // ── CHANGED: filterTreeForToday nested data expect pannuthu, ippo lazy-load ah irukanum so remove pannirukom
+  const displayRoot = period === 'today' ? filterTreeForToday(root) : root
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
@@ -539,7 +445,6 @@ useEffect(() => {
         .sprod-label{ color:#7A8987; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; }
       `}</style>
 
-      {/* ── FIXED HEADER ── */}
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -565,28 +470,22 @@ useEffect(() => {
         </button>
       </div>
 
-      {/* ── PAGE BODY (padded, pushed below the fixed header) ── */}
       <div style={{ padding: '28px 32px', paddingTop: 108 }}>
 
       <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 22, alignItems: 'start' }}>
 
-
-        {/* ── LEFT: HIERARCHY TREE ── */}
         <div className="stree-panel" style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 14, maxHeight: 'calc(100vh - 128px)', overflowY: 'auto', position: 'sticky', top: 108, boxShadow: '0 22px 58px rgba(7,59,63,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 4px 12px 4px', marginBottom: 10, borderBottom: '1px solid rgba(189,207,206,0.5)' }}>
             <IconLink color="#0C4044" size={14} />
             <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#0C4044' }}>HIERARCHY TREE</span>
           </div>
-  {displayRoot ? (
+          {displayRoot ? (
   <TreeItem
     node={displayRoot}
     selectedId={selected ? `${selected.type}-${selected.id}` : null}
     onSelect={setSelected}
     pulseId={pulseId}
     period={period}
-    expandedChildren={expandedChildren}
-    loadingNode={loadingNode}
-    fetchChildren={fetchChildren}
   />
 ) : (
   <div style={{ padding: '24px 8px', textAlign: 'center', color: '#7A8987', fontSize: 12.5 }}>
@@ -598,11 +497,9 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* ── RIGHT: SELECTED PERSON DETAILS ── */}
         <div style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 24, boxShadow: '0 22px 58px rgba(7,59,63,0.06)' }}>
           {selected && (
             <div key={`${selected.type}-${selected.id}`} className="sfade-in">
-              {/* person header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
                 <div className="sperson-icon" style={{ background: `linear-gradient(135deg, ${selCfg.color}33, ${selCfg.color}0d)`, border: `1.5px solid ${selCfg.color}`, boxShadow: `0 0 18px ${selCfg.color}33` }}>
                   <selCfg.Icon color={selCfg.color} size={20} />
@@ -613,7 +510,6 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* stat cards */}
               <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
                 <div className="sstat-card sstat-glow" style={{ background: 'rgba(12,64,68,0.05)', borderColor: 'rgba(12,64,68,0.22)', '--glow': 'rgba(12,64,68,0.3)' }}>
                   <div className="sstat-icon" style={{ background: 'rgba(12,64,68,0.12)' }}>
@@ -635,20 +531,18 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* product breakdown */}
-              {groupedList.length === 0 && !ordersLoading ? (
+              {groupedList.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '48px 0', color: subtext }}>
                   <IconEmpty color={subtext} />
                   <span style={{ fontSize: 13 }}>Idhu kku keela orders illa.</span>
                 </div>
               ) : (
-                <>
                 <div className="sprod-grid">
                   {groupedList.map((g, i) => {
                     const imgUrl = getImageUrl(g.image)
                     return (
                       <div
-                        key={`${g.product_name}-${g.owner?.id}-${i}`}
+                        key={g.key}
                         className="sprod-card"
                         onClick={() => g.owner && jumpToCustomer(g.owner)}
                         style={{
@@ -689,30 +583,20 @@ useEffect(() => {
                         </div>
                         <div className="sprod-row">
                           <span className="sprod-label">Quantity</span>
-                          <span style={{ fontWeight: 700 }}>{g.total_qty}</span>
+                          <span style={{ fontWeight: 700 }}>{g.totalQty}</span>
                         </div>
                         <div className="sprod-row">
                           <span className="sprod-label">Rate</span>
-                          <span style={{ fontWeight: 700 }}>₹{g.last_rate.toLocaleString('en-IN')}</span>
+                          <span style={{ fontWeight: 700 }}>₹{g.lastRate.toLocaleString('en-IN')}</span>
                         </div>
                         <div className="sprod-row">
                           <span className="sprod-label">Total</span>
-                          <span style={{ fontWeight: 800, color: '#BB8958' }}>₹{g.total_amount.toLocaleString('en-IN')}</span>
+                          <span style={{ fontWeight: 800, color: '#BB8958' }}>₹{g.totalAmount.toLocaleString('en-IN')}</span>
                         </div>
                       </div>
                     )
                   })}
                 </div>
-
-                {/* ── NEW: Load More — right panel product cards keezhe ── */}
-                {hasMoreOrders && !ordersLoadingMore && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-                    <button onClick={loadMoreOrders} style={{ padding: '10px 24px', background: '#0C4044', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, cursor: 'pointer' }}>
-                      Load More ({orderGroups.length} of {ordersTotal})
-                    </button>
-                  </div>
-                )}
-                </>
               )}
             </div>
           )}

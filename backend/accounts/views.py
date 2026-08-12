@@ -1983,6 +1983,12 @@ class HierarchyNodeOrdersView(APIView):
         if period == 'today':
             today = timezone.now().date()
             qs = qs.filter(created_at__date=today)
+        elif period != 'all':
+            # ── NEW: default = this month mattum — Grid page-la kaattura SALES(X)
+            # number matching aagum. period=all pass panninaa mattum lifetime varum ──
+            now = timezone.now()
+            month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            qs = qs.filter(created_at__gte=month_start)
 
         # ── Overall totals — MOTHATHA subtree ku, pagination touch pannadhu ──
         overall = qs.aggregate(total_count=Count('id'), total_amount=Sum('total_price'))
