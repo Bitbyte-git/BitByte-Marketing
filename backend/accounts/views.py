@@ -2760,15 +2760,15 @@ def _month_rollup_counts():
 
     for r in base.filter(user__customer_profile__assigned_promotor__isnull=False).values('user__customer_profile__assigned_promotor_id').annotate(c=Count('id')):
         add(('promotor', r['user__customer_profile__assigned_promotor_id']), r['c'])
-    for r in base.filter(user__promotor_profile__isnull=False).values('user__promotor_profile_id').annotate(c=Count('id')):
-        add(('promotor', r['user__promotor_profile_id']), r['c'])
+    for r in base.filter(user__promotor_profile__isnull=False).values('user__promotor_profile__id').annotate(c=Count('id')):
+        add(('promotor', r['user__promotor_profile__id']), r['c'])
 
     for r in base.filter(user__customer_profile__assigned_promotor__assigned_sub_dealer__isnull=False).values('user__customer_profile__assigned_promotor__assigned_sub_dealer_id').annotate(c=Count('id')):
         add(('sub_dealer', r['user__customer_profile__assigned_promotor__assigned_sub_dealer_id']), r['c'])
     for r in base.filter(user__promotor_profile__assigned_sub_dealer__isnull=False).values('user__promotor_profile__assigned_sub_dealer_id').annotate(c=Count('id')):
         add(('sub_dealer', r['user__promotor_profile__assigned_sub_dealer_id']), r['c'])
-    for r in base.filter(user__sub_dealer_profile__isnull=False).values('user__sub_dealer_profile_id').annotate(c=Count('id')):
-        add(('sub_dealer', r['user__sub_dealer_profile_id']), r['c'])
+    for r in base.filter(user__sub_dealer_profile__isnull=False).values('user__sub_dealer_profile__id').annotate(c=Count('id')):
+        add(('sub_dealer', r['user__sub_dealer_profile__id']), r['c'])
 
     for r in base.filter(user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__isnull=False).values('user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer_id').annotate(c=Count('id')):
         add(('dealer', r['user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer_id']), r['c'])
@@ -2776,8 +2776,8 @@ def _month_rollup_counts():
         add(('dealer', r['user__promotor_profile__assigned_sub_dealer__assigned_dealer_id']), r['c'])
     for r in base.filter(user__sub_dealer_profile__assigned_dealer__isnull=False).values('user__sub_dealer_profile__assigned_dealer_id').annotate(c=Count('id')):
         add(('dealer', r['user__sub_dealer_profile__assigned_dealer_id']), r['c'])
-    for r in base.filter(user__dealer_profile__isnull=False).values('user__dealer_profile_id').annotate(c=Count('id')):
-        add(('dealer', r['user__dealer_profile_id']), r['c'])
+    for r in base.filter(user__dealer_profile__isnull=False).values('user__dealer_profile__id').annotate(c=Count('id')):
+        add(('dealer', r['user__dealer_profile__id']), r['c'])
 
     for r in base.filter(user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin__isnull=False).values('user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin_id').annotate(c=Count('id')):
         add(('admin', r['user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin_id']), r['c'])
@@ -2787,11 +2787,10 @@ def _month_rollup_counts():
         add(('admin', r['user__sub_dealer_profile__assigned_dealer__assigned_admin_id']), r['c'])
     for r in base.filter(user__dealer_profile__assigned_admin__isnull=False).values('user__dealer_profile__assigned_admin_id').annotate(c=Count('id')):
         add(('admin', r['user__dealer_profile__assigned_admin_id']), r['c'])
-    for r in base.filter(user__admin_profile__isnull=False).values('user__admin_profile_id').annotate(c=Count('id')):
-        add(('admin', r['user__admin_profile_id']), r['c'])
+    for r in base.filter(user__admin_profile__isnull=False).values('user__admin_profile__id').annotate(c=Count('id')):
+        add(('admin', r['user__admin_profile__id']), r['c'])
 
     return counts
-
 
 class TodayLoginStatusView(APIView):
     permission_classes = [IsAuthenticated]

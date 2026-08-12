@@ -3227,14 +3227,14 @@ setOrderPopupState({
             <div
               onClick={e => e.stopPropagation()}
              style={{
-                background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC',
-                border: '1px solid rgba(204,168,129,0.35)',
+                background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF6ED 100%)',
+                border: '1px solid rgba(204,168,129,0.3)',
                 borderRadius: '24px',
                 width: '95%', maxWidth: '640px',
                 maxHeight: '95vh',
                 overflowY: 'auto',
-                padding: '28px 32px',
-                boxShadow: '0 32px 80px rgba(17,24,23,0.7)',
+                padding: '32px 36px',
+                boxShadow: '0 40px 90px rgba(17,24,23,0.28), 0 0 0 1px rgba(204,168,129,0.08)',
                 animation: 'fadeIn 0.3s cubic-bezier(0.22,1,0.36,1)',
               }}
             >
@@ -3381,8 +3381,8 @@ setOrderPopupState({
 
                 {/* Diamond 18K */}
                 <div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#D1DFDE', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D1DFDE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7A8987" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/>
                     </svg>
                     Diamond 18K
@@ -3392,9 +3392,9 @@ setOrderPopupState({
                     placeholder="e.g. 45000"
                     value={rateForm.diamond_18k}
                     onChange={e => setRateForm({ ...rateForm, diamond_18k: e.target.value })}
-                    style={{ width: '100%', background: inpBg, border: `1px solid rgba(103,232,249,0.4)`, borderRadius: '12px', padding: '13px 16px', color: '#D1DFDE', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
-                    onFocus={e => e.target.style.borderColor = '#D1DFDE'}
-                    onBlur={e => e.target.style.borderColor = 'rgba(103,232,249,0.4)'}
+                    style={{ width: '100%', background: '#FFFFFF', border: `1px solid #BDCFCE`, borderRadius: '12px', padding: '13px 16px', color: '#073B3F', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                    onFocus={e => e.target.style.borderColor = '#0C4044'}
+                    onBlur={e => e.target.style.borderColor = '#BDCFCE'}
                   />
                   {rateForm.diamond_18k && (
                     <div style={{ color: '#D1DFDE', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
@@ -3429,8 +3429,8 @@ setOrderPopupState({
 
                 {/* Platinum 92 */}
                 <div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#E7EDEC', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E7EDEC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7A8987" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#53615F"/>
                     </svg>
                     Platinum 92
@@ -3440,9 +3440,9 @@ setOrderPopupState({
                     placeholder="e.g. 3200"
                     value={rateForm.platinum_92}
                     onChange={e => setRateForm({ ...rateForm, platinum_92: e.target.value })}
-                    style={{ width: '100%', background: inpBg, border: `1px solid rgba(226,232,240,0.4)`, borderRadius: '12px', padding: '13px 16px', color: '#E7EDEC', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
-                    onFocus={e => e.target.style.borderColor = '#E7EDEC'}
-                    onBlur={e => e.target.style.borderColor = 'rgba(226,232,240,0.4)'}
+                    style={{ width: '100%', background: '#FFFFFF', border: `1px solid #BDCFCE`, borderRadius: '12px', padding: '13px 16px', color: '#073B3F', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                    onFocus={e => e.target.style.borderColor = '#0C4044'}
+                    onBlur={e => e.target.style.borderColor = '#BDCFCE'}
                   />
                   {rateForm.platinum_92 && (
                     <div style={{ color: '#E7EDEC', fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
@@ -3481,24 +3481,25 @@ setOrderPopupState({
                   setRateSaving(false)
                 }}
                 style={{
-                  marginTop: '20px',
-                  width: '100%', padding: '14px',
-                  background: rateSaving ? 'rgba(204,168,129,0.3)' : 'linear-gradient(90deg,#CCA881,#CCA881)',
-                  border: 'none', borderRadius: '12px',
-                  fontWeight: 800, color: rateSaving ? '#CCA881' : '#111817',
+                  marginTop: '22px',
+                  width: '100%', padding: '15px',
+                  background: rateSaving ? 'rgba(204,168,129,0.3)' : 'linear-gradient(135deg,#CCA881,#BB8958)',
+                  border: 'none', borderRadius: '14px',
+                  fontWeight: 800, color: rateSaving ? '#CCA881' : '#FDFDFC',
                   fontSize: '15px', cursor: rateSaving ? 'not-allowed' : 'pointer',
                   letterSpacing: '0.5px', transition: 'all 0.3s ease',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  boxShadow: rateSaving ? 'none' : '0 14px 30px rgba(204,168,129,0.35)',
                 }}
               >
                 {rateSaving ? (
                   <>
-                    <div style={{ width: 14, height: 14, border: '2px solid rgba(17,24,23,0.3)', borderTop: '2px solid #111817', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                    <div style={{ width: 14, height: 14, border: '2px solid rgba(204,168,129,0.3)', borderTop: '2px solid #CCA881', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111817" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FDFDFC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
                     </svg>
                     Save Rate
