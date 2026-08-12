@@ -22,24 +22,32 @@ export default function LoginInactive() {
   const [error, setError] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [periodFilter, setPeriodFilter] = useState('today')   // ── NEW
-  const [visibleCount, setVisibleCount] = useState(20)   // ── NEW: 20 -> 50 -> 100 "Load More" ──
+  const [offset, setOffset] = useState(0)
+const [limit, setLimit] = useState(20)
+const [totalCount, setTotalCount] = useState(0)
+const [loadingMore, setLoadingMore] = useState(false)
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const res = await api.get('/today-login-status/', { params: { period: periodFilter } })   // ── CHANGED
-        let list = [...(res.data.inactive || [])]
-        if (scopeIds) list = list.filter(u => scopeIds.includes(u.id))
-        const sorted = list.sort((a, b) => a.level - b.level)
-        setData(sorted)
-      } catch (err) {
-        setError('Failed to load inactive users')
-      }
-      setLoading(false)
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const res = await api.get('/today-login-status/', {
+  params: { period: periodFilter, offset: 0, limit: 20, list_type: 'inactive' }
+})
+      let list = [...(res.data.inactive || [])]
+      setTotalCount(res.data.total_count || 0)
+      setOffset(20)
+      setLimit(50)
+      if (scopeIds) list = list.filter(u => scopeIds.includes(u.id))
+      const sorted = list.sort((a, b) => a.level - b.level)
+      setData(sorted)
+    } catch (err) {
+      setError('Failed to load inactive users')
     }
-    fetchData()
-  }, [periodFilter])
+    setLoading(false)
+  }
+  fetchData()
+}, [periodFilter])
 
   const formatTime = (iso) => {
     if (!iso) return 'Never logged in'
@@ -58,14 +66,23 @@ export default function LoginInactive() {
 
   const filtered = roleFilter === 'all' ? data : data.filter(u => u.level_role === roleFilter)
 
-  // ── NEW: filter maarina, 20-la irundhu mattum start pண்ணும் ──
-  useEffect(() => { setVisibleCount(20) }, [roleFilter, periodFilter, data])
+const hasMore = data.length < totalCount
 
-  // ── NEW: 20 -> 50 -> 100 -> +100 ovvoru "Load More" click-கும் ──
-  const visibleRows = filtered.slice(0, visibleCount)
-  const nextChunk = visibleCount === 20 ? 50 : visibleCount === 70 ? 100 : 100
-  const hasMore = visibleCount < filtered.length
-  const loadMore = () => setVisibleCount(prev => prev + nextChunk)
+const loadMore = async () => {
+  setLoadingMore(true)
+  try {
+    const res = await api.get('/today-login-status/', {
+  params: { period: periodFilter, offset, limit, list_type: 'inactive' }
+})
+    const newList = res.data.inactive || []
+    setData(prev => [...prev, ...newList].sort((a, b) => a.level - b.level))
+    setOffset(prev => prev + limit)
+    setLimit(100)
+  } catch (err) {
+    setError('Failed to load more users')
+  }
+  setLoadingMore(false)
+}
 
   return (
     <>
@@ -139,7 +156,7 @@ export default function LoginInactive() {
                     <tr>{['Level', 'Position', 'User ID', 'Name', 'Phone No', 'Last Inactive', 'Day'].map(h => <th key={h}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
-                    {visibleRows.map((u, i) => (
+                    {filtered.map((u, i) => (
                       <tr key={i}>
                         <td className="ls-muted">{u.level}</td>
                         <td className="ls-role">{u.level_role}</td>
@@ -155,12 +172,12 @@ export default function LoginInactive() {
               </div>
               {/* ── NEW: Load More — 20 -> 50 -> 100 -> +100 ── */}
               {hasMore && (
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-                  <button className="ls-btn" onClick={loadMore}>
-                    Load More ({visibleRows.length} of {filtered.length})
-                  </button>
-                </div>
-              )}
+  <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+    <button className="ls-btn" onClick={loadMore} disabled={loadingMore}>
+      {loadingMore ? 'Loading…' : `Load More (${data.length} of ${totalCount})`}
+    </button>
+  </div>
+)}
             </>
           )}
         </section>

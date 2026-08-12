@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { SkeletonText } from '../components/Skeleton'
 
 export default function SuperAdminAutopayList() {
   const [mandates, setMandates] = useState([])
@@ -88,15 +89,36 @@ export default function SuperAdminAutopayList() {
         </div>
 
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '40px 0', color: '#7A8987', fontSize: 14 }}>
-            <div style={{
-              width: 20, height: 20, borderRadius: '50%',
-              border: '2.5px solid #D1DFDE', borderTopColor: '#073B3F',
-              animation: 'spin 0.8s linear infinite'
-            }} />
-            Loading autopay mandates...
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 20 }}>
+            <thead>
+              <tr style={{ background: '#073B3F', color: '#fff' }}>
+                <th style={{ padding: 12, textAlign: 'left' }}>Customer ID</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>Name</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>Phone</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>Amount</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>Frequency</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>Charge Day</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>Status</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>Next Charge</th>
+                <th style={{ padding: 12, textAlign: 'left' }}>Last Payment</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[0, 1, 2, 3, 4, 5].map(i => (
+                <tr key={i} style={{ borderBottom: '1px solid #D1DFDE' }}>
+                  <td style={{ padding: 12 }}><SkeletonText width="90px" height="12px" /></td>
+                  <td style={{ padding: 12 }}><SkeletonText width="110px" height="12px" /></td>
+                  <td style={{ padding: 12 }}><SkeletonText width="90px" height="12px" /></td>
+                  <td style={{ padding: 12 }}><SkeletonText width="50px" height="12px" /></td>
+                  <td style={{ padding: 12 }}><SkeletonText width="60px" height="12px" /></td>
+                  <td style={{ padding: 12 }}><SkeletonText width="40px" height="12px" /></td>
+                  <td style={{ padding: 12 }}><SkeletonText width="60px" height="12px" /></td>
+                  <td style={{ padding: 12 }}><SkeletonText width="80px" height="12px" /></td>
+                  <td style={{ padding: 12 }}><SkeletonText width="120px" height="12px" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         ) : filtered.length === 0 ? (
           <div style={{ padding: '40px 0', color: '#7A8987', fontSize: 14, textAlign: 'center' }}>
             No autopay mandates found.

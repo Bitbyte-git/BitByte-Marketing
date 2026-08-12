@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { SkeletonText } from '../components/Skeleton'
 
 const GOLD = '#BB8958'
 const DARK = '#111817'
@@ -281,7 +282,18 @@ useEffect(() => { fetchDefaultHistory(1, 'all') }, [])
           <h3 className="sc-section-title">Recent Recharges</h3>
           <p className="sc-section-sub">{foundUser ? `${foundUser.name}'s recent activity` : 'Coins you sent, across every user'}</p>
           {loadingHistory ? (
-            <div className="sc-empty">Loading...</div>
+            [0, 1, 2].map(i => (
+              <div className="sc-history-row" key={i}>
+                <div className="skel-line" style={{ width: 38, height: 38, borderRadius: '50%', marginBottom: 0, flexShrink: 0 }} />
+                <div style={{ flex: 1, marginLeft: 14 }}>
+                  <SkeletonText width="55%" height="13px" />
+                  <div style={{ marginTop: 6 }}>
+                    <SkeletonText width="35%" height="10px" />
+                  </div>
+                </div>
+                <SkeletonText width="60px" height="20px" />
+              </div>
+            ))
           ) : recentList.length === 0 ? (
             <div className="sc-empty">No transactions yet</div>
           ) : (
@@ -305,7 +317,18 @@ useEffect(() => { fetchDefaultHistory(1, 'all') }, [])
             ))}
           </div>
           {loadingHistory ? (
-            <div className="sc-empty">Loading...</div>
+            [0, 1, 2, 3, 4].map(i => (
+              <div className="sc-history-row" key={i}>
+                <div className="skel-line" style={{ width: 38, height: 38, borderRadius: '50%', marginBottom: 0, flexShrink: 0 }} />
+                <div style={{ flex: 1, marginLeft: 14 }}>
+                  <SkeletonText width="55%" height="13px" />
+                  <div style={{ marginTop: 6 }}>
+                    <SkeletonText width="35%" height="10px" />
+                  </div>
+                </div>
+                <SkeletonText width="60px" height="20px" />
+              </div>
+            ))
           ) : historyList.length === 0 ? (
             <div className="sc-empty">No transactions in this period</div>
           ) : (

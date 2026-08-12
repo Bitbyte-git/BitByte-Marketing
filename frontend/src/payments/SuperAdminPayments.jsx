@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { SkeletonText } from '../components/Skeleton'
 
 const GOLD = '#BB8958'
 const DARK = '#111817'
@@ -159,12 +160,6 @@ export default function SuperAdminPayments() {
             <option value="my_commission">My Commission</option>
           </select>
         </div>
-        <p className="sp-note">
-          Real money enters the business only when a user recharges AUG Coin via Razorpay — this
-          list shows every such recharge transaction (payment method + Razorpay transaction ID).
-          Spending coins on jewelry orders does not create new revenue, it just uses coins already paid for.
-        </p>
-
         <div className="sp-filter-row">
           {FILTERS.map(f => (
             <button
@@ -191,7 +186,59 @@ export default function SuperAdminPayments() {
         </div>
 
         {loading ? (
-          <div className="sp-empty">Loading...</div>
+          <>
+            <div className="sp-cards">
+              {[0, 1, 2].map(i => (
+                <div className="sp-card" key={i} style={{ borderStyle: 'dashed' }}>
+                  <SkeletonText width="60%" height="10px" />
+                  <div style={{ marginTop: 10 }}>
+                    <SkeletonText width="80%" height="22px" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <section className="sp-panel">
+              <SkeletonText width="220px" height="14px" />
+              <div className="sp-chart" style={{ marginTop: 20 }}>
+                {[0, 1, 2, 3, 4, 5].map(i => (
+                  <div className="sp-bar-col" key={i}>
+                    <SkeletonText width="70%" height="10px" />
+                    <div
+                      className="skel-line"
+                      style={{ width: '100%', maxWidth: 52, height: `${40 + (i % 3) * 30}px`, borderRadius: '6px 6px 0 0', marginTop: 6, marginBottom: 6 }}
+                    />
+                    <SkeletonText width="60%" height="10px" />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="sp-panel">
+              <SkeletonText width="260px" height="14px" />
+              <div style={{ marginTop: 18 }}>
+                {[0, 1, 2, 3, 4].map(i => (
+                  <div className="sp-txn-row" key={i}>
+                    <div style={{ flex: 1 }}>
+                      <SkeletonText width="140px" height="12px" />
+                      <div style={{ marginTop: 6 }}>
+                        <SkeletonText width="180px" height="10px" />
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <SkeletonText width="80px" height="14px" />
+                      <div style={{ marginTop: 6 }}>
+                        <SkeletonText width="60px" height="10px" />
+                      </div>
+                    </div>
+                    <div style={{ marginLeft: 14 }}>
+                      <SkeletonText width="70px" height="20px" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
         ) : (
           <>
             <div className="sp-cards">

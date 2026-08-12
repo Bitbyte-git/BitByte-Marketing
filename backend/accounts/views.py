@@ -2591,44 +2591,48 @@ def _today_order_counts():
 
 def _today_rollup_counts():
     """Returns dict: key = (role, profile_id) -> today's order count (rolled up).
-    role-kal: 'customer' (key=user_id), 'promotor', 'sub_dealer', 'dealer', 'admin' (key=profile.id)."""
+    role-kal: 'customer' (key=user_id), 'promotor', 'sub_dealer', 'dealer', 'admin' (key=profile.id).
+    ── FIX: Python-la ovvoru order-um loop pannama, DB GROUP BY vachi 5 fast queries panrom.
+    Order count evlo perusa irundhalum (1000s), idhu 5 queries mattum — user count-a sar-alla. ──"""
     today = timezone.localtime(timezone.now()).date()
-    orders = JewelryOrder.objects.filter(created_at__date=today).select_related(
-        'user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin'
-    )
+    base = JewelryOrder.objects.filter(created_at__date=today)
 
     counts = {}
 
-    def bump(key):
-        counts[key] = counts.get(key, 0) + 1
+    customer_rows = (
+        base.filter(user__customer_profile__isnull=False)
+        .values('user_id').annotate(c=Count('id'))
+    )
+    for r in customer_rows:
+        counts[('customer', r['user_id'])] = r['c']
 
-    for o in orders:
-        u = o.user
-        cp = getattr(u, 'customer_profile', None)
-        if not cp:
-            continue  
+    promotor_rows = (
+        base.filter(user__customer_profile__assigned_promotor__isnull=False)
+        .values('user__customer_profile__assigned_promotor_id').annotate(c=Count('id'))
+    )
+    for r in promotor_rows:
+        counts[('promotor', r['user__customer_profile__assigned_promotor_id'])] = r['c']
 
-        bump(('customer', u.id))
+    sub_dealer_rows = (
+        base.filter(user__customer_profile__assigned_promotor__assigned_sub_dealer__isnull=False)
+        .values('user__customer_profile__assigned_promotor__assigned_sub_dealer_id').annotate(c=Count('id'))
+    )
+    for r in sub_dealer_rows:
+        counts[('sub_dealer', r['user__customer_profile__assigned_promotor__assigned_sub_dealer_id'])] = r['c']
 
-        pr = cp.assigned_promotor
-        if not pr:
-            continue
-        bump(('promotor', pr.id))
+    dealer_rows = (
+        base.filter(user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__isnull=False)
+        .values('user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer_id').annotate(c=Count('id'))
+    )
+    for r in dealer_rows:
+        counts[('dealer', r['user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer_id'])] = r['c']
 
-        sd = pr.assigned_sub_dealer
-        if not sd:
-            continue
-        bump(('sub_dealer', sd.id))
-
-        d = sd.assigned_dealer
-        if not d:
-            continue
-        bump(('dealer', d.id))
-
-        a = d.assigned_admin
-        if not a:
-            continue
-        bump(('admin', a.id))
+    admin_rows = (
+        base.filter(user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin__isnull=False)
+        .values('user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin_id').annotate(c=Count('id'))
+    )
+    for r in admin_rows:
+        counts[('admin', r['user__customer_profile__assigned_promotor__assigned_sub_dealer__assigned_dealer__assigned_admin_id'])] = r['c']
 
     return counts
 
@@ -2643,11 +2647,21 @@ class TodayLoginStatusView(APIView):
         'year': 365,
     }
 
+    ROLE_META = {
+        # role_key: (id_field, label, level)
+        'admin':      ('admin_id', 'Admin', 2),
+        'dealer':     ('dealer_id', 'Dealer', 3),
+        'sub_dealer': ('sub_dealer_id', 'Sub Dealer', 4),
+        'promotor':   ('promotor_id', 'Promotor', 5),
+        'customer':   ('customer_id', 'Customer', 6),
+    }
+    LABEL_TO_ROLE_KEY = {'Admin': 'admin', 'Dealer': 'dealer', 'Sub Dealer': 'sub_dealer', 'Promotor': 'promotor', 'Customer': 'customer'}
+
     def get(self, request):
         if request.user.role != 'super_admin':
             return Response({'error': 'Permission denied'}, status=403)
 
-        period = request.query_params.get('period', 'today')   # ── NEW
+        period = request.query_params.get('period', 'today')
         scope_role = request.query_params.get('scope_role')
         scope_id = request.query_params.get('scope_id')
         scope_user_ids = None
@@ -2656,86 +2670,91 @@ class TodayLoginStatusView(APIView):
                 scope_user_ids = set(_resolve_scope_user_ids(request.user, scope_role, scope_id))
             except Exception:
                 scope_user_ids = set()
+
         today = timezone.now().date()
-        rollup_counts = _today_rollup_counts()   # ← NEW: (role, profile_id) -> today's rolled-up count
+        rollup_counts = _today_rollup_counts()
 
-        # ── NEW: role_key add pannom — rollup dict-la correct key vachu lookup pannanum ──
-        def build_entry(profile, id_field, role_label, level, role_key):
-            u = profile.user
-            last_login_date = u.last_login.date() if u.last_login else None
+        # ── NEW: role -> level Case/When, DB level la order pண்ணறatuku ──
+        from django.db.models import Case, When, Value, IntegerField
+        level_case = Case(
+            When(role='admin', then=Value(2)), When(role='dealer', then=Value(3)),
+            When(role='sub_dealer', then=Value(4)), When(role='promotor', then=Value(5)),
+            When(role='customer', then=Value(6)), default=Value(99), output_field=IntegerField(),
+        )
 
-            # ── NEW: never login pannalanna, account create panna date-la irundhu count ──
-            reference_date = last_login_date or (u.created_at.date() if u.created_at else today)
-            days_inactive = (today - reference_date).days
+        base_qs = User.objects.exclude(role='super_admin').annotate(level=level_case).select_related(
+            'admin_profile', 'dealer_profile', 'sub_dealer_profile', 'promotor_profile', 'customer_profile'
+        ).order_by('level', 'id')
 
-            if period == 'today':
-                is_active = bool(last_login_date and last_login_date == today)
-            else:
-                days_needed = self.PERIOD_DAYS.get(period, 0)
-                is_active = bool(last_login_date and (today - last_login_date).days < days_needed)
-
-            # ── NEW: customer ku key=user_id, meethi ellarukum key=profile.id ──
-            lookup_key = u.id if role_key == 'customer' else profile.id
-
-            return {
-                'level': level,
-                'level_role': role_label,
-                'id': getattr(profile, id_field, None),
-                'db_id': profile.id,   # ── NEW: actual database primary key (for SalesCount navigation)
-                'name': f"{profile.first_name} {profile.last_name or ''}".strip(),
-                'email': u.email,
-                'phone': profile.mobile_number,
-                'location': profile.city_name,
-                'active': is_active,
-                'last_login': u.last_login.isoformat() if u.last_login else None,
-                'days_inactive': days_inactive,          # ── NEW
-                'order_count': rollup_counts.get((role_key, lookup_key), 0),   # ← CHANGED: rolled-up today count
-            }
-
-        all_entries = []
-        for p in AdminProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'admin_id', 'Admin', 2, 'admin'))
-        for p in DealerProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'dealer_id', 'Dealer', 3, 'dealer'))
-        for p in SubDealerProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'sub_dealer_id', 'Sub Dealer', 4, 'sub_dealer'))
-        for p in PromotorProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'promotor_id', 'Promotor', 5, 'promotor'))
-        for p in CustomerProfile.objects.select_related('user'):
-            all_entries.append(build_entry(p, 'customer_id', 'Customer', 6, 'customer'))
-
-        # ── NEW: scope pண்ணின na, andha subtree user_ids mattum filter pண்ணும் ──
-        if scope_user_ids is not None:
-            all_entries = [e for e in all_entries if e.get('_user_id') in scope_user_ids]
-
-        active_list = [e for e in all_entries if e['active']]
-        active_list = [e for e in all_entries if e['active']]
-        inactive_list = [e for e in all_entries if not e['active']]
-
-        # ── NEW: role filter — level_role vachi filter pண்ணும் (Admin/Dealer/Sub Dealer/Promotor/Customer) ──
+        # ── NEW: role filter DB level-ல ──
         role_filter = request.query_params.get('role')
         if role_filter and role_filter != 'all':
-            active_list = [e for e in active_list if e['level_role'] == role_filter]
-            inactive_list = [e for e in inactive_list if e['level_role'] == role_filter]
+            role_key = self.LABEL_TO_ROLE_KEY.get(role_filter)
+            if role_key:
+                base_qs = base_qs.filter(role=role_key)
 
-        # ── NEW: limit — Load More pagination. 20/50/100/... mattum anuppuvom, total count um anuppuvom ──
-        limit_param = request.query_params.get('limit')
-        active_total = len(active_list)
-        inactive_total = len(inactive_list)
-        if limit_param:
-            try:
-                limit = int(limit_param)
-                active_list = active_list[:limit]
-                inactive_list = inactive_list[:limit]
-            except ValueError:
-                pass
+        # ── NEW: scope filter DB level-ல ──
+        if scope_user_ids is not None:
+            base_qs = base_qs.filter(id__in=scope_user_ids)
+
+        # ── NEW: active/inactive DB level-ல split — Python-la ella row-um build panna vendam ──
+        if period == 'today':
+            active_q = Q(last_login__date=today)
+        else:
+            days_needed = self.PERIOD_DAYS.get(period, 0)
+            active_q = Q(last_login__date__gte=today - timedelta(days=days_needed))
+
+        active_qs = base_qs.filter(active_q)
+        inactive_qs = base_qs.exclude(active_q)
+
+        # ── NEW: eppadi 'inactive' page ku 'inactive' mattum fetch pண்ணும், 'active' page ku 'active' mattum ──
+        list_type = request.query_params.get('list_type', 'inactive')
+        offset = int(request.query_params.get('offset', 0))
+        limit = int(request.query_params.get('limit', 20))
+
+        target_qs = active_qs if list_type == 'active' else inactive_qs
+        total_count = target_qs.count()
+        other_count = inactive_qs.count() if list_type == 'active' else active_qs.count()
+
+        # ── NEW: DB level la LIMIT/OFFSET — idhu than real pagination ──
+        page_users = target_qs[offset:offset + limit]
+
+        def build_entry(u):
+            role_key = u.role
+            meta = self.ROLE_META.get(role_key)
+            if not meta:
+                return None
+            id_field, role_label, level = meta
+            profile = getattr(u, f'{role_key}_profile', None)
+            if not profile:
+                return None
+
+            last_login_date = u.last_login.date() if u.last_login else None
+            reference_date = last_login_date or (u.created_at.date() if u.created_at else today)
+            days_inactive = (today - reference_date).days
+            is_active = bool(last_login_date and last_login_date >= (today - timedelta(days=self.PERIOD_DAYS.get(period, 0)))) if period != 'today' else bool(last_login_date and last_login_date == today)
+
+            lookup_key = u.id if role_key == 'customer' else profile.id
+            return {
+                'level': level, 'level_role': role_label,
+                'id': getattr(profile, id_field, None), 'db_id': profile.id,
+                'name': f"{profile.first_name} {profile.last_name or ''}".strip(),
+                'email': u.email, 'phone': profile.mobile_number, 'location': profile.city_name,
+                'active': is_active,
+                'last_login': u.last_login.isoformat() if u.last_login else None,
+                'days_inactive': days_inactive,
+                'order_count': rollup_counts.get((role_key, lookup_key), 0),
+            }
+
+        entries = [e for e in (build_entry(u) for u in page_users) if e]
 
         return Response({
-            'period': period,          # ── NEW
-            'active_count': active_total,
-            'inactive_count': inactive_total,
-            'active': active_list,
-            'inactive': inactive_list,
+            'period': period,
+            'list_type': list_type,
+            'total_count': total_count,
+            'other_count': other_count,
+            'active': entries if list_type == 'active' else [],
+            'inactive': entries if list_type == 'inactive' else [],
         })
 
 class CoinRequestView(APIView):

@@ -39,6 +39,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    # ── NEW: AbstractBaseUser's last_login field-ku default index illa,
+    # explicit-a override panni db_index add pannurom — active/inactive filter idhை vachi than pannudhu ──
+    last_login = models.DateTimeField(null=True, blank=True, db_index=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
