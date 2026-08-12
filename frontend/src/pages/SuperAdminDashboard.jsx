@@ -2022,6 +2022,8 @@ const fetchCoinStock = async () => {
         @media (max-width:1180px){.sa-pie-row{grid-template-columns:1fr!important}.sa-pie-card{min-height:390px!important}}
         .sa-navbar.sa-main-offset,.sa-navbar{display:none!important}
         .sa-sidebar,.sa-top-shell{display:none!important}.sa-main-offset{margin-left:0!important;width:100%!important}
+        .modal-scroll::-webkit-scrollbar{width:0px;background:transparent}
+        .modal-scroll{scrollbar-width:none;-ms-overflow-style:none}
       `}</style>
 
 
@@ -3804,10 +3806,10 @@ setOrderPopupState({
         {/* â”€â”€ BIRTHDAY LIST MODAL â”€â”€ */}
         {showBirthdayList && (
           <div onClick={() => setShowBirthdayList(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(201,32,53,0.3)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.6)' }}>
-              <div style={{ flexShrink: 0, padding: '22px 28px', borderBottom: '1px solid rgba(201,32,53,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FDF0F1 100%)', border: '1px solid rgba(201,32,53,0.22)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 90px rgba(17,24,23,0.24), 0 0 0 1px rgba(201,32,53,0.06)' }}>
+              <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(201,32,53,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(201,32,53,0.15)', border: '1px solid rgba(201,32,53,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(145deg,rgba(201,32,53,0.16),rgba(201,32,53,0.08))', border: '1px solid rgba(201,32,53,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(201,32,53,0.14)' }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 21h16v-7a4 4 0 00-4-4H8a4 4 0 00-4 4v7z"/>
                       <path d="M4 17c1 0 1.5-1 2.5-1s1.5 1 2.5 1 1.5-1 2.5-1 1.5 1 2.5 1 1.5-1 2.5-1"/>
@@ -3852,9 +3854,9 @@ setOrderPopupState({
                       setShowSpecialAnn(true)
                       setSpecialAnnMsg('')
                     }}
-                    style={{ background: dark ? 'rgba(201,32,53,0.06)' : 'rgba(201,32,53,0.04)', border: '1px solid rgba(201,32,53,0.25)', borderRadius: '14px', padding: '14px 18px', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,32,53,0.12)'; e.currentTarget.style.borderColor = 'rgba(201,32,53,0.5)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = dark ? 'rgba(201,32,53,0.06)' : 'rgba(201,32,53,0.04)'; e.currentTarget.style.borderColor = 'rgba(201,32,53,0.25)' }}
+                    style={{ background: '#FFFFFF', border: '1px solid rgba(201,32,53,0.2)', borderRadius: '16px', padding: '16px 20px', cursor: 'pointer', transition: 'all 0.2s ease', boxShadow: '0 6px 18px rgba(201,32,53,0.05)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,32,53,0.05)'; e.currentTarget.style.borderColor = 'rgba(201,32,53,0.4)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 26px rgba(201,32,53,0.12)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = 'rgba(201,32,53,0.2)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(201,32,53,0.05)' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
@@ -3882,10 +3884,10 @@ setOrderPopupState({
  {/* â”€â”€ ANNIVERSARY LIST MODAL â”€â”€ */}
         {showAnniversaryList && (
           <div onClick={() => setShowAnniversaryList(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.6)' }}>
-              <div style={{ flexShrink: 0, padding: '22px 28px', borderBottom: '1px solid rgba(204,168,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF6ED 100%)', border: '1px solid rgba(204,168,129,0.28)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 90px rgba(17,24,23,0.24), 0 0 0 1px rgba(204,168,129,0.08)' }}>
+              <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(204,168,129,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(204,168,129,0.15)', border: '1px solid rgba(204,168,129,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(145deg,rgba(204,168,129,0.2),rgba(204,168,129,0.1))', border: '1px solid rgba(204,168,129,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(204,168,129,0.16)' }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="15" r="6"/><path d="M9 9l3-6 3 6" strokeLinejoin="round"/>
                     </svg>
@@ -3927,9 +3929,9 @@ setOrderPopupState({
                       setShowSpecialAnn(true)
                       setSpecialAnnMsg('')
                     }}
-                    style={{ background: dark ? 'rgba(204,168,129,0.06)' : 'rgba(204,168,129,0.04)', border: '1px solid rgba(204,168,129,0.25)', borderRadius: '14px', padding: '14px 18px', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.12)'; e.currentTarget.style.borderColor = 'rgba(204,168,129,0.5)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = dark ? 'rgba(204,168,129,0.06)' : 'rgba(204,168,129,0.04)'; e.currentTarget.style.borderColor = 'rgba(204,168,129,0.25)' }}
+                    style={{ background: '#FFFFFF', border: '1px solid rgba(204,168,129,0.24)', borderRadius: '16px', padding: '16px 20px', cursor: 'pointer', transition: 'all 0.2s ease', boxShadow: '0 6px 18px rgba(204,168,129,0.06)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(204,168,129,0.06)'; e.currentTarget.style.borderColor = 'rgba(204,168,129,0.45)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 26px rgba(204,168,129,0.14)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = 'rgba(204,168,129,0.24)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(204,168,129,0.06)' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
@@ -3957,10 +3959,10 @@ setOrderPopupState({
 {/* â”€â”€ JOIN DATE LIST MODAL â”€â”€ */}
         {showJoinDateList && (
           <div onClick={() => setShowJoinDateList(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(187,137,88,0.3)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.6)' }}>
-              <div style={{ flexShrink: 0, padding: '22px 28px', borderBottom: '1px solid rgba(187,137,88,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF3E9 100%)', border: '1px solid rgba(187,137,88,0.28)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 90px rgba(17,24,23,0.24), 0 0 0 1px rgba(187,137,88,0.08)' }}>
+              <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(187,137,88,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(187,137,88,0.15)', border: '1px solid rgba(187,137,88,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(145deg,rgba(187,137,88,0.2),rgba(187,137,88,0.1))', border: '1px solid rgba(187,137,88,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(187,137,88,0.16)' }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BB8958" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M8 4h8v6a4 4 0 01-8 0V4z"/>
                       <path d="M8 5H5a2 2 0 002 4M16 5h3a2 2 0 01-2 4"/>
@@ -3985,11 +3987,13 @@ setOrderPopupState({
               </div>
               <div className="modal-scroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {joinDateList.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: subtext, padding: '50px 0', fontSize: '14px' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M8 4h8v6a4 4 0 01-8 0V4z"/><path d="M12 14v3"/>
-                    </svg>
-                    No work anniversaries today
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', textAlign: 'center', padding: '60px 0' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(187,137,88,0.1)', border: '1px solid rgba(187,137,88,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BB8958" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M8 4h8v6a4 4 0 01-8 0V4z"/><path d="M12 14v3"/>
+                      </svg>
+                    </div>
+                    <span style={{ color: subtext, fontSize: '14px', fontWeight: 600 }}>No work anniversaries today</span>
                   </div>
                 ) : joinDateList.map((m, i) => (
                   <div
@@ -4006,9 +4010,9 @@ setOrderPopupState({
                       setShowSpecialAnn(true)
                       setSpecialAnnMsg('')
                     }}
-                    style={{ background: dark ? 'rgba(187,137,88,0.06)' : 'rgba(187,137,88,0.04)', border: '1px solid rgba(187,137,88,0.25)', borderRadius: '14px', padding: '14px 18px', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(187,137,88,0.12)'; e.currentTarget.style.borderColor = 'rgba(187,137,88,0.5)' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = dark ? 'rgba(187,137,88,0.06)' : 'rgba(187,137,88,0.04)'; e.currentTarget.style.borderColor = 'rgba(187,137,88,0.25)' }}
+                    style={{ background: '#FFFFFF', border: '1px solid rgba(187,137,88,0.24)', borderRadius: '16px', padding: '16px 20px', cursor: 'pointer', transition: 'all 0.2s ease', boxShadow: '0 6px 18px rgba(187,137,88,0.06)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(187,137,88,0.06)'; e.currentTarget.style.borderColor = 'rgba(187,137,88,0.45)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 26px rgba(187,137,88,0.14)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.borderColor = 'rgba(187,137,88,0.24)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(187,137,88,0.06)' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
@@ -4418,12 +4422,12 @@ try {
             <div
               onClick={e => e.stopPropagation()}
               className="modal-scroll"
-              style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(204,168,129,0.35)', borderRadius: '24px', width: '95%', maxWidth: '480px', maxHeight: '88vh', overflowY: 'auto', padding: '32px', boxShadow: '0 32px 80px rgba(17,24,23,0.7)', animation: 'fadeIn 0.3s ease' }}
+style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF6ED 100%)', border: '1px solid rgba(204,168,129,0.28)', borderRadius: '24px', width: '95%', maxWidth: '480px', maxHeight: '95vh', overflowY: 'auto', padding: '26px 32px', boxShadow: '0 40px 90px rgba(17,24,23,0.28), 0 0 0 1px rgba(204,168,129,0.08)', animation: 'fadeIn 0.3s ease' }}
             >
               {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+<div style={{ width: '44px', height: '44px', borderRadius: '13px', background: 'linear-gradient(145deg,rgba(12,64,68,0.14),rgba(12,64,68,0.06))', border: '1px solid rgba(12,64,68,0.26)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 16px rgba(12,64,68,0.12)' }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -4463,16 +4467,16 @@ try {
                 { label: 'Diamond 22K', color: '#0C4044', rgb: '12,64,68', value: metalPrices.diamond22k, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg> },
                 { label: 'Platinum 92', color: '#53615F', rgb: '231,237,236', value: metalPrices.platinum92, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#53615F" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="#53615F"/></svg> },
               ].map(item => (
-                <div key={item.label} style={{ background: '#FDFDFC', border: `1.5px solid rgba(${item.rgb},0.38)`, borderRadius: '14px', padding: '16px 20px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div key={item.label} style={{ background: '#FFFFFF', border: `1px solid rgba(${item.rgb},0.3)`, borderRadius: '14px', padding: '12px 18px', marginBottom: '9px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: `0 4px 14px rgba(${item.rgb},0.07)`, transition: 'all 0.2s ease' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `rgba(${item.rgb},0.10)`, border: `1px solid rgba(${item.rgb},0.42)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</div>
+                    <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: `linear-gradient(145deg,rgba(${item.rgb},0.16),rgba(${item.rgb},0.06))`, border: `1px solid rgba(${item.rgb},0.32)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{item.icon}</div>
                     <div>
                       <div style={{ color: item.color, fontWeight: 800, fontSize: '13px' }}>{item.label}</div>
-                      <div style={{ color: '#53615F', fontSize: '11px', fontWeight: 600, marginTop: '3px' }}>per gram</div>
+                      <div style={{ color: '#53615F', fontSize: '10px', fontWeight: 600, marginTop: '2px' }}>per gram</div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: item.color, fontWeight: 900, fontSize: '20px', fontFamily: 'monospace' }}>
+                    <div style={{ color: item.color, fontWeight: 900, fontSize: '17px', fontFamily: 'monospace' }}>
                       {item.value ? item.value.toFixed(2) : <span style={{ color: subtext, fontSize: '13px' }}>Not set</span>}
                     </div>
                   </div>
@@ -4481,9 +4485,9 @@ try {
 
               <button
                 onClick={() => { setShowTodayRates(false); setShowRatePopup(true); setRateMsg('') }}
-                style={{ width: '100%', marginTop: '8px', padding: '13px', background: 'linear-gradient(90deg,#CCA881,#CCA881)', border: 'none', borderRadius: '12px', fontWeight: 800, color: '#111817', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+style={{ width: '100%', marginTop: '6px', padding: '14px', background: 'linear-gradient(135deg,#CCA881,#BB8958)', border: 'none', borderRadius: '14px', fontWeight: 800, color: '#FDFDFC', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 14px 30px rgba(204,168,129,0.32)' }}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111817" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FDFDFC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
                 </svg>
                 Update Rates
@@ -5095,12 +5099,12 @@ try {
             <div
               onClick={e => e.stopPropagation()}
               className="modal-scroll"
-              style={{ background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC', border: '1px solid rgba(187,137,88,0.3)', borderRadius: '24px', width: '95%', maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', boxShadow: '0 32px 80px rgba(17,24,23,0.6)', animation: 'fadeIn 0.3s cubic-bezier(0.22,1,0.36,1)' }}
+              style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF3E9 100%)', border: '1px solid rgba(187,137,88,0.28)', borderRadius: '24px', width: '95%', maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto', padding: '32px 36px', boxShadow: '0 40px 90px rgba(17,24,23,0.28), 0 0 0 1px rgba(187,137,88,0.08)', animation: 'fadeIn 0.3s cubic-bezier(0.22,1,0.36,1)' }}
             >
               {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '26px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg,rgba(187,137,88,0.3),rgba(187,137,88,0.15))', border: '1px solid rgba(187,137,88,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(187,137,88,0.2)' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '13px', background: 'linear-gradient(145deg,rgba(187,137,88,0.22),rgba(187,137,88,0.1))', border: '1px solid rgba(187,137,88,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 18px rgba(187,137,88,0.2)' }}>
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#BB8958" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 10v4a1 1 0 001 1h2l6 4V5L6 9H4a1 1 0 00-1 1z"/>
                       <path d="M16 8a4 4 0 010 8M19 6a7 7 0 010 12"/>
@@ -5176,7 +5180,7 @@ try {
                           const updated = checked ? announcementForm.roles.filter(x => x !== role.key) : [...announcementForm.roles, role.key]
                           setAnnouncementForm({ ...announcementForm, roles: updated })
                         }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 14px', borderRadius: '10px', cursor: 'pointer', background: checked ? `rgba(${rgb},0.14)` : `rgba(${rgb},0.04)`, border: `1.5px solid ${checked ? `rgba(${rgb},0.6)` : `rgba(${rgb},0.18)`}`, transition: 'all 0.2s ease', userSelect: 'none' }}
+style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '999px', cursor: 'pointer', background: checked ? `rgba(${rgb},0.14)` : '#FFFFFF', border: `1.5px solid ${checked ? `rgba(${rgb},0.55)` : 'rgba(189,207,206,0.6)'}`, transition: 'all 0.2s ease', userSelect: 'none', boxShadow: checked ? `0 6px 16px rgba(${rgb},0.16)` : 'none' }}
                       >
                         <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: `2px solid ${checked ? role.color : `rgba(${rgb},0.35)`}`, background: checked ? role.color : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', flexShrink: 0 }}>
                           {checked && (
@@ -5230,7 +5234,7 @@ fetchAnnouncementCount(annData)
                   }
                   setAnnouncingSending(false)
                 }}
-                style={{ width: '100%', padding: '14px', background: announcingSending ? 'rgba(187,137,88,0.3)' : 'linear-gradient(90deg,#BB8958,#BB8958)', border: 'none', borderRadius: '12px', fontWeight: 800, color: announcingSending ? '#BB8958' : '#111817', fontSize: '15px', cursor: announcingSending ? 'not-allowed' : 'pointer', letterSpacing: '0.5px', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(187,137,88,0.3)' : 'linear-gradient(135deg,#CCA881,#BB8958)', border: 'none', borderRadius: '14px', fontWeight: 800, color: announcingSending ? '#BB8958' : '#FDFDFC', fontSize: '15px', cursor: announcingSending ? 'not-allowed' : 'pointer', letterSpacing: '0.5px', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: announcingSending ? 'none' : '0 14px 30px rgba(187,137,88,0.32)' }}
               >
                 {announcingSending ? (
                   <>
@@ -5239,9 +5243,9 @@ fetchAnnouncementCount(annData)
                   </>
                 ) : (
                   <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111817" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FDFDFC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 10v4a1 1 0 001 1h2l6 4V5L6 9H4a1 1 0 00-1 1z"/>
-                      <path d="M16 8a4 4 0 010 8M19 6a7 7 0 010 12"/>
+                      <path d="M16 8a4 4 0 010 8M19 6a7 7 0 010 12" strokeLinecap="round"/>
                     </svg>
                     Send Announcement
                   </>
@@ -5270,8 +5274,8 @@ fetchAnnouncementCount(annData)
             <div
               onClick={e => e.stopPropagation()}
               style={{
-                background: dark ? 'linear-gradient(145deg,#F3F3F0,#E7EDEC)' : '#FDFDFC',
-                border: '1px solid rgba(189,207,206,0.3)',
+                background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#EEF4F3 100%)',
+                border: '1px solid rgba(12,64,68,0.16)',
                 borderRadius: '24px',
                 width: '95%',
                 maxWidth: '560px',
@@ -5279,27 +5283,28 @@ fetchAnnouncementCount(annData)
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
-                boxShadow: '0 32px 80px rgba(17,24,23,0.6)'
+                boxShadow: '0 40px 90px rgba(17,24,23,0.24), 0 0 0 1px rgba(12,64,68,0.06)'
               }}
             >
               <div style={{
                 flexShrink: 0,
                 padding: '24px 28px',
-                borderBottom: '1px solid rgba(12,64,68,0.16)',
+                borderBottom: '1px solid rgba(12,64,68,0.12)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '10px',
-                    background: 'rgba(12,64,68,0.08)',
-                    border: '1px solid rgba(12,64,68,0.24)',
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(145deg,rgba(12,64,68,0.14),rgba(12,64,68,0.06))',
+                    border: '1px solid rgba(12,64,68,0.28)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 14px rgba(12,64,68,0.14)'
                   }}>
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="7" width="20" height="13" rx="2"/>
@@ -5358,12 +5363,11 @@ fetchAnnouncementCount(annData)
                   <div
                     key={ann.id}
                     style={{
-                      background: idx === 0
-                        ? (dark ? 'rgba(189,207,206,0.07)' : 'rgba(189,207,206,0.05)')
-                        : (dark ? 'rgba(253,253,252,0.02)' : 'rgba(17,24,23,0.02)'),
-                      border: `1px solid ${idx === 0 ? 'rgba(189,207,206,0.35)' : border}`,
-                      borderRadius: '14px',
-                      padding: '16px 18px'
+                      background: idx === 0 ? 'rgba(12,64,68,0.04)' : '#FFFFFF',
+                      border: `1px solid ${idx === 0 ? 'rgba(12,64,68,0.3)' : 'rgba(189,207,206,0.5)'}`,
+                      borderRadius: '16px',
+                      padding: '18px 20px',
+                      boxShadow: idx === 0 ? '0 8px 20px rgba(12,64,68,0.08)' : '0 4px 12px rgba(7,59,63,0.04)'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
@@ -5372,16 +5376,16 @@ fetchAnnouncementCount(annData)
                           <span style={{
                             fontSize: '9px',
                             fontWeight: 800,
-                            padding: '2px 8px',
+                            padding: '3px 10px',
                             borderRadius: '20px',
-                            background: 'rgba(189,207,206,0.15)',
-                            color: '#53615F',
-                            border: '1px solid rgba(189,207,206,0.3)'
+                            background: 'rgba(12,64,68,0.12)',
+                            color: '#0C4044',
+                            border: '1px solid rgba(12,64,68,0.28)'
                           }}>
-                            â— NEW
+                            ● NEW
                           </span>
                         )}
-                        <span style={{ color: idx === 0 ? '#BDCFCE' : text, fontWeight: 700, fontSize: '14px' }}>
+                        <span style={{ color: idx === 0 ? '#073B3F' : text, fontWeight: 700, fontSize: '14px' }}>
                           {ann.title}
                         </span>
                       </div>

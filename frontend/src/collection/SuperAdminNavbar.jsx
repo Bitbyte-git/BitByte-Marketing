@@ -233,7 +233,6 @@ export default function SuperAdminNavbar({
   ]
   const reports = [
     ['Login Reward', () => navigate('/coins-reward')],
-    ['Hierarchy Sales Report', () => navigate('/hierarchy-sales-count')],
     ['Sales Report', () => navigate('/sales-report')],
     ['Login Active', () => navigate('/login-active')],
     ['Login Inactive', () => navigate('/login-inactive')],
@@ -384,13 +383,13 @@ export default function SuperAdminNavbar({
               </div>
             </div>
             <div className="san-menu-center">
-              <MenuGroup label="Management" items={management} footer={{ label: 'View All Management ->', action: () => navigate('/superadmin-hierarchy-grid') }} />
-              <MenuGroup label="Celebrations" items={celebrations} footer={{ label: 'View All Celebrations ->', action: () => run(onBirthdays, '/super-admin') }} />
-              <MenuGroup label="Announcements" items={announcements} footer={{ label: 'View All Announcements ->', action: () => run(onMyAnnouncements, '/super-admin') }} />
-              <MenuGroup label="Coins" items={coins} footer={{ label: 'View All Coins ->', action: () => navigate('/stored-coins') }} />
-              <MenuGroup label="Reports" items={reports} footer={{ label: 'View All Reports ->', action: () => navigate('/sales-report') }} />
-              <MenuGroup label="Promotion" items={promotion} footer={{ label: 'View All Promotion ->', action: () => navigate('/promotions/retailer') }} />
-              <MenuGroup label="Payment" items={payment} footer={{ label: 'View Revenue & Payments ->', action: () => navigate('/superadmin-payments') }} />  
+              <MenuGroup label="Management" items={management} />
+              <MenuGroup label="Celebrations" items={celebrations} />
+              <MenuGroup label="Announcements" items={announcements} />
+              <MenuGroup label="Coins" items={coins} />
+              <MenuGroup label="Reports" items={reports} />
+              <MenuGroup label="Promotion" items={promotion} />
+              <MenuGroup label="Payment" items={payment} />  
             </div>
             <div className="san-actions">
               <button className="san-action" type="button" onClick={() => run(onTodayRates, '/super-admin')}><Icon name="rate" />Today Rates</button>

@@ -1,3 +1,4 @@
+from numpy import add
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -2039,6 +2040,88 @@ class HierarchyNodeOrdersView(APIView):
             'overall_amount': float(overall['total_amount'] or 0),
         })
 
+def _month_status_map():
+    """dict: (role, profile_id) -> status ('red'/'orange'/'yellow'/'green').
+    Bottom-up cascade — customer own status -> promotor worst-of-customers ->
+    sub_dealer worst-of-promotors -> dealer worst-of-sub_dealers -> admin worst-of-dealers.
+    SALES total (rollup sum) layum vera, idhu mattum status calculate pannurathukku."""
+    now = timezone.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    own_counts = dict(
+        JewelryOrder.objects.filter(created_at__gte=month_start)
+        .values('user_id').annotate(c=Count('id')).values_list('user_id', 'c')
+    )
+
+    customers = list(CustomerProfile.objects.all().values('id', 'user_id', 'created_by_id', 'assigned_promotor_id'))
+    promotors = list(PromotorProfile.objects.all().values('id', 'user_id', 'assigned_sub_dealer_id'))
+    sub_dealers = list(SubDealerProfile.objects.all().values('id', 'user_id', 'assigned_dealer_id'))
+    dealers = list(DealerProfile.objects.all().values('id', 'user_id', 'assigned_admin_id'))
+    admins = list(AdminProfile.objects.all().values('id', 'user_id'))
+
+    subcustomers_by_creator = {}
+    for c in customers:
+        subcustomers_by_creator.setdefault(c['created_by_id'], []).append(c)
+
+    customers_by_promotor = {}
+    for c in customers:
+        if c['assigned_promotor_id']:
+            customers_by_promotor.setdefault(c['assigned_promotor_id'], []).append(c)
+
+    promotors_by_sd = {}
+    for p in promotors:
+        if p['assigned_sub_dealer_id']:
+            promotors_by_sd.setdefault(p['assigned_sub_dealer_id'], []).append(p)
+
+    sds_by_dealer = {}
+    for sd in sub_dealers:
+        if sd['assigned_dealer_id']:
+            sds_by_dealer.setdefault(sd['assigned_dealer_id'], []).append(sd)
+
+    dealers_by_admin = {}
+    for d in dealers:
+        if d['assigned_admin_id']:
+            dealers_by_admin.setdefault(d['assigned_admin_id'], []).append(d)
+
+    status_map = {}
+    customer_status_cache = {}
+
+    def customer_status(c):
+        if c['id'] in customer_status_cache:
+            return customer_status_cache[c['id']]
+        own = get_target_status(own_counts.get(c['user_id'], 0))
+        sub_statuses = [customer_status(sc) for sc in subcustomers_by_creator.get(c['user_id'], [])]
+        result = worst_status([own] + sub_statuses)
+        customer_status_cache[c['id']] = result
+        status_map[('customer', c['user_id'])] = result
+        return result
+
+    for c in customers:
+        customer_status(c)
+
+    for p in promotors:
+        own = get_target_status(own_counts.get(p['user_id'], 0))
+        child_statuses = [customer_status_cache[c['id']] for c in customers_by_promotor.get(p['id'], [])]
+        status_map[('promotor', p['id'])] = worst_status([own] + child_statuses)
+
+    for sd in sub_dealers:
+        own = get_target_status(own_counts.get(sd['user_id'], 0))
+        child_statuses = [status_map[('promotor', p['id'])] for p in promotors_by_sd.get(sd['id'], [])]
+        status_map[('sub_dealer', sd['id'])] = worst_status([own] + child_statuses)
+
+    for d in dealers:
+        own = get_target_status(own_counts.get(d['user_id'], 0))
+        child_statuses = [status_map[('sub_dealer', sd['id'])] for sd in sds_by_dealer.get(d['id'], [])]
+        status_map[('dealer', d['id'])] = worst_status([own] + child_statuses)
+
+    for a in admins:
+        own = get_target_status(own_counts.get(a['user_id'], 0))
+        child_statuses = [status_map[('dealer', d['id'])] for d in dealers_by_admin.get(a['id'], [])]
+        status_map[('admin', a['id'])] = worst_status([own] + child_statuses)
+
+    return status_map
+
+
 # ── NEW: Lightweight — Level 1 mattum. Full tree venaam ──
 class HierarchyAdminsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -2057,17 +2140,19 @@ class HierarchyAdminsView(APIView):
             .values('assigned_admin_id').annotate(c=Count('id')).values_list('assigned_admin_id', 'c')
         )
 
-        rollup_counts = _month_rollup_counts()   # ── CHANGED: own order illa, entire subtree rollup ──
+        rollup_counts = _month_rollup_counts()
+        status_map = _month_status_map()   # ── NEW: cascading worst-status, SALES total-oda vera ──
 
         results = []
         for a in admins:
-            oc = rollup_counts.get(('admin', a.id), 0)   # ── CHANGED: key = profile id, not user_id ──
+            oc = rollup_counts.get(('admin', a.id), 0)
+            status = status_map.get(('admin', a.id), 'red')   # ── CHANGED
             results.append({
                 'id': a.id, 'user_id': a.user_id, 'admin_id': a.admin_id,
                 'first_name': a.first_name, 'last_name': a.last_name,
                 'mobile_number': a.mobile_number, 'city_name': a.city_name,
                 'dealer_count': dealer_counts.get(a.id, 0),
-                'order_count': oc, 'status': get_target_status(oc),
+                'order_count': oc, 'status': status,   # ── CHANGED
             })
         return Response({'super_admin_email': User.objects.filter(role='super_admin').first().email, 'admins': results})
 
@@ -2118,21 +2203,22 @@ class HierarchyChildrenView(APIView):
                 )
                 grandchild_counts = gc
 
-        rollup_counts = _month_rollup_counts()   # ── CHANGED: subtree rollup
+        rollup_counts = _month_rollup_counts()
+        status_map = _month_status_map()
 
-        # ── FIX: customer chain key = user_id, mattras roles key = profile id ──
         count_key_attr = 'user_id' if cfg['child_role'] == 'customer' else 'id'
 
         results = []
         for c in children:
-            key_val = c.user_id if cfg['child_role'] == 'customer' else c.id   # ── CHANGED
-            oc = rollup_counts.get((cfg['child_role'], key_val), 0)   # ── CHANGED
+            key_val = c.user_id if cfg['child_role'] == 'customer' else c.id
+            oc = rollup_counts.get((cfg['child_role'], key_val), 0)
+            status = status_map.get((cfg['child_role'], key_val), 'red')
             results.append({
                 'id': c.id, 'user_id': c.user_id, cfg['id_field']: getattr(c, cfg['id_field']),
                 'first_name': c.first_name, 'last_name': c.last_name,
                 'mobile_number': c.mobile_number, 'city_name': c.city_name,
                 'child_count': grandchild_counts.get(getattr(c, count_key_attr), 0),
-                'order_count': oc, 'status': get_target_status(oc),
+                'order_count': oc, 'status': status,
             })
         return Response({'role': cfg['child_role'], 'items': results})
 
@@ -2151,16 +2237,19 @@ class HierarchyChildrenView(APIView):
             CustomerProfile.objects.filter(created_by_id__in=child_ids)
             .values('created_by_id').annotate(c=Count('id')).values_list('created_by_id', 'c')
         )
-        rollup_counts = _month_rollup_counts()   # ── CHANGED
+        rollup_counts = _month_rollup_counts()
+        status_map = _month_status_map()
+
         results = []
         for c in children:
-            oc = rollup_counts.get(('customer', c.user_id), 0)   # ── CHANGED
+            oc = rollup_counts.get(('customer', c.user_id), 0)
+            status = status_map.get(('customer', c.user_id), 'red')
             results.append({
                 'id': c.id, 'user_id': c.user_id, 'customer_id': c.customer_id,
                 'first_name': c.first_name, 'last_name': c.last_name,
                 'mobile_number': c.mobile_number, 'city_name': c.city_name,
                 'child_count': sub_child_counts.get(c.user_id, 0),
-                'order_count': oc, 'status': get_target_status(oc),
+                'order_count': oc, 'status': status,
             })
         return Response({'role': 'customer', 'items': results})        
 
