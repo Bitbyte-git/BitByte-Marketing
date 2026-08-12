@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
 from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge, AutoPayMandate
-from django.db.models import Prefetch, Count, Q, Sum
+from django.db.models import Prefetch, Count, Q, Sum, Max
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
 from .serializers import *
 from django.utils import timezone
@@ -1962,6 +1962,77 @@ class HierarchySubtreeOrdersView(APIView):
         return Response({'root': root})
 
 
+# ── NEW: Selected node kila irukka orders ah product-wise group panni,
+# DB level offset/limit pagination kudukum. Right panel (product cards) ku idha use pannuvom ──
+class HierarchyNodeOrdersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        role = request.query_params.get('role')
+        node_id = request.query_params.get('id')
+        period = request.query_params.get('period')
+        offset = int(request.query_params.get('offset', 0))
+        limit = int(request.query_params.get('limit', 20))
+
+        try:
+            user_ids = _resolve_scope_user_ids(request.user, role, node_id)
+        except Exception as e:
+            return Response({'error': str(e)}, status=404)
+
+        qs = JewelryOrder.objects.filter(user_id__in=user_ids)
+        if period == 'today':
+            today = timezone.now().date()
+            qs = qs.filter(created_at__date=today)
+
+        # ── Overall totals — MOTHATHA subtree ku, pagination touch pannadhu ──
+        overall = qs.aggregate(total_count=Count('id'), total_amount=Sum('total_price'))
+
+        # ── product + owner vachi group pannurom — DB level la ──
+        grouped_qs = (
+            qs.values('product_id', 'product_name', 'product_metal', 'product_grade',
+                      'product_category', 'user_id')
+            .annotate(
+                total_qty=Sum('quantity'),
+                total_amount=Sum('total_price'),
+                latest_at=Max('created_at'),
+                last_unit_price=Max('unit_price'),
+            )
+            .order_by('-latest_at')
+        )
+
+        total_groups = grouped_qs.count()
+        page = list(grouped_qs[offset:offset + limit])
+
+        owner_user_ids = [g['user_id'] for g in page]
+        owners = {cp.user_id: cp for cp in CustomerProfile.objects.filter(user_id__in=owner_user_ids)}
+        product_ids = [g['product_id'] for g in page if g['product_id']]
+        products = {p.id: p for p in JewelryProduct.objects.filter(id__in=product_ids).prefetch_related('images')}
+
+        results = []
+        for g in page:
+            owner = owners.get(g['user_id'])
+            product = products.get(g['product_id'])
+            img_url = None
+            if product:
+                first_img = product.images.first()
+                if first_img:
+                    img_url = first_img.image.url
+            results.append({
+                'product_name': g['product_name'], 'metal': g['product_metal'],
+                'grade': g['product_grade'], 'category': g['product_category'],
+                'net_weight': str(product.net_weight) if product and product.net_weight else None,
+                'image': img_url,
+                'total_qty': g['total_qty'], 'total_amount': float(g['total_amount']),
+                'last_rate': float(g['last_unit_price']), 'latest_at': g['latest_at'],
+                'owner': {'id': owner.id, 'first_name': owner.first_name, 'last_name': owner.last_name} if owner else None,
+            })
+
+        return Response({
+            'items': results, 'total_groups': total_groups,
+            'overall_count': overall['total_count'] or 0,
+            'overall_amount': float(overall['total_amount'] or 0),
+        })
+
 # ── NEW: Lightweight — Level 1 mattum. Full tree venaam ──
 class HierarchyAdminsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -2100,6 +2171,49 @@ class HierarchyChildrenView(APIView):
                 'order_count': oc, 'status': get_target_status(oc),
             })
         return Response({'role': 'customer', 'items': results})        
+
+
+# ── NEW: single node basic info fetch pannும் — root node load pannும்போது use aagும் ──
+class HierarchyNodeInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    MODEL_MAP = {
+        'admin': (AdminProfile, 'admin_id'),
+        'dealer': (DealerProfile, 'dealer_id'),
+        'sub_dealer': (SubDealerProfile, 'sub_dealer_id'),
+        'promotor': (PromotorProfile, 'promotor_id'),
+        'customer': (CustomerProfile, 'customer_id'),
+    }
+
+    def get(self, request):
+        role = request.query_params.get('role')
+        node_id = request.query_params.get('id')
+        cfg = self.MODEL_MAP.get(role)
+        if not cfg or not node_id:
+            return Response({'error': 'invalid role/id'}, status=400)
+
+        model, id_field = cfg
+        try:
+            node = model.objects.get(id=node_id)
+        except model.DoesNotExist:
+            return Response({'error': 'not found'}, status=404)
+
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        order_count = JewelryOrder.objects.filter(
+            user_id=node.user_id, created_at__gte=month_start
+        ).count()
+
+        return Response({
+            'id': node.id, 'user_id': node.user_id,
+            id_field: getattr(node, id_field, None),
+            'first_name': node.first_name, 'last_name': node.last_name,
+            'mobile_number': node.mobile_number,
+            'city_name': getattr(node, 'city_name', None),
+            'order_count': order_count,
+        })
+
+
 # ── NEW: role-scoped hierarchy for Admin / Dealer / Sub Dealer / Promotor logins.
 # Ovvoruthar their own subtree mattum kaanpanum — SuperAdmin mari full tree venaam. ──
 class MyHierarchyView(APIView):

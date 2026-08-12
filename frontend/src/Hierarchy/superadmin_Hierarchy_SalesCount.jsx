@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../api'
+import { SkeletonText } from '../components/Skeleton'
 
 const API_BASE = 'https://bitbyte-backend-f66f.onrender.com'
 
@@ -133,25 +134,31 @@ function filterTreeForToday(node) {
 // ══════════════════════════════════════════════════════════════════
 // TREE ITEM — left panel, one node per row, indented by depth.
 // ══════════════════════════════════════════════════════════════════
-function TreeItem({ node, selectedId, onSelect, isLast = true, pulseId, period }) {
+function TreeItem({ node, selectedId, onSelect, pulseId, period, expandedChildren, loadingNode, fetchChildren }) {
   const cfg = ROLE_CFG[node.type]
   const Icon = cfg.Icon
   const isSelected = selectedId === `${node.type}-${node.id}`
-  // ── NEW: product-la irundhu jump pannina, oru chinna neram glow flash aagum ──
   const isPulsing = pulseId === `${node.type}-${node.id}`
-  const children = cfg.childKey ? (node[cfg.childKey] || []) : []
-  const nodeOrders = collectOrders(node)
-  const orderCount = period === 'today'
-    ? nodeOrders.filter(o => isSameDay(o.created_at)).length
-    : nodeOrders.length
+  const nodeKey = `${node.type}-${node.id}`
+  // ── CHANGED: children ippo expandedChildren state la irundhu varum, node kula illa ──
+  const children = expandedChildren[nodeKey] || null   // null = innum fetch pannala, [] = fetch aagi customer-ku children illa
+  const isLoadingThis = loadingNode === nodeKey
   const rgb = hexToRgb(cfg.color)
-  const childColor = children.length > 0 ? ROLE_CFG[children[0].type].color : null
+  const childColor = children && children.length > 0 ? ROLE_CFG[children[0].type].color : null
+
+  // ── CHANGED: order count ippo node mela irundhே direct varum (backend already anுppுthு) ──
+  const orderCount = node.order_count ?? 0
+
+  const handleClick = () => {
+    onSelect(node)
+    if (cfg.childKey && !children) fetchChildren(node)   // ── NEW: first click la mattum fetch, appuram cache
+  }
 
   return (
     <div className="stree-node">
       <div
         id={`streeid-${node.type}-${node.id}`}
-        onClick={() => onSelect(node)}
+        onClick={handleClick}
         className={`stree-item ${isPulsing ? 'stree-item-pulse' : ''}`}
         style={{
           '--nc': cfg.color,
@@ -181,13 +188,27 @@ function TreeItem({ node, selectedId, onSelect, isLast = true, pulseId, period }
         <div className="stree-ordercount">
           <IconChart color="#0C4044" size={11} /> {orderCount} order{orderCount !== 1 ? 's' : ''}
         </div>
+        {/* ── NEW: children fetch aagும் pothு chinna loading text ── */}
+        {isLoadingThis && (
+          <div style={{ fontSize: 10, color: '#7A8987', marginTop: 6 }}>Loading...</div>
+        )}
       </div>
 
-      {children.length > 0 && (
+      {/* ── CHANGED: children irundha mattum render pannум், node.customers mari nested data illa ── */}
+      {children && children.length > 0 && (
         <div className="stree-children" style={{ '--cc': childColor }}>
-          {children.map((child, idx) => (
+          {children.map((child) => (
             <div className="stree-branch" key={`${child.type}-${child.id}`} style={{ '--cc': childColor }}>
-              <TreeItem node={child} selectedId={selectedId} onSelect={onSelect} isLast={idx === children.length - 1} pulseId={pulseId} period={period} />
+              <TreeItem
+                node={child}
+                selectedId={selectedId}
+                onSelect={onSelect}
+                pulseId={pulseId}
+                period={period}
+                expandedChildren={expandedChildren}
+                loadingNode={loadingNode}
+                fetchChildren={fetchChildren}
+              />
             </div>
           ))}
         </div>
@@ -195,7 +216,6 @@ function TreeItem({ node, selectedId, onSelect, isLast = true, pulseId, period }
     </div>
   )
 }
-
 // ══════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ══════════════════════════════════════════════════════════════════
@@ -214,21 +234,66 @@ export default function SuperAdminHierarchySalesCount() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
   }
 
-  const [root, setRoot] = useState(null)
-  const [loading, setLoading] = useState(true)
+ const [root, setRoot] = useState(null)          // ── CHANGED: root la mattum root node info, children KAALI
+const [loading, setLoading] = useState(true)
 const [selected, setSelected] = useState(null)
-  // ── NEW: which tree node should flash-glow right now (cleared after animation) ──
-  const [pulseId, setPulseId] = useState(null)
+const [pulseId, setPulseId] = useState(null)
+const [expandedChildren, setExpandedChildren] = useState({})   // ── NEW: { 'admin-5': [dealer1, dealer2...] }
+const [loadingNode, setLoadingNode] = useState(null)            // ── NEW: which node currently fetching children
+
+// ── NEW: orders pagination (right panel) ──
+const [orderGroups, setOrderGroups] = useState([])
+const [ordersOffset, setOrdersOffset] = useState(0)
+const [ordersLimit, setOrdersLimit] = useState(20)
+const [ordersTotal, setOrdersTotal] = useState(0)
+const [overallCount, setOverallCount] = useState(0)
+const [overallAmount, setOverallAmount] = useState(0)
+const [ordersLoading, setOrdersLoading] = useState(false)
+const [ordersLoadingMore, setOrdersLoadingMore] = useState(false)
 
 
-  useEffect(() => {
-    if (!role || !id) return
-    setLoading(true)
-    api.get(`/hierarchy/subtree-orders/?role=${role}&id=${id}`)
-      .then(res => { setRoot(res.data.root); setSelected(res.data.root) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [role, id])
+  const CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer', customer: 'customer' }
+const TREE_CACHE_KEY = `stree_cache_${role}_${id}`   // ── NEW: sessionStorage key
+
+useEffect(() => {
+  if (!role || !id) return
+  setLoading(true)
+
+  // ── NEW: root node real info (name/phone/city) backend la irundhu vaangurom ──
+  api.get('/hierarchy/node-info/', { params: { role, id } })
+    .then(res => {
+      const rootNode = { type: role, ...res.data }
+      setRoot(rootNode)
+      setSelected(rootNode)
+    })
+    .catch(() => setRoot(null))
+    .finally(() => setLoading(false))
+}, [role, id])
+
+  // ── NEW: node expand pannும் pothு, children fetch pannும் (cache-first) ──
+  const fetchChildren = async (node) => {
+  const key = `${node.type}-${node.id}`
+  if (expandedChildren[key]) return   // already fetched
+
+  setLoadingNode(key)
+  try {
+    const cacheKey = `stree_children_${key}`
+    const cached = sessionStorage.getItem(cacheKey)
+    if (cached) {
+      setExpandedChildren(prev => ({ ...prev, [key]: JSON.parse(cached) }))
+      setLoadingNode(null)
+      return
+    }
+    const res = await api.get(`/hierarchy/children/?role=${node.type}&id=${node.id}`)
+    const children = (res.data.items || []).map(c => ({ ...c, type: CHILD_ROLE[node.type] }))
+    setExpandedChildren(prev => ({ ...prev, [key]: children }))
+    // ── NEW: non-sensitive summary mattum cache pannurom (id, name, role, order_count) ──
+    sessionStorage.setItem(cacheKey, JSON.stringify(children))
+  } catch (err) {
+    setExpandedChildren(prev => ({ ...prev, [key]: [] }))
+  }
+  setLoadingNode(null)
+}
 
  // ── NEW: product-la irundhu neraa antha customer-ku jump pannum —
   // selected node-ah maathi, tree-la andha customer row-ku smooth scroll pannும் ──
@@ -239,51 +304,131 @@ const [selected, setSelected] = useState(null)
       const el = document.getElementById(`streeid-customer-${custNode.id}`)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 60)
-    // ── NEW: glow konjam neram kaatitu off aagum ──
     setTimeout(() => setPulseId(null), 1600)
   }
 
-   const allOrders = selected ? collectOrders(selected) : []
-  const orders = period === 'today' ? allOrders.filter(o => isToday(o.created_at)) : allOrders   // ── NEW
+  // ── NEW: selected node maarina, orders backend la irundhu offset=0, limit=20 fetch pannurom ──
+  useEffect(() => {
+    if (!selected) return
+    const fetchOrders = async () => {
+      setOrdersLoading(true)
+      try {
+        const res = await api.get('/hierarchy/node-orders/', {
+          params: { role: selected.type, id: selected.id, period, offset: 0, limit: 20 }
+        })
+        setOrderGroups(res.data.items || [])
+        setOrdersTotal(res.data.total_groups || 0)
+        setOverallCount(res.data.overall_count || 0)
+        setOverallAmount(res.data.overall_amount || 0)
+        setOrdersOffset(20)
+        setOrdersLimit(50)
+      } catch (err) { /* ignore */ }
+      setOrdersLoading(false)
+    }
+    fetchOrders()
+  }, [selected, period])
 
- 
-  const grouped = {}
-  orders.forEach(o => {
-    const ownerId = o._ownerNode ? o._ownerNode.id : 'unknown'
-    const key = `${o.metal}__${o.grade}__${o.product_name}__${ownerId}`
-    if (!grouped[key]) {
-      grouped[key] = {
-        key,
-        metal: o.metal, grade: o.grade, product_name: o.product_name,
-        category: o.category, net_weight: o.net_weight,
-        image: o.product_image_url,
-        totalQty: 0, totalAmount: 0, lastRate: 0,
-        owner: o._ownerNode || null,
-        latestAt: o.created_at, // ── NEW: indha card-oda latest order time track pannuvom ──
-      }
-    }
-    grouped[key].totalQty += o.quantity
-    grouped[key].totalAmount += o.total_price
-    grouped[key].lastRate = o.unit_price
-    // ── NEW: puthu order vandha, latestAt update pannuvom ──
-    if (new Date(o.created_at) > new Date(grouped[key].latestAt)) {
-      grouped[key].latestAt = o.created_at
-    }
-  })
-  // ── NEW: latest order mela, pazhaya order kீழe — always newest-first ──
-  const groupedList = Object.values(grouped).sort((a, b) => new Date(b.latestAt) - new Date(a.latestAt))
-  const overallCount = orders.length
-  const overallAmount = orders.reduce((s, o) => s + o.total_price, 0)
+  const loadMoreOrders = async () => {
+    setOrdersLoadingMore(true)
+    try {
+      const res = await api.get('/hierarchy/node-orders/', {
+        params: { role: selected.type, id: selected.id, period, offset: ordersOffset, limit: ordersLimit }
+      })
+      setOrderGroups(prev => [...prev, ...(res.data.items || [])])
+      setOrdersOffset(prev => prev + ordersLimit)
+      setOrdersLimit(100)
+    } catch (err) { /* ignore */ }
+    setOrdersLoadingMore(false)
+  }
+
+  const hasMoreOrders = orderGroups.length < ordersTotal
+  const groupedList = orderGroups   // ── CHANGED: backend already grouped ah anுppுthu, JSX same peraale use pannalam
 
   const text = '#111817'
   const subtext = '#7A8987'
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-        <div style={{ width: 34, height: 34, border: '3px solid rgba(12,64,68,0.15)', borderTop: '3px solid #0C4044', borderRadius: '50%', animation: 'ssc-spin 1s linear infinite' }} />
-        <span style={{ color: subtext, fontSize: 14 }}>Loading sales data...</span>
-        <style>{`@keyframes ssc-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 12, padding: '18px 32px',
+          background: 'rgba(253,253,252,0.94)', backdropFilter: 'blur(14px)',
+          borderBottom: '1px solid rgba(189,207,206,0.72)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.24)' }} />
+            <div>
+              <SkeletonText width="260px" height="17px" />
+              <div style={{ marginTop: 6 }}><SkeletonText width="320px" height="12px" /></div>
+            </div>
+          </div>
+          <SkeletonText width="90px" height="36px" />
+        </div>
+
+        <div style={{ padding: '28px 32px', paddingTop: 108 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 22, alignItems: 'start' }}>
+
+            {/* LEFT: tree skeleton */}
+            <div style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 14 }}>
+              <SkeletonText width="140px" height="12px" />
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[0, 1, 2, 3].map(i => (
+                  <div key={i} style={{ padding: '12px 14px', borderRadius: 12, border: '1.5px solid rgba(189,207,206,0.55)' }}>
+                    <SkeletonText width="70px" height="16px" />
+                    <div style={{ marginTop: 6 }}><SkeletonText width="90px" height="10px" /></div>
+                    <div style={{ marginTop: 4 }}><SkeletonText width="130px" height="13px" /></div>
+                    <div style={{ marginTop: 8 }}><SkeletonText width="80px" height="18px" /></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT: details skeleton */}
+            <div style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(189,207,206,0.2)' }} />
+                <div>
+                  <SkeletonText width="80px" height="10px" />
+                  <div style={{ marginTop: 6 }}><SkeletonText width="150px" height="16px" /></div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+                {[0, 1].map(i => (
+                  <div key={i} style={{ flex: 1, minWidth: 160, borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, border: '1px solid rgba(189,207,206,0.4)' }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 11, background: 'rgba(189,207,206,0.25)' }} />
+                    <div>
+                      <SkeletonText width="80px" height="10px" />
+                      <div style={{ marginTop: 6 }}><SkeletonText width="60px" height="22px" /></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{ background: 'rgba(253,253,252,0.85)', border: '1px solid rgba(189,207,206,0.6)', borderRadius: 14, padding: 16 }}>
+                    <div style={{ width: '100%', height: 130, borderRadius: 10, background: 'rgba(189,207,206,0.18)', marginBottom: 12 }} />
+                    <SkeletonText width="70%" height="14px" />
+                    <div style={{ marginTop: 8, marginBottom: 10, display: 'flex', gap: 6 }}>
+                      <SkeletonText width="50px" height="18px" />
+                      <SkeletonText width="50px" height="18px" />
+                    </div>
+                    {[0, 1, 2, 3].map(j => (
+                      <div key={j} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                        <SkeletonText width="40%" height="10px" />
+                        <SkeletonText width="30%" height="10px" />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     )
   }
@@ -302,7 +447,7 @@ const [selected, setSelected] = useState(null)
 
   const selCfg = selected ? ROLE_CFG[selected.type] : null
 
-  const displayRoot = period === 'today' ? filterTreeForToday(root) : root
+  const displayRoot = root   // ── CHANGED: filterTreeForToday nested data expect pannuthu, ippo lazy-load ah irukanum so remove pannirukom
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
@@ -432,13 +577,16 @@ const [selected, setSelected] = useState(null)
             <IconLink color="#0C4044" size={14} />
             <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#0C4044' }}>HIERARCHY TREE</span>
           </div>
-          {displayRoot ? (
+  {displayRoot ? (
   <TreeItem
     node={displayRoot}
     selectedId={selected ? `${selected.type}-${selected.id}` : null}
     onSelect={setSelected}
     pulseId={pulseId}
     period={period}
+    expandedChildren={expandedChildren}
+    loadingNode={loadingNode}
+    fetchChildren={fetchChildren}
   />
 ) : (
   <div style={{ padding: '24px 8px', textAlign: 'center', color: '#7A8987', fontSize: 12.5 }}>
@@ -488,18 +636,19 @@ const [selected, setSelected] = useState(null)
               </div>
 
               {/* product breakdown */}
-              {groupedList.length === 0 ? (
+              {groupedList.length === 0 && !ordersLoading ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '48px 0', color: subtext }}>
                   <IconEmpty color={subtext} />
                   <span style={{ fontSize: 13 }}>Idhu kku keela orders illa.</span>
                 </div>
               ) : (
+                <>
                 <div className="sprod-grid">
                   {groupedList.map((g, i) => {
                     const imgUrl = getImageUrl(g.image)
                     return (
                       <div
-                        key={g.key}
+                        key={`${g.product_name}-${g.owner?.id}-${i}`}
                         className="sprod-card"
                         onClick={() => g.owner && jumpToCustomer(g.owner)}
                         style={{
@@ -515,8 +664,6 @@ const [selected, setSelected] = useState(null)
                           )}
                         </div>
 
-                        {/* ── NEW: indha card ЕТHU customer-oda order-nu fixed-a top-la kaatrom.
-                             Click pannina antha customer-ku tree-la jump aagum ── */}
                         {g.owner && (
                           <div style={{
                             display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 8,
@@ -542,20 +689,30 @@ const [selected, setSelected] = useState(null)
                         </div>
                         <div className="sprod-row">
                           <span className="sprod-label">Quantity</span>
-                          <span style={{ fontWeight: 700 }}>{g.totalQty}</span>
+                          <span style={{ fontWeight: 700 }}>{g.total_qty}</span>
                         </div>
                         <div className="sprod-row">
                           <span className="sprod-label">Rate</span>
-                          <span style={{ fontWeight: 700 }}>₹{g.lastRate.toLocaleString('en-IN')}</span>
+                          <span style={{ fontWeight: 700 }}>₹{g.last_rate.toLocaleString('en-IN')}</span>
                         </div>
                         <div className="sprod-row">
                           <span className="sprod-label">Total</span>
-                          <span style={{ fontWeight: 800, color: '#BB8958' }}>₹{g.totalAmount.toLocaleString('en-IN')}</span>
+                          <span style={{ fontWeight: 800, color: '#BB8958' }}>₹{g.total_amount.toLocaleString('en-IN')}</span>
                         </div>
                       </div>
                     )
                   })}
                 </div>
+
+                {/* ── NEW: Load More — right panel product cards keezhe ── */}
+                {hasMoreOrders && !ordersLoadingMore && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+                    <button onClick={loadMoreOrders} style={{ padding: '10px 24px', background: '#0C4044', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, cursor: 'pointer' }}>
+                      Load More ({orderGroups.length} of {ordersTotal})
+                    </button>
+                  </div>
+                )}
+                </>
               )}
             </div>
           )}

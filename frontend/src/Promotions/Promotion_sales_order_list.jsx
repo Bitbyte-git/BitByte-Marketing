@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import api from "../api";
+import { SkeletonText } from "../components/Skeleton";
 
 function money(value) {
   const n = Number(value);
@@ -116,7 +117,14 @@ export default function PromotionSalesOrderList() {
         {error && <div className="psl-error">{error}</div>}
 
         <div className="psl-stats">
-          {isCustomerMode ? (
+          {loading ? (
+            [0, 1, 2].map(i => (
+              <div className="psl-stat" key={i}>
+                <SkeletonText width="70%" height="10px" />
+                <div style={{ marginTop: 8 }}><SkeletonText width="40%" height="26px" /></div>
+              </div>
+            ))
+          ) : isCustomerMode ? (
             <>
               <div className="psl-stat">
                 <div className="psl-stat-label">Total Customers</div>
@@ -169,7 +177,21 @@ export default function PromotionSalesOrderList() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr className="psl-loading-row"><td colSpan={6}>Loading...</td></tr>
+                  [0, 1, 2, 3, 4].map(i => (
+                    <tr key={i}>
+                      <td><SkeletonText width="30px" height="12px" /></td>
+                      <td><SkeletonText width="90px" height="12px" /></td>
+                      <td>
+                        <SkeletonText width="120px" height="13px" />
+                        <div style={{ marginTop: 4 }}>
+                          <SkeletonText width="140px" height="10px" />
+                        </div>
+                      </td>
+                      <td><SkeletonText width="90px" height="12px" /></td>
+                      <td><SkeletonText width="40px" height="20px" /></td>
+                      <td><SkeletonText width="80px" height="12px" /></td>
+                    </tr>
+                  ))
                 ) : rows.length === 0 ? (
                   <tr className="psl-loading-row">
                     <td colSpan={6}><div className="psl-empty">No records found.</div></td>
