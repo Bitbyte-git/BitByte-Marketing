@@ -387,7 +387,6 @@ const handleDelete = async (id) => {
 
       {/* ── NAVBAR ── */}
       <div style={{ background: glass, borderBottom: `1px solid ${border}`, padding: '18px 32px', display: 'flex', alignItems: 'center', gap: '16px', backdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 100, flexWrap: 'wrap', boxShadow: '0 18px 42px rgba(7,59,63,0.06)' }}>
-        <img src={logo} alt="BB" style={{ width: 48, height: 42, borderRadius: '8px', objectFit: 'contain', flexShrink: 0 }} />
 
         {/* Category tabs */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: 1 }}>

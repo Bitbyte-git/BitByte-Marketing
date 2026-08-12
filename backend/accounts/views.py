@@ -2099,24 +2099,21 @@ def _month_status_map():
         customer_status(c)
 
     for p in promotors:
-        own = get_target_status(own_counts.get(p['user_id'], 0))
-        child_statuses = [customer_status_cache[c['id']] for c in customers_by_promotor.get(p['id'], [])]
-        status_map[('promotor', p['id'])] = worst_status([own] + child_statuses)
+        # ── FIX: "own" venaam — Promotor kila irukka customer status mattum vachi decide pannanum ──
+        child_statuses = customer_status_cache and [customer_status_cache[c['id']] for c in customers_by_promotor.get(p['id'], [])]
+        status_map[('promotor', p['id'])] = worst_status(child_statuses) if customers_by_promotor.get(p['id']) else 'red'
 
     for sd in sub_dealers:
-        own = get_target_status(own_counts.get(sd['user_id'], 0))
         child_statuses = [status_map[('promotor', p['id'])] for p in promotors_by_sd.get(sd['id'], [])]
-        status_map[('sub_dealer', sd['id'])] = worst_status([own] + child_statuses)
+        status_map[('sub_dealer', sd['id'])] = worst_status(child_statuses) if child_statuses else 'red'
 
     for d in dealers:
-        own = get_target_status(own_counts.get(d['user_id'], 0))
         child_statuses = [status_map[('sub_dealer', sd['id'])] for sd in sds_by_dealer.get(d['id'], [])]
-        status_map[('dealer', d['id'])] = worst_status([own] + child_statuses)
+        status_map[('dealer', d['id'])] = worst_status(child_statuses) if child_statuses else 'red'
 
     for a in admins:
-        own = get_target_status(own_counts.get(a['user_id'], 0))
         child_statuses = [status_map[('dealer', d['id'])] for d in dealers_by_admin.get(a['id'], [])]
-        status_map[('admin', a['id'])] = worst_status([own] + child_statuses)
+        status_map[('admin', a['id'])] = worst_status(child_statuses) if child_statuses else 'red'
 
     return status_map
 
