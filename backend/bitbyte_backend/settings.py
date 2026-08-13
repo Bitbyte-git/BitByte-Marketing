@@ -129,8 +129,13 @@ CLOUDINARY_STORAGE = {
 
 
 # razonpay
-RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_T0JMJzijqftP5f")
-RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "CLm5lolSo1tLgZYh9fcwii5C")
+# RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_T0JMJzijqftP5f")
+# RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "CLm5lolSo1tLgZYh9fcwii5C")
+
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_live_TPEuY1US0S3cEE")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "HLu6rrcUu0hSi34QxaIm2cC8")
+
+
 
 MEDIA_URL = '/media/'
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

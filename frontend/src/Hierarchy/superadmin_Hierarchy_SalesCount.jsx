@@ -147,7 +147,12 @@ function TreeItem({ node, selectedId, onSelect, pulseId, expandedChildren, loadi
         <div className="stree-ordercount">
           <IconChart color="#0C4044" size={11} /> {node.order_count ?? 0} order{(node.order_count ?? 0) !== 1 ? 's' : ''}
         </div>
-        {isLoadingThis && <div style={{ fontSize: 10, color: '#7A8987', marginTop: 6 }}>Loading...</div>}
+        {/* ── CHANGED: plain "Loading..." text ku pathila skeleton bar ── */}
+        {isLoadingThis && (
+          <div style={{ marginTop: 8 }}>
+            <SkeletonText width="90px" height="10px" />
+          </div>
+        )}
       </div>
 
       {children && children.length > 0 && (
@@ -443,9 +448,50 @@ export default function SuperAdminHierarchySalesCount() {
             </div>
           </div>
 
-          {/* ══════════════════ RIGHT SIDE — touch pannala ══════════════════ */}
+          {/* ══════════════════ RIGHT SIDE — skeleton while loading fix ══════════════════ */}
           <div style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 24, boxShadow: '0 22px 58px rgba(7,59,63,0.06)' }}>
-            {selected && (
+            {selected && (ordersLoading ? (
+              // ── NEW: role/id change aana udanE, old data kaamikkama skeleton kaatuvom ──
+              <div key={`skeleton-${selected.type}-${selected.id}`} className="sfade-in">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(189,207,206,0.2)' }} />
+                  <div>
+                    <SkeletonText width="80px" height="10px" />
+                    <div style={{ marginTop: 6 }}><SkeletonText width="150px" height="16px" /></div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+                  {[0, 1].map(i => (
+                    <div key={i} style={{ flex: 1, minWidth: 160, borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, border: '1px solid rgba(189,207,206,0.4)' }}>
+                      <div style={{ width: 42, height: 42, borderRadius: 11, background: 'rgba(189,207,206,0.25)' }} />
+                      <div>
+                        <SkeletonText width="80px" height="10px" />
+                        <div style={{ marginTop: 6 }}><SkeletonText width="60px" height="22px" /></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ background: 'rgba(253,253,252,0.85)', border: '1px solid rgba(189,207,206,0.6)', borderRadius: 14, padding: 16 }}>
+                      <div style={{ width: '100%', height: 130, borderRadius: 10, background: 'rgba(189,207,206,0.18)', marginBottom: 12 }} />
+                      <SkeletonText width="70%" height="14px" />
+                      <div style={{ marginTop: 8, marginBottom: 10, display: 'flex', gap: 6 }}>
+                        <SkeletonText width="50px" height="18px" />
+                        <SkeletonText width="50px" height="18px" />
+                      </div>
+                      {[0, 1, 2, 3].map(j => (
+                        <div key={j} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                          <SkeletonText width="40%" height="10px" />
+                          <SkeletonText width="30%" height="10px" />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              // ── EXISTING real content — same as before, edhume change pannala ──
               <div key={`${selected.type}-${selected.id}`} className="sfade-in">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
                   <div className="sperson-icon" style={{ background: `linear-gradient(135deg, ${selCfg.color}33, ${selCfg.color}0d)`, border: `1.5px solid ${selCfg.color}`, boxShadow: `0 0 18px ${selCfg.color}33` }}>
@@ -524,7 +570,7 @@ export default function SuperAdminHierarchySalesCount() {
                   </div>
                 )}
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
