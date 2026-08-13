@@ -920,7 +920,7 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
         .sales-report-page{position:relative;overflow-x:hidden;}
         .sales-report-page::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 8% 0%,rgba(230,241,239,.95),transparent 34%),radial-gradient(circle at 92% 8%,rgba(201,154,58,.10),transparent 26%);pointer-events:none;z-index:0;}
         .sales-report-page > *{position:relative;z-index:1;}
-        .report-topbar{position:relative;z-index:100;background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(230,241,239,.86),rgba(255,252,248,.96)) !important;border-bottom:1px solid rgba(14,90,87,.14) !important;box-shadow:0 18px 42px rgba(14,90,87,.08);}
+.report-topbar{position:relative;background:transparent !important;border-bottom:none !important;box-shadow:none !important;}
         .report-brand-title{background:linear-gradient(90deg,#D71920,#F05C63,#C99A3A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
         .report-control,.report-action{min-height:44px !important;border-radius:14px !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 12px 24px rgba(14,90,87,.08) !important;}
         .print-card{position:relative;overflow:hidden;background:linear-gradient(145deg,#FFFFFF 0%,#FFFCF8 56%,#F2FAF8 100%) !important;border:1px solid rgba(14,90,87,.15) !important;border-radius:22px !important;box-shadow:0 24px 58px rgba(14,90,87,.12),inset 0 1px 0 rgba(255,255,255,.98) !important;}
@@ -960,8 +960,8 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
           @page { size: landscape; margin: 8mm; }
         }
       `}</style>
-      {/* Navbar */}
-      <div className="no-print report-topbar" style={{ padding: '18px 40px', borderBottom: `1px solid ${border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+    {/* Page toolbar — plain content, not a sticky navbar bar */}
+      <div className="no-print report-topbar" style={{ padding: '24px 40px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', maxWidth: '1500px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={() => { setGridSelectedNode(null); setSelectedLevel('own'); setSelectedNodeId('') }}

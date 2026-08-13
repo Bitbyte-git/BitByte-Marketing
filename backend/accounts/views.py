@@ -3448,6 +3448,8 @@ class RetailerPromotionListView(APIView):
             eligible = total_value >= self.SALES_THRESHOLD or total_customers >= self.CUSTOMER_COUNT_THRESHOLD
             if not eligible and cp.retailer_status == 'none':
                 continue
+            if cp.retailer_status == 'rejected':   # ── NEW: reject aana table-la kaamikkathu ──
+                continue
 
             results.append({
                 'user_id': creator_id,
@@ -3484,6 +3486,14 @@ class RetailerPromotionActionView(APIView):
         if action == 'reject':
             target_profile.retailer_status = 'rejected'
             target_profile.save(update_fields=['retailer_status'])
+            # ── NEW: rejection ah customer ku personal announcement ah anuppு ──
+            Announcement.objects.create(
+                title='Promotion Update',
+                message=f"Sorry {target_profile.first_name}, you're not eligible for promotion at this time.",
+                target_roles=[target_user.role],
+                target_user=target_user,
+                created_by=request.user,
+            )
             return Response({'message': 'Rejected'})
 
         if action == 'approve':
@@ -3625,6 +3635,8 @@ class WholesaleDealerPromotionListView(APIView):
             eligible = total_customers >= self.CUSTOMER_THRESHOLD and total_value >= self.SALES_THRESHOLD
             if not eligible and cp.wholesale_status == 'none':
                 continue
+            if cp.wholesale_status == 'rejected':   # ── NEW ──
+                continue
 
             results.append({
                 'user_id': creator_id,
@@ -3661,6 +3673,13 @@ class WholesaleDealerPromotionActionView(APIView):
         if action == 'reject':
             target_profile.wholesale_status = 'rejected'
             target_profile.save(update_fields=['wholesale_status'])
+            Announcement.objects.create(
+                title='Promotion Update',
+                message=f"Sorry {target_profile.first_name}, you're not eligible for promotion at this time.",
+                target_roles=[target_user.role],
+                target_user=target_user,
+                created_by=request.user,
+            )
             return Response({'message': 'Rejected'})
 
         if action == 'approve':
@@ -3776,6 +3795,8 @@ class DistributorPromotionListView(APIView):
             )
             if not eligible and cp.distributor_status == 'none':
                 continue
+            if cp.distributor_status == 'rejected':   # ── NEW ──
+                continue
 
             results.append({
                 'user_id': creator_id,
@@ -3813,6 +3834,13 @@ class DistributorPromotionActionView(APIView):
         if action == 'reject':
             target_profile.distributor_status = 'rejected'
             target_profile.save(update_fields=['distributor_status'])
+            Announcement.objects.create(
+                title='Promotion Update',
+                message=f"Sorry {target_profile.first_name}, you're not eligible for promotion at this time.",
+                target_roles=[target_user.role],
+                target_user=target_user,
+                created_by=request.user,
+            )
             return Response({'message': 'Rejected'})
 
         if action == 'approve':
@@ -3944,6 +3972,8 @@ class SuperStockistPromotionListView(APIView):
             )
             if not eligible and cp.super_stockist_status == 'none':
                 continue
+            if cp.super_stockist_status == 'rejected':   # ── NEW ──
+                continue
 
             results.append({
                 'user_id': creator_id,
@@ -3982,6 +4012,13 @@ class SuperStockistPromotionActionView(APIView):
         if action == 'reject':
             target_profile.super_stockist_status = 'rejected'
             target_profile.save(update_fields=['super_stockist_status'])
+            Announcement.objects.create(
+                title='Promotion Update',
+                message=f"Sorry {target_profile.first_name}, you're not eligible for promotion at this time.",
+                target_roles=[target_user.role],
+                target_user=target_user,
+                created_by=request.user,
+            )
             return Response({'message': 'Rejected'})
 
         if action == 'approve':
