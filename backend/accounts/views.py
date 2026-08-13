@@ -3395,7 +3395,11 @@ class RetailerPromotionListView(APIView):
             ).select_related('user').distinct()
         )
         if not creator_profiles:
-            return Response([])
+            return Response({
+                'results': [],
+                'approved_count': CustomerProfile.objects.filter(retailer_status='approved').count(),
+                'rejected_count': CustomerProfile.objects.filter(retailer_status='rejected').count(),
+            })
 
         creator_ids = [cp.user_id for cp in creator_profiles]
 
@@ -3465,7 +3469,11 @@ class RetailerPromotionListView(APIView):
             })
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
-        return Response(results)
+        return Response({
+            'results': results,
+            'approved_count': CustomerProfile.objects.filter(retailer_status='approved').count(),
+            'rejected_count': CustomerProfile.objects.filter(retailer_status='rejected').count(),
+        })
 
 
 class RetailerPromotionActionView(APIView):
@@ -3605,7 +3613,11 @@ class WholesaleDealerPromotionListView(APIView):
             ).select_related('user').distinct()
         )
         if not creator_profiles:
-            return Response([])
+            return Response({
+                'results': [],
+                'approved_count': PromotorProfile.objects.filter(wholesale_status='approved').count(),
+                'rejected_count': PromotorProfile.objects.filter(wholesale_status='rejected').count(),
+            })
 
         creator_ids = [cp.user_id for cp in creator_profiles]
 
@@ -3652,7 +3664,11 @@ class WholesaleDealerPromotionListView(APIView):
             })
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
-        return Response(results)
+        return Response({
+            'results': results,
+            'approved_count': PromotorProfile.objects.filter(wholesale_status='approved').count(),
+            'rejected_count': PromotorProfile.objects.filter(wholesale_status='rejected').count(),
+        })
 
 
 class WholesaleDealerPromotionActionView(APIView):
@@ -3741,7 +3757,11 @@ class DistributorPromotionListView(APIView):
             ).select_related('user').distinct()
         )
         if not creator_profiles:
-            return Response([])
+            return Response({
+                'results': [],
+                'approved_count': SubDealerProfile.objects.filter(distributor_status='approved').count(),
+                'rejected_count': SubDealerProfile.objects.filter(distributor_status='rejected').count(),
+            })
 
         creator_ids = [cp.user_id for cp in creator_profiles]
 
@@ -3814,7 +3834,11 @@ class DistributorPromotionListView(APIView):
             })
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
-        return Response(results)
+        return Response({
+            'results': results,
+            'approved_count': SubDealerProfile.objects.filter(distributor_status='approved').count(),
+            'rejected_count': SubDealerProfile.objects.filter(distributor_status='rejected').count(),
+        })
 
 class DistributorPromotionActionView(APIView):
     """Approve converts the SubDealer into a real Dealer; reject just marks it."""
@@ -3903,7 +3927,11 @@ class SuperStockistPromotionListView(APIView):
             ).select_related('user').distinct()
         )
         if not creator_profiles:
-            return Response([])
+            return Response({
+                'results': [],
+                'approved_count': DealerProfile.objects.filter(super_stockist_status='approved').count(),
+                'rejected_count': DealerProfile.objects.filter(super_stockist_status='rejected').count(),
+            })
 
         creator_ids = [cp.user_id for cp in creator_profiles]
 
@@ -3992,7 +4020,11 @@ class SuperStockistPromotionListView(APIView):
             })
 
         results.sort(key=lambda r: r['total_value'], reverse=True)
-        return Response(results)
+        return Response({
+            'results': results,
+            'approved_count': DealerProfile.objects.filter(super_stockist_status='approved').count(),
+            'rejected_count': DealerProfile.objects.filter(super_stockist_status='rejected').count(),
+        })
 
 class SuperStockistPromotionActionView(APIView):
     """Approve converts the Dealer into a real Admin; reject just marks it."""

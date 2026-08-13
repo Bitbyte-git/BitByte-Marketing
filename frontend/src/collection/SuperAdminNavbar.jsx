@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import logo from '../assets/logo.png'
 import api from '../api'
 
@@ -39,6 +39,167 @@ export default function SuperAdminNavbar({
   const [openMenu, setOpenMenu] = useState(null)
   const closeTimerRef = useRef(null)
 
+  // ── Gold Rate / Today Rates (moved from Dashboard) ──
+  const [showRatePopup, setShowRatePopup] = useState(false)
+  const [showTodayRates, setShowTodayRates] = useState(false)
+  const [metalPrices, setMetalPrices] = useState({
+    gold22k: null, gold24k: null, silver: null,
+    diamond18k: null, diamond22k: null, platinum92: null,
+  })
+  const [metalLoading, setMetalLoading] = useState(false)
+  const [dbRateDate, setDbRateDate] = useState(null)
+  const [rateForm, setRateForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    gold_22k: '', gold_24k: '', silver_999: '',
+    diamond_18k: '', diamond_22k: '', platinum_92: '',
+  })
+ const [rateMsg, setRateMsg] = useState('')
+  const [rateSaving, setRateSaving] = useState(false)
+
+  // ── Celebrations (moved from Dashboard) ──
+  const [showBirthdayList, setShowBirthdayList] = useState(false)
+  const [showAnniversaryList, setShowAnniversaryList] = useState(false)
+  const [showJoinDateList, setShowJoinDateList] = useState(false)
+  const [birthdayList, setBirthdayList] = useState([])
+  const [anniversaryList, setAnniversaryList] = useState([])
+  const [joinDateList, setJoinDateList] = useState([])
+  const [specialAnnForm, setSpecialAnnForm] = useState({ title: '', message: '', roles: [] })
+  const [showSpecialAnn, setShowSpecialAnn] = useState(false)
+  const [specialAnnMsg, setSpecialAnnMsg] = useState('')
+  const [specialAnnSending, setSpecialAnnSending] = useState(false)
+
+  // ── Announcements (moved from Dashboard) ──
+ const [showAnnouncement, setShowAnnouncement] = useState(false)
+  const [announcementForm, setAnnouncementForm] = useState({ title: '', message: '', roles: [] })
+  const [announcementMsg, setAnnouncementMsg] = useState('')
+  const [announcingSending, setAnnouncingSending] = useState(false)
+  const [showMyAnnouncements, setShowMyAnnouncements] = useState(false)
+  const [myAnnouncements, setMyAnnouncements] = useState([])
+
+  // ── Requests (moved from Dashboard) ──
+  const [showRequests, setShowRequests] = useState(false)
+  const [profileRequests, setProfileRequests] = useState([])
+  const [selectedRequest, setSelectedRequest] = useState(null)
+  const [requestMsg, setRequestMsg] = useState('')
+  const [proofModal, setProofModal] = useState(false)
+  const [proofUrl, setProofUrl] = useState('')
+  const [proofType, setProofType] = useState('')
+  const [proofLoading, setProofLoading] = useState(false)
+
+  const fetchProfileRequests = async () => {
+    try {
+      const res = await api.get('/profile-update-request/')
+      setProfileRequests(res.data)
+    } catch (err) {
+      setRequestMsg('Failed to load requests')
+    }
+  }
+
+  const approveProfileRequest = async (id) => {
+    try {
+      await api.post(`/profile-update-request/${id}/approve/`)
+      setRequestMsg('Request approved successfully!')
+      setSelectedRequest(null)
+      fetchProfileRequests()
+    } catch (err) {
+      setRequestMsg('Approve failed: ' + JSON.stringify(err.response?.data))
+    }
+  }
+
+  const fetchMyAnnouncements = async () => {
+    try {
+      const res = await api.get('/announcements/')
+      const sorted = [...res.data].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      setMyAnnouncements(sorted)
+    } catch { /* ignore */ }
+  }
+
+  const fetchCelebrations = async () => {
+    try {
+      const [adminsRes, dealerRes, sdRes, proRes, cusRes] = await Promise.allSettled([
+        api.get('/admins/'),
+        api.get('/dealers/list/'),
+        api.get('/sub-dealers/list/'),
+        api.get('/promotors/list/'),
+        api.get('/customers/'),
+      ])
+      const admins = adminsRes.status === 'fulfilled' ? adminsRes.value.data : []
+      const dealers = dealerRes.status === 'fulfilled' ? dealerRes.value.data : []
+      const sds = sdRes.status === 'fulfilled' ? sdRes.value.data : []
+      const pros = proRes.status === 'fulfilled' ? proRes.value.data : []
+      const cuss = cusRes.status === 'fulfilled' ? cusRes.value.data : []
+
+      const allMembers = [
+        ...admins.map(m => ({ ...m, _role: 'Admin', _id: m.admin_id, _roleColor: '#BDCFCE', _dob: m.dob, _ann: m.anniversary_date, _joined: m.user?.created_at || null })),
+        ...dealers.map(m => ({ ...m, _role: 'Dealer', _id: m.dealer_id, _roleColor: '#0C4044', _dob: m.dob, _ann: m.anniversary_date, _joined: m.created_at })),
+        ...sds.map(m => ({ ...m, _role: 'SubDealer', _id: m.sub_dealer_id, _roleColor: '#BB8958', _dob: m.dob, _ann: m.anniversary_date, _joined: m.created_at })),
+        ...pros.map(m => ({ ...m, _role: 'Promotor', _id: m.promotor_id, _roleColor: '#CCA881', _dob: m.dob, _ann: m.anniversary_date, _joined: m.created_at })),
+        ...cuss.map(m => ({ ...m, _role: 'Customer', _id: m.customer_id, _roleColor: '#C92035', _dob: m.dob || null, _ann: m.anniversary_date || null, _joined: m.user?.created_at || m.created_at || null })),
+      ]
+
+      const today = new Date()
+      const todayMD = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+      function parseDateLocal(str) {
+        if (!str) return null
+        const [y, m, d] = str.split('-').map(Number)
+        return new Date(y, m - 1, d)
+      }
+
+      const bdays = allMembers.filter(m => {
+        if (!m._dob) return false
+        const d = parseDateLocal(m._dob)
+        const md = `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        return md === todayMD
+      })
+      setBirthdayList(bdays)
+
+      const anns = allMembers.filter(m => {
+        if (!m._ann) return false
+        const d = parseDateLocal(m._ann)
+        const md = `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        return md === todayMD
+      })
+      setAnniversaryList(anns)
+
+      const joins = allMembers.filter(m => {
+        if (!m._joined) return false
+        const d = new Date(m._joined)
+        const md = `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        return md === todayMD
+      }).map(m => {
+        const joinedDate = new Date(m._joined)
+        const years = today.getFullYear() - joinedDate.getFullYear()
+        return { ...m, _yearsCompleted: years }
+      })
+      setJoinDateList(joins)
+    } catch (e) { console.error('fetchCelebrations error:', e) }
+  }
+
+  const fetchMetalPrices = async () => {
+    setMetalLoading(true)
+    try {
+      const res = await api.get('/metal-rates/')
+      const d = res.data
+      setMetalPrices({
+        gold22k: d.gold_22k ? parseFloat(d.gold_22k) : null,
+        gold24k: d.gold_24k ? parseFloat(d.gold_24k) : null,
+        silver: d.silver_999 ? parseFloat(d.silver_999) : null,
+        diamond18k: d.diamond_18k ? parseFloat(d.diamond_18k) : null,
+        diamond22k: d.diamond_22k ? parseFloat(d.diamond_22k) : null,
+        platinum92: d.platinum_92 ? parseFloat(d.platinum_92) : null,
+      })
+      setDbRateDate(d.date)
+    } catch (e) {
+      setMetalPrices({ gold22k: null, gold24k: null, silver: null, diamond18k: null, diamond22k: null, platinum92: null })
+      setDbRateDate(null)
+    } finally {
+      setMetalLoading(false)
+    }
+  }
+
+  useEffect(() => { fetchMetalPrices(); fetchCelebrations(); fetchMyAnnouncements(); fetchProfileRequests() }, [])
+
   const openMenuNow = (label) => {
     clearTimeout(closeTimerRef.current)
     setOpenMenu(label)
@@ -75,20 +236,6 @@ export default function SuperAdminNavbar({
     { keywords: ['requests', 'profile request'], path: '/super-admin?open=requests' },
     { keywords: ['send announcement'], path: '/super-admin?open=announcement' },
     { keywords: ['my announcements'], path: '/super-admin?open=myannouncements' },
-    -    { keywords: ['today birthday', 'birthday'], path: '/super-admin' },
--    { keywords: ['work anniversary', 'join date', 'join anniversary'], path: '/super-admin' },
--    { keywords: ['anniversary'], path: '/super-admin' },
--    { keywords: ['gold rate', 'today rate'], path: '/super-admin' },
--    { keywords: ['requests', 'profile request'], path: '/super-admin' },
--    { keywords: ['send announcement'], path: '/super-admin' },
--    { keywords: ['my announcements'], path: '/super-admin' },
-+    { keywords: ['today birthday', 'birthday'], path: '/super-admin?open=birthday' },
-+    { keywords: ['work anniversary', 'join date', 'join anniversary'], path: '/super-admin?open=joindate' },
-+    { keywords: ['anniversary'], path: '/super-admin?open=anniversary' },
-+    { keywords: ['gold rate', 'today rate'], path: '/super-admin?open=rate' },
-+    { keywords: ['requests', 'profile request'], path: '/super-admin?open=requests' },
-+    { keywords: ['send announcement'], path: '/super-admin?open=announcement' },
-+    { keywords: ['my announcements'], path: '/super-admin?open=myannouncements' },
   ]
 
   const submitVoiceSearch = async (query) => {
@@ -209,21 +356,21 @@ export default function SuperAdminNavbar({
   }
 
   const management = [
-    ['Gold Rate', () => run(onGoldRate, '/super-admin')],
+    ['Gold Rate', () => setShowRatePopup(true)],
     ['Add Product', () => navigate('/add-product')],
     ['Orders', () => navigate('/admin-orders')],
-    ['Requests', () => run(onRequests, '/super-admin')],
+    ['Requests', () => { setShowRequests(true); setRequestMsg('') }],
     ['Hierarchy Grid', () => navigate('/superadmin-hierarchy-grid')],
     ['Hierarchy Tree', () => navigate('/superadmin-hierarchy')],
   ]
   const celebrations = [
-    ["Today's Birthdays", () => run(onBirthdays, '/super-admin')],
-    ["Today's Anniversaries", () => run(onAnniversaries, '/super-admin')],
-    ['Work Anniversaries', () => run(onWorkAnniversaries, '/super-admin')],
+    ["Today's Birthdays", () => setShowBirthdayList(true)],
+    ["Today's Anniversaries", () => setShowAnniversaryList(true)],
+    ['Work Anniversaries', () => setShowJoinDateList(true)],
   ]
   const announcements = [
-    ['Send Announcement', () => run(onSendAnnouncement, '/super-admin')],
-    ['My Announcements', () => run(onMyAnnouncements, '/super-admin')],
+    ['Send Announcement', () => { setShowAnnouncement(true); setAnnouncementMsg('') }],
+    ['My Announcements', () => { setShowMyAnnouncements(true); fetchMyAnnouncements() }],
   ]
   const coins = [
     ['Buy Coin', () => navigate('/buy-coin')],
@@ -258,7 +405,20 @@ export default function SuperAdminNavbar({
       <button className="san-menu-trigger" type="button">{label}<Icon name="chevron" size={15} /></button>
       <div className="san-menu-dropdown">
         <div className="san-menu-title"><span>D</span>{label}</div>
-        {items.map(([text, action]) => <button key={text} type="button" className="san-menu-link" onClick={action}>{text}<b>-&gt;</b></button>)}
+        {items.map(([text, action]) => (
+          <button
+            key={text}
+            type="button"
+            className="san-menu-link"
+            onClick={() => {
+              clearTimeout(closeTimerRef.current)
+              setOpenMenu(null)
+              action()
+            }}
+          >
+            {text}<b>-&gt;</b>
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -332,6 +492,7 @@ export default function SuperAdminNavbar({
   .san-menu-trigger { min-width: 160px; height: 54px; }
   .san-actions { border-left: 0; overflow: auto; }
   .san-action { height: 52px; min-width: 140px; }
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 }
       `}</style>
       <div className="san-shell">
@@ -345,7 +506,7 @@ export default function SuperAdminNavbar({
               <button className="san-side-link is-active" type="button" onClick={() => navigate('/super-admin')}><Icon name="home" />Dashboard</button>
               <button className="san-side-link" type="button" onClick={() => navigate('/add-product')}><Icon name="box" />Products</button>
               <button className="san-side-link" type="button" onClick={() => navigate('/admin-orders')}><Icon name="orders" />Orders</button>
-              <button className="san-side-link" type="button" onClick={() => run(onTodayRates, '/super-admin')}><Icon name="rate" />Gold Rate</button>
+<button className="san-side-link" type="button" onClick={() => setShowTodayRates(true)}><Icon name="rate" />Gold Rate</button>
               <button className="san-side-link" type="button"><Icon name="settings" />Settings</button>
             </nav>
             <div className="san-quick">
@@ -392,12 +553,856 @@ export default function SuperAdminNavbar({
               <MenuGroup label="Payment" items={payment} />  
             </div>
             <div className="san-actions">
-              <button className="san-action" type="button" onClick={() => run(onTodayRates, '/super-admin')}><Icon name="rate" />Today Rates</button>
+<button className="san-action" type="button" onClick={() => setShowTodayRates(true)}><Icon name="rate" />Today Rates</button>
               <button className="san-action logout" type="button" onClick={logout}><Icon name="logout" />Logout</button>
             </div>
           </div>
         </header>
       </div>
+
+      {/* ── RATE ENTRY POPUP ── */}
+      {showRatePopup && (
+        <div
+          onClick={() => setShowRatePopup(false)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(17,24,23,0.45)',
+            backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+            zIndex: 1300,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF6ED 100%)',
+              border: '1px solid rgba(204,168,129,0.3)',
+              borderRadius: '24px',
+              width: '95%', maxWidth: '640px',
+              maxHeight: '95vh',
+              overflowY: 'auto',
+              padding: '32px 36px',
+              boxShadow: '0 40px 90px rgba(17,24,23,0.28), 0 0 0 1px rgba(204,168,129,0.08)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{
+                  width: '42px', height: '42px', borderRadius: '12px',
+                  background: 'rgba(204,168,129,0.15)', border: '1px solid rgba(204,168,129,0.4)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2v4M8 6h8l3 5-3 9H8l-3-9 3-5z"/>
+                    <path d="M9.5 12c0-1.1.9-2 2.5-2s2.5 1 2.5 2-1.5 1.5-2.5 2-2.5.9-2.5 2 1.1 2 2.5 2 2.5-.9 2.5-2"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '16px' }}>ENTER METAL RATES</div>
+                  <div style={{ color: '#7A8987', fontSize: '12px', marginTop: '2px' }}>
+                    {dbRateDate ? `Current: ${dbRateDate}` : 'No rate entered yet'}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRatePopup(false)}
+                style={{
+                  background: 'rgba(201,32,53,0.12)', border: '1px solid rgba(201,32,53,0.3)',
+                  color: '#C92035', borderRadius: '50%', width: '34px', height: '34px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            {rateMsg && (
+              <div style={{
+                background: rateMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)',
+                border: `1px solid ${rateMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`,
+                color: rateMsg.includes('✅') ? '#0C4044' : '#C92035',
+                borderRadius: '12px', padding: '13px 16px', fontSize: '13px', marginBottom: '18px'
+              }}>
+                {rateMsg}
+              </div>
+            )}
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                Date *
+              </label>
+              <input
+                type="date"
+                value={rateForm.date}
+                onChange={e => setRateForm({ ...rateForm, date: e.target.value })}
+                style={{ width: '100%', background: '#FDFDFC', border: `1px solid #BDCFCE`, borderRadius: '12px', padding: '13px 16px', color: '#111817', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', color: '#CCA881', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Gold 22K</label>
+                <input
+                  type="number" placeholder="e.g. 12800"
+                  value={rateForm.gold_22k}
+                  onChange={e => setRateForm({ ...rateForm, gold_22k: e.target.value })}
+                  style={{ width: '100%', background: '#FDFDFC', border: `1px solid rgba(204,168,129,0.4)`, borderRadius: '12px', padding: '13px 16px', color: '#CCA881', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', color: '#CCA881', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Gold 24K</label>
+                <input
+                  type="number" placeholder="e.g. 13900"
+                  value={rateForm.gold_24k}
+                  onChange={e => setRateForm({ ...rateForm, gold_24k: e.target.value })}
+                  style={{ width: '100%', background: '#FDFDFC', border: `1px solid rgba(204,168,129,0.4)`, borderRadius: '12px', padding: '13px 16px', color: '#CCA881', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', color: '#53615F', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Silver 999</label>
+                <input
+                  type="number" placeholder="e.g. 225"
+                  value={rateForm.silver_999}
+                  onChange={e => setRateForm({ ...rateForm, silver_999: e.target.value })}
+                  style={{ width: '100%', background: '#FDFDFC', border: `1px solid rgba(192,192,192,0.4)`, borderRadius: '12px', padding: '13px 16px', color: '#53615F', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Diamond 18K</label>
+                <input
+                  type="number" placeholder="e.g. 45000"
+                  value={rateForm.diamond_18k}
+                  onChange={e => setRateForm({ ...rateForm, diamond_18k: e.target.value })}
+                  style={{ width: '100%', background: '#FFFFFF', border: `1px solid #BDCFCE`, borderRadius: '12px', padding: '13px 16px', color: '#073B3F', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', color: '#0C4044', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Diamond 22K</label>
+                <input
+                  type="number" placeholder="e.g. 55000"
+                  value={rateForm.diamond_22k}
+                  onChange={e => setRateForm({ ...rateForm, diamond_22k: e.target.value })}
+                  style={{ width: '100%', background: '#FDFDFC', border: `1px solid rgba(165,243,252,0.4)`, borderRadius: '12px', padding: '13px 16px', color: '#0C4044', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>Platinum 92</label>
+                <input
+                  type="number" placeholder="e.g. 3200"
+                  value={rateForm.platinum_92}
+                  onChange={e => setRateForm({ ...rateForm, platinum_92: e.target.value })}
+                  style={{ width: '100%', background: '#FFFFFF', border: `1px solid #BDCFCE`, borderRadius: '12px', padding: '13px 16px', color: '#073B3F', fontSize: '15px', fontWeight: 700, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                />
+              </div>
+            </div>
+
+            <button
+              disabled={rateSaving}
+              onClick={async () => {
+                if (!rateForm.date || !rateForm.gold_22k || !rateForm.gold_24k || !rateForm.silver_999) {
+                  setRateMsg('❌ Gold and Silver fields are required.')
+                  return
+                }
+                setRateSaving(true)
+                try {
+                  await api.post('/metal-rates/', {
+                    date: rateForm.date,
+                    gold_22k: rateForm.gold_22k,
+                    gold_24k: rateForm.gold_24k,
+                    silver_999: rateForm.silver_999,
+                    diamond_18k: rateForm.diamond_18k || 0,
+                    diamond_22k: rateForm.diamond_22k || 0,
+                    platinum_92: rateForm.platinum_92 || 0,
+                  })
+                  setRateMsg('✅ Rate saved successfully!')
+                  fetchMetalPrices()
+                  setTimeout(() => setShowRatePopup(false), 1400)
+                } catch (err) {
+                  setRateMsg('❌ Failed: ' + JSON.stringify(err.response?.data))
+                }
+                setRateSaving(false)
+              }}
+              style={{
+                marginTop: '22px',
+                width: '100%', padding: '15px',
+                background: rateSaving ? 'rgba(204,168,129,0.3)' : 'linear-gradient(135deg,#CCA881,#BB8958)',
+                border: 'none', borderRadius: '14px',
+                fontWeight: 800, color: rateSaving ? '#CCA881' : '#FDFDFC',
+                fontSize: '15px', cursor: rateSaving ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              }}
+            >
+              {rateSaving ? 'Saving...' : 'Save Rate'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── TODAY RATES MODAL ── */}
+      {showTodayRates && (
+        <div
+          onClick={() => setShowTodayRates(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF6ED 100%)', border: '1px solid rgba(204,168,129,0.28)', borderRadius: '24px', width: '95%', maxWidth: '480px', maxHeight: '95vh', overflowY: 'auto', padding: '26px 32px', boxShadow: '0 40px 90px rgba(17,24,23,0.28), 0 0 0 1px rgba(204,168,129,0.08)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '13px', background: 'linear-gradient(145deg,rgba(12,64,68,0.14),rgba(12,64,68,0.06))', border: '1px solid rgba(12,64,68,0.26)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ color: '#0C4044', fontWeight: 900, fontSize: '15px' }}>TODAY'S METAL RATES</div>
+                  <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>
+                    {dbRateDate ? new Date(dbRateDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'No rate entered yet'}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTodayRates(false)}
+                style={{ background: 'rgba(201,32,53,0.12)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            {[
+              { label: 'Gold 22K', color: '#8A5A25', rgb: '204,168,129', value: metalPrices.gold22k },
+              { label: 'Gold 24K', color: '#8A5A25', rgb: '204,168,129', value: metalPrices.gold24k },
+              { label: 'Silver 999', color: '#0C4044', rgb: '12,64,68', value: metalPrices.silver },
+              { label: 'Diamond 18K', color: '#53615F', rgb: '209,223,222', value: metalPrices.diamond18k },
+              { label: 'Diamond 22K', color: '#0C4044', rgb: '12,64,68', value: metalPrices.diamond22k },
+              { label: 'Platinum 92', color: '#53615F', rgb: '231,237,236', value: metalPrices.platinum92 },
+            ].map(item => (
+              <div key={item.label} style={{ background: '#FFFFFF', border: `1px solid rgba(${item.rgb},0.3)`, borderRadius: '14px', padding: '12px 18px', marginBottom: '9px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ color: item.color, fontWeight: 800, fontSize: '13px' }}>{item.label}</div>
+                  <div style={{ color: '#53615F', fontSize: '10px', fontWeight: 600, marginTop: '2px' }}>per gram</div>
+                </div>
+                <div style={{ color: item.color, fontWeight: 900, fontSize: '17px', fontFamily: 'monospace' }}>
+                  {item.value ? item.value.toFixed(2) : <span style={{ color: '#7A8987', fontSize: '13px' }}>Not set</span>}
+                </div>
+              </div>
+            ))}
+
+            <button
+              onClick={() => { setShowTodayRates(false); setShowRatePopup(true); setRateMsg('') }}
+              style={{ width: '100%', marginTop: '6px', padding: '14px', background: 'linear-gradient(135deg,#CCA881,#BB8958)', border: 'none', borderRadius: '14px', fontWeight: 800, color: '#FDFDFC', fontSize: '14px', cursor: 'pointer' }}
+            >
+              Update Rates
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── BIRTHDAY LIST MODAL ── */}
+      {showBirthdayList && (
+        <div onClick={() => setShowBirthdayList(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FDF0F1 100%)', border: '1px solid rgba(201,32,53,0.22)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 90px rgba(17,24,23,0.24)' }}>
+            <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(201,32,53,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(145deg,rgba(201,32,53,0.16),rgba(201,32,53,0.08))', border: '1px solid rgba(201,32,53,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 21h16v-7a4 4 0 00-4-4H8a4 4 0 00-4 4v7z"/><path d="M4 17c1 0 1.5-1 2.5-1s1.5 1 2.5 1 1.5-1 2.5-1 1.5 1 2.5 1 1.5-1 2.5-1"/><path d="M12 10V6M9 6c0-1 1-1 1-2s-1-1-1-2M15 6c0-1-1-1-1-2s1-1 1-2"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ color: '#C92035', fontWeight: 800, fontSize: '14px' }}>TODAY'S BIRTHDAYS</div>
+                  <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                </div>
+              </div>
+              <button onClick={() => setShowBirthdayList(false)} style={{ background: 'rgba(201,32,53,0.12)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {birthdayList.length === 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: '#7A8987', padding: '50px 0', fontSize: '14px' }}>
+                  No birthdays today
+                </div>
+              ) : birthdayList.map((m, i) => (
+                <div
+                  key={i}
+                  onClick={() => {
+                    setSpecialAnnForm({
+                      title: `Happy Birthday ${m.first_name} ${m.last_name || ''} (${m._id})`,
+                      message: `By BitByte Technologies — Wishing you a wonderful birthday! May this special day bring you joy, happiness, and all the success you deserve. Here's to another amazing year! 🎉🎂`,
+                      roles: ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
+                    })
+                    setShowBirthdayList(false)
+                    setShowSpecialAnn(true)
+                    setSpecialAnnMsg('')
+                  }}
+                  style={{ background: '#FFFFFF', border: '1px solid rgba(201,32,53,0.2)', borderRadius: '16px', padding: '16px 20px', cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: 'rgba(201,32,53,0.1)', color: m._roleColor, border: '1px solid rgba(201,32,53,0.3)' }}>{m._role}</span>
+                        <span style={{ color: '#C92035', fontFamily: 'monospace', fontSize: '10px' }}>{m._id}</span>
+                      </div>
+                      <div style={{ color: '#111817', fontWeight: 700, fontSize: '14px' }}>{m.first_name} {m.last_name || ''}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#7A8987', fontSize: '11px', marginTop: '3px' }}>
+                        {new Date(m._dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long' })}
+                      </div>
+                    </div>
+                    <div style={{ color: '#C92035', fontSize: '11px', fontWeight: 700 }}>Click to Wish</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ANNIVERSARY LIST MODAL ── */}
+      {showAnniversaryList && (
+        <div onClick={() => setShowAnniversaryList(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF6ED 100%)', border: '1px solid rgba(204,168,129,0.28)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 90px rgba(17,24,23,0.24)' }}>
+            <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(204,168,129,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(145deg,rgba(204,168,129,0.2),rgba(204,168,129,0.1))', border: '1px solid rgba(204,168,129,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="15" r="6"/><path d="M9 9l3-6 3 6" strokeLinejoin="round"/></svg>
+                </div>
+                <div>
+                  <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '14px' }}>TODAY'S ANNIVERSARIES</div>
+                  <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                </div>
+              </div>
+              <button onClick={() => setShowAnniversaryList(false)} style={{ background: 'rgba(201,32,53,0.12)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {anniversaryList.length === 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: '#7A8987', padding: '50px 0', fontSize: '14px' }}>
+                  No anniversaries today
+                </div>
+              ) : anniversaryList.map((m, i) => (
+                <div
+                  key={i}
+                  onClick={() => {
+                    setSpecialAnnForm({
+                      title: `🎉 Happy Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
+                      message: `By BitByte Technologies — Wishing you a beautiful anniversary! May your bond grow stronger with each passing year. Here's to celebrating love and togetherness!`,
+                      roles: ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
+                    })
+                    setShowAnniversaryList(false)
+                    setShowSpecialAnn(true)
+                    setSpecialAnnMsg('')
+                  }}
+                  style={{ background: '#FFFFFF', border: '1px solid rgba(204,168,129,0.24)', borderRadius: '16px', padding: '16px 20px', cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: 'rgba(204,168,129,0.15)', color: '#CCA881', border: '1px solid rgba(204,168,129,0.35)' }}>{m._role}</span>
+                        <span style={{ color: '#CCA881', fontFamily: 'monospace', fontSize: '10px' }}>{m._id}</span>
+                      </div>
+                      <div style={{ color: '#111817', fontWeight: 700, fontSize: '14px' }}>{m.first_name} {m.last_name || ''}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#7A8987', fontSize: '11px', marginTop: '3px' }}>
+                        {new Date(m._ann).toLocaleDateString('en-IN', { day: '2-digit', month: 'long' })}
+                      </div>
+                    </div>
+                    <div style={{ color: '#CCA881', fontSize: '11px', fontWeight: 700 }}>Click to Wish</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── JOIN DATE LIST MODAL ── */}
+      {showJoinDateList && (
+        <div onClick={() => setShowJoinDateList(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF3E9 100%)', border: '1px solid rgba(187,137,88,0.28)', borderRadius: '24px', width: '95%', maxWidth: '500px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 90px rgba(17,24,23,0.24)' }}>
+            <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(187,137,88,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(145deg,rgba(187,137,88,0.2),rgba(187,137,88,0.1))', border: '1px solid rgba(187,137,88,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BB8958" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 4h8v6a4 4 0 01-8 0V4z"/><path d="M8 5H5a2 2 0 002 4M16 5h3a2 2 0 01-2 4"/><path d="M12 14v3M9 21h6M9 21l1-4h4l1 4"/></svg>
+                </div>
+                <div>
+                  <div style={{ color: '#BB8958', fontWeight: 800, fontSize: '14px' }}>WORK ANNIVERSARIES</div>
+                  <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                </div>
+              </div>
+              <button onClick={() => setShowJoinDateList(false)} style={{ background: 'rgba(201,32,53,0.12)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {joinDateList.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', textAlign: 'center', padding: '60px 0' }}>
+                  <span style={{ color: '#7A8987', fontSize: '14px', fontWeight: 600 }}>No work anniversaries today</span>
+                </div>
+              ) : joinDateList.map((m, i) => (
+                <div
+                  key={i}
+                  onClick={() => {
+                    const yrs = m._yearsCompleted
+                    const ordinal = yrs === 1 ? '1st' : yrs === 2 ? '2nd' : yrs === 3 ? '3rd' : `${yrs}th`
+                    setSpecialAnnForm({
+                      title: `🎉 Happy ${ordinal} Work Anniversary ${m.first_name} ${m.last_name || ''} (${m._id})`,
+                      message: `By BitByte Technologies — Congratulations on completing ${yrs} amazing year${yrs > 1 ? 's' : ''} with us! Your dedication and hard work are truly valued. Here's to many more years of success together!`,
+                      roles: ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
+                    })
+                    setShowJoinDateList(false)
+                    setShowSpecialAnn(true)
+                    setSpecialAnnMsg('')
+                  }}
+                  style={{ background: '#FFFFFF', border: '1px solid rgba(187,137,88,0.24)', borderRadius: '16px', padding: '16px 20px', cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: 'rgba(187,137,88,0.15)', color: '#BB8958', border: '1px solid rgba(187,137,88,0.35)' }}>{m._role}</span>
+                        <span style={{ color: '#BB8958', fontFamily: 'monospace', fontSize: '10px' }}>{m._id}</span>
+                      </div>
+                      <div style={{ color: '#111817', fontWeight: 700, fontSize: '14px' }}>{m.first_name} {m.last_name || ''}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#BB8958', fontSize: '12px', fontWeight: 700, marginTop: '3px' }}>
+                        {m._yearsCompleted === 1 ? '1st' : m._yearsCompleted === 2 ? '2nd' : m._yearsCompleted === 3 ? '3rd' : `${m._yearsCompleted}th`} Year Anniversary
+                      </div>
+                      <div style={{ color: '#7A8987', fontSize: '11px' }}>Joined: {new Date(m._joined).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                    </div>
+                    <div style={{ color: '#BB8958', fontSize: '11px', fontWeight: 700 }}>Click to Wish</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SPECIAL ANNOUNCEMENT MODAL (Birthday/Anniversary/JoinDate) ── */}
+      {showSpecialAnn && (
+        <div onClick={() => setShowSpecialAnn(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.85)', backdropFilter: 'blur(12px)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#FDFDFC', border: '1px solid rgba(187,137,88,0.3)', borderRadius: '24px', width: '95%', maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(187,137,88,0.15)', border: '1px solid rgba(187,137,88,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}></div>
+                <div>
+                  <div style={{ color: '#BB8958', fontWeight: 800, fontSize: '15px' }}>SEND ANNOUNCEMENT</div>
+                  <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>Review & send the wish</div>
+                </div>
+              </div>
+              <button onClick={() => setShowSpecialAnn(false)} style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+            </div>
+            {specialAnnMsg && (
+              <div style={{ background: specialAnnMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${specialAnnMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: specialAnnMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '13px 16px', fontSize: '13px', marginBottom: '18px' }}>
+                {specialAnnMsg}
+              </div>
+            )}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Announcement Title</label>
+              <input
+                value={specialAnnForm.title}
+                onChange={e => setSpecialAnnForm({ ...specialAnnForm, title: e.target.value })}
+                style={{ width: '100%', background: '#FDFDFC', border: '1px solid #BDCFCE', borderRadius: '12px', padding: '13px 16px', color: '#111817', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Message</label>
+              <textarea
+                value={specialAnnForm.message}
+                onChange={e => setSpecialAnnForm({ ...specialAnnForm, message: e.target.value })}
+                rows={4}
+                style={{ width: '100%', background: '#FDFDFC', border: '1px solid #BDCFCE', borderRadius: '12px', padding: '13px 16px', color: '#111817', fontSize: '14px', outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.6' }}
+              />
+            </div>
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' }}>Send To</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                {[
+                  { key: 'admin', label: 'Admin', color: '#53615F' },
+                  { key: 'dealer', label: 'Dealer', color: '#0C4044' },
+                  { key: 'sub_dealer', label: 'Sub Dealer', color: '#BB8958' },
+                  { key: 'promotor', label: 'Promotor', color: '#CCA881' },
+                  { key: 'customer', label: 'Customer', color: '#C92035' },
+                ].map(role => {
+                  const checked = specialAnnForm.roles.includes(role.key)
+                  return (
+                    <div key={role.key}
+                      onClick={() => {
+                        const updated = checked ? specialAnnForm.roles.filter(x => x !== role.key) : [...specialAnnForm.roles, role.key]
+                        setSpecialAnnForm({ ...specialAnnForm, roles: updated })
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '10px', cursor: 'pointer', background: checked ? `${role.color}22` : `${role.color}09`, border: `1.5px solid ${checked ? `${role.color}99` : `${role.color}33`}` }}
+                    >
+                      <div style={{ width: '14px', height: '14px', borderRadius: '4px', border: `2px solid ${role.color}`, background: checked ? role.color : 'transparent' }} />
+                      <span style={{ color: checked ? role.color : '#7A8987', fontSize: '12px', fontWeight: checked ? 700 : 500 }}>{role.label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            <button
+              disabled={specialAnnSending}
+              onClick={async () => {
+                if (!specialAnnForm.title.trim() || !specialAnnForm.message.trim()) { setSpecialAnnMsg('Title and Message required.'); return }
+                if (specialAnnForm.roles.length === 0) { setSpecialAnnMsg('Select at least one role.'); return }
+                setSpecialAnnSending(true)
+                try {
+                  await api.post('/announcements/', { title: specialAnnForm.title, message: specialAnnForm.message, target_roles: specialAnnForm.roles })
+                  setSpecialAnnMsg('Announcement sent successfully!')
+                  fetchMyAnnouncements()
+                  setTimeout(() => setShowSpecialAnn(false), 1500)
+                } catch (err) {
+                  setSpecialAnnMsg('Failed: ' + JSON.stringify(err.response?.data))
+                }
+                setSpecialAnnSending(false)
+              }}
+              style={{ width: '100%', padding: '14px', background: specialAnnSending ? 'rgba(187,137,88,0.3)' : 'linear-gradient(90deg,#BB8958,#BB8958)', border: 'none', borderRadius: '12px', fontWeight: 800, color: specialAnnSending ? '#BB8958' : '#111817', fontSize: '15px', cursor: specialAnnSending ? 'not-allowed' : 'pointer' }}
+            >
+              {specialAnnSending ? 'Sending...' : 'Send Announcement'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── ANNOUNCEMENT SEND MODAL ── */}
+      {showAnnouncement && (
+        <div onClick={() => setShowAnnouncement(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#FBF3E9 100%)', border: '1px solid rgba(187,137,88,0.28)', borderRadius: '24px', width: '95%', maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto', padding: '32px 36px', boxShadow: '0 40px 90px rgba(17,24,23,0.28)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '26px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '13px', background: 'linear-gradient(145deg,rgba(187,137,88,0.22),rgba(187,137,88,0.1))', border: '1px solid rgba(187,137,88,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#BB8958" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10v4a1 1 0 001 1h2l6 4V5L6 9H4a1 1 0 00-1 1z"/><path d="M16 8a4 4 0 010 8M19 6a7 7 0 010 12"/></svg>
+                </div>
+                <div>
+                  <div style={{ color: '#BB8958', fontWeight: 800, fontSize: '15px' }}>SEND ANNOUNCEMENT</div>
+                  <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>Notify selected roles instantly</div>
+                </div>
+              </div>
+              <button onClick={() => setShowAnnouncement(false)} style={{ background: 'rgba(201,32,53,0.12)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            {announcementMsg && (
+              <div style={{ background: announcementMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${announcementMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: announcementMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '13px 16px', fontSize: '13px', marginBottom: '18px' }}>
+                {announcementMsg}
+              </div>
+            )}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Announcement Title *</label>
+              <input
+                value={announcementForm.title}
+                onChange={e => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
+                placeholder="e.g. Tomorrow Leave, Low Orders Alert..."
+                style={{ width: '100%', background: '#FDFDFC', border: '1px solid #BDCFCE', borderRadius: '12px', padding: '13px 16px', color: '#111817', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Message *</label>
+              <textarea
+                value={announcementForm.message}
+                onChange={e => setAnnouncementForm({ ...announcementForm, message: e.target.value })}
+                rows={4}
+                placeholder="Type your announcement here..."
+                style={{ width: '100%', background: '#FDFDFC', border: '1px solid #BDCFCE', borderRadius: '12px', padding: '13px 16px', color: '#111817', fontSize: '14px', outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.6' }}
+              />
+            </div>
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', color: '#7A8987', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '12px' }}>Send To (Select Roles) *</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                {[
+                  { key: 'admin', label: 'Admin', color: '#53615F' },
+                  { key: 'dealer', label: 'Dealer', color: '#0C4044' },
+                  { key: 'sub_dealer', label: 'Sub Dealer', color: '#BB8958' },
+                  { key: 'promotor', label: 'Promotor', color: '#CCA881' },
+                  { key: 'customer', label: 'Customer', color: '#C92035' },
+                ].map(role => {
+                  const checked = announcementForm.roles.includes(role.key)
+                  return (
+                    <div key={role.key}
+                      onClick={() => {
+                        const updated = checked ? announcementForm.roles.filter(x => x !== role.key) : [...announcementForm.roles, role.key]
+                        setAnnouncementForm({ ...announcementForm, roles: updated })
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '999px', cursor: 'pointer', background: checked ? `${role.color}22` : '#FFFFFF', border: `1.5px solid ${checked ? `${role.color}88` : 'rgba(189,207,206,0.6)'}` }}
+                    >
+                      <div style={{ width: '16px', height: '16px', borderRadius: '4px', border: `2px solid ${checked ? role.color : `${role.color}55`}`, background: checked ? role.color : 'transparent' }} />
+                      <span style={{ fontSize: '13px', fontWeight: checked ? 700 : 500, color: checked ? role.color : '#7A8987' }}>{role.label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+              <button
+                onClick={() => {
+                  const all = ['admin', 'dealer', 'sub_dealer', 'promotor', 'customer']
+                  const allSelected = all.every(r => announcementForm.roles.includes(r))
+                  setAnnouncementForm({ ...announcementForm, roles: allSelected ? [] : all })
+                }}
+                style={{ marginTop: '10px', padding: '6px 14px', fontSize: '11px', fontWeight: 700, background: 'rgba(187,137,88,0.1)', border: '1px solid rgba(187,137,88,0.3)', borderRadius: '8px', color: '#BB8958', cursor: 'pointer' }}
+              >
+                {['admin', 'dealer', 'sub_dealer', 'promotor', 'customer'].every(r => announcementForm.roles.includes(r)) ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            <button
+              disabled={announcingSending}
+              onClick={async () => {
+                if (!announcementForm.title.trim() || !announcementForm.message.trim()) { setAnnouncementMsg('❌ Title and Message are required.'); return }
+                if (announcementForm.roles.length === 0) { setAnnouncementMsg('❌ Please select at least one role.'); return }
+                setAnnouncingSending(true)
+                try {
+                  await api.post('/announcements/', { title: announcementForm.title, message: announcementForm.message, target_roles: announcementForm.roles })
+                  setAnnouncementMsg('✅ Announcement sent successfully!')
+                  setAnnouncementForm({ title: '', message: '', roles: [] })
+                  fetchMyAnnouncements()
+                } catch (err) {
+                  setAnnouncementMsg('❌ Failed: ' + JSON.stringify(err.response?.data))
+                }
+                setAnnouncingSending(false)
+              }}
+              style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(187,137,88,0.3)' : 'linear-gradient(135deg,#CCA881,#BB8958)', border: 'none', borderRadius: '14px', fontWeight: 800, color: announcingSending ? '#BB8958' : '#FDFDFC', fontSize: '15px', cursor: announcingSending ? 'not-allowed' : 'pointer' }}
+            >
+              {announcingSending ? 'Sending...' : 'Send Announcement'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── MY ANNOUNCEMENTS MODAL ── */}
+      {showMyAnnouncements && (
+        <div onClick={() => setShowMyAnnouncements(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(165deg,#FFFFFF 0%,#FDFCFA 60%,#EEF4F3 100%)', border: '1px solid rgba(12,64,68,0.16)', borderRadius: '24px', width: '95%', maxWidth: '560px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 40px 90px rgba(17,24,23,0.24)' }}>
+            <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(12,64,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(145deg,rgba(12,64,68,0.14),rgba(12,64,68,0.06))', border: '1px solid rgba(12,64,68,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0C4044" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 9l10 6 10-6"/><path d="M16 3l3 3-3 3"/></svg>
+                </div>
+                <div>
+                  <div style={{ color: '#0C4044', fontWeight: 900, fontSize: '14px' }}>MY ANNOUNCEMENTS</div>
+                  <div style={{ color: '#53615F', fontSize: '12px', fontWeight: 650, marginTop: '4px' }}>{myAnnouncements.length} total sent by Super Admin</div>
+                </div>
+              </div>
+              <button onClick={() => setShowMyAnnouncements(false)} style={{ background: 'rgba(201,32,53,0.12)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {myAnnouncements.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#7A8987', padding: '60px 0', fontSize: '15px' }}>No announcements yet.</div>
+              ) : myAnnouncements.map((ann, idx) => (
+                <div key={ann.id} style={{ background: idx === 0 ? 'rgba(12,64,68,0.04)' : '#FFFFFF', border: `1px solid ${idx === 0 ? 'rgba(12,64,68,0.3)' : 'rgba(189,207,206,0.5)'}`, borderRadius: '16px', padding: '18px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {idx === 0 && <span style={{ fontSize: '9px', fontWeight: 800, padding: '3px 10px', borderRadius: '20px', background: 'rgba(12,64,68,0.12)', color: '#0C4044', border: '1px solid rgba(12,64,68,0.28)' }}>● NEW</span>}
+                      <span style={{ color: idx === 0 ? '#073B3F' : '#111817', fontWeight: 700, fontSize: '14px' }}>{ann.title}</span>
+                    </div>
+                    <span style={{ color: '#7A8987', fontSize: '10px', whiteSpace: 'nowrap' }}>{new Date(ann.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                  <div style={{ color: '#7A8987', fontSize: '13px', lineHeight: 1.6 }}>{ann.message}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PROFILE UPDATE REQUESTS MODAL ── */}
+      {showRequests && (
+        <div
+          onClick={() => { setShowRequests(false); setSelectedRequest(null) }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.45)', backdropFilter: 'blur(6px)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#FDFDFC', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '24px', width: '95%', maxWidth: selectedRequest ? '900px' : '560px', maxHeight: '88vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(17,24,23,0.6)' }}
+          >
+            <div style={{ padding: '22px 28px', borderBottom: '1px solid rgba(204,168,129,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '7px' }}>
+                  PROFILE UPDATE REQUESTS
+                </div>
+                <div style={{ color: '#7A8987', fontSize: '11px', marginTop: '3px' }}>{profileRequests.length} pending requests</div>
+              </div>
+              <button
+                onClick={() => { setShowRequests(false); setSelectedRequest(null) }}
+                style={{ background: 'rgba(201,32,53,0.12)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C92035" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {requestMsg && (
+              <div style={{ margin: '14px 28px 0', background: requestMsg.includes('successfully') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${requestMsg.includes('successfully') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: requestMsg.includes('successfully') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', fontSize: '13px' }}>
+                {requestMsg}
+              </div>
+            )}
+
+            {!selectedRequest ? (
+              <div style={{ padding: '20px 28px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {profileRequests.length === 0 ? (
+                  <div style={{ color: '#7A8987', textAlign: 'center', padding: '50px 0' }}>No pending profile requests.</div>
+                ) : profileRequests.map(req => (
+                  <div
+                    key={req.id}
+                    onClick={() => setSelectedRequest(req)}
+                    style={{ background: 'rgba(17,24,23,0.03)', border: '1px solid rgba(204,168,129,0.22)', borderRadius: '14px', padding: '16px 18px', cursor: 'pointer' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+                      <div>
+                        <div style={{ color: '#CCA881', fontWeight: 800, fontSize: '12px', textTransform: 'uppercase' }}>{req.role}</div>
+                        <div style={{ color: '#111817', fontWeight: 700, fontSize: '15px', marginTop: '4px' }}>{req.first_name} {req.last_name}</div>
+                        <div style={{ color: '#7A8987', fontSize: '12px', marginTop: '4px' }}>{req.email}</div>
+                      </div>
+                      <div style={{ color: '#7A8987', fontSize: '11px', whiteSpace: 'nowrap' }}>{new Date(req.created_at).toLocaleDateString('en-IN')}</div>
+                    </div>
+                    {req.message && (
+                      <div style={{ color: '#7A8987', fontSize: '13px', marginTop: '10px', lineHeight: 1.5 }}>{req.message}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ padding: '20px 28px', overflowY: 'auto' }}>
+                <button
+                  onClick={() => setSelectedRequest(null)}
+                  style={{ marginBottom: '14px', background: 'rgba(204,168,129,0.1)', border: '1px solid rgba(204,168,129,0.3)', color: '#CCA881', borderRadius: '8px', padding: '7px 14px', cursor: 'pointer', fontSize: '12px' }}
+                >
+                  Back to Requests
+                </button>
+                <div style={{ color: '#CCA881', fontWeight: 800, marginBottom: '14px' }}>REQUEST DETAILS</div>
+
+                {selectedRequest.message && (
+                  <div style={{ background: 'rgba(189,207,206,0.06)', border: '1px solid rgba(189,207,206,0.2)', borderRadius: '12px', padding: '14px 16px', color: '#111817', fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>
+                    {selectedRequest.message}
+                  </div>
+                )}
+
+                {selectedRequest.proof_document && (
+                  <button
+                    onClick={async () => {
+                      const url = selectedRequest.proof_document
+                      const fullUrl = url.startsWith('http') ? url : `https://bitbyte-e-commerce.onrender.com/${url.replace(/^\//, '')}`
+                      setProofUrl(''); setProofType(''); setProofLoading(true); setProofModal(true)
+                      try {
+                        const token = localStorage.getItem('token')
+                        const response = await fetch(fullUrl, { headers: { Authorization: `Bearer ${token}` } })
+                        if (!response.ok) throw new Error('fetch failed')
+                        const contentType = response.headers.get('content-type') || ''
+                        const blob = await response.blob()
+                        const objectUrl = URL.createObjectURL(blob)
+                        const isPdf = contentType.includes('pdf') || fullUrl.toLowerCase().includes('.pdf')
+                        setProofType(isPdf ? 'pdf' : 'image')
+                        setProofUrl(objectUrl)
+                      } catch {
+                        const isPdf = fullUrl.toLowerCase().includes('.pdf')
+                        setProofType(isPdf ? 'pdf' : 'image')
+                        setProofUrl(fullUrl)
+                      } finally {
+                        setProofLoading(false)
+                      }
+                    }}
+                    style={{ marginBottom: '16px', background: 'rgba(187,137,88,0.1)', border: '1px solid rgba(187,137,88,0.35)', color: '#BB8958', borderRadius: '10px', padding: '10px 16px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}
+                  >
+                    View Proof Document
+                  </button>
+                )}
+
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left', color: '#CCA881', padding: '10px', borderBottom: '1px solid rgba(189,207,206,0.78)' }}>Field</th>
+                        <th style={{ textAlign: 'left', color: '#CCA881', padding: '10px', borderBottom: '1px solid rgba(189,207,206,0.78)' }}>Details To Update</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ['initial', 'Initial'], ['first_name', 'First Name'], ['last_name', 'Last Name'],
+                        ['mobile_number', 'Mobile Number'], ['gender', 'Gender'], ['dob', 'DOB'],
+                        ['married_status', 'Married Status'], ['anniversary_date', 'Anniversary Date'],
+                        ['door_no', 'Door No'], ['street_name', 'Street Name'], ['town_name', 'Town Name'],
+                        ['city_name', 'City Name'], ['district', 'District'], ['state', 'State'],
+                        ['aadhaar_no', 'Aadhaar No'], ['pan_no', 'PAN No'], ['occupation', 'Occupation'],
+                        ['occupation_detail', 'Occupation Detail'], ['annual_salary', 'Annual Salary'],
+                      ].map(([key, label]) => (
+                        selectedRequest[key] ? (
+                          <tr key={key}>
+                            <td style={{ padding: '10px', color: '#7A8987', borderBottom: '1px solid rgba(189,207,206,0.78)' }}>{label}</td>
+                            <td style={{ padding: '10px', color: '#111817', borderBottom: '1px solid rgba(189,207,206,0.78)' }}>{selectedRequest[key]}</td>
+                          </tr>
+                        ) : null
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <button
+                  onClick={() => approveProfileRequest(selectedRequest.id)}
+                  style={{ width: '100%', marginTop: '20px', padding: '13px', background: 'linear-gradient(90deg,#CCA881,#BDCFCE)', border: 'none', borderRadius: '12px', color: '#FDFDFC', fontWeight: 900, cursor: 'pointer' }}
+                >
+                  Approve Request
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── PROOF DOCUMENT PREVIEW MODAL ── */}
+      {proofModal && (
+        <div
+          onClick={() => {
+            if (proofUrl?.startsWith('blob:')) URL.revokeObjectURL(proofUrl)
+            setProofModal(false); setProofUrl(''); setProofType('')
+          }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(17,24,23,0.92)', backdropFilter: 'blur(14px)', zIndex: 1400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#FDFDFC', border: '1px solid rgba(187,137,88,0.35)', borderRadius: '20px', width: '95%', maxWidth: '780px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(17,24,23,0.7)' }}
+          >
+            <div style={{ padding: '18px 24px', borderBottom: '1px solid rgba(187,137,88,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ color: '#BB8958', fontWeight: 800, fontSize: '13px' }}>PROOF DOCUMENT</div>
+                <div style={{ color: '#7A8987', fontSize: '10px', marginTop: '2px' }}>
+                  {selectedRequest?.first_name} {selectedRequest?.last_name} {selectedRequest?.role?.toUpperCase()}
+                </div>
+              </div>
+              <button
+                onClick={() => { setProofModal(false); setProofUrl('') }}
+                style={{ background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '12px' }}
+              >
+                Close
+              </button>
+            </div>
+            <div style={{ flex: 1, overflow: 'auto', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', flexDirection: 'column' }}>
+              {proofLoading && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ width: 40, height: 40, border: '3px solid rgba(187,137,88,0.2)', borderTop: '3px solid #BB8958', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  <span style={{ color: '#7A8987', fontSize: '14px' }}>Loading document...</span>
+                </div>
+              )}
+              {!proofLoading && proofType === 'image' && proofUrl && (
+                <img src={proofUrl} alt="Proof" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: '12px', border: '1px solid rgba(187,137,88,0.2)' }} onError={() => setProofType('error')} />
+              )}
+              {!proofLoading && proofType === 'pdf' && proofUrl && (
+                <iframe src={proofUrl} style={{ width: '100%', height: '65vh', borderRadius: '10px', border: 'none' }} title="Proof Document" />
+              )}
+              {!proofLoading && proofType === 'error' && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '40px' }}>
+                  <div style={{ color: '#7A8987', fontSize: '14px', textAlign: 'center' }}>Document load failed</div>
+                  <a href={proofUrl} target="_blank" rel="noreferrer" style={{ padding: '10px 20px', background: 'rgba(187,137,88,0.15)', border: '1px solid rgba(187,137,88,0.4)', borderRadius: '10px', color: '#BB8958', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>
+                    Open in New Tab
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

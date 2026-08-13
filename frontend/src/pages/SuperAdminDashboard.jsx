@@ -1116,7 +1116,7 @@ const [showTodayRates, setShowTodayRates] = useState(false)
 
 
 
-  // NEW Rate entry popup
+  // move superadmin model
   const [showRatePopup, setShowRatePopup] = useState(false)
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [productForm, setProductForm] = useState({

@@ -25,13 +25,19 @@ export default function RetailerPromotions() {
   const [toast, setToast] = useState("");
   const [toastType, setToastType] = useState("success");
   const [confirmReject, setConfirmReject] = useState(null);
+  const [approvedCount, setApprovedCount] = useState(0);
+  const [rejectedCount, setRejectedCount] = useState(0);
 
   const fetchRows = () => {
     setLoading(true);
     setError("");
     api
       .get("/retailer-promotions/")
-      .then((res) => setRows(Array.isArray(res.data) ? res.data : []))
+      .then((res) => {
+        setRows(Array.isArray(res.data?.results) ? res.data.results : []);
+        setApprovedCount(res.data?.approved_count || 0);
+        setRejectedCount(res.data?.rejected_count || 0);
+      })
       .catch((err) => {
         setError(err.response?.data?.error || "Could not load retailer promotions.");
         setRows([]);
@@ -434,11 +440,11 @@ export default function RetailerPromotions() {
           </div>
           <div className="rp-stat">
             <div className="rp-stat-label">Approved Retailers</div>
-            {loading ? <div style={{ marginTop: 6 }}><SkeletonText width="40px" height="26px" /></div> : <div className="rp-stat-value">{rows.filter((r) => r.status === "approved").length}</div>}
+            {loading ? <div style={{ marginTop: 6 }}><SkeletonText width="40px" height="26px" /></div> : <div className="rp-stat-value">{approvedCount}</div>}
           </div>
           <div className="rp-stat">
             <div className="rp-stat-label">Rejected</div>
-            {loading ? <div style={{ marginTop: 6 }}><SkeletonText width="40px" height="26px" /></div> : <div className="rp-stat-value">{rows.filter((r) => r.status === "rejected").length}</div>}
+            {loading ? <div style={{ marginTop: 6 }}><SkeletonText width="40px" height="26px" /></div> : <div className="rp-stat-value">{rejectedCount}</div>}
           </div>
         </div>
 
