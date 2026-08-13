@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
 from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge, AutoPayMandate
 from django.db.models import Prefetch, Count, Q, Sum, Max
+from django.core.cache import cache   # ── NEW: for month_rollup/status caching ──
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
 from .serializers import *
 from django.utils import timezone
@@ -1538,6 +1539,9 @@ def distribute_commission(order):
     """Order success aana odane call pண்ணனும் — 27% chain ku distribute pண்ணும்,
     balance Super Admin ku pogும். Role edhுவும் irundhalும் (customer/promotor/
     sub_dealer/dealer/admin) buyer order pannalum commission chain trigger aagum."""
+    now = timezone.now()
+    cache.delete(f'month_rollup_counts_{now.strftime("%Y%m")}')
+    cache.delete(f'month_status_map_{now.strftime("%Y%m")}')
     buyer = order.user
     # ── role restriction REMOVED — evaru order pannalum commission poogum ──
 
@@ -2041,9 +2045,13 @@ class HierarchyNodeOrdersView(APIView):
 
 def _month_status_map():
     """dict: (role, profile_id) -> status ('red'/'orange'/'yellow'/'green').
-    Bottom-up cascade — customer own status -> promotor worst-of-customers ->
-    sub_dealer worst-of-promotors -> dealer worst-of-sub_dealers -> admin worst-of-dealers.
-    SALES total (rollup sum) layum vera, idhu mattum status calculate pannurathukku."""
+    ── NEW: cached same way as _month_rollup_counts — idhu ella profile
+    ah Python-la load panni recursive calculate pண்ணுthு, romba heavy ──"""
+    cache_key = f'month_status_map_{timezone.now().strftime("%Y%m")}'
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     now = timezone.now()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
@@ -2115,6 +2123,7 @@ def _month_status_map():
         child_statuses = [status_map[('dealer', d['id'])] for d in dealers_by_admin.get(a['id'], [])]
         status_map[('admin', a['id'])] = worst_status(child_statuses) if child_statuses else 'red'
 
+    cache.set(cache_key, status_map, 120)   # ── NEW: 2 min TTL ──
     return status_map
 
 
@@ -2831,7 +2840,15 @@ def _today_rollup_counts():
 def _month_rollup_counts():
     """dict: (role, profile_id) -> this month's order count, rolled up from
     the entire subtree kீழе. role keys: 'customer'(user_id), 'promotor','sub_dealer',
-    'dealer','admin' (profile id). DB aggregate queries mattum — Python loop illa."""
+    'dealer','admin' (profile id). DB aggregate queries mattum — Python loop illa.
+    ── NEW: cache pண்ணுறோம் — indha function FULL DB scan pண்ணுthு, ovvoru
+    hierarchy click-kும் recompute aana 6 sec edukkum. 2 min TTL cache-la vachi,
+    ella children-fetch click-ும் fast aagும் ──"""
+    cache_key = f'month_rollup_counts_{timezone.now().strftime("%Y%m")}'
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     now = timezone.now()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     base = JewelryOrder.objects.filter(created_at__gte=month_start)
@@ -2875,6 +2892,7 @@ def _month_rollup_counts():
     for r in base.filter(user__admin_profile__isnull=False).values('user__admin_profile__id').annotate(c=Count('id')):
         add(('admin', r['user__admin_profile__id']), r['c'])
 
+    cache.set(cache_key, counts, 120)   # ── NEW: 2 min TTL ──
     return counts
 
 class TodayLoginStatusView(APIView):

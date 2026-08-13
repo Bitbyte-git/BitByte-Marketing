@@ -386,7 +386,7 @@ const handleDelete = async (id) => {
       `}</style>
 
       {/* ── NAVBAR ── */}
-      <div style={{ background: glass, borderBottom: `1px solid ${border}`, padding: '18px 32px', display: 'flex', alignItems: 'center', gap: '16px', backdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 100, flexWrap: 'wrap', boxShadow: '0 18px 42px rgba(7,59,63,0.06)' }}>
+      <div style={{ background: glass, borderBottom: `1px solid ${border}`, padding: '18px 32px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', boxShadow: '0 18px 42px rgba(7,59,63,0.06)' }}>
 
         {/* Category tabs */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: 1 }}>

@@ -61,7 +61,6 @@ const COLUMN_MAP = {
   promotor:   ['Customer'],
 }
 
-// â”€â”€ Drill-down levels available per login role â”€â”€
 const DRILL_LEVELS = {
   super_admin: ['own', 'admin', 'dealer', 'sub_dealer', 'promotor', 'customer'],
   admin:       ['own', 'dealer', 'sub_dealer', 'promotor', 'customer'],

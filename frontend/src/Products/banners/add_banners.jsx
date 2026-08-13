@@ -102,17 +102,17 @@ export default function AddBanners() {
     <div style={{ minHeight: '100vh', background: bg, color: text, fontFamily: '"Inter",system-ui,sans-serif' }}>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-      {/* Navbar */}
-      <div style={{ background: glass, borderBottom: `1px solid ${border}`, padding: '14px 28px', display: 'flex', alignItems: 'center', gap: '16px', backdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ color: '#0C4044', fontWeight: 900, fontSize: '16px' }}>🖼️ Add Banners</div>
-        <div style={{ flex: 1 }} />
-        <button onClick={() => navigate('/add-product')}
-          style={{ padding: '7px 14px', background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' }}>
-          ← Back
-        </button>
-      </div>
-
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px' }}>
+
+        {/* Page title + back — plain content, not a sticky navbar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ color: '#0C4044', fontWeight: 900, fontSize: '18px' }}>🖼️ Add Banners</div>
+          <div style={{ flex: 1 }} />
+          <button onClick={() => navigate('/add-product')}
+            style={{ padding: '9px 18px', background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
+            ← Back
+          </button>
+        </div>
 
         {/* Message */}
         {msg && (
