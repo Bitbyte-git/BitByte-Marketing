@@ -1159,7 +1159,6 @@ class JewelryProductView(APIView):
         # ── Search filter (NEW) ──
         search = request.query_params.get('search', '').strip()
         if search:
-            from django.db.models import Q
             try:
                 # Number type பண்ணா — weight search
                 num = float(search)

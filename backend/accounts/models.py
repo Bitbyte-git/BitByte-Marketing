@@ -656,7 +656,7 @@ class JewelryProductImage(models.Model):
     product = models.ForeignKey(
         JewelryProduct, on_delete=models.CASCADE, related_name='images'
     )
-    image = models.ImageField(upload_to='jewelry_products/')
+    image = models.ImageField(upload_to='jewelry_products/', max_length=255)
     order = models.IntegerField(default=0)  # for sorting images
 
     class Meta:

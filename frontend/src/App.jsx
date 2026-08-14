@@ -32,6 +32,7 @@ const ProductDisplay = lazy(() => import('./collection/product_display'))
 const CardSection = lazy(() => import('./collection/card_section'))
 const WishlistPage = lazy(() => import('./collection/WishlistPage'))
 const BBLive = lazy(() => import('./collection/bb-live'))
+const NearbyShop = lazy(() => import('./collection/NearbyShop'))
 const AddProduct = lazy(() => import('./Products/add_product'))
 const AddNewProduct = lazy(() => import('./Products/add_new_product'))  
 const SoldOutProducts = lazy(() => import('./Products/SoldOutProducts'))
@@ -232,6 +233,7 @@ export default function App() {
           <Route path="/wishlist" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><WishlistPage /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/order-confirm" element={<WithCustomerNavbar><OrderConfirm /></WithCustomerNavbar>} />
           <Route path="/bj-live" element={<WithCustomerNavbar><BBLive /></WithCustomerNavbar>} />
+          <Route path="/nearby-shop" element={<WithCustomerNavbar><NearbyShop /></WithCustomerNavbar>} />
           <Route path="/order-summary" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><OrderSummary /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/recharge" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><Recharge /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/order-payment" element={<WithCustomerNavbar><OrderPayment /></WithCustomerNavbar>} />
