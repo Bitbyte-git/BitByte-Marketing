@@ -16,6 +16,9 @@ function Icon({ name, size = 17 }) {
     mic: <><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><path d="M12 18v4" /><path d="M9 22h6" /></>,
     chevron: <path d="m6 9 6 6 6-6" />,
     alert: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></>,
+    menu: <><path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" /></>,
+    close: <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>,
+    stock: <><path d="M20 7 12 3 4 7" /><path d="M4 7v10l8 4 8-4V7" /><path d="M4 7l8 4 8-4" /><path d="M12 11v10" /></>,
   }
   return <svg {...common}>{icons[name]}</svg>
 }
@@ -39,6 +42,7 @@ export default function SuperAdminNavbar({
   const recognitionRef = useRef(null)
   const [openMenu, setOpenMenu] = useState(null)
   const closeTimerRef = useRef(null)
+  const [showMobileDrawer, setShowMobileDrawer] = useState(false)   // ── NEW: hamburger sidebar ──
 
   // ── Gold Rate / Today Rates (moved from Dashboard) ──
   const [showRatePopup, setShowRatePopup] = useState(false)
@@ -479,6 +483,16 @@ export default function SuperAdminNavbar({
 .san-mobile-logo img { width: 46px; height: 46px; }
 .san-mobile-logo strong { font-family: Georgia, 'Times New Roman', serif; color: #073B3F; font-size: 25px; line-height: 1; }
 .san-mobile-logo small { display: block; color: #BB8958; font-size: 9px; font-weight: 900; letter-spacing: .2em; }
+.san-hamburger { display: flex; background: transparent; border: none; color: #0C4044; padding: 8px; cursor: pointer; align-items: center; justify-content: center; flex-shrink: 0; }
+.san-hamburger:hover { color: #073B3F; }
+.san-drawer-overlay { position: fixed; inset: 0; background: rgba(17,24,23,.55); backdrop-filter: blur(4px); z-index: 1400; }
+.san-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 260px; max-width: 82vw; background: #FDFDFC; z-index: 1401; box-shadow: -18px 0 48px rgba(7,59,63,.22); display: flex; flex-direction: column; padding: 20px 16px; gap: 6px; }
+.san-drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 14px; border-bottom: 1px solid rgba(189,207,206,.7); }
+.san-drawer-title { font-family: Georgia, 'Times New Roman', serif; font-size: 17px; font-weight: 800; color: #073B3F; }
+.san-drawer-close { background: transparent; border: none; color: #0C4044; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; }
+.san-drawer-link { display: flex; align-items: center; gap: 12px; padding: 13px 12px; border-radius: 10px; border: none; background: transparent; color: #073B3F; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; }
+.san-drawer-link:hover { background: #F3F3F0; }
+.san-drawer-link.logout { color: #C92035; }
 @media (max-width: 1100px) {
   .san-navbar-brand { width: 100%; height: 76px; border-right: 0; justify-content: center; }
   .san-sidebar { position: relative; width: 100%; min-height: 0; padding: 16px; border-right: 0; border-bottom: 1px solid rgba(189,207,206,.72); }
@@ -551,13 +565,14 @@ export default function SuperAdminNavbar({
               <MenuGroup label="Coins" items={coins} />
               <MenuGroup label="Reports" items={reports} />
               <MenuGroup label="Promotion" items={promotion} />
-              <MenuGroup label="Payment" items={payment} />  
+              <MenuGroup label="Payment" items={payment} />
+              <button className="san-menu-trigger" type="button" onClick={() => navigate('/sold-out-products')}>
+                <Icon name="stock" size={16} />Stock
+              </button>
             </div>
-            <div className="san-actions">
-<button className="san-action" type="button" onClick={() => navigate('/sold-out-products')} style={{ color: '#C92035' }}><Icon name="alert" />Stock Alerts</button>
-<button className="san-action" type="button" onClick={() => setShowTodayRates(true)}><Icon name="rate" />Today Rates</button>
-              <button className="san-action logout" type="button" onClick={logout}><Icon name="logout" />Logout</button>
-            </div>
+            <button className="san-hamburger" type="button" onClick={() => setShowMobileDrawer(true)} aria-label="Open menu">
+              <Icon name="menu" size={22} />
+            </button>
           </div>
         </header>
       </div>
@@ -1351,6 +1366,27 @@ export default function SuperAdminNavbar({
             )}
           </div>
         </div>
+      )}
+
+      {/* ── MOBILE HAMBURGER DRAWER ── */}
+      {showMobileDrawer && (
+        <>
+          <div className="san-drawer-overlay" onClick={() => setShowMobileDrawer(false)} />
+          <div className="san-drawer">
+            <div className="san-drawer-head">
+              <span className="san-drawer-title">Menu</span>
+              <button className="san-drawer-close" onClick={() => setShowMobileDrawer(false)} aria-label="Close menu">
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+            <button className="san-drawer-link" onClick={() => { setShowMobileDrawer(false); setShowTodayRates(true) }}>
+              <Icon name="rate" size={18} />Today's Rate
+            </button>
+            <button className="san-drawer-link logout" onClick={() => { setShowMobileDrawer(false); logout() }}>
+              <Icon name="logout" size={18} />Logout
+            </button>
+          </div>
+        </>
       )}
 
       {/* ── PROOF DOCUMENT PREVIEW MODAL ── */}

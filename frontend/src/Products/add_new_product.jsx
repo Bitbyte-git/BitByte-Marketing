@@ -2,6 +2,20 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 
+function Icon({ name, size = 16, className = '' }) {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, className }
+  const icons = {
+    plus: <><path d="M12 5v14" /><path d="M5 12h14" /></>,
+    back: <><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></>,
+    camera: <><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z" /><circle cx="12" cy="13" r="4" /></>,
+    close: <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>,
+    check: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m22 4-10 10-3-3" /></>,
+    warn: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></>,
+    spinner: <><path d="M21 12a9 9 0 1 1-6.219-8.56" /></>,
+  }
+  return <svg {...common}>{icons[name]}</svg>
+}
+
 const CATEGORIES = [
   { key: 'rings', label: 'Rings', emoji: 'R' },
   { key: 'necklaces', label: 'Necklaces', emoji: 'N' },
@@ -225,12 +239,12 @@ export default function AddNewProduct() {
   }
 
   const handleSave = async () => {
-    if (!productForm.name.trim())    { setProductMsg('❌ Name required');     return }
-    if (!productForm.cross_weight)   { setProductMsg('❌ Cross Weight required');   return }
-    if (!productForm.category)       { setProductMsg('❌ Category required'); return }
-    if (!productForm.metal)          { setProductMsg('❌ Metal required');    return }
-    if (!productForm.grade) { setProductMsg('❌ Grade required'); return }
-    if (!productForm.stock_quantity) { setProductMsg('❌ Stock Quantity required'); return }
+    if (!productForm.name.trim())    { setProductMsg('ERR: Name required');     return }
+    if (!productForm.cross_weight)   { setProductMsg('ERR: Cross Weight required');   return }
+    if (!productForm.category)       { setProductMsg('ERR: Category required'); return }
+    if (!productForm.metal)          { setProductMsg('ERR: Metal required');    return }
+    if (!productForm.grade) { setProductMsg('ERR: Grade required'); return }
+    if (!productForm.stock_quantity) { setProductMsg('ERR: Stock Quantity required'); return }
     setProductSaving(true)
     try {
       const fd = new FormData()
@@ -240,9 +254,9 @@ export default function AddNewProduct() {
       if (originalPrice) fd.append('original_price', originalPrice)
       productImages.forEach(img => fd.append('uploaded_images', img))
       await api.post('/jewelry-products/', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setProductMsg('✅ Product added!')
+      setProductMsg('OK: Product added!')
       setTimeout(() => navigate('/add-product'), 900)
-    } catch (err) { setProductMsg('❌ ' + JSON.stringify(err.response?.data || err.message)) }
+    } catch (err) { setProductMsg('ERR: ' + JSON.stringify(err.response?.data || err.message)) }
     setProductSaving(false)
   }
 
@@ -250,15 +264,19 @@ export default function AddNewProduct() {
     <div style={{ minHeight: '100vh', background: bg, color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
       <style>{`
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes spin { to { transform: rotate(360deg) } }
+        .anp-spin { animation: spin 1s linear infinite; }
         input:focus, textarea:focus, select:focus { border-color:#0C4044 !important; box-shadow:0 0 0 4px rgba(209,223,222,.65) !important }
       `}</style>
 
       {/* ── NAVBAR ── */}
       <div style={{ background: glass, borderBottom: `1px solid ${border}`, padding: '18px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 18px 42px rgba(7,59,63,0.06)' }}>
-        <div style={{ color: '#0C4044', fontSize: '15px', fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase' }}>➕ Add New Product</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0C4044', fontSize: '15px', fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+          <Icon name="plus" size={16} />Add New Product
+        </div>
         <div style={{ flex: 1 }} />
-        <button onClick={() => navigate('/add-product')} style={{ padding: '11px 16px', borderRadius: '14px', background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>
-          ← Back to Products
+        <button onClick={() => navigate('/add-product')} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '11px 16px', borderRadius: '14px', background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>
+          <Icon name="back" size={14} />Back to Products
         </button>
       </div>
 
@@ -267,8 +285,9 @@ export default function AddNewProduct() {
         <div style={{ background: cardBg, border: cardBorder, borderRadius: '22px', padding: '30px', animation: 'fadeIn 0.3s ease', boxShadow: '0 24px 64px rgba(7,59,63,0.08)' }}>
 
           {productMsg && (
-            <div style={{ background: productMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${productMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: productMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px' }}>
-              {productMsg}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: productMsg.startsWith('OK:') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${productMsg.startsWith('OK:') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: productMsg.startsWith('OK:') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px' }}>
+              <Icon name={productMsg.startsWith('OK:') ? 'check' : 'warn'} size={15} />
+              {productMsg.replace(/^OK:|^ERR:/, '')}
             </div>
           )}
 
@@ -472,13 +491,13 @@ export default function AddNewProduct() {
                 {livePrice ? `₹ ${Number(livePrice).toLocaleString('en-IN')}` : '—'}
               </div>
               {livePrice && (
-                <div style={{ fontSize: '10px', color: '#0C4044', marginTop: '4px' }}>
-                  ✅ Includes 3% GST
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#0C4044', marginTop: '4px' }}>
+                  <Icon name="check" size={11} />Includes 3% GST
                 </div>
               )}
               {!livePrice && productForm.metal && productForm.grade && (
-                <div style={{ fontSize: '10px', color: '#C92035', marginTop: '4px' }}>
-                  ⚠️ No rate entered for {productForm.metal} {productForm.grade}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: '#C92035', marginTop: '4px' }}>
+                  <Icon name="warn" size={11} />No rate entered for {productForm.metal} {productForm.grade}
                 </div>
               )}
             </div>
@@ -488,7 +507,7 @@ export default function AddNewProduct() {
           <div style={{ marginBottom: '18px' }}>
             <label style={lblStyle}>Product Images</label>
             <label htmlFor="anp-add-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '13px', background: 'rgba(12,64,68,0.08)', border: '2px dashed rgba(12,64,68,0.4)', borderRadius: '10px', cursor: 'pointer', color: '#0C4044', fontWeight: 700, fontSize: '13px' }}>
-              📷 Add Images
+              <Icon name="camera" size={16} />Add Images
             </label>
             <input id="anp-add-img" type="file" accept="image/*" multiple style={{ display: 'none' }}
               onChange={e => { const f = Array.from(e.target.files); setProductImages(p => [...p, ...f]); setProductPreviewUrls(p => [...p, ...f.map(x => URL.createObjectURL(x))]); e.target.value = '' }} />
@@ -499,7 +518,7 @@ export default function AddNewProduct() {
                     onClick={() => setLightboxUrl(url)}>
                     <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <button onClick={e => { e.stopPropagation(); setProductImages(p => p.filter((_, i) => i !== idx)); setProductPreviewUrls(p => p.filter((_, i) => i !== idx)) }}
-                      style={{ position: 'absolute', top: '3px', right: '3px', background: 'rgba(201,32,53,0.9)', color: '#FDFDFC', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                      style={{ position: 'absolute', top: '3px', right: '3px', background: 'rgba(201,32,53,0.9)', color: '#FDFDFC', border: 'none', borderRadius: '50%', width: '18px', height: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="close" size={10} /></button>
                   </div>
                 ))}
               </div>
@@ -507,8 +526,8 @@ export default function AddNewProduct() {
           </div>
 
           <button disabled={productSaving} onClick={handleSave}
-            style={{ padding: '12px 32px', background: productSaving ? 'rgba(12,64,68,0.22)' : 'linear-gradient(135deg,#0C4044,#073B3F)', border: 'none', borderRadius: '12px', fontWeight: 900, fontSize: '14px', color: productSaving ? '#0C4044' : '#FDFDFC', cursor: productSaving ? 'not-allowed' : 'pointer' }}>
-            {productSaving ? '⏳ Saving...' : '✅ Add Product'}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 32px', background: productSaving ? 'rgba(12,64,68,0.22)' : 'linear-gradient(135deg,#0C4044,#073B3F)', border: 'none', borderRadius: '12px', fontWeight: 900, fontSize: '14px', color: productSaving ? '#0C4044' : '#FDFDFC', cursor: productSaving ? 'not-allowed' : 'pointer' }}>
+            {productSaving ? <><Icon name="spinner" size={15} className="anp-spin" />Saving...</> : <><Icon name="check" size={15} />Add Product</>}
           </button>
 
         </div>
