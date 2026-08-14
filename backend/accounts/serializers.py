@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder,JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, Wallet, CoinRecharge, AutoPayMandate 
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder,JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, Wallet, CoinRecharge, AutoPayMandate , StockNotifyRequest
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -475,6 +475,36 @@ class JewelryProductSerializer(serializers.ModelSerializer):
             JewelryProductImage.objects.create(product=product, image=img, order=i)
         return product            
 
+class StockNotifyRequestSerializer(serializers.ModelSerializer):
+    customer_email = serializers.EmailField(source='user.email', read_only=True)
+    customer_role = serializers.CharField(source='user.role', read_only=True)
+    customer_id_str = serializers.SerializerMethodField()
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_code = serializers.CharField(source='product.product_code', read_only=True)
+    product_stock = serializers.IntegerField(source='product.stock_quantity', read_only=True)
+
+    class Meta:
+        model = StockNotifyRequest
+        fields = ['id', 'product', 'product_name', 'product_code', 'product_stock',
+                  'customer_email', 'customer_role', 'customer_id_str', 'notified', 'created_at']
+        read_only_fields = ['created_at', 'notified']
+
+    def get_customer_id_str(self, obj):
+        try:
+            role_map = {
+                'customer': ('customer_profile', 'customer_id'),
+                'promotor': ('promotor_profile', 'promotor_id'),
+                'sub_dealer': ('sub_dealer_profile', 'sub_dealer_id'),
+                'dealer': ('dealer_profile', 'dealer_id'),
+                'admin': ('admin_profile', 'admin_id'),
+            }
+            if obj.user.role in role_map:
+                attr, field = role_map[obj.user.role]
+                p = getattr(obj.user, attr)
+                return getattr(p, field)
+        except Exception:
+            pass
+        return None
 
 class HomeBannerSerializer(serializers.ModelSerializer):
     class Meta:

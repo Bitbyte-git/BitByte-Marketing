@@ -345,6 +345,7 @@ export default function ProductDisplay() {
   const [zoomLensStyle, setZoomLensStyle] = useState({})
   const [wishlisted, setWishlisted] = useState(false)
   const [liveRate, setLiveRate] = useState(null)
+  const [notifyMsg, setNotifyMsg] = useState('')
   const imageRef = useRef(null)
   const mainImageRef = useRef(null)
 
@@ -697,6 +698,7 @@ const displayOriginalPrice = calcOriginalPriceMain()
           animation: pulseGlow 2.2s ease-in-out infinite;
         }
         .pd-btn-cart:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        .pd-btn-cart:disabled { opacity: 1; }
 
         .pd-btn-buy {
           flex: 1;
@@ -787,6 +789,8 @@ const displayOriginalPrice = calcOriginalPriceMain()
             radial-gradient(circle at 50% 48%, rgba(255,255,255,0.96), rgba(243,232,222,0.34) 48%, rgba(231,237,236,0.72) 100%) !important;
           box-shadow: inset 0 0 0 1px rgba(218,194,169,0.55), inset 0 -45px 90px rgba(12,64,68,0.06);
           padding: clamp(22px, 3vw, 46px) !important;
+          overflow: hidden !important;
+          position: relative !important;
         }
 
         .pd-main-img {
@@ -1014,9 +1018,23 @@ const displayOriginalPrice = calcOriginalPriceMain()
             <div className="pd-img-frame" ref={imageRef} onMouseMove={handleMouseMove} onMouseEnter={() => setShowZoom(true)} onMouseLeave={() => setShowZoom(false)} style={{ height: 480, display: 'grid', placeItems: 'center', cursor: 'zoom-in' }}>
 
               {/* Tag ribbon */}
-              {productTag && (
-                <div style={{ position: 'absolute', top: 16, left: 0, background: '#8B1A1A', color: '#fff', padding: '5px 16px 5px 12px', fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', clipPath: 'polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%)', zIndex: 2 }}>
+              {productTag && !(!product.is_active) && (
+                <div style={{ position: 'absolute', top: 16, left: 0, background: '#8B1A1A', color: '#fff', padding: '5px 16px 5px 12px', fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', clipPath: 'polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%)', zIndex: 20 }}>
                   {productTag}
+                </div>
+              )}
+
+              {/* NEW: Sold Out stamp — Amazon/Flipkart style */}
+              {!product.is_active && (
+                <div style={{
+                  position: 'absolute', top: 16, left: 0, zIndex: 20,
+                  background: '#C92035', color: '#fff',
+                  padding: '6px 18px 6px 14px', fontSize: 11, fontWeight: 900,
+                  letterSpacing: '1.5px', textTransform: 'uppercase',
+                  clipPath: 'polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%)',
+                  boxShadow: '0 8px 18px rgba(201,32,53,0.35)',
+                }}>
+                  Sold Out
                 </div>
               )}
 
@@ -1031,7 +1049,7 @@ const displayOriginalPrice = calcOriginalPriceMain()
                     window.dispatchEvent(new Event('bb_wishlist_update'))
                   } catch (err) { console.error(err) }
                 }}
-                style={{ position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: '50%', border: wishlisted ? '1.5px solid #c0392b' : '1px solid #ddd', background: wishlisted ? 'rgba(192,57,43,0.1)' : 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, transition: 'all 0.2s ease' }}
+                style={{ position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: '50%', border: wishlisted ? '1.5px solid #c0392b' : '1px solid #ddd', background: wishlisted ? 'rgba(192,57,43,0.1)' : 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 20, transition: 'all 0.2s ease' }}
                 title={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <svg width="18" height="18" viewBox="0 0 32 32" fill={wishlisted ? '#c0392b' : 'none'} stroke={wishlisted ? '#c0392b' : '#aaa'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -1041,7 +1059,7 @@ const displayOriginalPrice = calcOriginalPriceMain()
 
               {mainImage && (
                 <img ref={mainImageRef} className="pd-main-img" src={mainImage} onError={e => { e.currentTarget.style.display = 'none' }}
-                  style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', filter: 'drop-shadow(0 20px 36px rgba(0,0,0,0.14))', transition: 'transform 0.55s cubic-bezier(0.34,1.56,0.64,1)' }} />
+                  style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', filter: product.is_active ? 'drop-shadow(0 20px 36px rgba(0,0,0,0.14))' : 'drop-shadow(0 20px 36px rgba(0,0,0,0.14)) grayscale(0.55) opacity(0.85)', transition: 'transform 0.55s cubic-bezier(0.34,1.56,0.64,1)' }} />
               )}
 
               {showZoom && mainImage && (
@@ -1159,15 +1177,34 @@ const displayOriginalPrice = calcOriginalPriceMain()
 
             {/* CTA buttons */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button className="pd-btn-cart" onClick={handleAddToCart}>
-                {showAdded ? '✓ Added to Cart' : '🛒 Add to Cart'}
-              </button>
-              <button className="pd-btn-buy" disabled={!product.is_active}
-                onClick={handleBuy}
-                style={{ background: product.is_active ? 'linear-gradient(135deg,#1a1a1a,#333)' : 'rgba(100,100,100,0.3)', color: product.is_active ? '#fff' : '#888', cursor: product.is_active ? 'pointer' : 'not-allowed' }}>
-                💳 Buy Now
-              </button>
+              {product.is_active ? (
+                <>
+                  <button className="pd-btn-cart" onClick={handleAddToCart}>
+                    {showAdded ? '✓ Added to Cart' : '🛒 Add to Cart'}
+                  </button>
+                  <button className="pd-btn-buy" onClick={handleBuy}
+                    style={{ background: 'linear-gradient(135deg,#1a1a1a,#333)', color: '#fff', cursor: 'pointer' }}>
+                    💳 Buy Now
+                  </button>
+                </>
+              ) : (
+                <button className="pd-btn-cart" disabled onClick={async () => {
+                  const api = (await import('../api')).default
+                  try {
+                    const res = await api.post('/notify-me/', { product_id: product.id })
+                    setNotifyMsg(res.data.message)
+                  } catch (err) { setNotifyMsg('Something went wrong. Please try again.') }
+                }}
+                  style={{ background: 'linear-gradient(135deg,#073B3F,#0C4044)', cursor: 'pointer', opacity: 1 }}>
+                  🔔 Notify Me When Available
+                </button>
+              )}
             </div>
+            {notifyMsg && (
+              <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.2)', borderRadius: 8, color: '#073B3F', fontSize: 13, fontWeight: 700 }}>
+                {notifyMsg}
+              </div>
+            )}
             <div className="pd-assurance-row">
               <div className="pd-assurance-item">Secure payment</div>
               <div className="pd-assurance-item">Easy exchange</div>

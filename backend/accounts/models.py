@@ -665,7 +665,19 @@ class JewelryProductImage(models.Model):
     def __str__(self):
         return f"Image for {self.product.name}"        
 
+class StockNotifyRequest(models.Model):
+    """Customer 'Notify Me' click pண்ணும்pothு entry create aagும். Product restock
+    aana, Super Admin idha vachi யார் யார் notify pண்ணனும்nு paருவாங்க."""
+    product = models.ForeignKey(JewelryProduct, on_delete=models.CASCADE, related_name='notify_requests')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stock_notify_requests')
+    created_at = models.DateTimeField(auto_now_add=True)
+    notified = models.BooleanField(default=False)   # restock aana message anuppina True aagum
 
+    class Meta:
+        unique_together = ('product', 'user')   # same customer same product ku rendu thadava request pண்ண koodathu
+
+    def __str__(self):
+        return f"{self.user.email} — notify for {self.product.name}"
 
 
 class HomeBanner(models.Model):

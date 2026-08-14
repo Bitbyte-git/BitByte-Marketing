@@ -1255,6 +1255,71 @@ class SoldOutProductsView(APIView):
             'results': serializer.data,
         })
 
+# ── NEW: Customer "Notify Me" ── 
+class StockNotifyRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Customer sold-out product-la 'Notify Me' click pண்ணும்pothு call aagும்."""
+        product_id = request.data.get('product_id')
+        try:
+            product = JewelryProduct.objects.get(id=product_id)
+        except JewelryProduct.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=404)
+
+        obj, created = StockNotifyRequest.objects.get_or_create(
+            product=product, user=request.user
+        )
+        if not created:
+            return Response({'message': 'You already requested notification for this product.'}, status=200)
+        return Response({'message': 'We will notify you when this product is back in stock!'}, status=201)
+
+    def get(self, request):
+        """
+        Customer: 'my_requests=true' query param -> avanga own notify requests (product IDs) return pண்ணும்,
+        so frontend button state ah check pண்ண mудியும்.
+        Super Admin: ella requests-ayум் product-wise group பண்ணி return pண்ணும்.
+        """
+        if request.query_params.get('my_requests') == 'true':
+            ids = list(StockNotifyRequest.objects.filter(user=request.user).values_list('product_id', flat=True))
+            return Response({'product_ids': ids})
+
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+
+        notified_filter = request.query_params.get('notified')
+        qs = StockNotifyRequest.objects.select_related('product', 'user').order_by('-created_at')
+        if notified_filter == 'false':
+            qs = qs.filter(notified=False)
+
+        serializer = StockNotifyRequestSerializer(qs, many=True)
+
+        # ── product-wise group pண்ணுறோம் — Super Admin ku "இந்த product-க்கு 5 pேr wait pண்றாங்க" nு தெரிய ──
+        grouped = {}
+        for item in serializer.data:
+            pid = item['product']
+            if pid not in grouped:
+                grouped[pid] = {
+                    'product_id': pid,
+                    'product_name': item['product_name'],
+                    'product_code': item['product_code'],
+                    'current_stock': item['product_stock'],
+                    'waiting_count': 0,
+                    'customers': [],
+                }
+            grouped[pid]['waiting_count'] += 1
+            grouped[pid]['customers'].append({
+                'notify_id': item['id'],
+                'email': item['customer_email'],
+                'role': item['customer_role'],
+                'id_str': item['customer_id_str'],
+                'requested_at': item['created_at'],
+                'notified': item['notified'],
+            })
+
+        results = sorted(grouped.values(), key=lambda x: x['waiting_count'], reverse=True)
+        return Response({'total_requests': len(serializer.data), 'products': results})    
+
 
 class JewelryProductImageDeleteView(APIView):
     permission_classes = [IsAuthenticated]
