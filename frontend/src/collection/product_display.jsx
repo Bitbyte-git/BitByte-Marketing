@@ -1176,33 +1176,62 @@ const displayOriginalPrice = calcOriginalPriceMain()
             </div>
 
             {/* CTA buttons */}
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              {product.is_active ? (
-                <>
-                  <button className="pd-btn-cart" onClick={handleAddToCart}>
-                    {showAdded ? '✓ Added to Cart' : '🛒 Add to Cart'}
-                  </button>
-                  <button className="pd-btn-buy" onClick={handleBuy}
-                    style={{ background: 'linear-gradient(135deg,#1a1a1a,#333)', color: '#fff', cursor: 'pointer' }}>
-                    💳 Buy Now
-                  </button>
-                </>
-              ) : (
-                <button className="pd-btn-cart" disabled onClick={async () => {
-                  const api = (await import('../api')).default
-                  try {
-                    const res = await api.post('/notify-me/', { product_id: product.id })
-                    setNotifyMsg(res.data.message)
-                  } catch (err) { setNotifyMsg('Something went wrong. Please try again.') }
-                }}
-                  style={{ background: 'linear-gradient(135deg,#073B3F,#0C4044)', cursor: 'pointer', opacity: 1 }}>
-                  🔔 Notify Me When Available
+            {product.is_active ? (
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button className="pd-btn-cart" onClick={handleAddToCart}>
+                  {showAdded ? '✓ Added to Cart' : '🛒 Add to Cart'}
                 </button>
-              )}
-            </div>
-            {notifyMsg && (
-              <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.2)', borderRadius: 8, color: '#073B3F', fontSize: 13, fontWeight: 700 }}>
-                {notifyMsg}
+                <button className="pd-btn-buy" onClick={handleBuy}
+                  style={{ background: 'linear-gradient(135deg,#1a1a1a,#333)', color: '#fff', cursor: 'pointer' }}>
+                  💳 Buy Now
+                </button>
+              </div>
+            ) : (
+              <div style={{
+                border: '1px solid rgba(201,32,53,0.25)',
+                background: 'linear-gradient(135deg, rgba(201,32,53,0.05), rgba(201,32,53,0.02))',
+                borderRadius: 16, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 4
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    width: 8, height: 8, borderRadius: '50%', background: '#C92035', display: 'inline-block'
+                  }} />
+                  <span style={{ color: '#C92035', fontWeight: 900, fontSize: 13, letterSpacing: '0.4px', textTransform: 'uppercase' }}>
+                    Currently Unavailable
+                  </span>
+                </div>
+                <p style={{ margin: '4px 0 14px', color: '#6b6b6b', fontSize: 13.5 }}>
+                  This item is temporarily out of stock. We'll notify you the moment it's back.
+                </p>
+
+                {notifyMsg ? (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.2)',
+                    borderRadius: 10, padding: '12px 16px', color: '#073B3F', fontSize: 13.5, fontWeight: 700
+                  }}>
+                    ✓ {notifyMsg}
+                  </div>
+                ) : (
+                  <button onClick={async () => {
+                    const api = (await import('../api')).default
+                    try {
+                      const res = await api.post('/notify-me/', { product_id: product.id })
+                      setNotifyMsg(res.data.message)
+                    } catch (err) { setNotifyMsg('Something went wrong. Please try again.') }
+                  }}
+                    style={{
+                      width: '100%', padding: '14px 0', border: 'none', borderRadius: 10,
+                      background: 'linear-gradient(135deg,#1f6feb,#2563eb)', color: '#fff',
+                      fontWeight: 800, fontSize: 15, cursor: 'pointer',
+                      boxShadow: '0 8px 20px rgba(37,99,235,0.28)',
+                      transition: 'transform 0.15s ease'
+                    }}
+                    onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
+                    onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                    🔔 Notify Me
+                  </button>
+                )}
               </div>
             )}
             <div className="pd-assurance-row">

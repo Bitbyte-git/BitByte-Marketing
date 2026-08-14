@@ -1105,7 +1105,11 @@ class JewelryProductView(APIView):
         if request.user.is_authenticated and getattr(request.user, 'role', None) == 'super_admin':
             qs = JewelryProduct.objects.all().prefetch_related('images')
         else:
-            qs = JewelryProduct.objects.filter(is_active=True).prefetch_related('images')
+            # ── sold-out (is_active=False due to stock=0) products-um kaamikkanum,
+            # hided products (manual hide) mattum hide aaganum ──
+            qs = JewelryProduct.objects.filter(
+                Q(is_active=True) | Q(stock_quantity=0)
+            ).prefetch_related('images')
 
         # ── Existing filters (உன்னோட பழைய code — same) ──
 

@@ -143,7 +143,7 @@ const menuItems = [
   { label: "Team369-Live", route: "/bj-live" },
   { label: "Wedding", route: "/collection/all?wedding=true" },
   { label: "Gifting", route: "/collection/gifting" },
-  { label: "New Arrivals", route: "/collection/new-arrivals" },
+  { label: "Nearby Shop", route: "/bj-live" },
 ];
 
 const allJewelleryMega = [
