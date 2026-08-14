@@ -57,9 +57,14 @@ export default function SoldOutProducts() {
             <div style={{ fontSize: '13px', color: '#7A8987', marginTop: '4px' }}>Sold out and low stock products</div>
           </div>
         </div>
-        <button onClick={() => navigate('/super-admin')} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', fontWeight: 800, cursor: 'pointer' }}>
-          <Icon name="back" size={15} />Back
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => navigate('/stock-notifications')} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(31,111,235,0.08)', border: '1px solid rgba(31,111,235,0.3)', color: '#1f6feb', fontWeight: 800, cursor: 'pointer' }}>
+            <Icon name="alert" size={15} />Notify Requests
+          </button>
+          <button onClick={() => navigate('/super-admin')} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', fontWeight: 800, cursor: 'pointer' }}>
+            <Icon name="back" size={15} />Back
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
