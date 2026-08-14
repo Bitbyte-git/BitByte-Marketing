@@ -4748,6 +4748,21 @@ class PayWithCoinsView(APIView):
         except JewelryProduct.DoesNotExist:
             return Response({'error': 'Product not found'}, status=404)
 
+        # ── NEW: Atomic stock check + reduce — wallet deduct panna munnadi ──
+        from django.db.models import F
+        quantity = int(data.get('quantity', 1))
+        updated_rows = JewelryProduct.objects.filter(
+            id=product_id, stock_quantity__gte=quantity
+        ).update(stock_quantity=F('stock_quantity') - quantity)
+
+        if not updated_rows:
+            return Response({'error': f'Only limited stock left for {product.name}. Please reduce quantity.'}, status=400)
+
+        product.refresh_from_db()
+        if product.stock_quantity <= 0:
+            product.is_active = False
+            product.save(update_fields=['is_active'])
+
         product_image_url = data.get('product_image_url', '')
         if not product_image_url:
             first_img = product.images.first()
