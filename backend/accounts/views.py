@@ -1199,9 +1199,15 @@ class JewelryProductDetailView(APIView):
                       'cross_weight', 'stone_weight', 'net_weight',
                       'making_charge', 'wastage_charge', 'stone_value', 'tax_percent',
                       'price', 'original_price', 'tag', 'occasion', 'wedding_category',
-                      'gender', 'is_active']:
+                      'gender', 'is_active',
+                      'stock_quantity', 'low_stock_threshold']:   # ── NEW: restock fields ──
             if field in request.data:
                 setattr(product, field, request.data[field])
+
+        # ── NEW: Restock pannina, stock > 0 aana automatic-a "active" ah maathum ──
+        if 'stock_quantity' in request.data and int(request.data['stock_quantity']) > 0:
+            product.is_active = True
+
         product.save()
 
         new_images = request.FILES.getlist('uploaded_images')
@@ -1222,6 +1228,32 @@ class JewelryProductDetailView(APIView):
             return Response({'message': 'Product deleted'})
         except JewelryProduct.DoesNotExist:
             return Response({'error': 'Not found'}, status=404) 
+
+# ── NEW: Sold Out / Low Stock products list — dashboard "Notify" click ku ──
+class SoldOutProductsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+
+        from django.db.models import F, Q
+        filter_type = request.query_params.get('filter', 'sold_out')  # sold_out | low_stock | both
+
+        qs = JewelryProduct.objects.all().prefetch_related('images')
+        if filter_type == 'sold_out':
+            qs = qs.filter(stock_quantity=0)
+        elif filter_type == 'low_stock':
+            qs = qs.filter(stock_quantity__gt=0, stock_quantity__lte=F('low_stock_threshold'))
+        else:  # both
+            qs = qs.filter(Q(stock_quantity=0) | Q(stock_quantity__lte=F('low_stock_threshold')))
+
+        qs = qs.order_by('stock_quantity')
+        serializer = JewelryProductSerializer(qs, many=True, context={'request': request})
+        return Response({
+            'count': qs.count(),
+            'results': serializer.data,
+        })
 
 
 class JewelryProductImageDeleteView(APIView):
@@ -1409,11 +1441,27 @@ class JewelryOrderView(APIView):
         
         product_id = data.get('product_id')
         product_image_url = data.get('product_image_url', '')
+        quantity = int(data.get('quantity', 1))
         
         try:
             product = JewelryProduct.objects.get(id=product_id)
         except JewelryProduct.DoesNotExist:
             return Response({'error': 'Product not found'}, status=404)
+
+        # ── NEW: Atomic stock check + reduce — race condition safe ──
+        from django.db.models import F
+        updated_rows = JewelryProduct.objects.filter(
+            id=product_id, stock_quantity__gte=quantity
+        ).update(stock_quantity=F('stock_quantity') - quantity)
+
+        if not updated_rows:
+            return Response({'error': f'Only limited stock left for {product.name}. Please reduce quantity.'}, status=400)
+
+        # ── NEW: Auto sold-out — stock 0 aana product hide aagum ──
+        product.refresh_from_db()
+        if product.stock_quantity <= 0:
+            product.is_active = False
+            product.save(update_fields=['is_active'])
 
         # Get first image URL if not provided
         if not product_image_url:

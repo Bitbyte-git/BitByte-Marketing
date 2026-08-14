@@ -145,29 +145,7 @@ export default function AddProduct() {
   const [activeCategory, setActiveCategory] = useState('rings')
   const [products, setProducts]           = useState([])
   const [loadingProducts, setLoadingProducts] = useState(false)
-  const [showAddForm, setShowAddForm]     = useState(false)
-  const [metalPrices, setMetalPrices] = useState({
-  gold22k: null, gold24k: null, silver: null,
-  diamond18k: null, diamond22k: null, platinum92: null
-})
-
-  // Add form
-
-  const [productImages, setProductImages]     = useState([])
-  const [productPreviewUrls, setProductPreviewUrls] = useState([])
-  const [productMsg, setProductMsg]   = useState('')
-  const [productForm, setProductForm] = useState({
-  category: '', metal: '', grade: '', name: '', description: '',
-  cross_weight: '', stone_weight: '', making_charge: '', stone_value: '',
-  tag: '', occasion: '', wedding_category: '', gender: 'all', wastage_charge: ''
-})
-const [productSaving, setProductSaving] = useState(false)
-const [livePrice, setLivePrice] = useState(null)   // final price with tax
-const [netWeight, setNetWeight] = useState(null)    // cross - stone
-const [baseMetalAmt, setBaseMetalAmt] = useState(null) // netWeight × rate
-const [makingAmt, setMakingAmt] = useState(null)       // ← NEW
-const [discountAmt, setDiscountAmt] = useState(null)
-const [originalPrice, setOriginalPrice] = useState(null)
+  
 
   // Edit modal
   const [editProduct, setEditProduct] = useState(null)
@@ -195,21 +173,7 @@ const [originalPrice, setOriginalPrice] = useState(null)
   const inpStyle = { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '14px', padding: '13px 16px', color: text, fontSize: '14px', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit', transition: 'border-color 0.2s, box-shadow 0.2s', boxShadow: 'inset 0 1px 0 rgba(253,253,252,0.9)' }
   const lblStyle = { display: 'block', color: subtext, fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }
 
-useEffect(() => {
-  api.get('/metal-rates/').then(res => {
-    const d = res.data
-    setMetalPrices({
-      gold22k:     parseFloat(d.gold_22k)    || 0,
-      gold24k:     parseFloat(d.gold_24k)    || 0,
-      silver:      parseFloat(d.silver_999)  || 0,
-      diamond18k:  parseFloat(d.diamond_18k) || 0,
-      diamond22k:  parseFloat(d.diamond_22k) || 0,
-      platinum92:  parseFloat(d.platinum_92) || 0,
-    })
-  }).catch(() => {})
-}, [])
-
-  useEffect(() => { fetchProducts() }, [activeCategory])
+useEffect(() => { fetchProducts() }, [activeCategory])
 
   const fetchProducts = async () => {
     setLoadingProducts(true)
@@ -220,112 +184,13 @@ useEffect(() => {
     setLoadingProducts(false)
   }
 
-const calcAll = (crossW, stoneW, metal, grade, makingChargePct, discountPct, stoneVal) => {
-  const cw    = parseFloat(crossW) || 0
-  const sw    = parseFloat(stoneW) || 0
-  const mcPct = parseFloat(makingChargePct) || 0   // Making Charge %
-  const disPct = parseFloat(discountPct) || 0       // Discount %
-  const sv    = parseFloat(stoneVal) || 0
 
-  if (!cw || cw <= 0 || !metal) {
-    setNetWeight(null); setBaseMetalAmt(null)
-    setLivePrice(null); setMakingAmt(null); setDiscountAmt(null)
-    return
-  }
-
-  const nw = cw - sw
-  if (nw <= 0) {
-    setNetWeight(null); setBaseMetalAmt(null)
-    setLivePrice(null); setMakingAmt(null); setDiscountAmt(null)
-    return
-  }
-
-// ── Pick today's rate per gram ──
-  let rate = null
-  if (metal === 'gold') {
-    rate = grade === '24k' ? metalPrices.gold24k : metalPrices.gold22k
-  } else if (metal === 'diamond') {
-    rate = grade === '18k' ? metalPrices.diamond18k : metalPrices.diamond22k
-  } else if (metal === 'platinum') {
-    rate = metalPrices.platinum92
-  } else if (metal === 'silver') {
-    rate = metalPrices.silver
-  }
-
-  if (!rate) {
-    setNetWeight(nw); setBaseMetalAmt(null)
-    setLivePrice(null); setMakingAmt(null); setDiscountAmt(null)
-    return
-  }
-
-  // ── Step 1: Base = Net Weight × Today Rate ──
-  const base = nw * rate                         // e.g. 8 × 14100 = 1,12,800
-
- // ── Step 2: Making Charge = Rate × Making% ──
-  const makingAmtVal = rate * (mcPct / 100)        // 14,100 × 3% = ₹423
-
-  // ── Step 3: Rate + Making = effective rate per gram ──
-  const rateWithMaking = rate + makingAmtVal        // 14,100 + 423 = ₹14,523
-
-  // ── Step 4: Discount % on (Rate + Making) together ──
-  const discAmtVal = rateWithMaking * (disPct / 100) // 14,523 × 2% = ₹290.46
-
-  // ── Step 5: Effective rate after discount ──
-  const effectiveRate = rateWithMaking - discAmtVal  // 14,523 - 290.46 = ₹14,232.54
-
-  // ── Step 6: Final base = Net Weight × effective rate ──
-  const finalBase = nw * effectiveRate               // 8 × 14,232.54 = ₹1,13,860.32
-
-  // ── Step 7: Add Stone Value ──
-  const withStone = finalBase + sv
-
-  // ── Step 8: GST 3% ──
-  const total = (withStone * 1.03).toFixed(2)
-
-// Original = no discount applied (rateWithMaking × nw + sv) × 1.03
-  const originalTotal = ((nw * rateWithMaking + sv) * 1.03).toFixed(2)
-
-  setNetWeight(nw)
-  setBaseMetalAmt((nw * rate).toFixed(2))
-  setMakingAmt(makingAmtVal.toFixed(2))
-  setDiscountAmt(discAmtVal.toFixed(2))
-  setLivePrice(total)
-  setOriginalPrice(originalTotal)   // ← NEW
-}
-
-  // ── ADD ──
-  const handleSave = async () => {
-    if (!productForm.name.trim())    { setProductMsg('❌ Name required');     return }
-    if (!productForm.cross_weight)   { setProductMsg('❌ Cross Weight required');   return }
-    if (!productForm.category)       { setProductMsg('❌ Category required'); return }
-    if (!productForm.metal)          { setProductMsg('❌ Metal required');    return }
-    if (!productForm.grade) { setProductMsg('❌ Grade required'); return }
-    setProductSaving(true)
-    try {
-      const fd = new FormData()
-      Object.entries(productForm).forEach(([k, v]) => fd.append(k, v))
-//       fd.append('cross_weight', productForm.cross_weight || 0)
-// fd.append('stone_weight', productForm.stone_weight || 0)
-fd.append('net_weight', netWeight || 0)
-// fd.append('making_charge', productForm.making_charge || 0)
-// fd.append('stone_value', productForm.stone_value || 0)
-if (livePrice) fd.append('price', livePrice)
-  if (originalPrice) fd.append('original_price', originalPrice)
-      productImages.forEach(img => fd.append('uploaded_images', img))
-      await api.post('/jewelry-products/', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setProductMsg('✅ Product added!')
-      setProductForm({ category: '', metal: '', grade: '', name: '', description: '', cross_weight: '', stone_weight: '', making_charge: '', stone_value: '', tag: '', occasion: '', wedding_category: '', gender: 'all', wastage_charge: '' })
-      setProductImages([]); setProductPreviewUrls([]); setLivePrice(null); setNetWeight(null); setBaseMetalAmt(null); setMakingAmt(null); setDiscountAmt(null); setOriginalPrice(null)
-      setShowAddForm(false)
-      fetchProducts()
-    } catch (err) { setProductMsg('❌ ' + JSON.stringify(err.response?.data || err.message)) }
-    setProductSaving(false)
-  }
 
   // ── EDIT OPEN ──
   const openEdit = p => {
     setEditProduct(p)
-    setEditForm({ category: p.category, metal: p.metal, grade: p.grade, name: p.name, description: p.description || '', weight_grams: p.weight_grams || '', tag: p.tag || '', wedding_category: p.wedding_category || '' })
+    setEditForm({ category: p.category, metal: p.metal, grade: p.grade, name: p.name, description: p.description || '', weight_grams: p.weight_grams || '', tag: p.tag || '', wedding_category: p.wedding_category || '',
+      stock_quantity: p.stock_quantity ?? 0 })   // ── NEW: restock field ──
     setEditImages([]); setEditPreviews([]); setEditMsg('')
     setEditLivePrice(p.price ? String(p.price) : null)
   }
@@ -392,7 +257,7 @@ const handleDelete = async (id) => {
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: 1 }}>
           {CATEGORIES.map(cat => (
             <button key={cat.key}
-              onClick={() => { setActiveCategory(cat.key); setShowAddForm(false); setProductMsg('') }}
+              onClick={() => setActiveCategory(cat.key)}
               style={{ padding: '10px 16px', borderRadius: '999px', cursor: 'pointer', fontWeight: 900, fontSize: '12px', border: activeCategory === cat.key ? '1px solid #073B3F' : '1px solid rgba(189,207,206,0.72)', transition: 'all 0.2s', boxShadow: '0 10px 24px rgba(7,59,63,0.06)',
                 background: activeCategory === cat.key ? 'linear-gradient(135deg,#0C4044,#073B3F)' : '#F3F3F0',
                 color: activeCategory === cat.key ? '#FDFDFC' : '#0C4044',
@@ -410,11 +275,11 @@ const handleDelete = async (id) => {
     🖼️ Add Banner
   </button>
 
-          <button onClick={() => { setShowAddForm(s => !s); setProductMsg('') }}
-            style={{ padding: '12px 18px', borderRadius: '14px', border: showAddForm ? '1px solid rgba(201,32,53,0.35)' : '1px solid #073B3F', fontWeight: 900, fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
-              background: showAddForm ? 'rgba(201,32,53,0.1)' : 'linear-gradient(135deg,#0C4044,#073B3F)',
-              color: showAddForm ? '#C92035' : '#FDFDFC',
-            }}>{showAddForm ? '✕ Close' : '+ Add Product'}</button>
+          <button onClick={() => navigate('/add-new-product')}
+            style={{ padding: '12px 18px', borderRadius: '14px', border: '1px solid #073B3F', fontWeight: 900, fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
+              background: 'linear-gradient(135deg,#0C4044,#073B3F)',
+              color: '#FDFDFC',
+            }}>+ Add Product</button>
           <button onClick={() => navigate('/super-admin')} style={{ padding: '11px 16px', borderRadius: '14px', background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>
             ← Back
           </button>
@@ -424,273 +289,7 @@ const handleDelete = async (id) => {
       {/* ── PAGE BODY ── */}
       <div style={{ maxWidth: '1500px', margin: '0 auto', padding: '34px 32px 56px' }}>
 
-        {/* ── ADD FORM ── */}
-        {showAddForm && (
-          <div style={{ background: cardBg, border: cardBorder, borderRadius: '22px', padding: '30px', marginBottom: '32px', animation: 'fadeIn 0.3s ease', boxShadow: '0 24px 64px rgba(7,59,63,0.08)' }}>
-            <div style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '20px' }}>➕ Add New Product</div>
-
-            {productMsg && (
-              <div style={{ background: productMsg.includes('✅') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${productMsg.includes('✅') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: productMsg.includes('✅') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px' }}>
-                {productMsg}
-              </div>
-            )}
-
- {/* Row 1 - category / Wedding Category / metal / grade */}
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-  {/* Metal FIRST */}
-  <div>
-    <label style={lblStyle}>Metal *</label>
-    <select value={productForm.metal} onChange={e => setProductForm(f => ({ ...f, metal: e.target.value, grade: '', name: '' }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-      <option value="" style={{ background: optionBg }}>-- Select --</option>
-      <option value="gold" style={{ background: optionBg }}>🏅 Gold</option>
-      <option value="silver" style={{ background: optionBg }}>🥈 Silver</option>
-      <option value="diamond" style={{ background: optionBg }}>💎 Diamond</option>
-      <option value="platinum" style={{ background: optionBg }}>⚪ Platinum</option>
-    </select>
-  </div>
-
-  {/* Product second */}
-  <div>
-    <label style={lblStyle}>Product *</label>
-    <select value={productForm.category} onChange={e => setProductForm(f => ({ ...f, category: e.target.value, grade: '', name: '' }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-      <option value="" style={{ background: optionBg }}>-- Select --</option>
-      {CATEGORIES.map(c => <option key={c.key} value={c.key} style={{ background: optionBg }}>{c.emoji} {c.label}</option>)}
-    </select>
-  </div>
-
-  {/* Wedding Category */}
-  <div>
-    <label style={lblStyle}>Wedding Category</label>
-    <select value={productForm.wedding_category} onChange={e => setProductForm(f => ({ ...f, wedding_category: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-      <option value="" style={{ background: optionBg }}>-- None --</option>
-      {WEDDING_CATEGORIES.map(w => <option key={w} value={w} style={{ background: optionBg }}>{w}</option>)}
-    </select>
-  </div>
-
-  {/* Grade — smart logic */}
-  {(() => {
-    const m = productForm.metal
-    const cat = productForm.category
-    // Hide grade for diamond (diamond has its own 18k/22k below in a different spot... wait we show it)
-    // Actually: diamond → show 18k/22k; platinum → 950; gold/silver coins → 22k/24k; gold earrings & others → 22k only; silver → 999
-    if (!m || m === '') return <div />
-
-    const gradeOptions = getGradeOptions(m, cat)
-
-    return (
-      <div>
-        <label style={lblStyle}>Grade *</label>
-        <select value={productForm.grade} onChange={e => setProductForm(f => ({ ...f, grade: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-          <option value="" style={{ background: optionBg }}>-- Select --</option>
-          {gradeOptions.map(g => (
-            <option key={g} value={g} style={{ background: optionBg }}>{g.toUpperCase()}</option>
-          ))}
-        </select>
-      </div>
-    )
-  })()}
-</div>
-
-{/* Row 2 - Product Name / Occasion / Tag */}
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-  <div>
-    <label style={lblStyle}>Product Name *</label>
-    <input
-      list="product-name-options"
-      value={productForm.name}
-      onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))}
-      placeholder={productForm.category && productForm.metal ? 'Select a suggestion or type a custom name' : 'Select metal and product first'}
-      disabled={!productForm.category || !productForm.metal}
-      style={{ ...inpStyle, cursor: 'pointer' }}
-    />
-    <datalist id="product-name-options">
-      {(SUBCATEGORIES[productForm.category]?.[productForm.metal] || []).map(n => (
-        <option key={n} value={n} />
-      ))}
-    </datalist>
-  </div>
-  <div>
-    <label style={lblStyle}>Occasion</label>
-    <select value={productForm.occasion} onChange={e => setProductForm(f => ({ ...f, occasion: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-      <option value="" style={{ background: optionBg }}>-- None --</option>
-      {OCCASIONS.map(o => <option key={o} value={o} style={{ background: optionBg }}>{o}</option>)}
-    </select>
-  </div>
-  <div>
-    <label style={lblStyle}>Tag</label>
-    <select value={productForm.tag} onChange={e => setProductForm(f => ({ ...f, tag: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-      <option value="" style={{ background: optionBg }}>-- None --</option>
-      {TAGS.map(t => <option key={t} value={t} style={{ background: optionBg }}>{t}</option>)}
-    </select>
-  </div>
-</div>
-
-{/* Row 3 - Gender only */}
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-  <div>
-    <label style={lblStyle}>Gender</label>
-    <select value={productForm.gender} onChange={e => setProductForm(f => ({ ...f, gender: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-      {GENDERS.map(g => <option key={g} value={g} style={{ background: optionBg }}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>)}
-    </select>
-  </div>
-</div>
-  
-            {/* Description */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={lblStyle}>Description</label>
-              <textarea value={productForm.description} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))} rows={2} placeholder="Product description..." style={{ ...inpStyle, resize: 'vertical' }} />
-            </div>
-
-{/* Weight Section */}
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-  {/* Cross Weight */}
-  <div>
-    <label style={lblStyle}>Cross Weight (g) *</label>
-    <input type="number" step="0.0001" value={productForm.cross_weight}
-      onChange={e => {
-        const v = e.target.value
-        setProductForm(f => ({ ...f, cross_weight: v }))
-       calcAll(v, productForm.stone_weight, productForm.metal, productForm.grade, productForm.making_charge, productForm.wastage_charge, productForm.stone_value)
-      }}
-      placeholder="e.g. 10" style={inpStyle} />
-  </div>
-
-  {/* Stone Weight */}
-  <div>
-    <label style={lblStyle}>Stone Weight (g)</label>
-    <input type="number" step="0.0001" value={productForm.stone_weight}
-      onChange={e => {
-        const v = e.target.value
-        setProductForm(f => ({ ...f, stone_weight: v }))
-        calcAll(productForm.cross_weight, v, productForm.metal, productForm.grade, productForm.making_charge, productForm.wastage_charge, productForm.stone_value)
-      }}
-      placeholder="e.g. 2 (0 if none)" style={inpStyle} />
-  </div>
-
-  {/* Net Weight Display */}
-  <div>
-    <label style={lblStyle}>Net Weight (auto)</label>
-    <div style={{
-      ...inpStyle,
-      border: `1px solid ${netWeight ? 'rgba(12,64,68,0.5)' : inpBorder}`,
-      color: netWeight ? '#0C4044' : subtext,
-      fontWeight: 800, fontFamily: 'monospace'
-    }}>
-      {netWeight
-        ? `${netWeight}g${baseMetalAmt ? ` (₹${Number(baseMetalAmt).toLocaleString('en-IN')})` : ''}`
-        : '—'}
-    </div>
-  </div>
-</div>
-
-
-
-{/* Making Charge + Stone Value + Final Price — ALL metals */}
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '16px' }}>
-
-  {/* Making Charge % */}
-  <div>
-    <label style={lblStyle}>Making Charge (%)</label>
-    <input type="number" step="0.01" value={productForm.making_charge}
-      onChange={e => {
-        const v = e.target.value
-        setProductForm(f => ({ ...f, making_charge: v }))
-        calcAll(productForm.cross_weight, productForm.stone_weight, productForm.metal, productForm.grade, v, productForm.wastage_charge, productForm.stone_value)
-      }}
-      placeholder="e.g. 2" style={inpStyle} />
-    {makingAmt && (
-      <div style={{ fontSize: '10px', color: '#0C4044', marginTop: '4px' }}>
-        = ₹{Number(makingAmt).toLocaleString('en-IN')}
-      </div>
-    )}
-  </div>
-
-  {/* Discount % */}
-  <div>
-    <label style={lblStyle}>Discount (%)</label>
-    <input type="number" step="0.01" value={productForm.wastage_charge}
-      onChange={e => {
-        const v = e.target.value
-        setProductForm(f => ({ ...f, wastage_charge: v }))
-        calcAll(productForm.cross_weight, productForm.stone_weight, productForm.metal, productForm.grade, productForm.making_charge, v, productForm.stone_value)
-      }}
-      placeholder="e.g. 4" style={inpStyle} />
-    {discountAmt && (
-      <div style={{ fontSize: '10px', color: '#BB8958', marginTop: '4px' }}>
-        − ₹{Number(discountAmt).toLocaleString('en-IN')} off making
-      </div>
-    )}
-  </div>
-
-  {/* Stone Value */}
-  <div>
-    <label style={lblStyle}>Stone Value (₹)</label>
-    <input type="number" step="1" value={productForm.stone_value}
-      onChange={e => {
-        const v = e.target.value
-        setProductForm(f => ({ ...f, stone_value: v }))
-        calcAll(productForm.cross_weight, productForm.stone_weight, productForm.metal, productForm.grade, productForm.making_charge, productForm.wastage_charge, v)
-      }}
-      placeholder="e.g. 2000" style={inpStyle} />
-  </div>
-
-  {/* Total Price (auto) */}
-  <div>
-    <label style={lblStyle}>Total Price (with 3% tax)</label>
-    <div style={{
-      ...inpStyle,
-      color: livePrice ? '#0C4044' : subtext,
-      fontWeight: 800, fontFamily: 'monospace',
-      border: `1px solid ${livePrice ? 'rgba(12,64,68,0.5)' : inpBorder}`
-    }}>
-      {livePrice ? `₹ ${Number(livePrice).toLocaleString('en-IN')}` : '—'}
-    </div>
-    {livePrice && (
-      <div style={{ fontSize: '10px', color: '#0C4044', marginTop: '4px' }}>
-        ✅ Includes 3% GST
-      </div>
-    )}
-    {!livePrice && productForm.metal && productForm.grade && (
-      <div style={{ fontSize: '10px', color: '#C92035', marginTop: '4px' }}>
-        ⚠️ No rate entered for {productForm.metal} {productForm.grade}
-      </div>
-    )}
-  </div>
-
-</div>
-
-  
-
-
-            {/* Images */}
-            <div style={{ marginBottom: '18px' }}>
-              <label style={lblStyle}>Product Images</label>
-              <label htmlFor="ap-add-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '13px', background: 'rgba(12,64,68,0.08)', border: '2px dashed rgba(12,64,68,0.4)', borderRadius: '10px', cursor: 'pointer', color: '#0C4044', fontWeight: 700, fontSize: '13px' }}>
-                📷 Add Images
-              </label>
-              <input id="ap-add-img" type="file" accept="image/*" multiple style={{ display: 'none' }}
-                onChange={e => { const f = Array.from(e.target.files); setProductImages(p => [...p, ...f]); setProductPreviewUrls(p => [...p, ...f.map(x => URL.createObjectURL(x))]); e.target.value = '' }} />
-              {productPreviewUrls.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '12px' }}>
-                  {productPreviewUrls.map((url, idx) => (
-                    <div key={idx} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(12,64,68,0.3)', cursor: 'pointer' }}
-                      onClick={() => setLightboxUrl(url)}>
-                      <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button onClick={e => { e.stopPropagation(); setProductImages(p => p.filter((_, i) => i !== idx)); setProductPreviewUrls(p => p.filter((_, i) => i !== idx)) }}
-                        style={{ position: 'absolute', top: '3px', right: '3px', background: 'rgba(201,32,53,0.9)', color: '#FDFDFC', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button disabled={productSaving} onClick={handleSave}
-              style={{ padding: '12px 32px', background: productSaving ? 'rgba(12,64,68,0.22)' : 'linear-gradient(135deg,#0C4044,#073B3F)', border: 'none', borderRadius: '12px', fontWeight: 900, fontSize: '14px', color: productSaving ? '#0C4044' : '#FDFDFC', cursor: productSaving ? 'not-allowed' : 'pointer' }}>
-              {productSaving ? '⏳ Saving...' : '✅ Add Product'}
-            </button>
-          </div>
-        )}
-
+        
         {/* ── PRODUCT GRID HEADER ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
           <div style={{ color: '#0C4044', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1.4px' }}>
@@ -763,7 +362,16 @@ const handleDelete = async (id) => {
                         {price > 0 ? `₹${price.toLocaleString('en-IN')}` : '—'}
                       </div>
                     </div>
-                    <div style={{ color: subtext, fontSize: '11px', fontWeight: 700, marginTop: '8px' }}>📷 {p.images?.length || 0} image{p.images?.length !== 1 ? 's' : ''}</div>
+<div style={{ color: subtext, fontSize: '11px', fontWeight: 700, marginTop: '8px' }}>📷 {p.images?.length || 0} image{p.images?.length !== 1 ? 's' : ''}</div>
+                    {/* NEW: Stock status badge */}
+                    <div style={{
+                      fontSize: '11px', fontWeight: 800, marginTop: '4px',
+                      color: p.stock_status === 'out_of_stock' ? '#C92035' : p.stock_status === 'low_stock' ? '#BB8958' : '#0C4044'
+                    }}>
+                      📦 Stock: {p.stock_quantity ?? 0}
+                      {p.stock_status === 'out_of_stock' && ' — SOLD OUT (Edit to restock)'}
+                      {p.stock_status === 'low_stock' && ' — Low Stock ⚠️'}
+                    </div>
                   </div>
                 </div>
               )
@@ -872,7 +480,7 @@ const handleDelete = async (id) => {
               </div>
 
               {/* weight / live price */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                 <div>
                   <label style={lblStyle}>Weight (grams)</label>
                   <input type="number" step="0.0001" value={editForm.weight_grams}
@@ -885,6 +493,22 @@ const handleDelete = async (id) => {
                     {editLivePrice ? `₹ ${editLivePrice}` : '—'}
                   </div>
                 </div>
+              </div>
+
+              {/* NEW: Restock section */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={lblStyle}>Stock Quantity (Restock here)</label>
+                <input type="number" step="1" min="0" value={editForm.stock_quantity}
+                  onChange={e => setEditForm(f => ({ ...f, stock_quantity: e.target.value }))}
+                  placeholder="e.g. 50" style={{
+                    ...inpStyle,
+                    border: `2px solid ${Number(editForm.stock_quantity) <= 0 ? 'rgba(201,32,53,0.5)' : 'rgba(12,64,68,0.5)'}`
+                  }} />
+                {Number(editForm.stock_quantity) <= 0 && (
+                  <div style={{ fontSize: '10px', color: '#C92035', marginTop: '4px', fontWeight: 700 }}>
+                    ⚠️ Product will show as SOLD OUT
+                  </div>
+                )}
               </div>
 
               {/* Add more images */}

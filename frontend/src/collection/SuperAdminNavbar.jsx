@@ -15,6 +15,7 @@ function Icon({ name, size = 17 }) {
     logout: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></>,
     mic: <><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><path d="M12 18v4" /><path d="M9 22h6" /></>,
     chevron: <path d="m6 9 6 6 6-6" />,
+    alert: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></>,
   }
   return <svg {...common}>{icons[name]}</svg>
 }
@@ -553,6 +554,7 @@ export default function SuperAdminNavbar({
               <MenuGroup label="Payment" items={payment} />  
             </div>
             <div className="san-actions">
+<button className="san-action" type="button" onClick={() => navigate('/sold-out-products')} style={{ color: '#C92035' }}><Icon name="alert" />Stock Alerts</button>
 <button className="san-action" type="button" onClick={() => setShowTodayRates(true)}><Icon name="rate" />Today Rates</button>
               <button className="san-action logout" type="button" onClick={logout}><Icon name="logout" />Logout</button>
             </div>

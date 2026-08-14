@@ -33,6 +33,8 @@ const CardSection = lazy(() => import('./collection/card_section'))
 const WishlistPage = lazy(() => import('./collection/WishlistPage'))
 const BBLive = lazy(() => import('./collection/bb-live'))
 const AddProduct = lazy(() => import('./Products/add_product'))
+const AddNewProduct = lazy(() => import('./Products/add_new_product'))  
+const SoldOutProducts = lazy(() => import('./Products/SoldOutProducts'))
 const AddBanners = lazy(() => import('./Products/banners/add_banners'))
 const HomeBanner = lazy(() => import('./Products/banners/home_banner'))
 const OrderConfirm = lazy(() => import('./Orders/Orderconfirm'))
@@ -219,6 +221,8 @@ export default function App() {
           <Route path="/cart" element={<WithCustomerNavbar><CardSection /></WithCustomerNavbar>} />
           <Route path="/product-display" element={<WithCustomerNavbar><ProductDisplay /></WithCustomerNavbar>} />
           <Route path="/add-product" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AddProduct /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/add-new-product" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AddNewProduct /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/sold-out-products" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SoldOutProducts /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/add-banners" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AddBanners /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/home-banner" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><HomeBanner /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/collection/all" element={<WithCustomerNavbar><AllCollection /></WithCustomerNavbar>} />

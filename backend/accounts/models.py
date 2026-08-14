@@ -630,8 +630,26 @@ class JewelryProduct(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # ── NEW: Inventory management fields ──
+    product_code = models.CharField(max_length=20, unique=True, blank=True)  # e.g. JWL20260001
+    stock_quantity = models.PositiveIntegerField(default=0)
+    low_stock_threshold = models.PositiveIntegerField(default=5)
+
+    def save(self, *args, **kwargs):
+        # Auto-generate product_code: JWL{year}{0001, 0002, ...}
+        if not self.product_code:
+            from django.utils import timezone
+            year = timezone.now().year
+            count = JewelryProduct.objects.count() + 1
+            new_code = f"JWL{year}{count:05d}"
+            while JewelryProduct.objects.filter(product_code=new_code).exists():
+                count += 1
+                new_code = f"JWL{year}{count:05d}"
+            self.product_code = new_code
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.name} ({self.category} - {self.metal})"
+        return f"{self.product_code} - {self.name} ({self.category} - {self.metal})"
 
 
 class JewelryProductImage(models.Model):

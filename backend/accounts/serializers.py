@@ -442,17 +442,27 @@ class JewelryProductSerializer(serializers.ModelSerializer):
     uploaded_images = serializers.ListField(
         child=serializers.ImageField(), write_only=True, required=False
     )
+    # ── NEW: computed field — frontend badge ku use pannalam ──
+    stock_status = serializers.SerializerMethodField()
 
     class Meta:    # ← 4 spaces — CORRECT
         model = JewelryProduct
         fields = [
-            'id', 'category', 'metal', 'grade', 'name', 'description',
+            'id', 'product_code', 'category', 'metal', 'grade', 'name', 'description',
             'cross_weight', 'stone_weight', 'net_weight',
             'making_charge','wastage_charge', 'stone_value', 'tax_percent',
             'price', 'original_price', 'tag', 'occasion', 'wedding_category', 'gender', 'is_active',
+            'stock_quantity', 'low_stock_threshold', 'stock_status',
             'created_at', 'images', 'uploaded_images'
         ]
-        read_only_fields = ['created_at']
+        read_only_fields = ['created_at', 'product_code']
+
+    def get_stock_status(self, obj):
+        if obj.stock_quantity <= 0:
+            return 'out_of_stock'
+        elif obj.stock_quantity <= obj.low_stock_threshold:
+            return 'low_stock'
+        return 'in_stock'
         
     def create(self, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', [])
