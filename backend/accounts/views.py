@@ -3133,8 +3133,6 @@ class TodayLoginStatusView(APIView):
         })
 
 class DashboardQuickStatsView(APIView):
-    """Super Admin dashboard 4 KPI cards ku - Yesterday Order, Today Order,
-    Today New Customer, Active User. 60 sec cache - fast load ku."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -3149,14 +3147,24 @@ class DashboardQuickStatsView(APIView):
         today = timezone.now().date()
         yesterday = today - timedelta(days=1)
 
+        active_users = User.objects.exclude(role='super_admin').filter(last_login__date=today).count()
+
         data = {
             'yesterday_orders': JewelryOrder.objects.filter(created_at__date=yesterday).count(),
             'today_orders': JewelryOrder.objects.filter(created_at__date=today).count(),
             'today_new_customers': CustomerProfile.objects.filter(created_at__date=today).count(),
-            'active_users': User.objects.exclude(role='super_admin').filter(last_login__date=today).count(),
+            'active_users': active_users,
+            # NEW: for Role Distribution pie chart
+            'admins': AdminProfile.objects.count(),
+            'dealers': DealerProfile.objects.count(),
+            'sub_dealers': SubDealerProfile.objects.count(),
+            'promotors': PromotorProfile.objects.count(),
+            'customers': CustomerProfile.objects.count(),
+            # NEW: for Today's Login Status pie chart
+            'today_inactive_count': User.objects.exclude(role='super_admin').exclude(last_login__date=today).count(),
         }
         cache.set(cache_key, data, 60)
-        return Response(data)        
+        return Response(data)
 
 class CoinRequestView(APIView):
     """

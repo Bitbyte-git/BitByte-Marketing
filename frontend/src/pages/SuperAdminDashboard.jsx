@@ -1371,11 +1371,12 @@ const fetchAllMembers = async (adminsData = []) => {
 
   const [loginStatus, setLoginStatus] = useState({ active_count: 0, inactive_count: 0 })
 const [quickStats, setQuickStats] = useState(() => {
+  const defaults = { yesterday_orders: 0, today_orders: 0, today_new_customers: 0, active_users: 0, admins: 0, dealers: 0, sub_dealers: 0, promotors: 0, customers: 0, today_inactive_count: 0 }
   try {
     const cached = localStorage.getItem('sa_quick_stats')
-    return cached ? JSON.parse(cached) : { yesterday_orders: 0, today_orders: 0, today_new_customers: 0, active_users: 0 }
+    return cached ? { ...defaults, ...JSON.parse(cached) } : defaults
   } catch {
-    return { yesterday_orders: 0, today_orders: 0, today_new_customers: 0, active_users: 0 }
+    return defaults
   }
 })
   const fetchLoginStatus = async () => {
@@ -2534,20 +2535,20 @@ const fetchCoinStock = async () => {
     
           <div className="sa-pie-card" style={{ background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 20, padding: '24px 26px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
             <div className="sa-pie-title" style={{ fontSize: 14, fontWeight: 800, color: '#0C4044', marginBottom: 4 }}>Role Distribution</div>
-            <div className="lux-display sa-pie-total" style={{ fontSize: 28, fontWeight: 800, color: '#111817', marginBottom: 10 }}>
-              {totalStats ? (totalStats.admins + totalStats.dealers + totalStats.subDealers + totalStats.promotors + totalStats.customers) : 0} total
-            </div>
-            {totalStats && (
-              <ResponsiveContainer width="100%" height={270}>
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Admin', value: totalStats.admins },
-                      { name: 'Dealer', value: totalStats.dealers },
-                      { name: 'Sub Dealer', value: totalStats.subDealers },
-                      { name: 'Promotor', value: totalStats.promotors },
-                      { name: 'Customer', value: totalStats.customers },
-                    ]}
+<div className="lux-display sa-pie-total" style={{ fontSize: 28, fontWeight: 800, color: '#111817', marginBottom: 10 }}>
+  {quickStats.admins + quickStats.dealers + quickStats.sub_dealers + quickStats.promotors + quickStats.customers} total
+</div>
+{(
+  <ResponsiveContainer width="100%" height={270}>
+    <PieChart>
+      <Pie
+        data={[
+          { name: 'Admin', value: quickStats.admins },
+          { name: 'Dealer', value: quickStats.dealers },
+          { name: 'Sub Dealer', value: quickStats.sub_dealers },
+          { name: 'Promotor', value: quickStats.promotors },
+          { name: 'Customer', value: quickStats.customers },
+        ]}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
@@ -2568,11 +2569,11 @@ const fetchCoinStock = async () => {
             )}
             <div className="sa-pie-legend" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
               {[
-                { label: 'Admin', color: '#53615F', count: totalStats?.admins || 0 },
-                { label: 'Dealer', color: '#0C4044', count: totalStats?.dealers || 0 },
-                { label: 'Sub Dealer', color: '#BB8958', count: totalStats?.subDealers || 0 },
-                { label: 'Promotor', color: '#CCA881', count: totalStats?.promotors || 0 },
-                { label: 'Customer', color: '#C92035', count: totalStats?.customers || 0 },
+                { label: 'Admin', color: '#53615F', count: quickStats.admins || 0 },
+{ label: 'Dealer', color: '#0C4044', count: quickStats.dealers || 0 },
+{ label: 'Sub Dealer', color: '#BB8958', count: quickStats.sub_dealers || 0 },
+{ label: 'Promotor', color: '#CCA881', count: quickStats.promotors || 0 },
+{ label: 'Customer', color: '#C92035', count: quickStats.customers || 0 },
               ].map(l => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <div className="sa-pie-legend-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: l.color }} />
@@ -2585,16 +2586,16 @@ const fetchCoinStock = async () => {
           {/* Active/Inactive Login Pie */}
           <div className="sa-pie-card" style={{ background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 20, padding: '24px 26px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
             <div className="sa-pie-title" style={{ fontSize: 14, fontWeight: 800, color: '#0C4044', marginBottom: 4 }}>Today's Login Status</div>
-            <div className="lux-display sa-pie-total" style={{ fontSize: 28, fontWeight: 800, color: '#111817', marginBottom: 10 }}>
-              {loginStatus.active_count + loginStatus.inactive_count} total users
-            </div>
-            <ResponsiveContainer width="100%" height={270}>
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: 'Active', value: loginStatus.active_count },
-                    { name: 'Inactive', value: loginStatus.inactive_count },
-                  ]}
+<div className="lux-display sa-pie-total" style={{ fontSize: 28, fontWeight: 800, color: '#111817', marginBottom: 10 }}>
+  {quickStats.active_users + quickStats.today_inactive_count} total users
+</div>
+<ResponsiveContainer width="100%" height={270}>
+  <PieChart>
+    <Pie
+      data={[
+        { name: 'Active', value: quickStats.active_users },
+        { name: 'Inactive', value: quickStats.today_inactive_count },
+      ]}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
@@ -2620,14 +2621,14 @@ const fetchCoinStock = async () => {
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
               >
                 <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#0C4044' }} />
-                <span style={{ fontSize: 16, color: '#0C4044', fontWeight: 900 }}>Active {loginStatus.active_count}</span>
+                <span style={{ fontSize: 16, color: '#0C4044', fontWeight: 900 }}>Active {quickStats.active_users}</span>
               </div>
               <div
                 onClick={() => navigate('/login-inactive')}
                 style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
               >
                 <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#C92035' }} />
-                <span style={{ fontSize: 16, color: '#C92035', fontWeight: 900 }}>Inactive {loginStatus.inactive_count}</span>
+                <span style={{ fontSize: 16, color: '#C92035', fontWeight: 900 }}>Inactive {quickStats.today_inactive_count}</span>
               </div>
             </div>
           </div>
