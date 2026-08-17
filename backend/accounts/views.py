@@ -3132,6 +3132,32 @@ class TodayLoginStatusView(APIView):
             'inactive': entries if list_type == 'inactive' else [],
         })
 
+class DashboardQuickStatsView(APIView):
+    """Super Admin dashboard 4 KPI cards ku - Yesterday Order, Today Order,
+    Today New Customer, Active User. 60 sec cache - fast load ku."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+
+        cache_key = 'sa_dashboard_quick_stats'
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        today = timezone.now().date()
+        yesterday = today - timedelta(days=1)
+
+        data = {
+            'yesterday_orders': JewelryOrder.objects.filter(created_at__date=yesterday).count(),
+            'today_orders': JewelryOrder.objects.filter(created_at__date=today).count(),
+            'today_new_customers': CustomerProfile.objects.filter(created_at__date=today).count(),
+            'active_users': User.objects.exclude(role='super_admin').filter(last_login__date=today).count(),
+        }
+        cache.set(cache_key, data, 60)
+        return Response(data)        
+
 class CoinRequestView(APIView):
     """
     POST — Promotor/SubDealer/Dealer/Admin creates a coin request to their assigned parent.

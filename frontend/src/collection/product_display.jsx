@@ -564,6 +564,15 @@ const displayOriginalPrice = calcOriginalPriceMain()
     const imgRect = mainImageRef.current?.getBoundingClientRect()
     if (!frameRect || !imgRect || !mainImage) return
 
+    // ── image area kulla than mouse irukka nu check pannurom — illana zoom hide ──
+    const insideImage = e.clientX >= imgRect.left && e.clientX <= imgRect.right &&
+                         e.clientY >= imgRect.top && e.clientY <= imgRect.bottom
+    if (!insideImage) {
+      setShowZoom(false)
+      return
+    }
+    setShowZoom(true)
+
     const lensSize = 172
     const zoomScale = 2.65
     const frameX = e.clientX - frameRect.left
@@ -1015,7 +1024,7 @@ const displayOriginalPrice = calcOriginalPriceMain()
             <div className="pd-shine" />
 
             {/* Main image frame */}
-            <div className="pd-img-frame" ref={imageRef} onMouseMove={handleMouseMove} onMouseEnter={() => setShowZoom(true)} onMouseLeave={() => setShowZoom(false)} style={{ height: 480, display: 'grid', placeItems: 'center', cursor: 'zoom-in' }}>
+<div className="pd-img-frame" ref={imageRef} onMouseMove={handleMouseMove} onMouseLeave={() => setShowZoom(false)} style={{ height: 480, display: 'grid', placeItems: 'center', cursor: 'zoom-in' }}>
 
               {/* Tag ribbon */}
               {productTag && !(!product.is_active) && (

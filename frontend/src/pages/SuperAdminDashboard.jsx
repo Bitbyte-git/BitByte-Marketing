@@ -1370,6 +1370,14 @@ const fetchAllMembers = async (adminsData = []) => {
   }
 
   const [loginStatus, setLoginStatus] = useState({ active_count: 0, inactive_count: 0 })
+const [quickStats, setQuickStats] = useState(() => {
+  try {
+    const cached = localStorage.getItem('sa_quick_stats')
+    return cached ? JSON.parse(cached) : { yesterday_orders: 0, today_orders: 0, today_new_customers: 0, active_users: 0 }
+  } catch {
+    return { yesterday_orders: 0, today_orders: 0, today_new_customers: 0, active_users: 0 }
+  }
+})
   const fetchLoginStatus = async () => {
     try {
       const res = await api.get('/today-login-status/')
@@ -1378,6 +1386,16 @@ const fetchAllMembers = async (adminsData = []) => {
       console.error('Login status fetch error:', err)
     }
   }
+
+  const fetchQuickStats = async () => {
+  try {
+    const res = await api.get('/dashboard-quick-stats/')
+    setQuickStats(res.data)
+    localStorage.setItem('sa_quick_stats', JSON.stringify(res.data))
+  } catch (e) {
+    console.error('quick stats fetch error:', e)
+  }
+}
 
 const fetchMetalPrices = async () => {
     setMetalLoading(true)
@@ -1517,7 +1535,8 @@ useEffect(() => {
   fetchMetalPrices()
   fetchOrderStats()
   fetchHierarchy()
-  fetchLoginStatus()
+fetchLoginStatus()
+fetchQuickStats()
 }, [])
 
 
@@ -2489,24 +2508,24 @@ const fetchCoinStock = async () => {
 
             <div className="sa-main-offset sa-dashboard-row" style={{ display: 'flex', width: 'calc(100% - 286px)', marginLeft: 286, gap: 22, padding: '24px 34px 0', boxSizing: 'border-box', alignItems: 'stretch' }}>
         <div className="sa-dashboard-grid">
-          {[
-            { label: 'Order Volume', value: orderStats.today.gold_22k.count + orderStats.today.gold_24k.count + orderStats.today.silver_999.count, sub: 'orders', note: '+0%\nvs yesterday', color: '#00A767', bg: '#EAF8F0', icon: 'cart' },
-            { label: 'Total Users', value: (totalStats ? totalStats.admins + totalStats.dealers + totalStats.subDealers + totalStats.promotors + totalStats.customers : 0), sub: '', note: `Active: ${loginStatus.active_count}    Inactive: ${loginStatus.inactive_count}`, color: '#2563EB', bg: '#EAF2FF', icon: 'users' },
-            { label: 'Total Customers', value: totalStats?.customers || 0, sub: '', note: '+12.5%\nvs last month', color: '#00A767', bg: '#EAF8F0', icon: 'users' },
-            { label: 'Total Dealers', value: totalStats?.dealers || 0, sub: '', note: '+6.8%\nvs last month', color: '#9B31FF', bg: '#F5EAFF', icon: 'store' },
-          ].map(kpi => (
-            <div className="sa-kpi-card" key={kpi.label}>
-              <div className="sa-kpi-icon" style={{ background: kpi.bg, color: kpi.color }}>
-                {kpi.icon === 'cart' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6h15l-2 9H8L6 3H3"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg> : kpi.icon === 'store' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h16l-1-5H5l-1 5z"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>}
-              </div>
-              <div>
-                <div className="sa-kpi-label">{kpi.label}</div>
-                <div><span className="sa-kpi-value">{kpi.value}</span>{kpi.sub && <span style={{ marginLeft: 8, color: '#071A2D', fontSize: 16 }}>{kpi.sub}</span>}</div>
-                <div className="sa-kpi-note" style={{ whiteSpace: 'pre-line', color: kpi.note.includes('Inactive') ? '#071A2D' : '#009957' }}>{kpi.note}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+  {[
+    { label: 'Yesterday Order', value: quickStats.yesterday_orders, sub: 'orders', note: 'compared to today', color: '#9B31FF', bg: '#F5EAFF', icon: 'cart' },
+    { label: 'Today Order', value: quickStats.today_orders, sub: 'orders', note: '+0%\nvs yesterday', color: '#00A767', bg: '#EAF8F0', icon: 'cart' },
+    { label: 'Today New Customer', value: quickStats.today_new_customers, sub: '', note: 'joined today', color: '#00A767', bg: '#EAF8F0', icon: 'users' },
+    { label: 'Active User', value: quickStats.active_users, sub: '', note: 'logged in today', color: '#2563EB', bg: '#EAF2FF', icon: 'users' },
+  ].map(kpi => (
+    <div className="sa-kpi-card" key={kpi.label}>
+      <div className="sa-kpi-icon" style={{ background: kpi.bg, color: kpi.color }}>
+        {kpi.icon === 'cart' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6h15l-2 9H8L6 3H3"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg> : kpi.icon === 'store' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h16l-1-5H5l-1 5z"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>}
+      </div>
+      <div>
+        <div className="sa-kpi-label">{kpi.label}</div>
+        <div><span className="sa-kpi-value">{kpi.value}</span>{kpi.sub && <span style={{ marginLeft: 8, color: '#071A2D', fontSize: 16 }}>{kpi.sub}</span>}</div>
+        <div className="sa-kpi-note" style={{ whiteSpace: 'pre-line', color: kpi.note.includes('Inactive') ? '#071A2D' : '#009957' }}>{kpi.note}</div>
+      </div>
+    </div>
+  ))}
+</div>
         <OrderTrendChart dark={dark} />
 
    
