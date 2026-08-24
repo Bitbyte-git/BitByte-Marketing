@@ -22,11 +22,16 @@ const SEARCH_TYPES = [
   { label: 'Bridal', value: 'bridal jewelry' },
 ]
 
-function ShopCard({ shop, onDirections, onCall }) {
+function ShopCard({ shop, index, onDirections, onCall }) {
+  const initials = shop.name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase()
   return (
     <article className="shop-card">
       <div className="shop-image">
         <div className="shop-image-mark">✦</div>
+
+        <span className="shop-rank">{String(index + 1).padStart(2, '0')}</span>
+        <div className="shop-monogram"><span>{initials || 'L'}</span></div>
+        <div className="shop-image-caption">Curated local jeweller</div>
 
         {shop.distance !== null && shop.distance !== undefined && (
           <div className="shop-ribbon">
@@ -42,9 +47,10 @@ function ShopCard({ shop, onDirections, onCall }) {
       </div>
 
       <div className="shop-content">
+        <div className="shop-eyebrow"><span /> Nearby boutique</div>
         <h2 className="shop-name">{shop.name}</h2>
 
-        {shop.address && <p className="shop-address">{shop.address}</p>}
+        {shop.address && <p className="shop-address"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 21s7-6.2 7-13a7 7 0 10-14 0c0 6.8 7 13 7 13z"/><circle cx="12" cy="8" r="2.4"/></svg><span>{shop.address}</span></p>}
 
         <div className="shop-tags">
           <span className="shop-tag">Jewellery Store</span>
@@ -553,6 +559,24 @@ export default function NearbyShop() {
           to { transform: rotate(360deg); }
         }
 
+        /* Premium boutique treatment */
+        .nearby-shell{width:min(1860px,100%);margin:0 auto}
+        .nearby-hero{background:radial-gradient(circle at 90% 12%,rgba(204,168,129,.24),transparent 30%),linear-gradient(135deg,rgba(253,253,252,.98),rgba(243,243,240,.94));box-shadow:0 30px 90px rgba(12,64,68,.12)}
+        .shop-card{border-radius:28px;background:#FDFDFC}
+        .shop-image{height:220px;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.98),rgba(243,232,222,.54) 42%,rgba(219,231,229,.9))}
+        .shop-image-mark{display:none}
+        .shop-monogram{width:108px;height:108px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#073B3F,#0D5458);color:#F0D29E;border:1px solid rgba(226,188,132,.58);box-shadow:0 24px 54px rgba(7,59,63,.22),inset 0 1px 0 rgba(255,255,255,.16)}
+        .shop-monogram span{font-family:"Cormorant Garamond",Georgia,serif;font-size:36px;font-weight:700;letter-spacing:.08em}
+        .shop-rank{position:absolute;left:18px;top:17px;color:rgba(7,59,63,.42);font-family:Georgia,serif;font-size:15px;font-weight:800}
+        .shop-image-caption{position:absolute;bottom:17px;color:#8C694A;font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+        .shop-content{padding:25px 26px 26px}
+        .shop-eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:9px;color:#A2764C;font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
+        .shop-eyebrow span{width:18px;height:1px;background:#BB8958}
+        .shop-name{font-size:29px}
+        .shop-address{margin-top:13px;min-height:40px;display:flex;gap:9px;align-items:flex-start}
+        .shop-address svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px;color:#BB8958}
+        .shop-btn{min-height:48px;padding-inline:12px}
+
         @media (max-width: 1180px) {
           .nearby-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
@@ -567,6 +591,7 @@ export default function NearbyShop() {
           .nearby-shell { padding: 22px 12px 52px; }
           .nearby-grid { grid-template-columns: 1fr; }
           .shop-name { min-height: 0; }
+          .shop-image{height:190px}.shop-actions{flex-direction:column}
         }
       `}</style>
 
@@ -657,8 +682,8 @@ export default function NearbyShop() {
 
         {locationGranted && !shopsLoading && shops.length > 0 && (
           <section className="nearby-grid" aria-label="Nearby jewellery stores">
-            {shops.map(shop => (
-              <ShopCard key={shop.id} shop={shop} onDirections={openDirections} onCall={callShop} />
+            {shops.map((shop, index) => (
+              <ShopCard key={shop.id} shop={shop} index={index} onDirections={openDirections} onCall={callShop} />
             ))}
           </section>
         )}

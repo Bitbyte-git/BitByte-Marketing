@@ -317,10 +317,12 @@ function HomeBannerSlider() {
 function ProductCard({ product, wishIds, onWishlist, onOpen }) {
   const name = safeText(product.name, "Jewellery Product");
   const image = productImage(product);
+  const category = safeText(product.category, "Luxiva Collection").replaceAll("_", " ");
 
   return (
     <article className="product-card" onClick={() => onOpen(product)}>
       <div className="product-img">
+        <span className="product-badge">Featured</span>
         {image ? (
           <img src={image} alt={name} />
         ) : (
@@ -350,11 +352,13 @@ function ProductCard({ product, wishIds, onWishlist, onOpen }) {
             <path d="M20.8 5.6a5.1 5.1 0 0 0-7.2 0L12 7.2l-1.6-1.6a5.1 5.1 0 0 0-7.2 7.2L12 21l8.8-8.2a5.1 5.1 0 0 0 0-7.2Z" />
           </svg>
         </button>
+        <span className="product-quick-view">View piece <b>↗</b></span>
       </div>
       <div className="product-body">
+        <span className="product-category">{category}</span>
         <h3>{name}</h3>
         <div className="product-price-row">
-          <span className="product-price">{money(product.price)}</span>
+          <span className="product-price"><small>Our price</small>{money(product.price)}</span>
           <button
             className="product-cart-btn"
             type="button"
@@ -1207,6 +1211,51 @@ export default function CustomerDashboard() {
           margin-left: 3px;
         }
 
+        /* Premium featured collection */
+        .featured-section { position: relative; padding: clamp(42px, 5vw, 76px) 0; }
+        .featured-section::before { content: ''; position: absolute; left: 50%; top: 0; width: 100vw; height: 100%; transform: translateX(-50%); z-index: -1; background: radial-gradient(circle at 8% 25%, rgba(204,168,129,.12), transparent 25%), linear-gradient(180deg,#fff,#f8faf8 52%,#fff); border-top: 1px solid rgba(209,223,222,.7); border-bottom: 1px solid rgba(209,223,222,.55); }
+        .featured-section .store-heading { align-items: flex-end; margin-bottom: clamp(24px,3vw,38px); }
+        .featured-heading-copy { max-width: 620px; }
+        .featured-kicker { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; color: #A2764C; font-size: 9px; font-weight: 800; letter-spacing: .2em; }
+        .featured-kicker i { width: 25px; height: 1px; background: #C59A68; }
+        .featured-section .store-heading h2 { color: #073B3F; font-size: clamp(32px,3vw,46px); letter-spacing: -.025em; }
+        .featured-heading-copy p { margin-top: 11px; color: #7A8987; font-size: 13px; }
+        .featured-section .store-heading .view-all-link { min-height: 44px; padding: 0 17px; gap: 18px; border: 1px solid #BDCFCE; border-radius: 999px; background: rgba(255,255,255,.78); text-transform: uppercase; font-size: 9px; letter-spacing: .12em; transition: background .2s,color .2s,border-color .2s,transform .2s; }
+        .featured-section .store-heading .view-all-link i { font-size: 15px; font-style: normal; }
+        .featured-section .store-heading .view-all-link:hover { color: #fff; background: #073B3F; border-color: #073B3F; text-decoration: none; transform: translateY(-2px); }
+        .featured-section .product-grid { gap: clamp(14px,1.4vw,22px); }
+        .featured-section .product-card { position: relative; border-radius: 22px; border-color: rgba(209,223,222,.86); background: linear-gradient(160deg,#fff 45%,#fbfaf7); box-shadow: 0 2px 4px rgba(7,59,63,.03),0 14px 34px rgba(7,59,63,.09); }
+        .featured-section .product-card:hover { transform: translateY(-9px); border-color: rgba(197,154,104,.65); box-shadow: 0 5px 12px rgba(7,59,63,.06),0 26px 55px rgba(7,59,63,.16); }
+        .featured-section .product-img { background: linear-gradient(145deg,#f5f2ec,#ecefeb); }
+        .featured-section .product-img::before { content:''; position:absolute; inset:auto 0 0; z-index:1; height:38%; background:linear-gradient(transparent,rgba(5,35,36,.24)); opacity:0; transition:opacity .28s; pointer-events:none; }
+        .featured-section .product-card:hover .product-img::before { opacity:1; }
+        .featured-section .wish-btn { z-index:3; width:36px; height:36px; border-color:rgba(255,255,255,.7); background:rgba(255,255,255,.88); backdrop-filter:blur(10px); }
+        .product-badge { position:absolute; z-index:3; top:13px; left:13px; padding:7px 10px; border-radius:999px; color:#fff; background:rgba(7,59,63,.88); backdrop-filter:blur(9px); font-size:8px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
+        .product-quick-view { position:absolute; z-index:2; left:15px; right:15px; bottom:14px; display:flex; align-items:center; justify-content:space-between; color:#fff; font-size:9px; font-weight:700; letter-spacing:.11em; text-transform:uppercase; opacity:0; transform:translateY(8px); transition:opacity .22s,transform .22s; }
+        .featured-section .product-card:hover .product-quick-view { opacity:1; transform:translateY(0); }
+        .featured-section .product-body { padding:17px 17px 18px; }
+        .product-category { display:block; margin-bottom:7px; color:#A2764C; font-size:8px; line-height:1; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+        .featured-section .product-body h3 { color:#173230; font-family:Georgia,"Times New Roman",serif; font-size:16px; margin-bottom:12px; }
+        .featured-section .product-price { display:flex; flex-direction:column; gap:2px; color:#102C2C; font-size:15px; font-weight:800; }
+        .product-price small { color:#91A09D; font-size:8px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+        .featured-section .product-cart-btn { width:39px; height:39px; border-width:1px; background:#F6F9F8; }
+
+        @media (max-width: 680px) {
+          .featured-section .store-heading { align-items: stretch; }
+          .featured-section .store-heading .view-all-link { align-self: flex-start; }
+          .featured-heading-copy p { max-width: 340px; line-height: 1.55; }
+        }
+
+        @media (max-width: 480px) {
+          .featured-section .product-body { padding: 12px; }
+          .featured-section .product-body h3 { font-size: 14px; margin-bottom: 10px; }
+          .featured-section .product-price { font-size: 13px; }
+          .featured-section .product-cart-btn { width: 34px; height: 34px; }
+          .product-badge { top: 8px; left: 8px; padding: 5px 7px; font-size: 7px; }
+          .featured-section .wish-btn { top: 8px; right: 8px; width: 31px; height: 31px; }
+          .product-quick-view { display: none; }
+        }
+
         .service-strip { display: none; }
 
         .store-banner {
@@ -2051,15 +2100,20 @@ export default function CustomerDashboard() {
           </div>
         </section>
 
-        <section className="store-section">
+        <section className="store-section featured-section">
           <div className="store-heading">
-            <h2>Featured Jewellery</h2>
+            <div className="featured-heading-copy">
+              <span className="featured-kicker"><i /> THE LUXIVA EDIT</span>
+              <h2>Featured Jewellery</h2>
+              <p>Exceptional pieces, selected for their beauty and craftsmanship.</p>
+            </div>
             <button
               className="view-all-link"
               type="button"
               onClick={() => navigate("/collection/all")}
             >
-              VIEW ALL PRODUCTS {">"}
+              <span>Explore the collection</span>
+              <i>↗</i>
             </button>
           </div>
 

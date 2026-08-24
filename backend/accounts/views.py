@@ -2807,12 +2807,18 @@ class OrderTimeSeriesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if request.user.role != 'super_admin':
+        if request.user.role not in ['super_admin', 'admin', 'dealer', 'sub_dealer', 'promotor']:
             return Response({'error': 'Permission denied'}, status=403)
 
         period = request.query_params.get('period', 'today')
         now = timezone.localtime(timezone.now())
         qs = JewelryOrder.objects.all()
+        if request.user.role != 'super_admin':
+            try:
+                scope_user_ids = _resolve_scope_user_ids(request.user, None, None)
+            except Exception as exc:
+                return Response({'error': str(exc)}, status=404)
+            qs = qs.filter(user_id__in=scope_user_ids)
 
         if period == 'today':
             start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -2837,19 +2843,21 @@ class OrderTimeSeriesView(APIView):
             end = now
             qs = qs.filter(created_at__gte=start).annotate(bucket=TruncWeek('created_at'))
             step = timedelta(weeks=1)
-            bucket_start = start
+            # TruncWeek always returns Monday. Fill from that same boundary so
+            # generated keys match the database aggregation keys.
+            bucket_start = start - timedelta(days=start.weekday())
         elif period == 'year':
             start = (now - timedelta(days=365)).replace(hour=0, minute=0, second=0, microsecond=0)
             end = now
             qs = qs.filter(created_at__gte=start).annotate(bucket=TruncMonth('created_at'))
-            step = timedelta(days=30)
+            step = 'month'
             bucket_start = start.replace(day=1)
         else:  # all
             earliest = JewelryOrder.objects.order_by('created_at').first()
             start = earliest.created_at if earliest else now
             end = now
             qs = qs.annotate(bucket=TruncMonth('created_at'))
-            step = timedelta(days=30)
+            step = 'month'
             bucket_start = start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         rows = (
@@ -2887,7 +2895,10 @@ class OrderTimeSeriesView(APIView):
                 'time': cursor.isoformat(),
                 'count': counts_map.get(lookup_key, 0),
             })
-            cursor += step
+            if step == 'month':
+                cursor = (cursor.replace(day=28) + timedelta(days=4)).replace(day=1)
+            else:
+                cursor += step
             i += 1
 
         return Response({'period': period, 'data': data})
@@ -3033,7 +3044,7 @@ class TodayLoginStatusView(APIView):
     LABEL_TO_ROLE_KEY = {'Admin': 'admin', 'Dealer': 'dealer', 'Sub Dealer': 'sub_dealer', 'Promotor': 'promotor', 'Customer': 'customer'}
 
     def get(self, request):
-        if request.user.role != 'super_admin':
+        if request.user.role not in ['super_admin', 'admin', 'dealer', 'sub_dealer', 'promotor']:
             return Response({'error': 'Permission denied'}, status=403)
 
         period = request.query_params.get('period', 'today')
@@ -3043,6 +3054,11 @@ class TodayLoginStatusView(APIView):
         if scope_role and scope_id:
             try:
                 scope_user_ids = set(_resolve_scope_user_ids(request.user, scope_role, scope_id))
+            except Exception:
+                scope_user_ids = set()
+        elif request.user.role != 'super_admin':
+            try:
+                scope_user_ids = set(_resolve_scope_user_ids(request.user, None, None))
             except Exception:
                 scope_user_ids = set()
 

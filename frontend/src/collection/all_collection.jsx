@@ -430,7 +430,8 @@ export default function AllCollection() {
 
         .an-filter {
           position: sticky;
-          top: 194px;
+          top: 192px;
+          align-self: start;
           border-radius: 10px;
           overflow: hidden;
           background: linear-gradient(180deg,#fdfaf7,#f8f4ef);

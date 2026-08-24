@@ -725,6 +725,7 @@ function OrderTrendChart({ dark }) {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
+  const requestSequence = useRef(0)
 
   const PERIODS = [
     { key: 'today', label: 'Today' },
@@ -745,31 +746,9 @@ function OrderTrendChart({ dark }) {
   const formatAxisLabel = (iso, p) => {
     const d = new Date(iso)
     if (p === 'today') return d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })
-    if (p === 'week' || p === 'month' || p === '3month') {
-      return `${d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })} ${d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`
-    }
+    if (p === 'week' || p === 'month') return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+    if (p === '3month') return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
     return d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
-  }
-
-  const getPeriodEndTime = (p, rows) => {
-    const now = new Date()
-    const base = rows.length ? new Date(rows[rows.length - 1].time) : now
-    if (p === 'today') {
-      const end = new Date(base)
-      end.setHours(23, 59, 59, 999)
-      return end
-    }
-    if (p === 'week') {
-      const end = new Date(now)
-      end.setHours(23, 59, 59, 999)
-      return end
-    }
-    if (p === 'month' || p === '3month' || p === 'year' || p === 'all') {
-      const end = new Date(now)
-      end.setHours(23, 59, 59, 999)
-      return end
-    }
-    return now
   }
 
   const completeChartSeries = (rows, p) => {
@@ -791,53 +770,23 @@ function OrderTrendChart({ dark }) {
     })
 
     const normalized = Array.from(grouped.values()).sort((a, b) => new Date(a.time) - new Date(b.time))
-    if (!normalized.length) return normalized
-
-    const first = new Date(normalized[0].time)
-    const start = new Date(first)
-    start.setHours(0, 0, 0, 0)
-
-    const end = getPeriodEndTime(p, normalized)
-    const withBounds = []
-
-    if (new Date(normalized[0].time).getTime() - start.getTime() > 60 * 1000) {
-      withBounds.push({
-        ...normalized[0],
-        time: start.toISOString(),
-        count: 0,
-        label: formatAxisLabel(start.toISOString(), p),
-        full: formatFullLabel(start.toISOString()),
-        isBoundaryPoint: true,
-      })
-    }
-
-    withBounds.push(...normalized)
-
-    const last = new Date(normalized[normalized.length - 1].time)
-    if (end.getTime() - last.getTime() > 60 * 1000) {
-      withBounds.push({
-        ...normalized[normalized.length - 1],
-        time: end.toISOString(),
-        count: 0,
-        label: formatAxisLabel(end.toISOString(), p),
-        full: formatFullLabel(end.toISOString()),
-        isBoundaryPoint: true,
-      })
-    }
-
-    return withBounds
+    return normalized
   }
+
   const fetchData = async (p = period) => {
+    const requestId = ++requestSequence.current
     setLoading(true)
     try {
       const res = await api.get('/order-timeseries/', { params: { period: p } })
+      if (requestId !== requestSequence.current) return
       const formatted = completeChartSeries(res.data.data || [], p)
       setData(formatted)
       setLastUpdated(new Date())
     } catch {
+      if (requestId !== requestSequence.current) return
       setData([])
     }
-    setLoading(false)
+    if (requestId === requestSequence.current) setLoading(false)
   }
 
   useEffect(() => { fetchData('today') }, [])
@@ -852,6 +801,10 @@ function OrderTrendChart({ dark }) {
   const secondAvg = avg(secondHalf)
   const trendPercent = firstAvg > 0 ? (((secondAvg - firstAvg) / firstAvg) * 100).toFixed(1) : (secondAvg > 0 ? 100 : 0)
   const isUp = trendPercent >= 0
+  const actualBuckets = data.filter(d => !d.isBoundaryPoint)
+  const peakOrders = actualBuckets.length ? Math.max(...actualBuckets.map(d => Number(d.count || 0))) : 0
+  const averageOrders = actualBuckets.length ? (totalOrders / actualBuckets.length).toFixed(1) : '0.0'
+  const selectedPeriodLabel = PERIODS.find(item => item.key === period)?.label || 'Today'
 
   // â”€â”€ Peak point index used to show a highlighted dot on the busiest bucket â”€â”€
   const peakIndex = data.length
@@ -887,8 +840,8 @@ function OrderTrendChart({ dark }) {
     const isPeak = index === peakIndex
     return (
       <g>
-        {isPeak && <circle className="sa-peak-pulse" cx={cx} cy={cy} r={9} fill="#0C4044" opacity={0.22} />}
-        <circle cx={cx} cy={cy} r={isPeak ? 6 : 5} fill="#0C4044" stroke="#FDFDFC" strokeWidth={2.5} />
+        {isPeak && <circle className="sa-peak-pulse" cx={cx} cy={cy} r={10} fill="#E2BC84" opacity={0.28} />}
+        <circle cx={cx} cy={cy} r={isPeak ? 6 : 4.5} fill="#E2BC84" stroke="#073B3F" strokeWidth={2.5} />
       </g>
     )
   }
@@ -909,11 +862,18 @@ function OrderTrendChart({ dark }) {
           @keyframes saChartPulse { 0%,100% { transform: scale(1); opacity: .62; } 50% { transform: scale(1.75); opacity: .14; } }
           @keyframes saTooltipIn { from { opacity: 0; transform: translateY(8px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
           .sa-order-chart-card { animation: saChartCardIn .55s cubic-bezier(.22,1,.36,1) both; }
-          .sa-chart-eyebrow{font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#BB8958}
-          .sa-chart-title{font-family:"Cormorant Garamond",Georgia,serif;font-size:42px;font-weight:900;line-height:1;color:#073B3F;margin:5px 0 0}
+          .sa-chart-eyebrow{font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#A2764C}
+          .sa-chart-title{font-family:"Cormorant Garamond",Georgia,serif;font-size:46px;font-weight:900;line-height:1;color:#073B3F;margin:7px 0 0;letter-spacing:-.035em}
           .sa-chart-sub{font-size:13px;font-weight:750;color:#7A8987;margin-top:8px}
           .sa-manual-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(12,64,68,.28);background:#E7EDEC;color:#0C4044;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:900;letter-spacing:.04em}
-          .sa-chart-panel{height:430px;border:1px solid rgba(189,207,206,.48);border-radius:18px;padding:14px 12px 8px;background:linear-gradient(180deg,rgba(253,253,252,.75),rgba(231,237,236,.36));box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+          .sa-chart-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0 18px}
+          .sa-chart-kpi{position:relative;overflow:hidden;padding:14px 16px;border:1px solid rgba(209,223,222,.82);border-radius:14px;background:rgba(255,255,255,.72)}
+          .sa-chart-kpi::after{content:'';position:absolute;right:-20px;top:-24px;width:62px;height:62px;border:1px solid rgba(197,154,104,.18);border-radius:50%}
+          .sa-chart-kpi small{display:block;color:#869592;font-size:8px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.sa-chart-kpi strong{display:block;margin-top:5px;color:#073B3F;font-family:Georgia,serif;font-size:22px}.sa-chart-kpi span{color:#A2764C;font-size:9px;font-weight:700}
+          .sa-period-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;padding:6px;border:1px solid rgba(209,223,222,.8);border-radius:15px;background:rgba(255,255,255,.66)}
+          .sa-period-bar>span{padding-right:12px;color:#8B9997;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+          .sa-chart-panel{height:430px;position:relative;border:1px solid rgba(219,191,148,.24);border-radius:20px;padding:22px 18px 10px;background:radial-gradient(circle at 16% 0%,rgba(197,154,104,.17),transparent 32%),linear-gradient(145deg,#0B4848,#07383B 62%,#052D31);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 22px 44px rgba(7,59,63,.2)}
+          .sa-chart-panel::before{content:'ORDER ACTIVITY';position:absolute;left:24px;top:15px;color:rgba(255,255,255,.32);font-size:8px;font-weight:800;letter-spacing:.16em}
           .sa-chart-refresh[disabled]{opacity:.66;cursor:not-allowed;transform:none!important}
           .sa-chart-refresh svg{transition:transform .24s ease}
           .sa-chart-refresh:hover svg{transform:rotate(90deg)}
@@ -925,6 +885,7 @@ function OrderTrendChart({ dark }) {
           .sa-order-chart-card .recharts-area-curve { stroke-dasharray: 900; animation: saChartLineDraw 1.2s cubic-bezier(.22,1,.36,1) both; filter: drop-shadow(0 7px 10px rgba(12,64,68,.18)); }
           .sa-order-tooltip { animation: saTooltipIn .18s cubic-bezier(.22,1,.36,1) both; }
           .sa-peak-pulse { transform-box: fill-box; transform-origin: center; animation: saChartPulse 1.6s ease-in-out infinite; }
+          @media(max-width:680px){.sa-chart-kpis{grid-template-columns:1fr}.sa-period-bar{align-items:flex-start;flex-direction:column}.sa-period-bar>span{padding:0 8px 4px}.sa-chart-title{font-size:38px}.sa-chart-panel{height:360px;padding-inline:8px}}
           .sa-pie-row{flex:1 1 100%!important;min-width:0!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:24px!important;width:100%!important}
         .sa-pie-card{min-height:420px!important;padding:34px 36px!important;border-radius:18px!important;background:linear-gradient(145deg,#FDFDFC,#F3F3F0)!important;border:1px solid rgba(189,207,206,.78)!important;box-shadow:0 28px 64px rgba(7,59,63,.08)!important}
         .sa-pie-title{font-size:17px!important;font-weight:900!important;color:#0C4044!important;margin-bottom:8px!important}
@@ -959,14 +920,20 @@ function OrderTrendChart({ dark }) {
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
+        <div className="sa-chart-kpis">
+          <div className="sa-chart-kpi"><small>Total orders</small><strong>{totalOrders.toLocaleString('en-IN')}</strong><span>{selectedPeriodLabel} selection</span></div>
+          <div className="sa-chart-kpi"><small>Peak volume</small><strong>{peakOrders.toLocaleString('en-IN')}</strong><span>Highest single bucket</span></div>
+          <div className="sa-chart-kpi"><small>Average pace</small><strong>{averageOrders}</strong><span>Orders per interval</span></div>
+        </div>
         {/* Period tabs */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16, marginTop: 12 }}>
-          {PERIODS.map(p => (
+        <div className="sa-period-bar">
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{PERIODS.map(p => (
             <button className={`sa-period-tab ${period === p.key ? 'is-active' : ''}`} key={p.key} onClick={() => { setPeriod(p.key); fetchData(p.key) }}
               style={{ padding: '8px 18px', borderRadius: 999, border: period === p.key ? '1px solid #0C4044' : '1px solid rgba(189,207,206,0.82)', background: period === p.key ? 'linear-gradient(135deg,#0C4044,#073B3F)' : 'rgba(253,253,252,0.64)', color: period === p.key ? '#FDFDFC' : '#6F7F7D', fontSize: 13, fontWeight: 800, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
               {p.label}
             </button>
-          ))}
+          ))}</div>
+          <span>Viewing {selectedPeriodLabel}</span>
         </div>
 
         <div className="sa-chart-panel" style={{ height: 430 }}>
@@ -979,9 +946,9 @@ function OrderTrendChart({ dark }) {
               <AreaChart data={data} margin={{ top: 18, right: 22, left: 4, bottom: 10 }}>
                 <defs>
                   <linearGradient id="orderGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0C4044" stopOpacity={0.24} />
-                    <stop offset="48%" stopColor="#CCA881" stopOpacity={0.12} />
-                    <stop offset="100%" stopColor="#0C4044" stopOpacity={0.01} />
+                    <stop offset="0%" stopColor="#E3BC83" stopOpacity={0.42} />
+                    <stop offset="52%" stopColor="#C59A68" stopOpacity={0.16} />
+                    <stop offset="100%" stopColor="#C59A68" stopOpacity={0.01} />
                   </linearGradient>
                   <linearGradient id="orderStroke" x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0%" stopColor="#0C4044" />
@@ -989,19 +956,19 @@ function OrderTrendChart({ dark }) {
                     <stop offset="100%" stopColor="#0C4044" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="4 10" stroke="rgba(189,207,206,0.45)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 10" stroke="rgba(255,255,255,0.12)" vertical={false} />
                 <XAxis
                   dataKey="label"
-                  stroke="rgba(122,137,135,0.78)"
+                  stroke="rgba(226,235,232,0.62)"
                   fontSize={10}
                   tickLine={false}
-                  axisLine={{ stroke: 'rgba(189,207,206,0.5)' }}
+                  axisLine={{ stroke: 'rgba(255,255,255,0.16)' }}
                   tickFormatter={tickFormatter}
                   interval="preserveStartEnd"
                   minTickGap={30}
                 />
                 <YAxis
-                  stroke="rgba(122,137,135,0.78)"
+                  stroke="rgba(226,235,232,0.62)"
                   fontSize={10}
                   tickLine={false}
                   axisLine={false}
@@ -1010,7 +977,7 @@ function OrderTrendChart({ dark }) {
                 />
                 <Tooltip
                   content={<CustomTooltip />}
-                  cursor={{ stroke: 'rgba(12,64,68,0.74)', strokeWidth: 2, strokeDasharray: '5 7' }}
+                  cursor={{ stroke: 'rgba(226,193,142,0.72)', strokeWidth: 1.5, strokeDasharray: '5 7' }}
                 />
 <Area
                   type="monotone"
@@ -1025,12 +992,12 @@ function OrderTrendChart({ dark }) {
                 <Line
                   type="monotone"
                   dataKey="count"
-                  stroke="#BB8958"
-                  strokeWidth={5}
+                  stroke="#E2BC84"
+                  strokeWidth={4}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   dot={<SalesDot />}
-                  activeDot={{ r: 8, fill: '#0C4044', stroke: '#FDFDFC', strokeWidth: 3 }}
+                  activeDot={{ r: 8, fill: '#F0D29E', stroke: '#073B3F', strokeWidth: 3 }}
                   isAnimationActive={false}
                 />
               </AreaChart>
@@ -1046,6 +1013,9 @@ export default function SuperAdminDashboard() {
   const [searchParams] = useSearchParams()
   const dark = false
   const [admins, setAdmins] = useState([])
+  const [adminActionOpen, setAdminActionOpen] = useState(null)
+  const [selectedAdminDetail, setSelectedAdminDetail] = useState(null)
+  const [copiedAdminId, setCopiedAdminId] = useState(null)
   const [hierarchyData, setHierarchyData] = useState(null)
   const [hierarchyLoading, setHierarchyLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
@@ -1239,11 +1209,31 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
 
   // AFTER
 const fetchAdmins = async () => {
-  try {
-    const res = await api.get('/admins/')
-    setAdmins(res.data)
-    return res.data
-  } catch { return [] }
+  const endpoints = ['/admins/', '/admins/list/', '/hierarchy/admins/']
+
+  for (const endpoint of endpoints) {
+    try {
+      const res = await api.get(endpoint)
+      const payload = res.data
+      const rows = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.results)
+          ? payload.results
+          : Array.isArray(payload?.admins)
+            ? payload.admins
+            : []
+
+      if (rows.length > 0) {
+        setAdmins(rows)
+        return rows
+      }
+    } catch (error) {
+      console.warn(`Admin list request failed: ${endpoint}`, error.response?.status || error.message)
+    }
+  }
+
+  setAdmins([])
+  return []
 }
 
   // AFTER
@@ -2026,7 +2016,12 @@ const fetchCoinStock = async () => {
         .sa-admin-table-card{border-radius:10px!important;padding:18px 20px!important;background:#FFFFFF!important;box-shadow:none!important}
         .sa-admin-table-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
         .sa-admin-search{height:42px;border:1px solid #E0E9E8;border-radius:8px;min-width:320px;display:flex;align-items:center;gap:10px;padding:0 14px;color:#6E7D7B;font-size:12px}
+        .sa-admin-action-cell{position:relative}.sa-admin-action-btn{width:34px;height:34px;border-radius:9px;border:1px solid #D8E3E1;background:#FFFFFF;color:#0C4044;cursor:pointer;font-weight:900;font-size:16px;transition:.2s}.sa-admin-action-btn:hover,.sa-admin-action-btn.is-open{color:#fff;background:#073B3F;border-color:#073B3F;box-shadow:0 10px 22px rgba(7,59,63,.18)}
+        .sa-admin-action-menu{position:absolute;z-index:80;top:48px;right:16px;width:220px;padding:8px;border:1px solid rgba(189,207,206,.85);border-radius:14px;background:rgba(255,255,255,.98);box-shadow:0 24px 58px rgba(7,59,63,.2);backdrop-filter:blur(14px)}
+        .sa-admin-action-menu button{width:100%;min-height:40px;padding:0 11px;border:0;border-radius:9px;background:transparent;color:#173230;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;font-size:12px;font-weight:750;cursor:pointer}.sa-admin-action-menu button:hover{color:#073B3F;background:#EDF3F1}.sa-admin-action-menu button span:last-child{color:#A2764C}
+        .sa-admin-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.sa-admin-detail-item{padding:14px;border:1px solid #E0E9E8;border-radius:11px;background:#F8FAF9}.sa-admin-detail-item small{display:block;margin-bottom:5px;color:#83918F;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.sa-admin-detail-item strong{color:#173230;font-size:13px;overflow-wrap:anywhere}
         @media (max-width:1180px){.sa-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sa-pie-row,.sa-admin-tools-head>div{grid-template-columns:1fr!important}.sa-admin-search{min-width:0;width:100%}.sa-admin-table-top{align-items:stretch;flex-direction:column}}
+        @media (max-width:520px){.sa-admin-detail-grid{grid-template-columns:1fr}}
         @media (max-width:920px){.sa-main-offset,.sa-navbar{margin-left:0!important;width:100%!important}.sa-sidebar{width:100%!important}.sa-dashboard-grid{grid-template-columns:1fr}.sa-navbar{padding:14px 16px!important}}
         @media (max-width:420px){.sa-rate-card-grid{grid-template-columns:1fr}.sa-rate-card{min-height:0}.sa-rate-card > div:first-child{min-height:68px}.sa-search span{font-size:12px!important}.sa-navbar-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.sa-role-chip,.sa-command-btn,.sa-logout{grid-column:span 2}.sa-icon-action{height:38px}}
 
@@ -5824,15 +5819,23 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
                   </tr>
                 </thead>
                 <tbody>
-                  {admins.map((a, i) => (
-                    <tr key={i} className="sa-tr" style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
+                  {admins.map((a) => (
+                    <tr key={a.id || a.admin_id} className="sa-tr" style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
                       <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 700 }}>{a.first_name}</td>
                       <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 700 }}>{a.last_name}</td>
                       <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 650 }}>{a.email}</td>
                       <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 650 }}>{a.mobile_number}</td>
                       <td style={{ padding: '14px 16px', color: '#111817', fontFamily: 'monospace', fontWeight: 800 }}>{a.admin_id}</td>
                                             <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 650 }}>{a.city_name}</td>
-                      <td style={{ padding: '10px 16px' }}><button type="button" style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #E0E9E8', background: '#FFFFFF', color: '#0C4044', cursor: 'pointer', fontWeight: 900 }}>...</button></td>
+                      <td className="sa-admin-action-cell" style={{ padding: '10px 16px' }}>
+                        <button type="button" className={`sa-admin-action-btn ${adminActionOpen === a.id ? 'is-open' : ''}`} aria-label={`Actions for ${a.first_name}`} aria-expanded={adminActionOpen === a.id} onClick={() => setAdminActionOpen(current => current === a.id ? null : a.id)}>•••</button>
+                        {adminActionOpen === a.id && <div className="sa-admin-action-menu">
+                          <button type="button" onClick={() => { setSelectedAdminDetail(a); setAdminActionOpen(null) }}><span>View profile</span><span>↗</span></button>
+                          <button type="button" onClick={() => navigate(`/hierarchy-sales-count?role=admin&id=${a.id}`)}><span>Performance report</span><span>↗</span></button>
+                          <button type="button" onClick={() => navigate(`/superadmin-hierarchy-grid?role=admin&id=${a.id}`)}><span>View hierarchy</span><span>↗</span></button>
+                          <button type="button" onClick={async () => { await navigator.clipboard.writeText(a.admin_id || ''); setCopiedAdminId(a.id); setTimeout(() => setCopiedAdminId(null), 1600) }}><span>{copiedAdminId === a.id ? 'Admin ID copied' : 'Copy Admin ID'}</span><span>{copiedAdminId === a.id ? '✓' : '⧉'}</span></button>
+                        </div>}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -5841,6 +5844,24 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
           )}
         </div>
       </div>
+
+      {selectedAdminDetail && (
+        <div onClick={() => setSelectedAdminDetail(null)} style={{ position:'fixed', inset:0, zIndex:1350, padding:20, display:'grid', placeItems:'center', background:'rgba(7,31,34,.52)', backdropFilter:'blur(8px)' }}>
+          <section onClick={event => event.stopPropagation()} style={{ width:'min(520px,100%)', overflow:'hidden', border:'1px solid rgba(204,168,129,.38)', borderRadius:22, background:'linear-gradient(155deg,#fff,#F7FAF8)', boxShadow:'0 35px 90px rgba(7,31,34,.3)' }}>
+            <header style={{ padding:'24px 26px', display:'flex', alignItems:'center', justifyContent:'space-between', color:'#fff', background:'linear-gradient(120deg,#073B3F,#0C5254)' }}>
+              <div><small style={{ display:'block', marginBottom:5, color:'#D9B780', fontSize:9, fontWeight:800, letterSpacing:'.16em' }}>ADMIN PROFILE</small><h3 style={{ margin:0, fontFamily:'Georgia,serif', fontSize:25 }}>{selectedAdminDetail.first_name} {selectedAdminDetail.last_name}</h3></div>
+              <button type="button" onClick={() => setSelectedAdminDetail(null)} aria-label="Close profile" style={{ width:34, height:34, border:'1px solid rgba(255,255,255,.25)', borderRadius:'50%', color:'#fff', background:'rgba(255,255,255,.08)', cursor:'pointer' }}>×</button>
+            </header>
+            <div className="sa-admin-detail-grid" style={{ padding:24 }}>
+              {[['Admin ID',selectedAdminDetail.admin_id],['Email',selectedAdminDetail.email],['Mobile',selectedAdminDetail.mobile_number],['City',selectedAdminDetail.city_name],['Date of birth',selectedAdminDetail.dob || 'Not provided'],['Anniversary',selectedAdminDetail.anniversary_date || 'Not provided']].map(([label,value]) => <div className="sa-admin-detail-item" key={label}><small>{label}</small><strong>{value || 'Not provided'}</strong></div>)}
+            </div>
+            <footer style={{ padding:'0 24px 24px', display:'flex', gap:10 }}>
+              <button type="button" onClick={() => navigate(`/hierarchy-sales-count?role=admin&id=${selectedAdminDetail.id}`)} style={{ flex:1, minHeight:44, border:0, borderRadius:11, color:'#fff', background:'#073B3F', fontWeight:800, cursor:'pointer' }}>Open performance</button>
+              <button type="button" onClick={() => setSelectedAdminDetail(null)} style={{ minWidth:100, border:'1px solid #D8E3E1', borderRadius:11, color:'#53615F', background:'#fff', fontWeight:750, cursor:'pointer' }}>Close</button>
+            </footer>
+          </section>
+        </div>
+      )}
 
       {showAddCoin && (
   <div onClick={() => setShowAddCoin(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 1400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

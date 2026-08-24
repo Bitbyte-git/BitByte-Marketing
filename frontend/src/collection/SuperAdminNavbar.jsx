@@ -400,6 +400,11 @@ export default function SuperAdminNavbar({
     ['Add AUG Coins', () => navigate('/superadmin-send-coins')],
     ['Autopay List', () => navigate('/superadmin-autopay-list')],
   ]
+  const mobileMenuGroups = [
+    ['Management', management], ['Celebrations', celebrations],
+    ['Announcements', announcements], ['Coins', coins],
+    ['Reports', reports], ['Promotion', promotion], ['Payment', payment],
+  ]
 
   const MenuGroup = ({ label, items }) => (
     <div
@@ -469,6 +474,10 @@ export default function SuperAdminNavbar({
 .san-menu-trigger:hover { background: #F3F3F0; border-radius: 999px; }
 .san-menu-dropdown { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 0; padding: 32px 28px 24px; min-width: 286px; background: #FDFDFC; border: 1px solid rgba(189,207,206,.8); box-shadow: 0 26px 68px rgba(7,59,63,.22); border-radius: 8px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .16s ease, visibility .16s ease; z-index: 200; }
 .san-menu-group.is-open .san-menu-dropdown { opacity: 1; visibility: visible; pointer-events: auto; transform: translateX(-50%); }
+.san-menu-group:first-child .san-menu-dropdown,
+.san-menu-group:first-child.is-open .san-menu-dropdown { left: 0; transform: none; }
+.san-menu-group:last-of-type .san-menu-dropdown,
+.san-menu-group:last-of-type.is-open .san-menu-dropdown { left: auto; right: 0; transform: none; }
 .san-menu-title { display: flex; align-items: center; gap: 12px; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 900; color: #073B3F; margin-bottom: 18px; }
 .san-menu-title span { font-size: 24px; color: #BB8958; }
 .san-menu-link { width: 100%; border: 0; background: transparent; padding: 10px 0; text-align: left; color: #111817; font-size: 14px; font-weight: 750; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
@@ -493,22 +502,47 @@ export default function SuperAdminNavbar({
 .san-drawer-link { display: flex; align-items: center; gap: 12px; padding: 13px 12px; border-radius: 10px; border: none; background: transparent; color: #073B3F; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; }
 .san-drawer-link:hover { background: #F3F3F0; }
 .san-drawer-link.logout { color: #C92035; }
+.san-drawer-groups { flex: 1; overflow-y: auto; padding-right: 4px; }
+.san-drawer-group { padding: 14px 0; border-bottom: 1px solid rgba(189,207,206,.6); }
+.san-drawer-group strong { display: block; padding: 0 12px 8px; color: #A2764C; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
+
+@media (max-width: 1500px) {
+  .san-top-inner { min-height: 136px; display: grid; grid-template-columns: auto minmax(220px,340px) 1fr auto; grid-template-rows: 74px 48px; column-gap: 18px; padding: 0 30px 12px; }
+  .san-navbar-brand { grid-column: 1; grid-row: 1; }
+  .san-search-block { grid-column: 2; grid-row: 1; width: 100%; margin: 0; padding: 0; }
+  .san-menu-center { grid-column: 1 / -1; grid-row: 2; width: 100%; height: 48px; justify-content: space-between; border-top: 1px solid rgba(189,207,206,.58); }
+  .san-menu-trigger { height: 100%; padding: 0 clamp(8px,1.2vw,18px); font-size: 12px; }
+  .san-hamburger { grid-column: 4; grid-row: 1; width: 42px; height: 42px; border: 1px solid rgba(189,207,206,.8); border-radius: 12px; background: #F7F9F8; }
+}
+
 @media (max-width: 1100px) {
-  .san-navbar-brand { width: 100%; height: 76px; border-right: 0; justify-content: center; }
-  .san-sidebar { position: relative; width: 100%; min-height: 0; padding: 16px; border-right: 0; border-bottom: 1px solid rgba(189,207,206,.72); }
-  .san-side-nav { flex-direction: row; overflow: auto; }
-  .san-side-link { height: 42px; flex: 0 0 auto; }
+  .san-sidebar { position: relative; width: 100%; min-height: 0; padding: 14px 16px; border-right: 0; border-bottom: 1px solid rgba(189,207,206,.72); }
+  .san-brand { padding-bottom: 14px; }
+  .san-side-nav { flex-direction: row; overflow-x: auto; margin-top: 12px; padding-bottom: 3px; }
+  .san-side-link { height: 42px; flex: 0 0 auto; padding: 0 14px; }
   .san-quick, .san-secure { display: none; }
   .san-top-shell { margin-left: 0 !important; }
-  .san-top-inner { min-height: auto; display: block; }
+  .san-top-inner { min-height: 82px; display: grid; grid-template-columns: auto minmax(180px,1fr) auto; grid-template-rows: 1fr; gap: 14px; padding: 0 20px; }
+  .san-navbar-brand { grid-column: 1; grid-row: 1; }
+  .san-navbar-brand img { width: 46px; height: 46px; }
+  .san-navbar-brand strong { font-size: 23px; }
+  .san-search-block { grid-column: 2; grid-row: 1; width: 100%; padding: 0; margin: 0; }
+  .san-menu-center { display: none; }
+  .san-hamburger { grid-column: 3; grid-row: 1; }
   .san-mobile-logo { display: none !important; }
-  .san-search-block { width: 100%; border-right: 0; padding: 14px 18px; }
-  .san-menu-center { overflow-x: auto; justify-content: flex-start; border-top: 0; }
-  .san-menu-trigger { min-width: 160px; height: 54px; }
-  .san-actions { border-left: 0; overflow: auto; }
-  .san-action { height: 52px; min-width: 140px; }
-  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 }
+
+@media (max-width: 640px) {
+  .san-top-inner { min-height: 128px; grid-template-columns: 1fr auto; grid-template-rows: 64px 52px; gap: 0 12px; padding: 0 14px 10px; }
+  .san-navbar-brand { grid-column: 1; grid-row: 1; }
+  .san-navbar-brand img { width: 40px; height: 40px; }
+  .san-navbar-brand strong { font-size: 21px; }
+  .san-navbar-brand small { font-size: 8px; }
+  .san-hamburger { grid-column: 2; grid-row: 1; }
+  .san-search-block { grid-column: 1 / -1; grid-row: 2; }
+  .san-search { height: 46px; }
+}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
       `}</style>
       <div className="san-shell">
         {showSidebar && (
@@ -1374,14 +1408,27 @@ export default function SuperAdminNavbar({
           <div className="san-drawer-overlay" onClick={() => setShowMobileDrawer(false)} />
           <div className="san-drawer">
             <div className="san-drawer-head">
-              <span className="san-drawer-title">Menu</span>
+              <span className="san-drawer-title">Command Menu</span>
               <button className="san-drawer-close" onClick={() => setShowMobileDrawer(false)} aria-label="Close menu">
                 <Icon name="close" size={20} />
               </button>
             </div>
-            <button className="san-drawer-link" onClick={() => { setShowMobileDrawer(false); setShowTodayRates(true) }}>
-              <Icon name="rate" size={18} />Today's Rate
-            </button>
+            <div className="san-drawer-groups">
+              {mobileMenuGroups.map(([label, items]) => (
+                <section className="san-drawer-group" key={label}>
+                  <strong>{label}</strong>
+                  {items.map(([text, action]) => (
+                    <button className="san-drawer-link" type="button" key={text} onClick={() => { setShowMobileDrawer(false); action() }}>
+                      <span>{text}</span><span>↗</span>
+                    </button>
+                  ))}
+                </section>
+              ))}
+              <section className="san-drawer-group">
+                <strong>Inventory</strong>
+                <button className="san-drawer-link" type="button" onClick={() => { setShowMobileDrawer(false); navigate('/sold-out-products') }}><span>Stock</span><span>↗</span></button>
+              </section>
+            </div>
             <button className="san-drawer-link logout" onClick={() => { setShowMobileDrawer(false); logout() }}>
               <Icon name="logout" size={18} />Logout
             </button>

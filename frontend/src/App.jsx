@@ -1,5 +1,6 @@
 ﻿import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useLayoutEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import CustomerNavbar from './collection/CustomerNavbar'
 import SuperAdminNavbar from './collection/SuperAdminNavbar'
 import InternalRoleNavbar from './collection/InternalRoleNavbar'
@@ -151,9 +152,21 @@ function WithAnyNavbar({ children }) {
   return <WithInternalRoleNavbar>{children}</WithInternalRoleNavbar>
 }
 
+function ScrollToTop() {
+  const { pathname, search } = useLocation()
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    if (document.scrollingElement) document.scrollingElement.scrollTop = 0
+  }, [pathname, search])
+
+  return null
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Suspense fallback={<RouteLoader />}>
         <Routes>
           <Route path="/" element={<WithCustomerNavbar><LandingPage /></WithCustomerNavbar>} />

@@ -685,6 +685,9 @@ const wishTimerRef = useRef(null)
   const selectInput = { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '12px', padding: '13px 16px', color: text, fontSize: '14px', outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }
 
   useEffect(() => {
+    // The dashboard now uses a clean, static Super Admin-style surface.
+    document.querySelectorAll('body > canvas').forEach(canvas => canvas.remove())
+    return undefined
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     let animationFrameId, particlesArray = []
@@ -901,7 +904,7 @@ const allSDList = allSDRes.status === 'fulfilled' ? allSDRes.value.data : []
 
       setSubDealers([mySelf])
       setAllSubDealers(allSDList)
-      setPromotors(promotorList)
+      setPromotors(enrichedPromotors)
 
     } catch (err) {
       console.error('fetchAll error:', err)
@@ -1275,8 +1278,6 @@ const handleSubmit = async e => {
   return (
     <div style={{ minHeight: '100vh', background: dark ? bg : 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, transition: 'background 0.8s ease, color 0.4s ease', fontFamily: '"Inter",system-ui,sans-serif', position: 'relative', overflow: 'hidden' }}>
       <style>{`
-        @keyframes float-orb{0%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-50px) scale(1.1)}66%{transform:translate(-20px,20px) scale(0.9)}100%{transform:translate(0,0) scale(1)}}
-        @keyframes antigravity{0%{transform:translateY(110vh) rotate(0deg);opacity:0}10%{opacity:var(--op)}90%{opacity:var(--op)}100%{transform:translateY(-20vh) rotate(360deg);opacity:0}}
         @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
         @keyframes proSDPopupIn{from{opacity:0;transform:translateY(8px) scale(0.97);}to{opacity:1;transform:translateY(0) scale(1);}}
         @keyframes proSDPulseGlow{0%,100%{box-shadow:0 0 8px rgba(204,168,129,0.15);}50%{box-shadow:0 0 22px rgba(204,168,129,0.35);}}
@@ -1291,17 +1292,14 @@ const handleSubmit = async e => {
         .sd-grad-btn::after{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(253,253,252,.2),transparent);transform:translateX(-100%)}
         .sd-grad-btn:hover::after{animation:shimmer 1s infinite}
         .sd-tr:hover td{background:rgba(253,253,252,.02)}
+        .sd-management-shell{margin:24px 34px 48px!important;max-width:none!important;padding:28px 32px!important;background:#FDFDFC;border:1px solid rgba(189,207,206,.78);border-radius:18px;box-shadow:0 24px 64px rgba(7,59,63,.09)}
+        .sd-management-head{padding-bottom:20px;border-bottom:1px solid rgba(189,207,206,.62)}
+        .sd-management-head h2{font-family:"Cormorant Garamond",Georgia,serif!important;font-size:34px!important;color:#073B3F!important}
+        .sd-management-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+        @media(max-width:820px){.sd-management-shell{margin:18px 14px 36px!important;padding:20px 16px!important}.sd-management-head{align-items:flex-start!important;flex-direction:column;gap:16px}.sd-management-actions{width:100%;justify-content:stretch}.sd-management-actions button{flex:1 1 180px}}
         .p-card{background:rgba(253,253,252,0.03);border:1px solid rgba(204,168,129,0.18);border-radius:14px;padding:14px 18px;min-width:140px;cursor:pointer;position:relative;overflow:hidden;transition:background 0.35s ease,border-color 0.35s ease,transform 0.4s cubic-bezier(0.34,1.4,0.64,1),box-shadow 0.35s ease;}
         .p-card.p-active{background:rgba(204,168,129,0.07);border-color:rgba(204,168,129,0.65);transform:translateY(-6px) scale(1.02);box-shadow:0 12px 32px rgba(204,168,129,0.18);animation:proSDPulseGlow 2.5s ease-in-out infinite;}
       `}</style>
-
-      <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 1, opacity: 0.45 }} />
-      <div style={{ position: 'absolute', borderRadius: '50%', filter: 'blur(80px)', animation: 'float-orb 20s infinite ease-in-out', zIndex: 0, top: '8%', left: '8%', width: '380px', height: '380px', background: dark ? 'rgba(204,168,129,0.08)' : 'rgba(124,58,237,0.08)' }} />
-      <div style={{ position: 'absolute', borderRadius: '50%', filter: 'blur(80px)', animation: 'float-orb 20s infinite ease-in-out', zIndex: 0, bottom: '10%', right: '4%', width: '460px', height: '460px', background: dark ? 'rgba(196,181,253,0.06)' : 'rgba(187,137,88,0.06)', animationDelay: '-5s' }} />
-
-      {PARTICLES.map(p => (
-        <div key={p.id} style={{ position: 'absolute', left: `${p.x}%`, bottom: '-100px', width: p.size, height: p.size, borderRadius: '40% 60% 60% 40% / 40% 40% 60% 60%', border: `1px solid ${accent}44`, opacity: p.opacity, animation: `antigravity ${p.duration}s ${p.delay}s infinite linear`, '--op': p.opacity, pointerEvents: 'none', zIndex: 0 }} />
-      ))}
 
       <InternalRoleNavbar
         roleTitle="SUB DEALER"
@@ -1351,7 +1349,7 @@ const handleSubmit = async e => {
           { label: 'Sales Report', icon: 'report', onClick: () => navigate('/sales-report') },
           { label: 'Create Promoter', icon: 'users', onClick: () => setShowForm(true) },
         ]}
-      />      <div style={{ position: 'relative', zIndex: 10, padding: '36px 40px', maxWidth: '1200px', margin: '0 auto' }}>
+      />      <div className="sd-management-shell" style={{ position: 'relative', zIndex: (showProfile || showProfileEdit) ? 100 : 10 }}>
         {msg && (
           <div style={{ background: msgType === 'success' ? 'rgba(204,168,129,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${msgType === 'success' ? 'rgba(204,168,129,0.25)' : 'rgba(201,32,53,0.3)'}`, color: msgType === 'success' ? '#CCA881' : '#C92035', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', marginBottom: '20px' }}>
             {msg}
@@ -1361,9 +1359,9 @@ const handleSubmit = async e => {
 
 
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div className="sd-management-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0 }}>Promotor Management</h2>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="sd-management-actions">
            <button onClick={() => navigate('/sales-report')}
   style={{ padding: '11px 28px', background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.3)', borderRadius: '12px', fontWeight: 700, color: '#0C4044', fontSize: '14px', cursor: 'pointer' }}>
   📊 Sales Report
