@@ -885,6 +885,12 @@ function OrderTrendChart({ dark }) {
           .sa-order-chart-card .recharts-area-curve { stroke-dasharray: 900; animation: saChartLineDraw 1.2s cubic-bezier(.22,1,.36,1) both; filter: drop-shadow(0 7px 10px rgba(12,64,68,.18)); }
           .sa-order-tooltip { animation: saTooltipIn .18s cubic-bezier(.22,1,.36,1) both; }
           .sa-peak-pulse { transform-box: fill-box; transform-origin: center; animation: saChartPulse 1.6s ease-in-out infinite; }
+@keyframes skelShimmerDark{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.sa-chart-skel-wrap{display:flex;flex-direction:column;justify-content:space-between;height:100%;padding:6px 4px}
+.sa-chart-skel-row{display:flex;align-items:center;gap:14px}
+.sa-chart-skel-axis{width:20px;height:9px;border-radius:3px;flex:0 0 auto;background:linear-gradient(90deg,rgba(255,255,255,0.06) 25%,rgba(255,255,255,0.14) 50%,rgba(255,255,255,0.06) 75%);background-size:200% 100%;animation:skelShimmerDark 1.5s ease-in-out infinite}
+.sa-chart-skel-line{flex:1;height:1px;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.08) 0 6px,transparent 6px 12px)}
+.sa-chart-skel-curve{position:relative;flex:1;margin:8px 4px 0;border-radius:12px;overflow:hidden;background:linear-gradient(90deg,rgba(226,188,132,0.05) 25%,rgba(226,188,132,0.14) 50%,rgba(226,188,132,0.05) 75%);background-size:200% 100%;animation:skelShimmerDark 1.6s ease-in-out infinite}
           @media(max-width:680px){.sa-chart-kpis{grid-template-columns:1fr}.sa-period-bar{align-items:flex-start;flex-direction:column}.sa-period-bar>span{padding:0 8px 4px}.sa-chart-title{font-size:38px}.sa-chart-panel{height:360px;padding-inline:8px}}
           .sa-pie-row{flex:1 1 100%!important;min-width:0!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:24px!important;width:100%!important}
         .sa-pie-card{min-height:420px!important;padding:34px 36px!important;border-radius:18px!important;background:linear-gradient(145deg,#FDFDFC,#F3F3F0)!important;border:1px solid rgba(189,207,206,.78)!important;box-shadow:0 28px 64px rgba(7,59,63,.08)!important}
@@ -909,21 +915,12 @@ function OrderTrendChart({ dark }) {
                 Manual refresh only
               </span>
             </div>
-            <div className="sa-chart-sub">
-              {totalOrders} orders selected - {isUp ? '+' : ''}{trendPercent}% trend
-              {lastUpdated && <span> - Updated {lastUpdated.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>}
-            </div>
-          </div>
+                      </div>
           <button className="sa-chart-refresh" disabled={loading} onClick={() => fetchData(period)}
             style={{ minHeight: 48, padding: '0 20px', borderRadius: 14, border: '1px solid rgba(12,64,68,0.32)', background: loading ? '#E7EDEC' : 'linear-gradient(135deg,#0C4044,#073B3F)', color: loading ? '#0C4044' : '#FDFDFC', fontSize: 13, fontWeight: 900, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 14px 28px rgba(7,59,63,0.16)', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 4v6h-6" strokeLinecap="round" strokeLinejoin="round"/></svg>
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
-        </div>
-        <div className="sa-chart-kpis">
-          <div className="sa-chart-kpi"><small>Total orders</small><strong>{totalOrders.toLocaleString('en-IN')}</strong><span>{selectedPeriodLabel} selection</span></div>
-          <div className="sa-chart-kpi"><small>Peak volume</small><strong>{peakOrders.toLocaleString('en-IN')}</strong><span>Highest single bucket</span></div>
-          <div className="sa-chart-kpi"><small>Average pace</small><strong>{averageOrders}</strong><span>Orders per interval</span></div>
         </div>
         {/* Period tabs */}
         <div className="sa-period-bar">
@@ -937,12 +934,20 @@ function OrderTrendChart({ dark }) {
         </div>
 
         <div className="sa-chart-panel" style={{ height: 430 }}>
-          {loading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#7A8987', fontSize: 13 }}>Loading...</div>
-          ) : data.length === 0 ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#7A8987', fontSize: 13 }}>No orders in this period</div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
+  {loading ? (                                                        // ✅ NEW skeleton block
+    <div className="sa-chart-skel-wrap">
+      {[4, 3, 2, 1, 0].map(n => (
+        <div className="sa-chart-skel-row" key={n}>
+          <div className="sa-chart-skel-axis" />
+          <div className="sa-chart-skel-line" />
+        </div>
+      ))}
+      <div className="sa-chart-skel-curve" />
+    </div>
+  ) : data.length === 0 ? (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#7A8987', fontSize: 13 }}>No orders in this period</div>
+  ) : (
+    <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 18, right: 22, left: 4, bottom: 10 }}>
                 <defs>
                   <linearGradient id="orderGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1369,6 +1374,7 @@ const [quickStats, setQuickStats] = useState(() => {
     return defaults
   }
 })
+const [quickStatsLoading, setQuickStatsLoading] = useState(true)   // ✅ NEW
   const fetchLoginStatus = async () => {
     try {
       const res = await api.get('/today-login-status/')
@@ -1378,13 +1384,16 @@ const [quickStats, setQuickStats] = useState(() => {
     }
   }
 
-  const fetchQuickStats = async () => {
+const fetchQuickStats = async () => {
+  setQuickStatsLoading(true)                                       // ✅ NEW
   try {
     const res = await api.get('/dashboard-quick-stats/')
     setQuickStats(res.data)
     localStorage.setItem('sa_quick_stats', JSON.stringify(res.data))
   } catch (e) {
     console.error('quick stats fetch error:', e)
+  } finally {
+    setQuickStatsLoading(false)                                    // ✅ NEW
   }
 }
 
@@ -1999,6 +2008,15 @@ const fetchCoinStock = async () => {
         .sa-kpi-label{font-size:11px;font-weight:900;text-transform:uppercase;color:#0C4044;margin-bottom:12px}
         .sa-kpi-value{font-size:28px;font-weight:900;color:#071A2D;line-height:1}
         .sa-kpi-note{font-size:13px;color:#6E7D7B;margin-top:12px;line-height:1.5}
+@keyframes skelShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.sa-kpi-skel-icon{width:54px;height:54px;border-radius:10px;flex:0 0 auto;background:linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%);background-size:200% 100%;animation:skelShimmer 1.4s ease-in-out infinite}
+.sa-kpi-skel-line{border-radius:4px;background:linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%);background-size:200% 100%;animation:skelShimmer 1.4s ease-in-out infinite}
+.sa-pie-skel-title{width:130px;height:14px;border-radius:4px;margin-bottom:10px;background:linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%);background-size:200% 100%;animation:skelShimmer 1.4s ease-in-out infinite}
+.sa-pie-skel-total{width:100px;height:24px;border-radius:4px;margin-bottom:18px;background:linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%);background-size:200% 100%;animation:skelShimmer 1.4s ease-in-out infinite}
+.sa-pie-skel-donut{width:210px;height:210px;border-radius:50%;margin:6px auto;position:relative;background:linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%);background-size:200% 100%;animation:skelShimmer 1.4s ease-in-out infinite}
+.sa-pie-skel-donut::after{content:'';position:absolute;inset:38px;border-radius:50%;background:#FDFDFC}
+.sa-pie-skel-legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.sa-pie-skel-chip{width:72px;height:12px;border-radius:4px;background:linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%);background-size:200% 100%;animation:skelShimmer 1.4s ease-in-out infinite}
         .sa-dashboard-row{flex-direction:column!important;gap:14px!important;padding-top:14px!important}
         .sa-pie-row{flex:1 1 auto!important;min-width:0!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:14px!important;width:100%}
         .sa-pie-row>div{border-radius:10px!important;box-shadow:none!important;background:#FFFFFF!important}
@@ -2504,23 +2522,36 @@ const fetchCoinStock = async () => {
 
             <div className="sa-main-offset sa-dashboard-row" style={{ display: 'flex', width: 'calc(100% - 286px)', marginLeft: 286, gap: 22, padding: '24px 34px 0', boxSizing: 'border-box', alignItems: 'stretch' }}>
         <div className="sa-dashboard-grid">
-  {[
-    { label: 'Yesterday Order', value: quickStats.yesterday_orders, sub: 'orders', note: 'compared to today', color: '#9B31FF', bg: '#F5EAFF', icon: 'cart' },
-    { label: 'Today Order', value: quickStats.today_orders, sub: 'orders', note: '+0%\nvs yesterday', color: '#00A767', bg: '#EAF8F0', icon: 'cart' },
-    { label: 'Today New Customer', value: quickStats.today_new_customers, sub: '', note: 'joined today', color: '#00A767', bg: '#EAF8F0', icon: 'users' },
-    { label: 'Active User', value: quickStats.active_users, sub: '', note: 'logged in today', color: '#2563EB', bg: '#EAF2FF', icon: 'users' },
-  ].map(kpi => (
-    <div className="sa-kpi-card" key={kpi.label}>
-      <div className="sa-kpi-icon" style={{ background: kpi.bg, color: kpi.color }}>
-        {kpi.icon === 'cart' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6h15l-2 9H8L6 3H3"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg> : kpi.icon === 'store' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h16l-1-5H5l-1 5z"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>}
+  {quickStatsLoading ? (                                            // ✅ NEW
+    Array.from({ length: 4 }).map((_, i) => (
+      <div className="sa-kpi-card" key={`skel-${i}`}>
+        <div className="sa-kpi-skel-icon" />
+        <div style={{ flex: 1 }}>
+          <div className="sa-kpi-skel-line" style={{ width: '70%', height: '11px', marginBottom: '14px' }} />
+          <div className="sa-kpi-skel-line" style={{ width: '40%', height: '26px', marginBottom: '12px' }} />
+          <div className="sa-kpi-skel-line" style={{ width: '55%', height: '11px' }} />
+        </div>
       </div>
-      <div>
-        <div className="sa-kpi-label">{kpi.label}</div>
-        <div><span className="sa-kpi-value">{kpi.value}</span>{kpi.sub && <span style={{ marginLeft: 8, color: '#071A2D', fontSize: 16 }}>{kpi.sub}</span>}</div>
-        <div className="sa-kpi-note" style={{ whiteSpace: 'pre-line', color: kpi.note.includes('Inactive') ? '#071A2D' : '#009957' }}>{kpi.note}</div>
+    ))
+  ) : (
+    [
+      { label: 'Yesterday Order', value: quickStats.yesterday_orders, sub: 'orders', note: 'compared to today', color: '#9B31FF', bg: '#F5EAFF', icon: 'cart' },
+      { label: 'Today Order', value: quickStats.today_orders, sub: 'orders', note: '+0%\nvs yesterday', color: '#00A767', bg: '#EAF8F0', icon: 'cart' },
+      { label: 'Today New Customer', value: quickStats.today_new_customers, sub: '', note: 'joined today', color: '#00A767', bg: '#EAF8F0', icon: 'users' },
+      { label: 'Active User', value: quickStats.active_users, sub: '', note: 'logged in today', color: '#2563EB', bg: '#EAF2FF', icon: 'users' },
+    ].map(kpi => (
+      <div className="sa-kpi-card" key={kpi.label}>
+        <div className="sa-kpi-icon" style={{ background: kpi.bg, color: kpi.color }}>
+          {kpi.icon === 'cart' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6h15l-2 9H8L6 3H3"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg> : kpi.icon === 'store' ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h16l-1-5H5l-1 5z"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>}
+        </div>
+        <div>
+          <div className="sa-kpi-label">{kpi.label}</div>
+          <div><span className="sa-kpi-value">{kpi.value}</span>{kpi.sub && <span style={{ marginLeft: 8, color: '#071A2D', fontSize: 16 }}>{kpi.sub}</span>}</div>
+          <div className="sa-kpi-note" style={{ whiteSpace: 'pre-line', color: kpi.note.includes('Inactive') ? '#071A2D' : '#009957' }}>{kpi.note}</div>
+        </div>
       </div>
-    </div>
-  ))}
+    ))
+  )}
 </div>
         <OrderTrendChart dark={dark} />
 
@@ -2528,104 +2559,122 @@ const fetchCoinStock = async () => {
         <div className="sa-pie-row" style={{ flex: '0 0 38%', minWidth: 360, display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
     
-          <div className="sa-pie-card" style={{ background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 20, padding: '24px 26px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
-            <div className="sa-pie-title" style={{ fontSize: 14, fontWeight: 800, color: '#0C4044', marginBottom: 4 }}>Role Distribution</div>
-<div className="lux-display sa-pie-total" style={{ fontSize: 28, fontWeight: 800, color: '#111817', marginBottom: 10 }}>
-  {quickStats.admins + quickStats.dealers + quickStats.sub_dealers + quickStats.promotors + quickStats.customers} total
-</div>
-{(
-  <ResponsiveContainer width="100%" height={270}>
-    <PieChart>
-      <Pie
-        data={[
-          { name: 'Admin', value: quickStats.admins },
-          { name: 'Dealer', value: quickStats.dealers },
-          { name: 'Sub Dealer', value: quickStats.sub_dealers },
-          { name: 'Promotor', value: quickStats.promotors },
-          { name: 'Customer', value: quickStats.customers },
-        ]}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={105}
-                    paddingAngle={2}
-                  >
-                    <Cell fill="#BDCFCE" />
-                    <Cell fill="#0C4044" />
-                    <Cell fill="#BB8958" />
-                    <Cell fill="#CCA881" />
-                    <Cell fill="#C92035" />
-                  </Pie>
-                  <Tooltip contentStyle={{ background: '#FDFDFC', border: '1px solid #BDCFCE', borderRadius: 8, fontSize: 12, color: '#111817' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-            <div className="sa-pie-legend" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
-              {[
-                { label: 'Admin', color: '#53615F', count: quickStats.admins || 0 },
-{ label: 'Dealer', color: '#0C4044', count: quickStats.dealers || 0 },
-{ label: 'Sub Dealer', color: '#BB8958', count: quickStats.sub_dealers || 0 },
-{ label: 'Promotor', color: '#CCA881', count: quickStats.promotors || 0 },
-{ label: 'Customer', color: '#C92035', count: quickStats.customers || 0 },
-              ].map(l => (
-                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <div className="sa-pie-legend-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: l.color }} />
-                  <span className="sa-pie-legend-text" style={{ fontSize: 10, color: '#7A8987' }}>{l.label} {l.count}</span>
+                    <div className="sa-pie-card" style={{ background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 20, padding: '24px 26px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
+            {quickStatsLoading ? (                                              // ✅ NEW skeleton
+              <>
+                <div className="sa-pie-skel-title" />
+                <div className="sa-pie-skel-total" />
+                <div className="sa-pie-skel-donut" />
+                <div className="sa-pie-skel-legend">
+                  {[0,1,2,3,4].map(i => <div key={i} className="sa-pie-skel-chip" />)}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <>
+                <div className="sa-pie-title" style={{ fontSize: 14, fontWeight: 800, color: '#0C4044', marginBottom: 4 }}>Role Distribution</div>
+                <div className="lux-display sa-pie-total" style={{ fontSize: 28, fontWeight: 800, color: '#111817', marginBottom: 10 }}>
+                  {quickStats.admins + quickStats.dealers + quickStats.sub_dealers + quickStats.promotors + quickStats.customers} total
+                </div>
+                <ResponsiveContainer width="100%" height={270}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Admin', value: quickStats.admins },
+                        { name: 'Dealer', value: quickStats.dealers },
+                        { name: 'Sub Dealer', value: quickStats.sub_dealers },
+                        { name: 'Promotor', value: quickStats.promotors },
+                        { name: 'Customer', value: quickStats.customers },
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={105}
+                      paddingAngle={2}
+                    >
+                      <Cell fill="#BDCFCE" />
+                      <Cell fill="#0C4044" />
+                      <Cell fill="#BB8958" />
+                      <Cell fill="#CCA881" />
+                      <Cell fill="#C92035" />
+                    </Pie>
+                    <Tooltip contentStyle={{ background: '#FDFDFC', border: '1px solid #BDCFCE', borderRadius: 8, fontSize: 12, color: '#111817' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="sa-pie-legend" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
+                  {[
+                    { label: 'Admin', color: '#53615F', count: quickStats.admins || 0 },
+                    { label: 'Dealer', color: '#0C4044', count: quickStats.dealers || 0 },
+                    { label: 'Sub Dealer', color: '#BB8958', count: quickStats.sub_dealers || 0 },
+                    { label: 'Promotor', color: '#CCA881', count: quickStats.promotors || 0 },
+                    { label: 'Customer', color: '#C92035', count: quickStats.customers || 0 },
+                  ].map(l => (
+                    <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div className="sa-pie-legend-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: l.color }} />
+                      <span className="sa-pie-legend-text" style={{ fontSize: 10, color: '#7A8987' }}>{l.label} {l.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Active/Inactive Login Pie */}
-          <div className="sa-pie-card" style={{ background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 20, padding: '24px 26px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
-            <div className="sa-pie-title" style={{ fontSize: 14, fontWeight: 800, color: '#0C4044', marginBottom: 4 }}>Today's Login Status</div>
-<div className="lux-display sa-pie-total" style={{ fontSize: 28, fontWeight: 800, color: '#111817', marginBottom: 10 }}>
-  {quickStats.active_users + quickStats.today_inactive_count} total users
-</div>
-<ResponsiveContainer width="100%" height={270}>
-  <PieChart>
-    <Pie
-      data={[
-        { name: 'Active', value: quickStats.active_users },
-        { name: 'Inactive', value: quickStats.today_inactive_count },
-      ]}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={105}
-                  paddingAngle={2}
-                  onClick={(entry) => {
-                    if (entry.name === 'Active') navigate('/login-active')
-                    else navigate('/login-inactive')
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <Cell fill="#0C4044" />
-                  <Cell fill="#C92035" />
-                </Pie>
-                <Tooltip contentStyle={{ background: '#FDFDFC', border: '1px solid #BDCFCE', borderRadius: 8, fontSize: 12, color: '#111817' }} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div style={{ display: 'flex', gap: '16px', marginTop: '8px', justifyContent: 'center' }}>
-              <div
-                onClick={() => navigate('/login-active')}
-                style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
-              >
-                <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#0C4044' }} />
-                <span style={{ fontSize: 16, color: '#0C4044', fontWeight: 900 }}>Active {quickStats.active_users}</span>
-              </div>
-              <div
-                onClick={() => navigate('/login-inactive')}
-                style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
-              >
-                <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#C92035' }} />
-                <span style={{ fontSize: 16, color: '#C92035', fontWeight: 900 }}>Inactive {quickStats.today_inactive_count}</span>
-              </div>
-            </div>
+                    <div className="sa-pie-card" style={{ background: 'linear-gradient(145deg,#FDFDFC,#F3F3F0)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 20, padding: '24px 26px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
+            {quickStatsLoading ? (                                              // ✅ NEW skeleton
+              <>
+                <div className="sa-pie-skel-title" />
+                <div className="sa-pie-skel-total" />
+                <div className="sa-pie-skel-donut" />
+                <div className="sa-pie-skel-legend">
+                  {[0,1].map(i => <div key={i} className="sa-pie-skel-chip" />)}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="sa-pie-title" style={{ fontSize: 14, fontWeight: 800, color: '#0C4044', marginBottom: 4 }}>Today's Login Status</div>
+                <div className="lux-display sa-pie-total" style={{ fontSize: 28, fontWeight: 800, color: '#111817', marginBottom: 10 }}>
+                  {quickStats.active_users + quickStats.today_inactive_count} total users
+                </div>
+                <ResponsiveContainer width="100%" height={270}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Active', value: quickStats.active_users },
+                        { name: 'Inactive', value: quickStats.today_inactive_count },
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={105}
+                      paddingAngle={2}
+                      onClick={(entry) => {
+                        if (entry.name === 'Active') navigate('/login-active')
+                        else navigate('/login-inactive')
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <Cell fill="#0C4044" />
+                      <Cell fill="#C92035" />
+                    </Pie>
+                    <Tooltip contentStyle={{ background: '#FDFDFC', border: '1px solid #BDCFCE', borderRadius: 8, fontSize: 12, color: '#111817' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div style={{ display: 'flex', gap: '16px', marginTop: '8px', justifyContent: 'center' }}>
+                  <div onClick={() => navigate('/login-active')} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                    <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#0C4044' }} />
+                    <span style={{ fontSize: 16, color: '#0C4044', fontWeight: 900 }}>Active {quickStats.active_users}</span>
+                  </div>
+                  <div onClick={() => navigate('/login-inactive')} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                    <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#C92035' }} />
+                    <span style={{ fontSize: 16, color: '#C92035', fontWeight: 900 }}>Inactive {quickStats.today_inactive_count}</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
         </div>
