@@ -68,6 +68,7 @@ export default function SuperAdminNavbar({
   const [birthdayList, setBirthdayList] = useState([])
   const [anniversaryList, setAnniversaryList] = useState([])
   const [joinDateList, setJoinDateList] = useState([])
+  const [celebLoading, setCelebLoading] = useState(false)
   const [specialAnnForm, setSpecialAnnForm] = useState({ title: '', message: '', roles: [] })
   const [showSpecialAnn, setShowSpecialAnn] = useState(false)
   const [specialAnnMsg, setSpecialAnnMsg] = useState('')
@@ -120,6 +121,7 @@ export default function SuperAdminNavbar({
   }
 
   const fetchCelebrations = async () => {
+    setCelebLoading(true)
     try {
       const [adminsRes, dealerRes, sdRes, proRes, cusRes] = await Promise.allSettled([
         api.get('/admins/'),
@@ -178,7 +180,8 @@ export default function SuperAdminNavbar({
         return { ...m, _yearsCompleted: years }
       })
       setJoinDateList(joins)
-    } catch (e) { console.error('fetchCelebrations error:', e) }
+        } catch (e) { console.error('fetchCelebrations error:', e) }
+    setCelebLoading(false)
   }
 
   const fetchMetalPrices = async () => {
@@ -202,8 +205,6 @@ export default function SuperAdminNavbar({
       setMetalLoading(false)
     }
   }
-
-  useEffect(() => { fetchMetalPrices(); fetchCelebrations(); fetchMyAnnouncements(); fetchProfileRequests() }, [])
 
   const openMenuNow = (label) => {
     clearTimeout(closeTimerRef.current)
@@ -361,18 +362,18 @@ export default function SuperAdminNavbar({
   }
 
   const management = [
-    ['Gold Rate', () => setShowRatePopup(true)],
-    ['Add Product', () => navigate('/add-product')],
-    ['Orders', () => navigate('/admin-orders')],
-    ['Requests', () => { setShowRequests(true); setRequestMsg('') }],
-    ['Hierarchy Grid', () => navigate('/superadmin-hierarchy-grid')],
-    ['Hierarchy Tree', () => navigate('/superadmin-hierarchy')],
-  ]
-  const celebrations = [
-    ["Today's Birthdays", () => setShowBirthdayList(true)],
-    ["Today's Anniversaries", () => setShowAnniversaryList(true)],
-    ['Work Anniversaries', () => setShowJoinDateList(true)],
-  ]
+  ['Gold Rate', () => { setShowRatePopup(true); fetchMetalPrices() }],
+  ['Add Product', () => navigate('/add-product')],
+  ['Orders', () => navigate('/admin-orders')],
+  ['Requests', () => { setShowRequests(true); setRequestMsg(''); fetchProfileRequests() }],
+  ['Hierarchy Grid', () => navigate('/superadmin-hierarchy-grid')],
+  ['Hierarchy Tree', () => navigate('/superadmin-hierarchy')],
+]
+ const celebrations = [
+  ["Today's Birthdays", () => { setShowBirthdayList(true); fetchCelebrations() }],
+  ["Today's Anniversaries", () => { setShowAnniversaryList(true); fetchCelebrations() }],
+  ['Work Anniversaries', () => { setShowJoinDateList(true); fetchCelebrations() }],
+]
   const announcements = [
     ['Send Announcement', () => { setShowAnnouncement(true); setAnnouncementMsg('') }],
     ['My Announcements', () => { setShowMyAnnouncements(true); fetchMyAnnouncements() }],
@@ -543,6 +544,7 @@ export default function SuperAdminNavbar({
   .san-search { height: 46px; }
 }
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes skelShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
       `}</style>
       <div className="san-shell">
         {showSidebar && (
@@ -555,7 +557,7 @@ export default function SuperAdminNavbar({
               <button className="san-side-link is-active" type="button" onClick={() => navigate('/super-admin')}><Icon name="home" />Dashboard</button>
               <button className="san-side-link" type="button" onClick={() => navigate('/add-product')}><Icon name="box" />Products</button>
               <button className="san-side-link" type="button" onClick={() => navigate('/admin-orders')}><Icon name="orders" />Orders</button>
-<button className="san-side-link" type="button" onClick={() => setShowTodayRates(true)}><Icon name="rate" />Gold Rate</button>
+<button className="san-side-link" type="button" onClick={() => { setShowTodayRates(true); fetchMetalPrices() }}><Icon name="rate" />Gold Rate</button>
               <button className="san-side-link" type="button"><Icon name="settings" />Settings</button>
             </nav>
             <div className="san-quick">
@@ -876,11 +878,17 @@ export default function SuperAdminNavbar({
               </button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {birthdayList.length === 0 ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: '#7A8987', padding: '50px 0', fontSize: '14px' }}>
-                  No birthdays today
-                </div>
-              ) : birthdayList.map((m, i) => (
+              {celebLoading ? (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    {[1,2,3].map(n => (
+      <div key={n} style={{ height: '78px', borderRadius: '16px', background: 'linear-gradient(90deg,#F3F3F0 25%,#E7EDEC 50%,#F3F3F0 75%)', backgroundSize: '200% 100%', animation: 'skelShimmer 1.4s ease-in-out infinite' }} />
+    ))}
+  </div>
+) : birthdayList.length === 0 ? (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: '#7A8987', padding: '50px 0', fontSize: '14px' }}>
+    No birthdays today
+  </div>
+) : birthdayList.map((m, i) => (
                 <div
                   key={i}
                   onClick={() => {
@@ -934,11 +942,17 @@ export default function SuperAdminNavbar({
               </button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {anniversaryList.length === 0 ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: '#7A8987', padding: '50px 0', fontSize: '14px' }}>
-                  No anniversaries today
-                </div>
-              ) : anniversaryList.map((m, i) => (
+              {celebLoading ? (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    {[1,2,3].map(n => (
+      <div key={n} style={{ height: '78px', borderRadius: '16px', background: 'linear-gradient(90deg,#F3F3F0 25%,#E7EDEC 50%,#F3F3F0 75%)', backgroundSize: '200% 100%', animation: 'skelShimmer 1.4s ease-in-out infinite' }} />
+    ))}
+  </div>
+) : anniversaryList.length === 0 ? (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textAlign: 'center', color: '#7A8987', padding: '50px 0', fontSize: '14px' }}>
+    No anniversaries today
+  </div>
+) : anniversaryList.map((m, i) => (
                 <div
                   key={i}
                   onClick={() => {
@@ -992,11 +1006,17 @@ export default function SuperAdminNavbar({
               </button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {joinDateList.length === 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', textAlign: 'center', padding: '60px 0' }}>
-                  <span style={{ color: '#7A8987', fontSize: '14px', fontWeight: 600 }}>No work anniversaries today</span>
-                </div>
-              ) : joinDateList.map((m, i) => (
+              {celebLoading ? (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    {[1,2,3].map(n => (
+      <div key={n} style={{ height: '78px', borderRadius: '16px', background: 'linear-gradient(90deg,#F3F3F0 25%,#E7EDEC 50%,#F3F3F0 75%)', backgroundSize: '200% 100%', animation: 'skelShimmer 1.4s ease-in-out infinite' }} />
+    ))}
+  </div>
+) : joinDateList.length === 0 ? (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', textAlign: 'center', padding: '60px 0' }}>
+    <span style={{ color: '#7A8987', fontSize: '14px', fontWeight: 600 }}>No work anniversaries today</span>
+  </div>
+) : joinDateList.map((m, i) => (
                 <div
                   key={i}
                   onClick={() => {

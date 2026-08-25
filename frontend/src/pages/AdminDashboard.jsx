@@ -25,6 +25,47 @@ const ROLE_LABELS_ADMIN = {
   customer: { emoji: '👤', label: 'CUSTOMER', color: '#C92035', idKey: 'customer_id' },
 }
 
+function SectionHeader({ icon, label }) {
+  const paths = {
+    user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+    lock: <><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
+    pin: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="3" /></>,
+    id: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M15 8h4M15 12h4M7 16h10" /></>,
+    briefcase: <><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>,
+  }
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '10px',
+      padding: '10px 14px', borderRadius: '10px', marginBottom: '20px',
+      background: 'linear-gradient(90deg, rgba(12,64,68,0.08), rgba(12,64,68,0.02))',
+    }}>
+      <div style={{
+        width: '30px', height: '30px', borderRadius: '9px', flexShrink: 0,
+        background: 'linear-gradient(135deg,#0C4044,#073B3F)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FDFDFC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {paths[icon] || paths.user}
+        </svg>
+      </div>
+      <span style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+    </div>
+  )
+}
+
+function getPasswordStrength(pw) {
+  if (!pw) return { label: '', color: '', width: '0%' }
+  let score = 0
+  if (pw.length >= 6) score++
+  if (pw.length >= 8) score++
+  if (/[A-Z]/.test(pw)) score++
+  if (/[0-9]/.test(pw)) score++
+  if (/[^A-Za-z0-9]/.test(pw)) score++
+  if (score <= 2) return { label: 'Weak', color: '#C92035', width: '33%' }
+  if (score <= 4) return { label: 'Medium', color: '#BB8958', width: '66%' }
+  return { label: 'Strong', color: '#0C4044', width: '100%' }
+}
+
 const OCCUPATIONS = ['employee', 'business', 'others']
 const emptyForm = {
   initial: '', first_name: '', last_name: '', mobile_number: '',
@@ -33,7 +74,7 @@ const emptyForm = {
   married_status: 'single',
   anniversary_date: '',
   email: '', password: '',
-  door_no: '', street_name: '', town_name: '', city_name: '',
+  door_no: '', street_name: '', town_name: '', city_name: '', pincode: '',
   district: '', state: '', aadhaar_no: '', pan_no: '',
   occupation: '', occupation_detail: '', annual_salary: ''
 }
@@ -579,6 +620,7 @@ export default function AdminDashboard() {
   const [msgType, setMsgType] = useState('success')
   const [form, setForm] = useState(emptyForm)
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [pincodeLookupMsg, setPincodeLookupMsg] = useState('')
   const [passwordError, setPasswordError] = useState('')
   const [showAnnouncements, setShowAnnouncements] = useState(false)
   const [updateForm, setUpdateForm] = useState({})
@@ -623,6 +665,7 @@ const [selCoinQty, setSelCoinQty] = useState('')
 const [showStoredCoin, setShowStoredCoin] = useState(false)
 const [coinStock, setCoinStock] = useState([])
 const [coinStockLoading, setCoinStockLoading] = useState(false)
+
 
 
 
@@ -878,6 +921,8 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
     }
   }
 
+
+
   const fetchProfile = async () => {
     try {
       const res = await api.get('/dashboard/')
@@ -1082,12 +1127,43 @@ useEffect(() => {
 
     setForm({ ...form, [name]: value })
   }
+
+  
   const handleAdminChange = (e) => {
     const id = parseInt(e.target.value)
     const admin = admins.find(a => a.id === id)
     setSelectedAdmin(admin || null)
     setForm({ ...form, assigned_admin_id: id })
   }
+
+  const handlePincodeChange = async (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+    setForm(prev => ({ ...prev, pincode: value }))
+    setPincodeLookupMsg('')
+
+    if (value.length === 6) {
+      setPincodeLookupMsg('Fetching location details...')
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${value}`)
+        const data = await res.json()
+        if (data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
+          const po = data[0].PostOffice[0]
+          setForm(prev => ({
+            ...prev,
+            city_name: po.District || prev.city_name,
+            district: po.District || prev.district,
+            state: po.State || prev.state,
+          }))
+          setPincodeLookupMsg('Location details auto-filled')
+        } else {
+          setPincodeLookupMsg('Pincode not found — please enter manually')
+        }
+      } catch {
+        setPincodeLookupMsg('Unable to fetch location — please enter manually')
+      }
+    }
+  }
+
 const handleSubmit = async e => {
   e.preventDefault()
 
@@ -1126,8 +1202,9 @@ const handleSubmit = async e => {
   }
   const secHead = (color = '#0C4044') => ({ color, fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.16em', margin: '0 0 22px', paddingBottom: '15px', borderBottom: cardBorder })
   const secLabel = (color = '#0C4044') => ({ color, fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '4px 0 0', paddingBottom: '11px', borderBottom: cardBorder })
-  const inp = { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '12px', padding: '13px 16px', color: text, fontSize: '14px', outline: 'none', boxSizing: 'border-box', boxShadow: dark ? 'none' : 'inset 0 1px 0 rgba(253,253,252,0.7)' }
+ const inp = { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '12px', padding: '13px 16px', color: text, fontSize: '14px', outline: 'none', boxSizing: 'border-box', boxShadow: dark ? 'none' : 'inset 0 1px 0 rgba(253,253,252,0.7)' }
   const lbl = { display: 'block', color: subtext, fontSize: '11px', fontWeight: 800, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.09em' }
+  const sectionCard = { background: '#FDFDFC', border: '1px solid rgba(189,207,206,0.55)', borderRadius: '16px', padding: '22px 24px', marginBottom: '4px' }
 
   return (
     <div style={{ minHeight: '100vh', background: dark ? bg : 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, transition: 'background 0.8s ease, color 0.4s ease', fontFamily: '"Inter",system-ui,sans-serif', position: 'relative', overflow: 'hidden' }}>
@@ -2012,116 +2089,150 @@ const handleSubmit = async e => {
         {showForm && (
           <div style={card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <p style={secHead('#192b1f')}>Create New Dealer</p>
+              <p style={secHead('#073B3F')}>Create New Dealer</p>
               <CopyUrlButton />
             </div>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-              <p style={secLabel('#073B3F')}>Account Info</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '0.4fr 1fr 1fr', gap: '14px' }}>
-                <div><label style={lbl}>Initial</label><input name="initial" maxLength={5} value={form.initial} onChange={handleChange} className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>First Name *</label><input name="first_name" maxLength={100} value={form.first_name} onChange={handleChange} required className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>Last Name *</label><input name="last_name" maxLength={100} value={form.last_name} onChange={handleChange} required className="ad-inp" style={inp} /></div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div><label style={lbl}>Mobile *</label><input name="mobile_number" maxLength={10} value={form.mobile_number} onChange={handleChange} required placeholder="10-digit" className="ad-inp" style={inp} /></div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginTop: '10px' }}>
-                  <div>
-                    <label style={lbl}>Gender</label>
-                    <select name="gender" value={form.gender} onChange={handleChange} className="sa-inp" style={selectInput}>
-                      <option value="male" style={{ background: optionBg, color: text }}>Male</option>
-                      <option value="female" style={{ background: optionBg, color: text }}>Female</option>
-                      <option value="other" style={{ background: optionBg, color: text }}>Other</option>
-                    </select>
+              <div style={sectionCard}>
+                <SectionHeader icon="user" label="Personal Info" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                  <div><label style={lbl}>Initial</label>
+                    <input name="initial" maxLength={5} value={form.initial} onChange={handleChange} className="ad-inp" style={inp} />
                   </div>
-
-                  <div>
-                    <label style={lbl}>DOB</label>
-                    <input type="date" name="dob" value={form.dob} onChange={handleChange} className="sa-inp" style={inp} />
+                  <div><label style={lbl}>First Name *</label>
+                    <input name="first_name" maxLength={100} value={form.first_name} onChange={handleChange} required className="ad-inp" style={inp} />
                   </div>
-
+                  <div><label style={lbl}>Last Name *</label>
+                    <input name="last_name" maxLength={100} value={form.last_name} onChange={handleChange} required className="ad-inp" style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>Mobile *</label>
+                    <input name="mobile_number" maxLength={10} value={form.mobile_number} onChange={handleChange} required placeholder="10-digit" className="ad-inp" style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>Gender *</label>
+                    <select name="gender" value={form.gender} onChange={handleChange} required className="ad-inp" style={selectInput}>
+  <option value="male" style={{ background: optionBg, color: text }}>Male</option>
+  <option value="female" style={{ background: optionBg, color: text }}>Female</option>
+  <option value="transgender" style={{ background: optionBg, color: text }}>Transgender</option>
+</select>
+                  </div>
+                  <div>
+                    <label style={lbl}>DOB *</label>
+                    <input type="date" name="dob" value={form.dob} onChange={handleChange} required className="ad-inp" style={inp} />
+                  </div>
                   <div>
                     <label style={lbl}>Married Status</label>
-                    <select name="married_status" value={form.married_status} onChange={handleChange} className="sa-inp" style={selectInput}>
-                      <option value="single" style={{ background: optionBg, color: text }}>Single</option>
-                      <option value="married" style={{ background: optionBg, color: text }}>Married</option>
-                      <option value="other" style={{ background: optionBg, color: text }}>Other</option>
-                    </select>
+                    <select name="married_status" value={form.married_status} onChange={handleChange} className="ad-inp" style={selectInput}>
+  <option value="single" style={{ background: optionBg, color: text }}>Single</option>
+  <option value="married" style={{ background: optionBg, color: text }}>Married</option>
+  <option value="divorced" style={{ background: optionBg, color: text }}>Divorced</option>
+</select>
                   </div>
-                </div>
-
-                {form.married_status === 'married' && (
-                  <div style={{ marginTop: '10px' }}>
-                    <label style={lbl}>Anniversary Date</label>
-                    <input
-                      type="date"
-                      name="anniversary_date"
-                      value={form.anniversary_date}
-                      onChange={handleChange}
-                      className="sa-inp"
-                      style={inp}
-                    />
-                  </div>
-                )}
-               <div><label style={lbl}>Email *</label><input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="email@example.com" className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>Password *</label><input type="password" name="password" value={form.password} onChange={handleChange} required className="ad-inp" style={inp} /></div>
-                <div>
-                  <label style={lbl}>Confirm Password *</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={e => { setConfirmPassword(e.target.value); setPasswordError('') }}
-                    required
-                    className="ad-inp"
-                    style={{ ...inp, border: `1px solid ${passwordError ? '#C92035' : inpBorder}` }}
-                  />
-                  {passwordError && (
-                    <div style={{ color: '#C92035', fontSize: '12px', marginTop: '6px' }}>{passwordError}</div>
+                  {form.married_status === 'married' && (
+                    <div>
+                      <label style={lbl}>Anniversary Date</label>
+                      <input type="date" name="anniversary_date" value={form.anniversary_date} onChange={handleChange} className="ad-inp" style={inp} />
+                    </div>
                   )}
                 </div>
               </div>
 
-              <p style={secLabel('#073B3F')}>Address</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
-                <div><label style={lbl}>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required maxLength={25} className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required maxLength={100} className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>Town *</label><input name="town_name" value={form.town_name} onChange={handleChange} required maxLength={100} className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>City *</label><input name="city_name" value={form.city_name} onChange={handleChange} required maxLength={25} className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>District *</label><input name="district" value={form.district} onChange={handleChange} required maxLength={25} className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>State *</label><input name="state" value={form.state} onChange={handleChange} required maxLength={25} className="ad-inp" style={inp} /></div>
+              <div style={sectionCard}>
+                <SectionHeader icon="lock" label="Account Info" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                  <div><label style={lbl}>Email *</label>
+                    <input type="email" name="email" value={form.email} onChange={handleChange} required placeholder="email@example.com" className="ad-inp" style={inp} />
+                  </div>
+                  <div><label style={lbl}>Password *</label>
+  <input type="password" name="password" value={form.password} onChange={handleChange} required className="ad-inp" style={inp} />
+  {form.password && (
+    <div style={{ marginTop: '6px' }}>
+      <div style={{ height: '4px', borderRadius: '4px', background: 'rgba(189,207,206,0.4)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: getPasswordStrength(form.password).width, background: getPasswordStrength(form.password).color, transition: 'all 0.3s ease' }} />
+      </div>
+      <div style={{ fontSize: '11px', fontWeight: 700, color: getPasswordStrength(form.password).color, marginTop: '4px' }}>
+        {getPasswordStrength(form.password).label}
+      </div>
+    </div>
+  )}
+</div>
+                  <div>
+                    <label style={lbl}>Confirm Password *</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={e => { setConfirmPassword(e.target.value); setPasswordError('') }}
+                      required
+                      className="ad-inp"
+                      style={{ ...inp, border: `1px solid ${passwordError ? '#C92035' : inpBorder}` }}
+                    />
+                    {passwordError && (
+                      <div style={{ color: '#C92035', fontSize: '12px', marginTop: '6px' }}>{passwordError}</div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <p style={secLabel('#073B3F')}>Identity</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div><label style={lbl}>Aadhaar No *</label><input name="aadhaar_no" value={form.aadhaar_no} onChange={handleChange} required maxLength={12} placeholder="12-digit" className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>PAN No *</label><input name="pan_no" value={form.pan_no} onChange={handleChange} required maxLength={10} placeholder="ABCDE1234F" className="ad-inp" style={inp} /></div>
+              <div style={sectionCard}>
+                <SectionHeader icon="pin" label="Address" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                  <div><label style={lbl}>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required maxLength={25} className="ad-inp" style={inp} /></div>
+                  <div><label style={lbl}>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required maxLength={100} className="ad-inp" style={inp} /></div>
+                  <div>
+                    <label style={lbl}>Pincode *</label>
+                    <input name="pincode" value={form.pincode} onChange={handlePincodeChange} required maxLength={6} inputMode="numeric" className="ad-inp" style={inp} />
+                    {pincodeLookupMsg && (
+                      <div style={{ fontSize: '11px', fontWeight: 700, marginTop: '4px', color: pincodeLookupMsg.includes('auto-filled') ? '#0C4044' : pincodeLookupMsg.includes('not found') || pincodeLookupMsg.includes('Unable') ? '#C92035' : subtext }}>
+                        {pincodeLookupMsg}
+                      </div>
+                    )}
+                  </div>
+                  <div><label style={lbl}>Town</label><input name="town_name" value={form.town_name} onChange={handleChange} maxLength={100} className="ad-inp" style={inp} /></div>
+                  <div><label style={lbl}>City</label><input name="city_name" value={form.city_name} onChange={handleChange} maxLength={25} className="ad-inp" style={inp} /></div>
+                  <div><label style={lbl}>District *</label><input name="district" value={form.district} onChange={handleChange} required maxLength={25} className="ad-inp" style={inp} /></div>
+                  <div><label style={lbl}>State *</label><input name="state" value={form.state} onChange={handleChange} required maxLength={25} className="ad-inp" style={inp} /></div>
+                </div>
               </div>
 
-              <p style={secLabel('#073B3F')}>Occupation</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
-                <div><label style={lbl}>Occupation *</label>
-                  <select name="occupation" value={form.occupation} onChange={handleChange} required className="ad-inp" style={{ ...inp, cursor: 'pointer' }}>
-                    <option value="" style={{ background: '#F3F3F0' }}>Select</option>
-                    {OCCUPATIONS.map(o => <option key={o} value={o} style={{ background: '#F3F3F0' }}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
-                  </select>
+              <div style={sectionCard}>
+                <SectionHeader icon="id" label="Identity" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div><label style={lbl}>Aadhaar No</label><input name="aadhaar_no" value={form.aadhaar_no} onChange={handleChange} maxLength={12} placeholder="12-digit" className="ad-inp" style={inp} /></div>
+<div><label style={lbl}>PAN No</label><input name="pan_no" value={form.pan_no} onChange={handleChange} maxLength={10} placeholder="ABCDE1234F" className="ad-inp" style={inp} /></div>
                 </div>
-                <div><label style={lbl}>Detail</label><input name="occupation_detail" value={form.occupation_detail} onChange={handleChange} maxLength={25} className="ad-inp" style={inp} /></div>
-                <div><label style={lbl}>Annual Salary *</label><input name="annual_salary" value={form.annual_salary} onChange={handleChange} required maxLength={10} placeholder="e.g. 500000" className="ad-inp" style={inp} /></div>
               </div>
 
-              <p style={secLabel('#073B3F')}>Admin Info</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
-                <div><label style={lbl}>Admin ID *</label>
-                  <select onChange={handleAdminChange} className="ad-inp" style={{ ...inp, cursor: 'pointer' }}>
-                    <option value="" style={{ background: '#F3F3F0' }}>Select Admin ID</option>
-                    {admins.map(a => <option key={a.id} value={a.id} style={{ background: '#F3F3F0' }}>{a.admin_id}</option>)}
-                  </select>
-                </div>
-                <div><label style={lbl}>Admin Name</label>
-                  <input value={selectedAdmin?.first_name || ''} readOnly placeholder="Auto fetch" style={{ ...inp, opacity: 0.5, cursor: 'not-allowed' }} />
-                </div>
-                <div><label style={lbl}>Admin Contact</label>
-                  <input value={selectedAdmin?.admin_contact_no || ''} readOnly placeholder="Auto fetch" style={{ ...inp, opacity: 0.5, cursor: 'not-allowed' }} />
+              <div style={sectionCard}>
+  <SectionHeader icon="briefcase" label="Occupation" />
+  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+    <div><label style={lbl}>Occupation</label>
+      <select name="occupation" value={form.occupation} onChange={handleChange} className="ad-inp" style={{ ...inp, cursor: 'pointer' }}>
+        <option value="" style={{ background: '#F3F3F0' }}>Select</option>
+        {OCCUPATIONS.map(o => <option key={o} value={o} style={{ background: '#F3F3F0' }}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
+      </select>
+    </div>
+    <div><label style={lbl}>Detail</label><input name="occupation_detail" value={form.occupation_detail} onChange={handleChange} maxLength={25} className="ad-inp" style={inp} /></div>
+    <div><label style={lbl}>Annual Salary</label><input name="annual_salary" value={form.annual_salary} onChange={handleChange} maxLength={10} placeholder="e.g. 500000" className="ad-inp" style={inp} /></div>
+  </div>
+</div>
+
+              <div style={sectionCard}>
+                <SectionHeader icon="user" label="Admin Info" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                  <div><label style={lbl}>Admin ID *</label>
+                    <select onChange={handleAdminChange} className="ad-inp" style={{ ...inp, cursor: 'pointer' }}>
+                      <option value="" style={{ background: '#F3F3F0' }}>Select Admin ID</option>
+                      {admins.map(a => <option key={a.id} value={a.id} style={{ background: '#F3F3F0' }}>{a.admin_id}</option>)}
+                    </select>
+                  </div>
+                  <div><label style={lbl}>Admin Name</label>
+                    <input value={selectedAdmin?.first_name || ''} readOnly placeholder="Auto fetch" style={{ ...inp, opacity: 0.5, cursor: 'not-allowed' }} />
+                  </div>
+                  <div><label style={lbl}>Admin Contact</label>
+                    <input value={selectedAdmin?.admin_contact_no || ''} readOnly placeholder="Auto fetch" style={{ ...inp, opacity: 0.5, cursor: 'not-allowed' }} />
+                  </div>
                 </div>
               </div>
 

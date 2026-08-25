@@ -46,6 +46,11 @@ const Recharge = lazy(() => import('./collection/Recharge'))
 const OrderPayment = lazy(() => import('./Orders/OrderPayment'))
 const SuperAdminPayments = lazy(() => import('./payments/SuperAdminPayments'))
 const SuperAdminSendCoins = lazy(() => import('./payments/SuperAdminSendCoins'))
+const SuperStockist = lazy(() => import('./Superadmin/Manage_Users/Super_Stockist'))
+const Distributor = lazy(() => import('./Superadmin/Manage_Users/Distributor'))
+const WholesaleDealer = lazy(() => import('./Superadmin/Manage_Users/Wholesale_Dealer'))
+const Retailer = lazy(() => import('./Superadmin/Manage_Users/Retailer'))
+const CustomerManage = lazy(() => import('./Superadmin/Manage_Users/Customer'))
 const SuperAdminAutopayList = lazy(() => import('./payments/SuperAdminAutopayList'))
 const AdminOrdersPage = lazy(() => import('./Orders/Adminorderspage'))
 const Report = lazy(() => import('./Orders/Report'))
@@ -256,6 +261,11 @@ export default function App() {
           <Route path="/superadmin-send-coins" element={<ProtectedRoute role={["super_admin"]}><WithSuperAdminNavbar><SuperAdminSendCoins /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/superadmin-autopay-list" element={<ProtectedRoute role={["super_admin"]}><WithSuperAdminNavbar><SuperAdminAutopayList /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/admin-orders" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AdminOrdersPage /></WithSuperAdminNavbar></ProtectedRoute>} />
+          <Route path="/superadmin/manage-users/super-stockist" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperStockist /></WithSuperAdminNavbar></ProtectedRoute>} />
+<Route path="/superadmin/manage-users/distributor" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><Distributor /></WithSuperAdminNavbar></ProtectedRoute>} />
+<Route path="/superadmin/manage-users/wholesale-dealer" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><WholesaleDealer /></WithSuperAdminNavbar></ProtectedRoute>} />
+<Route path="/superadmin/manage-users/retailer" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><Retailer /></WithSuperAdminNavbar></ProtectedRoute>} />
+<Route path="/superadmin/manage-users/customer" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><CustomerManage /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/sales-report" element={<ProtectedRoute><WithInternalRoleNavbar><Report /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/hierarchy-sales-count" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><SuperAdminHierarchySalesCount /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/promotions/retailer" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><RetailerPromotions /></WithSuperAdminNavbar></ProtectedRoute>} />

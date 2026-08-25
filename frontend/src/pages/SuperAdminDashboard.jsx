@@ -43,6 +43,34 @@ function SvgIcon({ name, size = 16, stroke = 'currentColor' }) {
   return <svg {...common}>{paths[name] || paths.document}</svg>
 }
 
+function SectionHeader({ icon, label }) {
+  const paths = {
+    user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+    lock: <><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
+    pin: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="3" /></>,
+    id: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M15 8h4M15 12h4M7 16h10" /></>,
+    briefcase: <><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>,
+  }
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '10px',
+      padding: '10px 14px', borderRadius: '10px', marginBottom: '20px',
+      background: 'linear-gradient(90deg, rgba(12,64,68,0.08), rgba(12,64,68,0.02))',
+    }}>
+      <div style={{
+        width: '30px', height: '30px', borderRadius: '9px', flexShrink: 0,
+        background: 'linear-gradient(135deg,#0C4044,#073B3F)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FDFDFC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {paths[icon] || paths.user}
+        </svg>
+      </div>
+      <span style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+    </div>
+  )
+}
+
 function svgIconMarkup(name, color = 'currentColor', size = 15) {
   const paths = {
     shield: '<path d="M12 3 4 6v5c0 5 3.4 8.8 8 10 4.6-1.2 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>',
@@ -270,6 +298,19 @@ function hexToRgb(hex) {
   const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
   return `${r},${g},${b}`
+}
+
+function getPasswordStrength(pw) {
+  if (!pw) return { label: '', color: '', width: '0%' }
+  let score = 0
+  if (pw.length >= 6) score++
+  if (pw.length >= 8) score++
+  if (/[A-Z]/.test(pw)) score++
+  if (/[0-9]/.test(pw)) score++
+  if (/[^A-Za-z0-9]/.test(pw)) score++
+  if (score <= 2) return { label: 'Weak', color: '#C92035', width: '33%' }
+  if (score <= 4) return { label: 'Medium', color: '#BB8958', width: '66%' }
+  return { label: 'Strong', color: '#0C4044', width: '100%' }
 }
 
 let _popupEl = null
@@ -1037,10 +1078,10 @@ useEffect(() => {
   const [activeAdmin, setActiveAdmin] = useState(null)
   const hideTimer = useRef(null)
   const [msg, setMsg] = useState('')
-  const [form, setForm] = useState({
+    const [form, setForm] = useState({
     initial: '', first_name: '', last_name: '', mobile_number: '',
     gender: 'male', dob: '', married_status: 'single', anniversary_date: '',
-    door_no: '', street_name: '', town_name: '',
+    door_no: '', street_name: '', town_name: '', pincode: '',
     city_name: '', district: '', state: '', email: '', password: '',
     aadhaar_no: '', pan_no: '', occupation: 'employee', occupation_detail: '',
     annual_salary: '', admin_name: '', admin_id: '', admin_contact_no: ''
@@ -1152,51 +1193,6 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
     month: { gold_22k: {}, gold_24k: {}, silver_999: {} },
   })
 
-  const [orderPopupState, setOrderPopupState] = useState({
-    visible: false,
-    period: null,
-    metalKey: null,
-    left: 0,
-    top: 0,
-  })
-
-  const orderHideTimer = useRef(null)
-  const getOrderPopupPosition = (anchorEl, side = 'right') => {
-  const rect = anchorEl.getBoundingClientRect()
-
-  const popupWidth = 320
-  const popupHeight = Math.min(window.innerHeight * 0.82, 620)
-  const gap = 14
-  const margin = 12
-
-  let left =
-    side === 'left'
-      ? rect.left - popupWidth - gap
-      : rect.right + gap
-
-  if (left + popupWidth > window.innerWidth - margin) {
-    left = rect.left - popupWidth - gap
-  }
-
-  if (left < margin) {
-    left = rect.right + gap
-  }
-
-  let top = rect.top + rect.height / 2 - popupHeight / 2
-
-  // popup konjam mela irunthu show aaganum na offset reduce pannalam
-  top = top - 60
-
-  if (top < margin) {
-    top = margin
-  }
-
-  if (top + popupHeight > window.innerHeight - margin) {
-    top = window.innerHeight - popupHeight - margin
-  }
-
-  return { left, top }
-}
 
   const bg = '#FDFDFC'
   const text = '#111817'
@@ -1214,31 +1210,23 @@ const [coinStockLoading, setCoinStockLoading] = useState(false)
 
   // AFTER
 const fetchAdmins = async () => {
-  const endpoints = ['/admins/', '/admins/list/', '/hierarchy/admins/']
-
-  for (const endpoint of endpoints) {
-    try {
-      const res = await api.get(endpoint)
-      const payload = res.data
-      const rows = Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.results)
-          ? payload.results
-          : Array.isArray(payload?.admins)
-            ? payload.admins
-            : []
-
-      if (rows.length > 0) {
-        setAdmins(rows)
-        return rows
-      }
-    } catch (error) {
-      console.warn(`Admin list request failed: ${endpoint}`, error.response?.status || error.message)
-    }
+  try {
+    const res = await api.get('/admins/')
+    const payload = res.data
+    const rows = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.results)
+        ? payload.results
+        : Array.isArray(payload?.admins)
+          ? payload.admins
+          : []
+    setAdmins(rows)
+    return rows
+  } catch (error) {
+    console.warn('Admin list fetch failed', error.response?.status || error.message)
+    setAdmins([])
+    return []
   }
-
-  setAdmins([])
-  return []
 }
 
   // AFTER
@@ -1534,7 +1522,6 @@ useEffect(() => {
   fetchProfileRequests()
   fetchMetalPrices()
   fetchOrderStats()
-  fetchHierarchy()
 fetchLoginStatus()
 fetchQuickStats()
 }, [])
@@ -1559,7 +1546,7 @@ fetchQuickStats()
     else if (open === 'myannouncements') { setShowMyAnnouncements(true); fetchMyAnnouncements() }
   }, [searchParams])
 
-  const handleChange = e => {
+    const handleChange = e => {
     const { name, value } = e.target
 
     if (name === 'married_status' && value !== 'married') {
@@ -1568,6 +1555,36 @@ fetchQuickStats()
     }
 
     setForm({ ...form, [name]: value })
+  }
+
+  const [pincodeLookupMsg, setPincodeLookupMsg] = useState('')
+
+    const handlePincodeChange = async (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+    setForm(prev => ({ ...prev, pincode: value }))
+    setPincodeLookupMsg('')
+
+    if (value.length === 6) {
+      setPincodeLookupMsg('Fetching location details...')
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${value}`)
+        const data = await res.json()
+        if (data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
+          const po = data[0].PostOffice[0]
+          setForm(prev => ({
+            ...prev,
+            city_name: po.District || prev.city_name,
+            district: po.District || prev.district,
+            state: po.State || prev.state,
+          }))
+          setPincodeLookupMsg('Location details auto-filled')
+        } else {
+          setPincodeLookupMsg('Pincode not found — please enter manually')
+        }
+      } catch {
+        setPincodeLookupMsg('Unable to fetch location — please enter manually')
+      }
+    }
   }
 
   const handleSubmit = async e => {
@@ -1602,125 +1619,13 @@ fetchQuickStats()
     }
   }
 
-
-
-  const flattenByRole = (role) => {
-  if (!hierarchyData) return []
-  const result = []
-  hierarchyData.admins.forEach(admin => {
-    if (role === 'admin') { result.push({ node: admin, ancestors: [] }); return }
-    admin.dealers.forEach(dealer => {
-      if (role === 'dealer') { result.push({ node: dealer, ancestors: [{ node: admin, role: 'admin' }] }); return }
-      dealer.sub_dealers.forEach(sd => {
-        if (role === 'sub_dealer') { result.push({ node: sd, ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }] }); return }
-        sd.promotors.forEach(pr => {
-          if (role === 'promotor') { result.push({ node: pr, ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }, { node: sd, role: 'sub_dealer' }] }); return }
-          pr.customers.forEach(cus => {
-            if (role === 'customer') { result.push({ node: cus, ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }, { node: sd, role: 'sub_dealer' }, { node: pr, role: 'promotor' }] }) }
-          })
-        })
-      })
-    })
-  })
-  return result
-}
-
-const searchAllHierarchy = (query) => {
-  if (!hierarchyData || !query.trim()) return []
-  const q = query.trim().toLowerCase()
-  const result = []
-
-  const checkMatch = (node, idKey) => {
-    const idVal = (node[idKey] || '').toString().toLowerCase()
-    const nameVal = `${node.first_name || ''} ${node.last_name || ''}`.toLowerCase()
-    const phoneVal = (node.mobile_number || '').toString().toLowerCase()
-    return idVal.includes(q) || nameVal.includes(q) || phoneVal.includes(q)
-  }
-
-  hierarchyData.admins.forEach(admin => {
-    if (checkMatch(admin, 'admin_id')) result.push({ node: admin, role: 'admin', ancestors: [] })
-    admin.dealers.forEach(dealer => {
-      if (checkMatch(dealer, 'dealer_id')) result.push({ node: dealer, role: 'dealer', ancestors: [{ node: admin, role: 'admin' }] })
-      dealer.sub_dealers.forEach(sd => {
-        if (checkMatch(sd, 'sub_dealer_id')) result.push({ node: sd, role: 'sub_dealer', ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }] })
-        sd.promotors.forEach(pr => {
-          if (checkMatch(pr, 'promotor_id')) result.push({ node: pr, role: 'promotor', ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }, { node: sd, role: 'sub_dealer' }] })
-          pr.customers.forEach(cus => {
-            if (checkMatch(cus, 'customer_id')) result.push({ node: cus, role: 'customer', ancestors: [{ node: admin, role: 'admin' }, { node: dealer, role: 'dealer' }, { node: sd, role: 'sub_dealer' }, { node: pr, role: 'promotor' }] })
-          })
-        })
-      })
-    })
-  })
-  return result
-}
-
-// âœ… NEW idha inga add pannunga (function-ku keezha)
-const searchResults = useMemo(() => {
-  if (!debouncedSearch) return []
-  return searchAllHierarchy(debouncedSearch)
-}, [debouncedSearch, hierarchyData])
-
-  // â”€â”€ ORDER HIERARCHY BUILDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const buildHierarchyOrders = (period, metalKey) => {
-  if (!hierarchyData) return null
-  const custOrders = orderDetails[period]?.[metalKey] || {}
-  const superAdminEmail = localStorage.getItem('email') || ''
-  let superTotal = 0
-  const matchedIds = new Set()
-
-  const admins = (hierarchyData.admins || []).map(admin => {
-    let adminTotal = 0
-    const dealers = (admin.dealers || []).map(dealer => {
-      let dealerTotal = 0
-      const subDealers = (dealer.sub_dealers || []).map(sd => {
-        let sdTotal = 0
-        const promotors = (sd.promotors || []).map(pr => {
-          let prTotal = 0
-
-          // âœ… FIX: Try all possible customer array keys
-          const customerList = pr.customers || pr.customer || []
-
-          const customers = customerList.map(c => {
-            // âœ… FIX: Try all possible id fields
-            const custId = c.customer_id || c.id || c.pk
-            const o = custOrders[custId] || { count: 0, amount: 0 }
-
-            if (o.count > 0) matchedIds.add(custId)
-            prTotal += o.count
-            return { ...c, orderCount: o.count, orderAmount: o.amount }
-          }).filter(c => c.orderCount > 0)
-
-          sdTotal += prTotal
-          return { ...pr, customers, orderCount: prTotal }
-        }).filter(pr => pr.orderCount > 0)
-
-        dealerTotal += sdTotal
-        return { ...sd, promotors, orderCount: sdTotal }
-      }).filter(sd => sd.orderCount > 0)
-
-      adminTotal += dealerTotal
-      return { ...dealer, subDealers, orderCount: dealerTotal }
-    }).filter(d => d.orderCount > 0)
-
-    superTotal += adminTotal
-    return { ...admin, dealers, orderCount: adminTotal }
-  }).filter(a => a.orderCount > 0)
-
-  const unlinked = Object.values(custOrders).filter(o => !matchedIds.has(o.customer_id))
-  const unlinkedTotal = unlinked.reduce((s, o) => s + o.count, 0)
-  superTotal += unlinkedTotal
-
-  return { superAdminEmail, superTotal, admins, unlinked, unlinkedTotal }
-}
-
-
   const s = {
     card: { background: cardBg, border: cardBorder, borderRadius: '22px', padding: '34px 38px', marginBottom: '26px', boxShadow: dark ? '0 26px 70px rgba(17,24,23,0.18)' : '0 22px 58px rgba(7,59,63,0.08)', backdropFilter: 'blur(18px)' },
     secHead: { color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 20px', paddingBottom: '14px', borderBottom: cardBorder },
     secSub: { color: '#0C4044', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '4px 0 0', paddingBottom: '10px', borderBottom: cardBorder },
-    lbl: { display: 'block', color: subtext, fontSize: '12px', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.04em' },
-    inp: { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '12px', padding: '13px 16px', color: text, fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
+    lbl: { display: 'block', color: subtext, fontSize: '10.5px', fontWeight: 700, marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.05em' },
+    inp: { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '9px', padding: '10px 13px', color: text, fontSize: '13.5px', outline: 'none', boxSizing: 'border-box' },
+    sectionCard: { background: '#FDFDFC', border: '1px solid rgba(189,207,206,0.55)', borderRadius: '16px', padding: '22px 24px', marginBottom: '4px' },
   }
 
   // Count total members
@@ -2578,21 +2483,32 @@ const fetchCoinStock = async () => {
                 <ResponsiveContainer width="100%" height={270}>
                   <PieChart>
                     <Pie
-                      data={[
-                        { name: 'Admin', value: quickStats.admins },
-                        { name: 'Dealer', value: quickStats.dealers },
-                        { name: 'Sub Dealer', value: quickStats.sub_dealers },
-                        { name: 'Promotor', value: quickStats.promotors },
-                        { name: 'Customer', value: quickStats.customers },
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={105}
-                      paddingAngle={2}
-                    >
+  data={[
+    { name: 'Super Stockist', value: quickStats.admins },
+    { name: 'Distributor', value: quickStats.dealers },
+    { name: 'Wholesale Dealer', value: quickStats.sub_dealers },
+    { name: 'Retailer', value: quickStats.promotors },
+    { name: 'Customer', value: quickStats.customers },
+  ]}
+  dataKey="value"
+  nameKey="name"
+  cx="50%"
+  cy="50%"
+  innerRadius={60}
+  outerRadius={105}
+  paddingAngle={2}
+  onClick={(entry) => {
+  const routeMap = {
+    'Super Stockist': '/superadmin/manage-users/super-stockist',
+    'Distributor': '/superadmin/manage-users/distributor',
+    'Wholesale Dealer': '/superadmin/manage-users/wholesale-dealer',
+    'Retailer': '/superadmin/manage-users/retailer',
+    'Customer': '/superadmin/manage-users/customer',
+  }
+  if (routeMap[entry.name]) navigate(routeMap[entry.name])
+}}
+style={{ cursor: 'pointer' }}
+>
                       <Cell fill="#BDCFCE" />
                       <Cell fill="#0C4044" />
                       <Cell fill="#BB8958" />
@@ -2604,17 +2520,17 @@ const fetchCoinStock = async () => {
                 </ResponsiveContainer>
                 <div className="sa-pie-legend" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
                   {[
-                    { label: 'Admin', color: '#53615F', count: quickStats.admins || 0 },
-                    { label: 'Dealer', color: '#0C4044', count: quickStats.dealers || 0 },
-                    { label: 'Sub Dealer', color: '#BB8958', count: quickStats.sub_dealers || 0 },
-                    { label: 'Promotor', color: '#CCA881', count: quickStats.promotors || 0 },
-                    { label: 'Customer', color: '#C92035', count: quickStats.customers || 0 },
-                  ].map(l => (
-                    <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <div className="sa-pie-legend-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: l.color }} />
-                      <span className="sa-pie-legend-text" style={{ fontSize: 10, color: '#7A8987' }}>{l.label} {l.count}</span>
-                    </div>
-                  ))}
+  { label: 'Super Stockist', color: '#53615F', count: quickStats.admins || 0, route: '/superadmin/manage-users/super-stockist' },
+  { label: 'Distributor', color: '#0C4044', count: quickStats.dealers || 0, route: '/superadmin/manage-users/distributor' },
+  { label: 'Wholesale Dealer', color: '#BB8958', count: quickStats.sub_dealers || 0, route: '/superadmin/manage-users/wholesale-dealer' },
+  { label: 'Retailer', color: '#CCA881', count: quickStats.promotors || 0, route: '/superadmin/manage-users/retailer' },
+  { label: 'Customer', color: '#C92035', count: quickStats.customers || 0, route: '/superadmin/manage-users/customer' },
+].map(l => (
+  <div key={l.label} onClick={() => navigate(l.route)} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+    <div className="sa-pie-legend-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: l.color }} />
+    <span className="sa-pie-legend-text" style={{ fontSize: 10, color: '#7A8987' }}>{l.label} {l.count}</span>
+  </div>
+))}
                 </div>
               </>
             )}
@@ -2687,7 +2603,6 @@ const fetchCoinStock = async () => {
           </div>
         )}
 
-        {/* â”€â”€ GOLD & SILVER PRICE TABLE HORIZONTAL LAYOUT â”€â”€ */}
         <div className="sa-rates-layout" style={{
           display: 'flex',
           gap: '0',
@@ -2739,27 +2654,9 @@ const fetchCoinStock = async () => {
 
                   {/* 22K */}
                   <div
-                    onMouseEnter={e => {
-                      clearTimeout(orderHideTimer.current)
-                      const pos = getOrderPopupPosition(e.currentTarget, 'right')
-
-                     setOrderPopupState({
-                      visible: true,
-                      period: s.periodKey,
-                       metalKey: 'gold_22k',
-                      left: pos.left,
-                       top: pos.top,
-                         })
-                    }}
-                    onMouseLeave={() => {
-                      orderHideTimer.current = setTimeout(
-                        () => setOrderPopupState(p => ({ ...p, visible: false })),
-                        300
-                      )
-                    }}
-                    className="sa-summary-block"
-                    style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
-                  >
+  className="sa-summary-block"
+  style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}` }}
+>
                     <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>22K</div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '9px', color: subtext }}>Orders</span>
@@ -2775,28 +2672,9 @@ const fetchCoinStock = async () => {
                     </div>
                   </div>
 
-                  {/* 24K */}
-                  <div
-                    onMouseEnter={e => {
-                      clearTimeout(orderHideTimer.current)
-                      const pos = getOrderPopupPosition(e.currentTarget, 'right')
-
-setOrderPopupState({
-  visible: true,
-  period: s.periodKey,
-  metalKey: 'gold_24k',
-  left: pos.left,
-  top: pos.top,
-})
-                    }}
-                    onMouseLeave={() => {
-                      orderHideTimer.current = setTimeout(
-                        () => setOrderPopupState(p => ({ ...p, visible: false })),
-                        300
-                      )
-                    }}
+                   <div
                     className="sa-summary-block"
-                    style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}`, cursor: 'pointer' }}
+                    style={{ marginBottom: '8px', paddingBottom: '9px', borderBottom: `1px solid ${border}` }}
                   >
                     <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#BB8958', fontWeight: 700, marginBottom: '3px' }}>24K</div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -2813,28 +2691,8 @@ setOrderPopupState({
                     </div>
                   </div>
 
-                  {/* Silver */}
                   <div
-                    onMouseEnter={e => {
-                      clearTimeout(orderHideTimer.current)
-                     const pos = getOrderPopupPosition(e.currentTarget, 'right')
-
-setOrderPopupState({
-  visible: true,
-  period: s.periodKey,
-  metalKey: 'silver_999',
-  left: pos.left,
-  top: pos.top,
-})
-                    }}
-                    onMouseLeave={() => {
-                      orderHideTimer.current = setTimeout(
-                        () => setOrderPopupState(p => ({ ...p, visible: false })),
-                        300
-                      )
-                    }}
                     className="sa-summary-block"
-                    style={{ cursor: 'pointer' }}
                   >
                     <div className="sa-summary-metal" style={{ fontSize: '8px', color: '#53615F', fontWeight: 700, marginBottom: '3px' }}>Silver</div>
                     <div className="sa-summary-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -3193,32 +3051,13 @@ return (
               },
             ].map(s => (
               <div
-                className="sa-today-card"
-                key={s.label}
-                style={{
-                  background: s.bg, border: `1px solid ${s.bd}`,
-                  borderRadius: '10px', padding: '12px 10px',
-                  cursor: 'default',
-                }}
-                onMouseEnter={e => {
-                  clearTimeout(orderHideTimer.current)
-                  const pos = getOrderPopupPosition(e.currentTarget, 'left')
-
-setOrderPopupState({
-  visible: true,
-  period: 'today',
-  metalKey: s.metalKey,
-  left: pos.left,
-  top: pos.top,
-})
-                }}
-                onMouseLeave={() => {
-                  orderHideTimer.current = setTimeout(
-                    () => setOrderPopupState(p => ({ ...p, visible: false })),
-                    300
-                  )
-                }}
-              >
+  className="sa-today-card"
+  key={s.label}
+  style={{
+    background: s.bg, border: `1px solid ${s.bd}`,
+    borderRadius: '10px', padding: '12px 10px',
+  }}
+>
 
                 <div className="sa-today-icon" style={{ fontSize: '14px', marginBottom: '5px' }}>{s.icon}</div>
                 <div className="sa-today-metal" style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: s.color, marginBottom: '8px' }}>
@@ -4560,305 +4399,6 @@ style={{ width: '100%', marginTop: '6px', padding: '14px', background: 'linear-g
           </div>
         )}
 
-
-
-
-{/* â”€â”€ ORDER HIERARCHY POPUP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-{orderPopupState.visible && orderPopupState.period && orderPopupState.metalKey && (() => {
-  if (!hierarchyData) return null
-
-
-  const hData = buildHierarchyOrders(orderPopupState.period, orderPopupState.metalKey)
-  if (!hData) return null
-
-  const periodLabel = { today: "TODAY'S", week: "THIS WEEK'S", month: "THIS MONTH'S" }[orderPopupState.period]
-  const renderOrderNode = (node, role) => {
-    const cfg = ROLE_LABELS[role]
-    const color = cfg?.color || '#BDCFCE'
-    const rgb = hexToRgb(color)
-
-    const children =
-      role === 'admin' ? (node.dealers || []) :
-      role === 'dealer' ? (node.subDealers || node.sub_dealers || []) :
-      role === 'sub_dealer' ? (node.promotors || []) :
-      role === 'promotor' ? (node.customers || []) :
-      []
-
-    const nextRole =
-      role === 'admin' ? 'dealer' :
-      role === 'dealer' ? 'sub_dealer' :
-      role === 'sub_dealer' ? 'promotor' :
-      role === 'promotor' ? 'customer' :
-      null
-
-    const idVal = node[cfg?.idKey] || node.id || ''
-    const name = `${node.first_name || ''} ${node.last_name || ''}`.trim() || 'Unknown'
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        position: 'relative',
-      }}>
-        {/* Node card */}
-        <div style={{
-          background: `rgba(${rgb},0.08)`,
-          border: `1px solid rgba(${rgb},0.4)`,
-          borderRadius: '12px',
-          padding: '9px 11px',
-          minWidth: '145px',
-          maxWidth: '170px',
-        }}>
-          <div style={{
-            fontSize: '8px',
-            color,
-            fontWeight: 800,
-            letterSpacing: '1px',
-            marginBottom: '4px',
-          }}>
-            {cfg?.emoji} {cfg?.label}
-          </div>
-
-          <div style={{
-            fontSize: '8px',
-            color: `rgba(${rgb},0.65)`,
-            fontFamily: 'monospace',
-            marginBottom: '3px',
-            wordBreak: 'break-all',
-          }}>
-            {idVal}
-          </div>
-
-          <div style={{
-            fontSize: '11px',
-            color: dark ? '#E7EDEC' : '#111817',
-            fontWeight: 800,
-          }}>
-            {name}
-          </div>
-
-          {node.mobile_number && (
-            <div style={{
-              fontSize: '9px',
-              color: `rgba(${rgb},0.7)`,
-              marginTop: '3px',
-            }}>
-              {node.mobile_number}
-            </div>
-          )}
-
-          {node.orderCount > 0 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              marginTop: '5px',
-            }}>
-              <span style={{
-                fontSize: '14px',
-                fontWeight: 900,
-                color,
-                fontFamily: 'monospace',
-              }}>
-                {node.orderCount}
-              </span>
-              <span style={{
-                fontSize: '8px',
-                color: `rgba(${rgb},0.65)`,
-                marginLeft: '3px',
-                alignSelf: 'flex-end',
-              }}>
-                orders
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Children tree */}
-        {children.length > 0 && (
-          <>
-            <div style={{
-              width: '2px',
-              height: '16px',
-              background: `rgba(${rgb},0.55)`,
-            }} />
-
-            <div style={{
-              position: 'relative',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'flex-start',
-              gap: '14px',
-              paddingTop: '12px',
-            }}>
-              {children.length > 1 && (
-                <div style={{
-                  position: 'absolute',
-                  top: '0',
-                  left: '10%',
-                  right: '10%',
-                  height: '2px',
-                  background: `rgba(${rgb},0.45)`,
-                }} />
-              )}
-
-              {children.map((child, idx) => (
-                <div
-                  key={child.id || child.admin_id || child.dealer_id || child.sub_dealer_id || child.promotor_id || child.customer_id || idx}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div style={{
-                    width: '2px',
-                    height: '12px',
-                    background: `rgba(${rgb},0.55)`,
-                  }} />
-
-                  {renderOrderNode(child, nextRole)}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    )
-  }
-
-  return (
-            <div
-              style={{
-                position: 'fixed', zIndex: 900,
-                left: Math.max(10, Math.min(orderPopupState.left || 10, window.innerWidth - 320)),
-                top: Math.max(10, Math.min(orderPopupState.top || 10, window.innerHeight - 520)),
-                background: dark ? 'rgba(7,59,63,0.97)' : 'rgba(248,250,252,0.98)',
-                border: '1px solid rgba(189,207,206,0.22)',
-                borderRadius: '16px', padding: '16px',
-                minWidth: '260px', maxWidth: '300px',
-                maxHeight: '78vh', overflow: 'auto',
-                boxShadow: '0 32px 80px rgba(17,24,23,0.85)',
-                fontFamily: 'Inter,system-ui,sans-serif',
-                animation: 'popupIn 0.25s cubic-bezier(0.22,1,0.36,1) both',
-                scrollbarWidth: 'thin', scrollbarColor: 'rgba(189,207,206,0.4) transparent',
-              }}
-              onMouseEnter={() => clearTimeout(orderHideTimer.current)}
-              onMouseLeave={() => {
-                orderHideTimer.current = setTimeout(
-                  () => setOrderPopupState(p => ({ ...p, visible: false })), 300
-                )
-              }}
-            >
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(189,207,206,0.12)' }}>
-                <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'rgba(189,207,206,0.15)', border: '1px solid rgba(189,207,206,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}></div>
-                <div>
-                  <div style={{ fontSize: '10px', fontWeight: 800, color: '#53615F', letterSpacing: '1.5px' }}>{periodLabel} ORDER CHAIN</div>
-                  <div style={{ fontSize: '9px', color: dark ? '#7A8987' : '#7A8987', marginTop: '2px' }}>Full hierarchy breakdown</div>
-                </div>
-              </div>
-
-              {/* States */}
-              {!hierarchyData && (
-                <div style={{ textAlign: 'center', color: subtext, padding: '18px 0', fontSize: '12px' }}>
-                  <div style={{ width: 18, height: 18, border: '2px solid rgba(189,207,206,0.2)', borderTop: '2px solid #BDCFCE', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 8px' }} />
-                  Loading hierarchy...
-                </div>
-              )}
-              {hData && hData.admins.length === 0 && hData.unlinked.length === 0 && (
-                <div style={{ textAlign: 'center', color: subtext, padding: '18px 0', fontSize: '12px' }}>No orders in this period</div>
-              )}
-
-              {hData && (hData.admins.length > 0 || hData.unlinked.length > 0) && (
-                <div>
-                  {/* â”€â”€ Super Admin â”€â”€ */}
-                  <div style={{ background: 'rgba(204,168,129,0.08)', border: '1px solid rgba(204,168,129,0.3)', borderRadius: '10px', padding: '9px 12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '8px', color: '#CCA881', fontWeight: 800, letterSpacing: '1px' }}>SUPER ADMIN</div>
-                        <div style={{ fontSize: '10px', color: dark ? '#111817' : '#7A8987', marginTop: '3px', wordBreak: 'break-all' }}>{hData.superAdminEmail}</div>
-                      </div>
-                      <div style={{ textAlign: 'right', marginLeft: '8px', flexShrink: 0 }}>
-                        <div style={{ fontSize: '15px', fontWeight: 800, color: '#CCA881', fontFamily: 'monospace' }}>{hData.superTotal}</div>
-                        <div style={{ fontSize: '8px', color: 'rgba(204,168,129,0.55)' }}>orders</div>
-                      </div>
-                    </div>
-                  </div>
-
-{/* â”€â”€ Hierarchy chain tree style â”€â”€ */}
-{/* â”€â”€ Hierarchy chain tree style â”€â”€ */}
-{hData.admins.length > 0 && (
-  <div>
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      padding: '4px 0 8px',
-    }}>
-      <div style={{
-        width: '2px',
-        height: '18px',
-        background: 'rgba(189,207,206,0.55)',
-      }} />
-    </div>
-
-    <div style={{
-      overflowX: 'auto',
-      padding: '10px 0 14px',
-    }}>
-
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        gap: '24px',
-        minWidth: 'max-content',
-      }}>
-        {hData.admins.map((admin, idx) => (
-          <div key={admin.id || admin.admin_id || idx}>
-            {renderOrderNode(admin, 'admin')}
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-)}
-
-                  {/* â”€â”€ Unlinked customers (no assigned promotor in hierarchy) â”€â”€ */}
-                  {hData.unlinked && hData.unlinked.length > 0 && (
-                    <div>
-                      <Arrow rgb="244,114,182" />
-                      <div style={{ background: 'rgba(201,32,53,0.06)', border: '1px dashed rgba(201,32,53,0.4)', borderRadius: '10px', padding: '9px 12px' }}>
-                        <div style={{ fontSize: '8px', color: '#C92035', fontWeight: 800, letterSpacing: '1px', marginBottom: '6px' }}>
-                          DIRECT CUSTOMERS{hData.unlinked.length} customer{hData.unlinked.length > 1 ? 's' : ''}
-                        </div>
-                        <div style={{ fontSize: '8px', color: 'rgba(201,32,53,0.5)', marginBottom: '8px', fontStyle: 'italic' }}>
-                          âš ï¸ Not linked to any promotor in hierarchy
-                        </div>
-                        {hData.unlinked.map(o => (
-                          <div key={o.customer_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid rgba(201,32,53,0.1)' }}>
-                            <div>
-                              <div style={{ fontSize: '9px', color: 'rgba(201,32,53,0.7)', fontFamily: 'monospace' }}>{o.customer_id}</div>
-                              <div style={{ fontSize: '9px', color: 'rgba(201,32,53,0.5)' }}>{o.email}</div>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontSize: '13px', fontWeight: 800, color: '#C92035', fontFamily: 'monospace' }}>{o.count}</div>
-                              <div style={{ fontSize: '8px', color: 'rgba(201,32,53,0.55)' }}>orders</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-            </div>
-          )
-        })()}
-
-
-        {/* â”€â”€ PROFILE UPDATE REQUESTS MODAL â”€â”€ */}
         {showRequests && (
           <div
             onClick={() => {
@@ -5695,12 +5235,13 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
         {showForm && (
           <div style={s.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <p style={s.secHead}>Create New Admin</p>
-              <CopyUrlButton />
-            </div>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <p style={s.secSub}>Personal Info</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '0.4fr 1fr 1fr', gap: '14px' }}>
+                            <p style={s.secHead}>Create New Admin</p>
+                <CopyUrlButton />
+              </div>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div style={s.sectionCard}>
+              <SectionHeader icon="user" label="Personal Info" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 <div><label style={s.lbl}>Initial</label>
                   <input name="initial" maxLength={5} value={form.initial} onChange={handleChange} className="sa-inp" style={s.inp} />
                 </div>
@@ -5710,10 +5251,8 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
                 <div><label style={s.lbl}>Last Name *</label>
                   <input name="last_name" maxLength={100} value={form.last_name} onChange={handleChange} required className="sa-inp" style={s.inp} />
                 </div>
-              </div>
-              {/* Row 1 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div>
+
+                                <div>
                   <label style={s.lbl}>Mobile *</label>
                   <input
                     name="mobile_number"
@@ -5727,6 +5266,43 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
                 </div>
 
                 <div>
+                  <label style={s.lbl}>Gender *</label>
+                  <select name="gender" value={form.gender} onChange={handleChange} required className="sa-inp" style={s.inp}>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="transgender">Transgender</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={s.lbl}>DOB *</label>
+                  <input type="date" name="dob" value={form.dob} onChange={handleChange} required className="sa-inp" style={s.inp} />
+                </div>
+
+                <div>
+                  <label style={s.lbl}>Married Status</label>
+                  <select name="married_status" value={form.married_status} onChange={handleChange} className="sa-inp" style={s.inp}>
+                    <option value="single">Single</option>
+                    <option value="married">Married</option>
+                    <option value="divorced">Divorced</option>
+                  </select>
+                </div>
+
+                {form.married_status === 'married' && (
+                  <div>
+                    <label style={s.lbl}>Anniversary Date</label>
+                    <input
+                      type="date"
+                      name="anniversary_date"
+                      value={form.anniversary_date}
+                      onChange={handleChange}
+                      className="sa-inp"
+                      style={s.inp}
+                    />
+                  </div>
+                )}
+
+                <div>
                   <label style={s.lbl}>Admin ID</label>
                   <div style={{ ...s.inp, opacity: 0.55, cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ color: '#53615F', fontFamily: 'monospace', fontSize: '13px' }}>
@@ -5738,58 +5314,28 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
                   </div>
                 </div>
               </div>
-
-              {/* Row 2 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginTop: '10px' }}>
-                <div>
-                  <label style={s.lbl}>Gender</label>
-                  <select name="gender" value={form.gender} onChange={handleChange} className="sa-inp" style={s.inp}>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={s.lbl}>DOB</label>
-                  <input type="date" name="dob" value={form.dob} onChange={handleChange} className="sa-inp" style={s.inp} />
-                </div>
-
-                <div>
-                  <label style={s.lbl}>Married Status</label>
-                  <select name="married_status" value={form.married_status} onChange={handleChange} className="sa-inp" style={s.inp}>
-                    <option value="single">Single</option>
-                    <option value="married">Married</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
               </div>
 
-              {/* Row 3 */}
-              {form.married_status === 'married' && (
-                <div style={{ marginTop: '10px' }}>
-                  <label style={s.lbl}>Anniversary Date</label>
-                  <input
-                    type="date"
-                    name="anniversary_date"
-                    value={form.anniversary_date}
-                    onChange={handleChange}
-                    className="sa-inp"
-                    style={s.inp}
-                  />
-                </div>
-              )}
-              <p style={s.secSub}>Account Info</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                            <div style={s.sectionCard}>
+              <SectionHeader icon="lock" label="Account Info" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 <div><label style={s.lbl}>Email *</label>
                   <input type="email" name="email" value={form.email} onChange={handleChange} required className="sa-inp" style={s.inp} />
                 </div>
-                <div><label style={s.lbl}>Password *</label>
+                <div>
+                  <label style={s.lbl}>Password *</label>
                   <input type="password" name="password" value={form.password} onChange={handleChange} required className="sa-inp" style={s.inp} />
+                  {form.password && (
+                    <div style={{ marginTop: '6px' }}>
+                      <div style={{ height: '4px', borderRadius: '4px', background: 'rgba(189,207,206,0.4)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: getPasswordStrength(form.password).width, background: getPasswordStrength(form.password).color, transition: 'all 0.3s ease' }} />
+                      </div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: getPasswordStrength(form.password).color, marginTop: '4px' }}>
+                        {getPasswordStrength(form.password).label}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginTop: '4px' }}>
                 <div>
                   <label style={s.lbl}>Confirm Password *</label>
                   <input
@@ -5805,33 +5351,58 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
                       {passwordError}
                     </div>
                   )}
+                  {confirmPassword && !passwordError && (
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: confirmPassword === form.password ? '#0C4044' : '#C92035', marginTop: '6px' }}>
+                      {confirmPassword === form.password ? 'Passwords match' : 'Passwords do not match'}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <p style={{ ...s.secSub, display: 'flex', alignItems: 'center', gap: '6px' }}><SvgIcon name="note" size={15} />Address</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
+              </div>
+
+                            <div style={s.sectionCard}>
+              <SectionHeader icon="pin" label="Address" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 <div><label style={s.lbl}>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
-                <div><label style={s.lbl}>Town *</label><input name="town_name" value={form.town_name} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
-                <div><label style={s.lbl}>City *</label><input name="city_name" value={form.city_name} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
+                <div>
+                  <label style={s.lbl}>Pincode *</label>
+                  <input name="pincode" value={form.pincode} onChange={handlePincodeChange} required maxLength={6} inputMode="numeric" className="sa-inp" style={s.inp} />
+                                    {pincodeLookupMsg && (
+                    <div style={{ fontSize: '11px', fontWeight: 700, marginTop: '4px', color: pincodeLookupMsg.includes('auto-filled') ? '#0C4044' : pincodeLookupMsg.includes('not found') || pincodeLookupMsg.includes('Unable') ? '#C92035' : subtext }}>
+                      {pincodeLookupMsg}
+                    </div>
+                  )}
+                </div>
+                <div><label style={s.lbl}>Town</label><input name="town_name" value={form.town_name} onChange={handleChange} className="sa-inp" style={s.inp} /></div>
+                                <div><label style={s.lbl}>City</label><input name="city_name" value={form.city_name} onChange={handleChange} className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>District *</label><input name="district" value={form.district} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>State *</label><input name="state" value={form.state} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
               </div>
-              <p style={s.secSub}>Identity</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div><label style={s.lbl}>Aadhaar No *</label><input name="aadhaar_no" maxLength={12} value={form.aadhaar_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
-                <div><label style={s.lbl}>PAN No *</label><input name="pan_no" maxLength={10} value={form.pan_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
               </div>
-              <p style={{ ...s.secSub, display: 'flex', alignItems: 'center', gap: '6px' }}><SvgIcon name="note" size={15} />Occupation</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
-                <div><label style={s.lbl}>Occupation *</label>
+
+                            <div style={s.sectionCard}>
+              <SectionHeader icon="id" label="Identity" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div><label style={s.lbl}>Aadhaar No</label><input name="aadhaar_no" maxLength={12} value={form.aadhaar_no} onChange={handleChange} className="sa-inp" style={s.inp} /></div>
+                <div><label style={s.lbl}>PAN No</label><input name="pan_no" maxLength={10} value={form.pan_no} onChange={handleChange} className="sa-inp" style={s.inp} /></div>
+              </div>
+              </div>
+
+              <div style={s.sectionCard}>
+              <SectionHeader icon="briefcase" label="Occupation" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                <div><label style={s.lbl}>Occupation</label>
                   <select name="occupation" value={form.occupation} onChange={handleChange} className="sa-inp" style={{ ...s.inp, cursor: 'pointer' }}>
                     {OCCUPATION_OPTIONS.map(o => <option key={o} value={o} style={{ background: '#F3F3F0' }}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
                   </select>
                 </div>
                 <div><label style={s.lbl}>Detail</label><input name="occupation_detail" value={form.occupation_detail} onChange={handleChange} className="sa-inp" style={s.inp} /></div>
-                <div><label style={s.lbl}>Annual Salary *</label><input name="annual_salary" value={form.annual_salary} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
+                <div><label style={s.lbl}>Annual Salary</label><input name="annual_salary" value={form.annual_salary} onChange={handleChange} className="sa-inp" style={s.inp} /></div>
               </div>
+              </div>
+
               <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
                 <button type="submit" className="sa-grad-btn"
                   style={{ padding: '12px 28px', background: 'linear-gradient(90deg,#BDCFCE,#0C4044)', border: 'none', borderRadius: '12px', fontWeight: 800, color: '#FDFDFC', fontSize: '14px', cursor: 'pointer' }}>
@@ -5845,53 +5416,6 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
             </form>
           </div>
         )}
-
-        {/* Admins Table */}
-                <div className="sa-admin-table-card" style={s.card}>
-          <div className="sa-admin-table-top">
-            <p style={{ ...s.secHead, margin: 0, paddingBottom: 0, borderBottom: 0 }}>All Admins ({admins.length})</p>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <div className="sa-admin-search">Search admin by name, email, ID...</div>
-              <button type="button" style={{ width: 42, height: 42, borderRadius: 8, border: '1px solid #E0E9E8', background: '#FFFFFF', display: 'grid', placeItems: 'center', cursor: 'pointer', color: '#0C4044', fontWeight: 900 }}>F</button>
-            </div>
-          </div>
-          {admins.length === 0 ? (
-            <p style={{ color: subtext, textAlign: 'center', padding: '60px 0', fontSize: '15px' }}>No admins yet!</p>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1.5px solid rgba(12,64,68,0.22)' }}>
-                    {['First Name', 'Last Name', 'Email', 'Mobile', 'Admin ID', 'City', 'Actions'].map(h => (
-                      <th key={h} style={{ padding: '14px 16px', textAlign: 'left', color: '#0C4044', fontSize: '13px', fontWeight: 900, whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {admins.map((a) => (
-                    <tr key={a.id || a.admin_id} className="sa-tr" style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
-                      <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 700 }}>{a.first_name}</td>
-                      <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 700 }}>{a.last_name}</td>
-                      <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 650 }}>{a.email}</td>
-                      <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 650 }}>{a.mobile_number}</td>
-                      <td style={{ padding: '14px 16px', color: '#111817', fontFamily: 'monospace', fontWeight: 800 }}>{a.admin_id}</td>
-                                            <td style={{ padding: '14px 16px', color: '#111817', fontWeight: 650 }}>{a.city_name}</td>
-                      <td className="sa-admin-action-cell" style={{ padding: '10px 16px' }}>
-                        <button type="button" className={`sa-admin-action-btn ${adminActionOpen === a.id ? 'is-open' : ''}`} aria-label={`Actions for ${a.first_name}`} aria-expanded={adminActionOpen === a.id} onClick={() => setAdminActionOpen(current => current === a.id ? null : a.id)}>•••</button>
-                        {adminActionOpen === a.id && <div className="sa-admin-action-menu">
-                          <button type="button" onClick={() => { setSelectedAdminDetail(a); setAdminActionOpen(null) }}><span>View profile</span><span>↗</span></button>
-                          <button type="button" onClick={() => navigate(`/hierarchy-sales-count?role=admin&id=${a.id}`)}><span>Performance report</span><span>↗</span></button>
-                          <button type="button" onClick={() => navigate(`/superadmin-hierarchy-grid?role=admin&id=${a.id}`)}><span>View hierarchy</span><span>↗</span></button>
-                          <button type="button" onClick={async () => { await navigator.clipboard.writeText(a.admin_id || ''); setCopiedAdminId(a.id); setTimeout(() => setCopiedAdminId(null), 1600) }}><span>{copiedAdminId === a.id ? 'Admin ID copied' : 'Copy Admin ID'}</span><span>{copiedAdminId === a.id ? '✓' : '⧉'}</span></button>
-                        </div>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       </div>
 
       {selectedAdminDetail && (

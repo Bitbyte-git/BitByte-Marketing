@@ -101,11 +101,11 @@ const IconMessage = ({ color, size = 13 }) => (
 // so the whole app stays visually consistent (super friendly + readable)
 // ══════════════════════════════════════════════════════════════════
 const ROLE_CFG = {
-  super_admin: { color: '#7C3AED', Icon: IconShield, label: 'SUPER ADMIN' },
-  admin: { color: '#16A34A', Icon: IconShield, label: 'ADMIN', idKey: 'admin_id' },
-  dealer: { color: '#0284C7', Icon: IconStore, label: 'DEALER', idKey: 'dealer_id' },
-  sub_dealer: { color: '#DC2626', Icon: IconLink, label: 'SUB DEALER', idKey: 'sub_dealer_id' },
-  promotor: { color: '#CA8A04', Icon: IconStar, label: 'PROMOTOR', idKey: 'promotor_id' },
+    super_admin: { color: '#7C3AED', Icon: IconShield, label: 'SUPER ADMIN' },
+  admin: { color: '#16A34A', Icon: IconShield, label: 'SUPER STOCKIST', idKey: 'admin_id' },
+  dealer: { color: '#0284C7', Icon: IconStore, label: 'DISTRIBUTOR', idKey: 'dealer_id' },
+  sub_dealer: { color: '#DC2626', Icon: IconLink, label: 'WHOLESALE DEALER', idKey: 'sub_dealer_id' },
+  promotor: { color: '#CA8A04', Icon: IconStar, label: 'RETAILER', idKey: 'promotor_id' },
   customer: { color: '#DB2777', Icon: IconUser, label: 'CUSTOMER', idKey: 'customer_id' },
 }
 const CHILD_ROLE = { admin: 'dealer', dealer: 'sub_dealer', sub_dealer: 'promotor', promotor: 'customer', customer: 'customer' }
@@ -1296,7 +1296,7 @@ const selectAdmin = (node) => {
 
       {!loading && (
         <div style={{ marginTop: '20px', padding: '14px 0', display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
-          {[{ role: 'Super Admin', key: 'super_admin' }, { role: 'Admin', key: 'admin' }, { role: 'Dealer', key: 'dealer' }, { role: 'Sub Dealer', key: 'sub_dealer' }, { role: 'Promotor', key: 'promotor' }, { role: 'Customer', key: 'customer' }].map(l => (
+          {[{ role: 'Super Admin', key: 'super_admin' }, { role: 'Super Stockist', key: 'admin' }, { role: 'Distributor', key: 'dealer' }, { role: 'Wholesale Dealer', key: 'sub_dealer' }, { role: 'Retailer', key: 'promotor' }, { role: 'Customer', key: 'customer' }].map(l => (
             <div key={l.role} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 9, height: 9, borderRadius: '50%', background: ROLE_CFG[l.key].color }} />
               <span style={{ color: subtext, fontSize: '12px', fontWeight: 650 }}>{l.role}</span>

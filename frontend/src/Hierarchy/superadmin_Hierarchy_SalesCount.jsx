@@ -75,7 +75,7 @@ const IconEmpty = ({ color, size = 40 }) => (
 
 // ── CHANGED: label mattum rename pannirukom (display only) — role key ella DB la irundhu adhe padi ──
 const ROLE_CFG = {
-  admin:      { color: '#53615F', label: 'ADMIN',            singular: 'Admin',            Icon: IconShield, idKey: 'admin_id',      childRole: 'dealer' },
+  admin:      { color: '#53615F', label: 'SUPER STOCKIST',    singular: 'Super Stockist',   Icon: IconShield, idKey: 'admin_id',      childRole: 'dealer' },
   dealer:     { color: '#0C4044', label: 'DISTRIBUTOR',       singular: 'Distributor',      Icon: IconStore,  idKey: 'dealer_id',     childRole: 'sub_dealer' },
   sub_dealer: { color: '#BB8958', label: 'WHOLESALE DEALER',  singular: 'Wholesale Dealer', Icon: IconLink,   idKey: 'sub_dealer_id', childRole: 'promotor' },
   promotor:   { color: '#CCA881', label: 'RETAILER',          singular: 'Retailer',         Icon: IconStar,   idKey: 'promotor_id',   childRole: 'customer' },

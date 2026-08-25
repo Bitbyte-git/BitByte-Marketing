@@ -8,7 +8,7 @@ const emptyForm = {
   initial: "", first_name: "", last_name: "", mobile_number: "",
   gender: "male", dob: "", married_status: "single", anniversary_date: "",
   email: "", password: "",
-  door_no: "", street_name: "", town_name: "", city_name: "",
+  door_no: "", street_name: "", town_name: "", city_name: "", pincode: "",
   district: "", state: "", aadhaar_no: "", pan_no: "",
   occupation: "", occupation_detail: "", annual_salary: "",
 };
@@ -28,6 +28,7 @@ export default function RegisterPage() {
   const [referrer, setReferrer] = useState(null);
   const [referrerLoading, setReferrerLoading] = useState(true);
   const [referrerError, setReferrerError] = useState("");
+  const [pincodeLookupMsg, setPincodeLookupMsg] = useState("");
 
   useEffect(() => {
     if (!ref) {
@@ -47,6 +48,34 @@ export default function RegisterPage() {
       })
       .finally(() => setReferrerLoading(false));
   }, [ref]);
+
+  const handlePincodeChange = async (e) => {
+  const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+  setForm((prev) => ({ ...prev, pincode: value }));
+  setPincodeLookupMsg("");
+
+  if (value.length === 6) {
+    setPincodeLookupMsg("Fetching location details...");
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${value}`);
+      const data = await res.json();
+      if (data[0]?.Status === "Success" && data[0]?.PostOffice?.length > 0) {
+        const po = data[0].PostOffice[0];
+        setForm((prev) => ({
+          ...prev,
+          city_name: po.District || prev.city_name,
+          district: po.District || prev.district,
+          state: po.State || prev.state,
+        }));
+        setPincodeLookupMsg("Location details auto-filled");
+      } else {
+        setPincodeLookupMsg("Pincode not found — please enter manually");
+      }
+    } catch {
+      setPincodeLookupMsg("Unable to fetch location — please enter manually");
+    }
+  }
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -284,15 +313,33 @@ export default function RegisterPage() {
                   </div>
                 )}
 
-                <p className="rg-sub-label">Address</p>
-                <div className="rg-grid cols-3">
-                  <div className="rg-field"><label>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required /></div>
-                  <div className="rg-field"><label>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required /></div>
-                  <div className="rg-field"><label>Town *</label><input name="town_name" value={form.town_name} onChange={handleChange} required /></div>
-                  <div className="rg-field"><label>City *</label><input name="city_name" value={form.city_name} onChange={handleChange} required /></div>
-                  <div className="rg-field"><label>District *</label><input name="district" value={form.district} onChange={handleChange} required /></div>
-                  <div className="rg-field"><label>State *</label><input name="state" value={form.state} onChange={handleChange} required /></div>
-                </div>
+               <p className="rg-sub-label">Address</p>
+<div className="rg-grid cols-3">
+  <div className="rg-field"><label>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required /></div>
+  <div className="rg-field"><label>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required /></div>
+  <div className="rg-field"><label>Town *</label><input name="town_name" value={form.town_name} onChange={handleChange} required /></div>
+  <div className="rg-field">
+    <label>Pincode *</label>
+    <input name="pincode" value={form.pincode} onChange={handlePincodeChange} required maxLength={6} inputMode="numeric" />
+    {pincodeLookupMsg && (
+      <div
+        className="rg-field-error"
+        style={{
+          color: pincodeLookupMsg.includes("auto-filled")
+            ? "#0C4044"
+            : pincodeLookupMsg.includes("not found") || pincodeLookupMsg.includes("Unable")
+            ? "#C92035"
+            : "#7A8987",
+        }}
+      >
+        {pincodeLookupMsg}
+      </div>
+    )}
+  </div>
+  <div className="rg-field"><label>City *</label><input name="city_name" value={form.city_name} onChange={handleChange} required /></div>
+  <div className="rg-field"><label>District *</label><input name="district" value={form.district} onChange={handleChange} required /></div>
+  <div className="rg-field"><label>State *</label><input name="state" value={form.state} onChange={handleChange} required /></div>
+</div>
 
                 <p className="rg-sub-label">Identity</p>
                 <div className="rg-grid cols-2">
