@@ -76,6 +76,7 @@ class AdminProfile(models.Model):
     street_name = models.CharField(max_length=100)
     town_name = models.CharField(max_length=100)
     city_name = models.CharField(max_length=25)
+    pincode = models.CharField(max_length=6, blank=True, null=True) 
     district = models.CharField(max_length=25)
     state = models.CharField(max_length=25)
 
@@ -92,7 +93,11 @@ class AdminProfile(models.Model):
     admin_contact_no = models.CharField(max_length=10, blank=True)  # = mobile_number
 
     class Meta:
-        indexes = [models.Index(fields=['created_by'])]
+        indexes = [
+            models.Index(fields=['created_by']),
+            models.Index(fields=['dob']),
+            models.Index(fields=['anniversary_date']),
+        ]
 
     def save(self, *args, **kwargs):
         # Auto-set admin_name from first_name
@@ -148,6 +153,7 @@ class DealerProfile(models.Model):
     street_name = models.CharField(max_length=100, blank=True, null=True)
     town_name = models.CharField(max_length=100, blank=True, null=True)
     city_name = models.CharField(max_length=25, blank=True, null=True)
+    pincode = models.CharField(max_length=6, blank=True, null=True)
     district = models.CharField(max_length=25, blank=True, null=True)
     state = models.CharField(max_length=25, blank=True, null=True)
 
@@ -163,7 +169,12 @@ class DealerProfile(models.Model):
     dealer_contact_no = models.CharField(max_length=10, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=['assigned_admin'])]
+        indexes = [
+            models.Index(fields=['assigned_admin']),
+            models.Index(fields=['dob']),
+            models.Index(fields=['anniversary_date']),
+            models.Index(fields=['created_at']),
+        ]
 
     SUPER_STOCKIST_STATUS_CHOICES = [
         ('none', 'Not Eligible'),
@@ -223,6 +234,7 @@ class SubDealerProfile(models.Model):
     street_name = models.CharField(max_length=100, blank=True, null=True)
     town_name = models.CharField(max_length=100, blank=True, null=True)
     city_name = models.CharField(max_length=25, blank=True, null=True)
+    pincode = models.CharField(max_length=6, blank=True, null=True)
     district = models.CharField(max_length=25, blank=True, null=True)
     state = models.CharField(max_length=25, blank=True, null=True)
 
@@ -236,7 +248,12 @@ class SubDealerProfile(models.Model):
     sub_dealer_id = models.CharField(max_length=20, unique=True, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=['assigned_dealer'])]
+        indexes = [
+            models.Index(fields=['assigned_dealer']),
+            models.Index(fields=['dob']),
+            models.Index(fields=['anniversary_date']),
+            models.Index(fields=['created_at']),
+        ]
 
     DISTRIBUTOR_STATUS_CHOICES = [
         ('none', 'Not Eligible'),
@@ -293,6 +310,7 @@ class PromotorProfile(models.Model):
     street_name = models.CharField(max_length=100, blank=True, null=True)
     town_name = models.CharField(max_length=100, blank=True, null=True)
     city_name = models.CharField(max_length=25, blank=True, null=True)
+    pincode = models.CharField(max_length=6, blank=True, null=True)
     district = models.CharField(max_length=25, blank=True, null=True)
     state = models.CharField(max_length=25, blank=True, null=True)
 
@@ -311,7 +329,12 @@ class PromotorProfile(models.Model):
     promotor_contact_no = models.CharField(max_length=10, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=['assigned_sub_dealer'])]
+        indexes = [
+            models.Index(fields=['assigned_sub_dealer']),
+            models.Index(fields=['dob']),
+            models.Index(fields=['anniversary_date']),
+            models.Index(fields=['created_at']),
+        ]
 
     WHOLESALE_STATUS_CHOICES = [
         ('none', 'Not Eligible'),
@@ -369,6 +392,7 @@ class CustomerProfile(models.Model):
     street_name = models.CharField(max_length=100, blank=True, null=True)
     town_name = models.CharField(max_length=100, blank=True, null=True)
     city_name = models.CharField(max_length=25, blank=True, null=True)
+    pincode = models.CharField(max_length=6, blank=True, null=True)
     district = models.CharField(max_length=25, blank=True, null=True)
     state = models.CharField(max_length=25, blank=True, null=True)
 
@@ -387,6 +411,9 @@ class CustomerProfile(models.Model):
         indexes = [
             models.Index(fields=['assigned_promotor']),
             models.Index(fields=['created_by']),
+            models.Index(fields=['dob']),
+            models.Index(fields=['anniversary_date']),
+            models.Index(fields=['created_at']),
         ]
 
     # ── NEW: Retailer promotion tracking ──
@@ -704,7 +731,7 @@ class CartItem(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['user', 'product']  # same product twice add பண்ண qty++ ஆகும்
+        unique_together = ['user', 'product']
 
     def __str__(self):
         return f"{self.user.email} - {self.product.name} x {self.qty}"     

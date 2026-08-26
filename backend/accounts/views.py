@@ -85,10 +85,20 @@ REWARD_COINS = {
 }
 
 def get_login_streak(user, upto_date):
-    """upto_date-la irundhu backward-a consecutive days evlo login pannirukanga nu count pannum."""
+    """upto_date-la irundhu backward-a consecutive days evlo login pannirukanga nu count pannum.
+    Calendar month boundary-ku ulle mattum count pannும் — month maarina streak reset aagும்.
+    Single query — month start to upto_date varaikkum fetch panni Python-la loop pannurom."""
+    month_start = upto_date.replace(day=1)
+    logged_dates = set(
+        DailyLoginLog.objects.filter(
+            user=user,
+            login_date__gte=month_start,
+            login_date__lte=upto_date,
+        ).values_list('login_date', flat=True)
+    )
     streak = 0
     day = upto_date
-    while DailyLoginLog.objects.filter(user=user, login_date=day).exists():
+    while day >= month_start and day in logged_dates:
         streak += 1
         day -= timedelta(days=1)
     return streak
@@ -584,7 +594,7 @@ class PublicCustomerRegisterView(APIView):
         profile_fields = [
             'initial', 'first_name', 'last_name', 'mobile_number',
             'gender', 'dob', 'married_status', 'anniversary_date',
-            'door_no', 'street_name', 'town_name', 'city_name',
+            'door_no', 'street_name', 'town_name', 'city_name', 'pincode',
             'district', 'state', 'aadhaar_no', 'pan_no',
             'occupation', 'occupation_detail', 'annual_salary',
         ]
@@ -3162,24 +3172,31 @@ class DashboardQuickStatsView(APIView):
 
         today = timezone.now().date()
         yesterday = today - timedelta(days=1)
+        # ── NEW: range queries instead of __date= — these USE the index, __date= does not ──
+        today_start = timezone.make_aware(timezone.datetime.combine(today, timezone.datetime.min.time()))
+        today_end = today_start + timedelta(days=1)
+        yesterday_start = today_start - timedelta(days=1)
 
-        active_users = User.objects.exclude(role='super_admin').filter(last_login__date=today).count()
+        active_users = User.objects.exclude(role='super_admin').filter(
+            last_login__gte=today_start, last_login__lt=today_end
+        ).count()
+
+        total_non_super = User.objects.exclude(role='super_admin').count()
 
         data = {
-            'yesterday_orders': JewelryOrder.objects.filter(created_at__date=yesterday).count(),
-            'today_orders': JewelryOrder.objects.filter(created_at__date=today).count(),
-            'today_new_customers': CustomerProfile.objects.filter(created_at__date=today).count(),
+            'yesterday_orders': JewelryOrder.objects.filter(created_at__gte=yesterday_start, created_at__lt=today_start).count(),
+            'today_orders': JewelryOrder.objects.filter(created_at__gte=today_start, created_at__lt=today_end).count(),
+            'today_new_customers': CustomerProfile.objects.filter(created_at__gte=today_start, created_at__lt=today_end).count(),
             'active_users': active_users,
-            # NEW: for Role Distribution pie chart
             'admins': AdminProfile.objects.count(),
             'dealers': DealerProfile.objects.count(),
             'sub_dealers': SubDealerProfile.objects.count(),
             'promotors': PromotorProfile.objects.count(),
             'customers': CustomerProfile.objects.count(),
-            # NEW: for Today's Login Status pie chart
-            'today_inactive_count': User.objects.exclude(role='super_admin').exclude(last_login__date=today).count(),
+            # ── NEW: subtract instead of a second full-table exclude-count — half the DB work ──
+            'today_inactive_count': total_non_super - active_users,
         }
-        cache.set(cache_key, data, 60)
+        cache.set(cache_key, data, 180)   # ── NEW: 60s → 180s, fewer cache-miss slow hits ──
         return Response(data)
 
 class CoinRequestView(APIView):

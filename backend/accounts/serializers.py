@@ -14,7 +14,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
         fields = [
            'id', 'email', 'password', 'initial', 'first_name', 'last_name', 'mobile_number',
            'gender', 'dob', 'married_status', 'anniversary_date',
-            'door_no', 'street_name', 'town_name', 'city_name',
+            'door_no', 'street_name', 'town_name', 'city_name', 'pincode',
             'district', 'state', 'aadhaar_no', 'pan_no',
             'occupation', 'occupation_detail', 'annual_salary',
             # auto-generated — read only
@@ -68,7 +68,7 @@ class DealerProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'password', 'initial', 'first_name', 'last_name', 'mobile_number',
             'gender', 'dob', 'married_status', 'anniversary_date',
-            'door_no','street_name', 'town_name', 'city_name',
+            'door_no','street_name', 'town_name', 'city_name','pincode',
             'district', 'state', 'aadhaar_no', 'pan_no',
             'occupation', 'occupation_detail', 'annual_salary',
             'assigned_admin_id',
@@ -138,7 +138,7 @@ class SubDealerProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'password', 'initial', 'first_name', 'last_name', 'mobile_number',
             'gender', 'dob', 'married_status', 'anniversary_date',
-            'door_no', 'street_name', 'town_name', 'city_name',
+            'door_no', 'street_name', 'town_name', 'city_name', 'pincode',
             'district', 'state', 'aadhaar_no', 'pan_no',
             'occupation', 'occupation_detail', 'annual_salary',
             'assigned_dealer_id',
@@ -210,7 +210,7 @@ class PromotorProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'password', 'initial', 'first_name', 'last_name', 'mobile_number',
             'gender', 'dob', 'married_status', 'anniversary_date',
-            'door_no', 'street_name', 'town_name', 'city_name',
+            'door_no', 'street_name', 'town_name', 'city_name', 'pincode',
             'district', 'state', 'aadhaar_no', 'pan_no',
             'occupation', 'occupation_detail', 'annual_salary',
             'assigned_sub_dealer_id',
@@ -292,7 +292,7 @@ class CustomerProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'password', 'initial', 'first_name', 'last_name', 'mobile_number',
             'gender', 'dob', 'married_status', 'anniversary_date',
-            'door_no', 'street_name', 'town_name', 'city_name',
+            'door_no', 'street_name', 'town_name', 'city_name', 'pincode',
             'district', 'state', 'aadhaar_no', 'pan_no',
             'occupation', 'occupation_detail', 'annual_salary',
             'assigned_promotor_id',
