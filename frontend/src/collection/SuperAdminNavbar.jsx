@@ -361,13 +361,18 @@ export default function SuperAdminNavbar({
     navigate('/login')
   }
 
-  const management = [
+    const management = [
   ['Gold Rate', () => { setShowRatePopup(true); fetchMetalPrices() }],
   ['Add Product', () => navigate('/add-product')],
   ['Orders', () => navigate('/admin-orders')],
   ['Requests', () => { setShowRequests(true); setRequestMsg(''); fetchProfileRequests() }],
   ['Hierarchy Grid', () => navigate('/superadmin-hierarchy-grid')],
   ['Hierarchy Tree', () => navigate('/superadmin-hierarchy')],
+  ['Super Stockists', () => navigate('/superadmin/manage-users/super-stockist')],
+  ['Distributors', () => navigate('/superadmin/manage-users/distributor')],
+  ['Wholesale Dealers', () => navigate('/superadmin/manage-users/wholesale-dealer')],
+  ['Retailers', () => navigate('/superadmin/manage-users/retailer')],
+  ['Customers', () => navigate('/superadmin/manage-users/customer')],
 ]
  const celebrations = [
   ["Today's Birthdays", () => { setShowBirthdayList(true); fetchCelebrations() }],

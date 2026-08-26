@@ -18,11 +18,11 @@ export default function SuperStockist() {
   const [copiedId, setCopiedId] = useState(null)
   const [selectedDetail, setSelectedDetail] = useState(null)
 
-  const fetchAdmins = async (signal, currentOffset, searchTerm, append) => {
+  const fetchAdmins = async (signal, currentOffset, searchTerm, append, retryCount = 0) => {
     if (append) setLoadingMore(true)
     else setLoading(true)
     try {
-      const res = await api.get('/admins/', {
+      const res = await api.get('/hierarchy/admins/', {
         signal,
         params: { offset: currentOffset, limit: PAGE_SIZE, search: searchTerm },
       })
@@ -30,14 +30,20 @@ export default function SuperStockist() {
       setAdmins(prev => (append ? [...prev, ...newRows] : newRows))
       setHasMore(!!res.data.has_more)
       setTotalCount(res.data.total_count || 0)
-    } catch (e) {
-      if (e.name !== 'CanceledError' && e.name !== 'AbortError') {
-        console.error('fetch admins error:', e)
-        if (!append) setAdmins([])
-      }
-    } finally {
       setLoading(false)
       setLoadingMore(false)
+    } catch (e) {
+      if (e.name === 'CanceledError' || e.name === 'AbortError') return
+      console.error('fetch admins error:', e)
+      if (retryCount < 5) {
+        setTimeout(() => {
+          fetchAdmins(signal, currentOffset, searchTerm, append, retryCount + 1)
+        }, 1500)
+      } else {
+        if (!append) setAdmins([])
+        setLoading(false)
+        setLoadingMore(false)
+      }
     }
   }
 

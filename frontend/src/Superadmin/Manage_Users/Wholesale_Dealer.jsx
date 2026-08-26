@@ -18,7 +18,7 @@ export default function WholesaleDealer() {
   const [copiedId, setCopiedId] = useState(null)
   const [selectedDetail, setSelectedDetail] = useState(null)
 
-  const fetchData = async (signal, currentOffset, searchTerm, append) => {
+  const fetchData = async (signal, currentOffset, searchTerm, append, retryCount = 0) => {
     if (append) setLoadingMore(true)
     else setLoading(true)
     try {
@@ -30,14 +30,20 @@ export default function WholesaleDealer() {
       setRows(prev => (append ? [...prev, ...newRows] : newRows))
       setHasMore(!!res.data.has_more)
       setTotalCount(res.data.total_count || 0)
-    } catch (e) {
-      if (e.name !== 'CanceledError' && e.name !== 'AbortError') {
-        console.error('fetch wholesale dealers error:', e)
-        if (!append) setRows([])
-      }
-    } finally {
       setLoading(false)
       setLoadingMore(false)
+    } catch (e) {
+      if (e.name === 'CanceledError' || e.name === 'AbortError') return
+      console.error('fetch wholesale dealers error:', e)
+      if (retryCount < 5) {
+        setTimeout(() => {
+          fetchData(signal, currentOffset, searchTerm, append, retryCount + 1)
+        }, 1500)
+      } else {
+        if (!append) setRows([])
+        setLoading(false)
+        setLoadingMore(false)
+      }
     }
   }
 

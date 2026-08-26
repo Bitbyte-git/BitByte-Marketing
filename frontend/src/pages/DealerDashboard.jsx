@@ -974,8 +974,14 @@ const submitProfileUpdate = async e => {
   } catch(err) { console.error(err) }
 }
 
-  const fetchDealers = async () => {
-    try { const res = await api.get('/dealers/list/'); setDealers(res.data) } catch (err) { console.error(err) }
+   const fetchDealers = async () => {
+    try {
+      const res = await api.get('/dealers/list/')
+      setDealers(Array.isArray(res.data) ? res.data : [])
+    } catch (err) {
+      console.error(err)
+      setDealers([])
+    }
   }
 
 
@@ -1132,6 +1138,7 @@ const handleSubmit = async e => {
   const secLabel = (color = '#fcd34d') => ({ color, fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '4px 0 0', paddingBottom: '10px', borderBottom: cardBorder })
   const inp = { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '12px', padding: '13px 16px', color: text, fontSize: '14px', outline: 'none', boxSizing: 'border-box' }
   const lbl = { display: 'block', color: subtext, fontSize: '12px', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.04em' }
+  const sectionCard = { background: '#FDFDFC', border: '1px solid rgba(189,207,206,0.55)', borderRadius: '16px', padding: '22px 24px', marginBottom: '4px' }
 
 
   const COIN_METAL_LABELS_TEXT = { gold_22k: 'Gold 22K', gold_24k: 'Gold 24K', silver_999: 'Silver 999' }
@@ -1980,9 +1987,9 @@ const fetchCoinStock = async () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
           <div><label style={lbl}>Dealer ID *</label>
             <select onChange={handleDealerChange} className="dl-inp" style={{ ...inp, cursor: 'pointer' }}>
-              <option value="" style={{ background: '#F3F3F0' }}>Select Dealer ID</option>
-              {dealers.map(d => <option key={d.id} value={d.id} style={{ background: '#F3F3F0' }}>{d.dealer_id}</option>)}
-            </select>
+  <option value="" style={{ background: '#F3F3F0' }}>Select Dealer ID</option>
+  {Array.isArray(dealers) && dealers.map(d => <option key={d.id} value={d.id} style={{ background: '#F3F3F0' }}>{d.dealer_id}</option>)}
+</select>
           </div>
           <div><label style={lbl}>Dealer Name</label>
             <input value={selectedDealer?.first_name || ''} readOnly placeholder="Auto fetch" style={{ ...inp, opacity: 0.5, cursor: 'not-allowed' }} />
