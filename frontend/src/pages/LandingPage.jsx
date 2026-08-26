@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import CustomerFooter from '../collection/CustomerFooter'
@@ -67,23 +67,6 @@ export default function LandingPage() {
     { label: 'Diamond 22K', value: 'Rs. 13430/-', color: '#60a5fa' },
     { label: 'Platinum', value: 'Rs. 5400/-', color: '#9ca3af' },
   ]
-
-  const loggedRoute = useMemo(() => {
-    const token = localStorage.getItem('token')
-    const role = localStorage.getItem('role')
-    if (!token || token === 'undefined' || token === 'null') return '/login'
-
-    const roleRoutes = {
-      super_admin: '/super-admin',
-      admin: '/admin',
-      dealer: '/dealer',
-      sub_dealer: '/sub-dealer',
-      promotor: '/promotor',
-      customer: '/customer',
-    }
-
-    return roleRoutes[role] || '/login'
-  }, [])
 
   return (
     <main className="bb-page" style={{ minHeight: '100vh', overflow: 'hidden' }}>
@@ -711,7 +694,7 @@ export default function LandingPage() {
             <button className="bb-btn bb-btn-secondary" type="button" onClick={() => navigate('/collection/all')}>
               Explore
             </button>
-            <button className="bb-btn bb-btn-primary" type="button" onClick={() => navigate(loggedRoute)}>
+            <button className="bb-btn bb-btn-primary" type="button" onClick={() => navigate('/login')}>
               Login
             </button>
             </div>

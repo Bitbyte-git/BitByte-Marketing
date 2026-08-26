@@ -174,7 +174,7 @@ export default function App() {
       <ScrollToTop />
       <Suspense fallback={<RouteLoader />}>
         <Routes>
-          <Route path="/" element={<WithCustomerNavbar><LandingPage /></WithCustomerNavbar>} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/super-admin" element={<ProtectedRoute role="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
