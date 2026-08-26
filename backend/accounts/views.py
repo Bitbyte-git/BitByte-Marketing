@@ -323,8 +323,31 @@ class DealerListForDealerView(APIView):
         if request.user.role not in ['promotor', 'sub_dealer', 'dealer', 'admin', 'super_admin']:
             return Response({'error': 'Permission denied'}, status=403)
         dealers = DealerProfile.objects.select_related('user', 'assigned_admin').all()
-        serializer = DealerListSerializer(dealers, many=True)
-        return Response(serializer.data)
+
+        # NEW: server-side search — only when the user actually searches, like Amazon
+        search = request.query_params.get('search', '').strip()
+        if search:
+            dealers = dealers.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(dealer_id__icontains=search) |
+                Q(mobile_number__icontains=search) |
+                Q(user__email__icontains=search)
+            )
+
+        # NEW: offset/limit pagination — first batch 300, "Load More" click panna next batch
+        offset = int(request.query_params.get('offset', 0))
+        limit = int(request.query_params.get('limit', 300))
+
+        total_count = dealers.count()
+        page = dealers[offset:offset + limit]
+
+        serializer = DealerListSerializer(page, many=True)
+        return Response({
+            'results': serializer.data,
+            'total_count': total_count,
+            'has_more': offset + limit < total_count,
+        })
 
 
 class AdminListForAdminView(APIView):
@@ -698,8 +721,31 @@ class PromotorListForView(APIView):
         promotors = PromotorProfile.objects.select_related(
             'user', 'assigned_sub_dealer__assigned_dealer__assigned_admin'
         ).all()
-        serializer = PromotorListSerializer(promotors, many=True)
-        return Response(serializer.data)
+
+        # NEW: server-side search
+        search = request.query_params.get('search', '').strip()
+        if search:
+            promotors = promotors.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(promotor_id__icontains=search) |
+                Q(mobile_number__icontains=search) |
+                Q(user__email__icontains=search)
+            )
+
+        # NEW: offset/limit pagination
+        offset = int(request.query_params.get('offset', 0))
+        limit = int(request.query_params.get('limit', 300))
+
+        total_count = promotors.count()
+        page = promotors[offset:offset + limit]
+
+        serializer = PromotorListSerializer(page, many=True)
+        return Response({
+            'results': serializer.data,
+            'total_count': total_count,
+            'has_more': offset + limit < total_count,
+        })
 
 
 class SubDealerListForView(APIView):
@@ -709,8 +755,31 @@ class SubDealerListForView(APIView):
         if request.user.role not in ['promotor', 'sub_dealer', 'dealer', 'admin', 'super_admin']:
             return Response({'error': 'Permission denied'}, status=403)
         sub_dealers = SubDealerProfile.objects.select_related('user', 'assigned_dealer').all()
-        serializer = SubDealerListSerializer(sub_dealers, many=True)
-        return Response(serializer.data)
+
+        # NEW: server-side search
+        search = request.query_params.get('search', '').strip()
+        if search:
+            sub_dealers = sub_dealers.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(sub_dealer_id__icontains=search) |
+                Q(mobile_number__icontains=search) |
+                Q(user__email__icontains=search)
+            )
+
+        # NEW: offset/limit pagination
+        offset = int(request.query_params.get('offset', 0))
+        limit = int(request.query_params.get('limit', 300))
+
+        total_count = sub_dealers.count()
+        page = sub_dealers[offset:offset + limit]
+
+        serializer = SubDealerListSerializer(page, many=True)
+        return Response({
+            'results': serializer.data,
+            'total_count': total_count,
+            'has_more': offset + limit < total_count,
+        })
 
 
 class FullHierarchyView(APIView):
@@ -2286,6 +2355,18 @@ class HierarchyAdminsView(APIView):
         admins = AdminProfile.objects.all().only(
             'id', 'user_id', 'admin_id', 'first_name', 'last_name', 'mobile_number', 'city_name'
         )
+
+        # NEW: search filter — Python-level (admin_id/name/mobile match)
+        search = request.query_params.get('search', '').strip().lower()
+        if search:
+            admins = [a for a in admins if (
+                search in (a.admin_id or '').lower() or
+                search in f"{a.first_name} {a.last_name}".lower() or
+                search in (a.mobile_number or '')
+            )]
+        else:
+            admins = list(admins)
+
         admin_ids = [a.user_id for a in admins]
 
         dealer_counts = dict(
@@ -2294,20 +2375,32 @@ class HierarchyAdminsView(APIView):
         )
 
         rollup_counts = _month_rollup_counts()
-        status_map = _month_status_map()   # ── NEW: cascading worst-status, SALES total-oda vera ──
+        status_map = _month_status_map()
 
         results = []
         for a in admins:
             oc = rollup_counts.get(('admin', a.id), 0)
-            status = status_map.get(('admin', a.id), 'red')   # ── CHANGED
+            status = status_map.get(('admin', a.id), 'red')
             results.append({
                 'id': a.id, 'user_id': a.user_id, 'admin_id': a.admin_id,
                 'first_name': a.first_name, 'last_name': a.last_name,
                 'mobile_number': a.mobile_number, 'city_name': a.city_name,
                 'dealer_count': dealer_counts.get(a.id, 0),
-                'order_count': oc, 'status': status,   # ── CHANGED
+                'order_count': oc, 'status': status,
             })
-        return Response({'super_admin_email': User.objects.filter(role='super_admin').first().email, 'admins': results})
+
+        # NEW: offset/limit pagination — first batch 300, "Load More" click panna next batch
+        total_count = len(results)
+        offset = int(request.query_params.get('offset', 0))
+        limit = int(request.query_params.get('limit', 300))
+        page = results[offset:offset + limit]
+
+        return Response({
+            'super_admin_email': User.objects.filter(role='super_admin').first().email,
+            'admins': page,
+            'total_count': total_count,
+            'has_more': offset + limit < total_count,
+        })
 
 
 # ── NEW: Generic — ஒரு node-oda DIRECT children mattum. role+id vachi call pண்ணுவாங்க ──

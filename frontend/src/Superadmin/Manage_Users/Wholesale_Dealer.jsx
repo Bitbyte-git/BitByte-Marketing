@@ -1,39 +1,64 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api'
+
+const PAGE_SIZE = 300
 
 export default function WholesaleDealer() {
   const navigate = useNavigate()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
   const [actionOpen, setActionOpen] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
   const [selectedDetail, setSelectedDetail] = useState(null)
 
-  const fetchData = async () => {
-    setLoading(true)
+  const fetchData = async (signal, currentOffset, searchTerm, append) => {
+    if (append) setLoadingMore(true)
+    else setLoading(true)
     try {
-      const res = await api.get('/sub-dealers/list/')
-      setRows(Array.isArray(res.data) ? res.data : (res.data.results || []))
+      const res = await api.get('/sub-dealers/list/', {
+        signal,
+        params: { offset: currentOffset, limit: PAGE_SIZE, search: searchTerm },
+      })
+      const newRows = res.data.results || []
+      setRows(prev => (append ? [...prev, ...newRows] : newRows))
+      setHasMore(!!res.data.has_more)
+      setTotalCount(res.data.total_count || 0)
     } catch (e) {
-      console.error('fetch wholesale dealers error:', e)
-      setRows([])
+      if (e.name !== 'CanceledError' && e.name !== 'AbortError') {
+        console.error('fetch wholesale dealers error:', e)
+        if (!append) setRows([])
+      }
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
     }
-    setLoading(false)
   }
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 400)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return rows
-    return rows.filter(a =>
-      (a.sub_dealer_id || '').toLowerCase().includes(q) ||
-      (a.email || '').toLowerCase().includes(q) ||
-      (a.mobile_number || '').toLowerCase().includes(q)
-    )
-  }, [rows, search])
+  useEffect(() => {
+    const controller = new AbortController()
+    setOffset(0)
+    fetchData(controller.signal, 0, search, false)
+    return () => controller.abort()
+  }, [search])
+
+  const handleLoadMore = () => {
+    const controller = new AbortController()
+    const nextOffset = offset + PAGE_SIZE
+    setOffset(nextOffset)
+    fetchData(controller.signal, nextOffset, search, true)
+  }
 
   const text = '#111817'
   const subtext = '#7A8987'
@@ -52,11 +77,11 @@ export default function WholesaleDealer() {
       `}</style>
       <div style={{ background: 'rgba(253,253,252,0.97)', border: `1px solid ${border}`, borderRadius: '22px', padding: '34px 38px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '14px' }}>
-          <p style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
-            WHOLESALE DEALER ({filtered.length})
+                    <p style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+            WHOLESALE DEALER ({totalCount})
           </p>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by ID, email, phone..."
+            <input value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder="Search by ID, email, phone..."
               style={{ height: '42px', minWidth: '280px', border: `1px solid ${border}`, borderRadius: '10px', padding: '0 14px', color: text, fontSize: '13px', outline: 'none' }} />
             <button type="button" onClick={() => navigate('/super-admin')}
               style={{ height: '42px', padding: '0 16px', borderRadius: '10px', border: `1px solid ${border}`, background: '#FFFFFF', color: '#0C4044', fontWeight: 800, cursor: 'pointer' }}>
@@ -70,17 +95,17 @@ export default function WholesaleDealer() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
               <thead>
                 <tr style={{ borderBottom: '1.5px solid rgba(12,64,68,0.22)' }}>
-                  {['First Name', 'Last Name', 'Email', 'Mobile', 'ID', 'City', 'Actions'].map(h => (
+                  {['S.No', 'First Name', 'Last Name', 'Email', 'Mobile', 'ID', 'City', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '14px 16px', textAlign: 'left', color: '#0C4044', fontSize: '13px', fontWeight: 900, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {Array.from({ length: 8 }).map((_, i) => (
+                                {Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} style={{ padding: '14px 16px' }}>
-                        <div style={{ height: '14px', borderRadius: '4px', width: j === 4 ? '70%' : '80%', background: 'linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%)', backgroundSize: '200% 100%', animation: 'skelShimmer 1.4s ease-in-out infinite' }} />
+                        <div style={{ height: '14px', borderRadius: '4px', width: j === 5 ? '70%' : '80%', background: 'linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%)', backgroundSize: '200% 100%', animation: 'skelShimmer 1.4s ease-in-out infinite' }} />
                       </td>
                     ))}
                   </tr>
@@ -88,7 +113,7 @@ export default function WholesaleDealer() {
               </tbody>
             </table>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : rows.length === 0 ? (
           <p style={{ color: subtext, textAlign: 'center', padding: '60px 0', fontSize: '15px' }}>
             {search ? `No results for "${search}"` : 'No Wholesale Dealers yet!'}
           </p>
@@ -103,8 +128,9 @@ export default function WholesaleDealer() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(a => (
+                                {rows.map((a, i) => (
                   <tr key={a.id || a.sub_dealer_id} style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
+                    <td style={{ padding: '14px 16px', color: subtext, fontWeight: 700 }}>{i + 1}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 700 }}>{a.first_name}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 700 }}>{a.last_name}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 650 }}>{a.email}</td>
@@ -138,8 +164,31 @@ export default function WholesaleDealer() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
+                            </tbody>
             </table>
+            {loadingMore && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
+                <tbody>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={`skel-more-${i}`} style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
+                      {Array.from({ length: 8 }).map((_, j) => (
+                        <td key={j} style={{ padding: '14px 16px' }}>
+                          <div style={{ height: '14px', borderRadius: '4px', width: j === 5 ? '70%' : '80%', background: 'linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%)', backgroundSize: '200% 100%', animation: 'skelShimmer 1.4s ease-in-out infinite' }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {hasMore && !loadingMore && (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0 4px' }}>
+                <button type="button" onClick={handleLoadMore}
+                  style={{ height: '42px', padding: '0 24px', borderRadius: '10px', border: `1px solid ${border}`, background: '#FFFFFF', color: '#0C4044', fontWeight: 800, cursor: 'pointer' }}>
+                  Load More
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

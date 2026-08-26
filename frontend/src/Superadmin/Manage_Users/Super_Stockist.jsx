@@ -1,40 +1,64 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api'
+
+const PAGE_SIZE = 300
 
 export default function SuperStockist() {
   const navigate = useNavigate()
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
   const [actionOpen, setActionOpen] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
   const [selectedDetail, setSelectedDetail] = useState(null)
 
-  const fetchAdmins = async () => {
-    setLoading(true)
+  const fetchAdmins = async (signal, currentOffset, searchTerm, append) => {
+    if (append) setLoadingMore(true)
+    else setLoading(true)
     try {
-      const res = await api.get('/admins/')
-      const rows = Array.isArray(res.data) ? res.data : (res.data.results || res.data.admins || [])
-      setAdmins(rows)
+      const res = await api.get('/admins/', {
+        signal,
+        params: { offset: currentOffset, limit: PAGE_SIZE, search: searchTerm },
+      })
+      const newRows = res.data.admins || []
+      setAdmins(prev => (append ? [...prev, ...newRows] : newRows))
+      setHasMore(!!res.data.has_more)
+      setTotalCount(res.data.total_count || 0)
     } catch (e) {
-      console.error('fetch admins error:', e)
-      setAdmins([])
+      if (e.name !== 'CanceledError' && e.name !== 'AbortError') {
+        console.error('fetch admins error:', e)
+        if (!append) setAdmins([])
+      }
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
     }
-    setLoading(false)
   }
 
-  useEffect(() => { fetchAdmins() }, [])
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 400)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return admins
-    return admins.filter(a =>
-      (a.admin_id || '').toLowerCase().includes(q) ||
-      (a.email || '').toLowerCase().includes(q) ||
-      (a.mobile_number || '').toLowerCase().includes(q)
-    )
-  }, [admins, search])
+  useEffect(() => {
+    const controller = new AbortController()
+    setOffset(0)
+    fetchAdmins(controller.signal, 0, search, false)
+    return () => controller.abort()
+  }, [search])
+
+  const handleLoadMore = () => {
+    const controller = new AbortController()
+    const nextOffset = offset + PAGE_SIZE
+    setOffset(nextOffset)
+    fetchAdmins(controller.signal, nextOffset, search, true)
+  }
 
   const text = '#111817'
   const subtext = '#7A8987'
@@ -56,13 +80,13 @@ export default function SuperStockist() {
         padding: '34px 38px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '14px' }}>
-          <p style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
-            SUPER STOCKIST ({filtered.length})
+                    <p style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+            SUPER STOCKIST ({totalCount})
           </p>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
               placeholder="Search by ID, email, phone..."
               style={{
                 height: '42px', minWidth: '280px', border: `1px solid ${border}`, borderRadius: '10px',
@@ -81,18 +105,18 @@ export default function SuperStockist() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
               <thead>
                 <tr style={{ borderBottom: '1.5px solid rgba(12,64,68,0.22)' }}>
-                  {['First Name', 'Last Name', 'Email', 'Mobile', 'ID', 'City', 'Actions'].map(h => (
+                                    {['S.No', 'First Name', 'Last Name', 'Email', 'Mobile', 'ID', 'City', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '14px 16px', textAlign: 'left', color: '#0C4044', fontSize: '13px', fontWeight: 900, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {Array.from({ length: 8 }).map((_, i) => (
+                                {Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} style={{ padding: '14px 16px' }}>
                         <div style={{
-                          height: '14px', borderRadius: '4px', width: j === 4 ? '70%' : '80%',
+                          height: '14px', borderRadius: '4px', width: j === 5 ? '70%' : '80%',
                           background: 'linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%)',
                           backgroundSize: '200% 100%', animation: 'skelShimmer 1.4s ease-in-out infinite',
                         }} />
@@ -103,7 +127,7 @@ export default function SuperStockist() {
               </tbody>
             </table>
           </div>
-        ) : filtered.length === 0 ? (
+                ) : admins.length === 0 ? (
           <p style={{ color: subtext, textAlign: 'center', padding: '60px 0', fontSize: '15px' }}>
             {search ? `No results for "${search}"` : 'No Super Stockist yet!'}
           </p>
@@ -118,8 +142,9 @@ export default function SuperStockist() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(a => (
+                                {admins.map((a, i) => (
                   <tr key={a.id || a.admin_id} style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
+                    <td style={{ padding: '14px 16px', color: subtext, fontWeight: 700 }}>{i + 1}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 700 }}>{a.first_name}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 700 }}>{a.last_name}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 650 }}>{a.email}</td>
@@ -153,8 +178,31 @@ export default function SuperStockist() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
+                            </tbody>
             </table>
+            {loadingMore && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
+                <tbody>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={`skel-more-${i}`} style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
+                      {Array.from({ length: 8 }).map((_, j) => (
+                        <td key={j} style={{ padding: '14px 16px' }}>
+                          <div style={{ height: '14px', borderRadius: '4px', width: j === 5 ? '70%' : '80%', background: 'linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%)', backgroundSize: '200% 100%', animation: 'skelShimmer 1.4s ease-in-out infinite' }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {hasMore && !loadingMore && (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0 4px' }}>
+                <button type="button" onClick={handleLoadMore}
+                  style={{ height: '42px', padding: '0 24px', borderRadius: '10px', border: `1px solid ${border}`, background: '#FFFFFF', color: '#0C4044', fontWeight: 800, cursor: 'pointer' }}>
+                  Load More
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

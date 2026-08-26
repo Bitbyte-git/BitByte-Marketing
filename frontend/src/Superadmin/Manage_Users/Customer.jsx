@@ -96,8 +96,8 @@ export default function Customer() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
               <thead>
-                <tr style={{ borderBottom: '1.5px solid rgba(12,64,68,0.22)' }}>
-                  {['First Name', 'Last Name', 'Email', 'Mobile', 'ID', 'City', 'Actions'].map(h => (
+                                <tr style={{ borderBottom: '1.5px solid rgba(12,64,68,0.22)' }}>
+                  {['S.No', 'First Name', 'Last Name', 'Email', 'Mobile', 'ID', 'City', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '14px 16px', textAlign: 'left', color: '#0C4044', fontSize: '13px', fontWeight: 900, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
@@ -123,15 +123,16 @@ export default function Customer() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
               <thead>
-                <tr style={{ borderBottom: '1.5px solid rgba(12,64,68,0.22)' }}>
-                  {['First Name', 'Last Name', 'Email', 'Mobile', 'ID', 'City', 'Actions'].map(h => (
+                               <tr style={{ borderBottom: '1.5px solid rgba(12,64,68,0.22)' }}>
+                  {['S.No', 'First Name', 'Last Name', 'Email', 'Mobile', 'ID', 'City', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '14px 16px', textAlign: 'left', color: '#0C4044', fontSize: '13px', fontWeight: 900, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {rows.map(a => (
+                                {rows.map((a, i) => (
                   <tr key={a.id || a.customer_id} style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
+                    <td style={{ padding: '14px 16px', color: subtext, fontWeight: 700 }}>{i + 1}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 700 }}>{a.first_name}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 700 }}>{a.last_name}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 650 }}>{a.email}</td>
