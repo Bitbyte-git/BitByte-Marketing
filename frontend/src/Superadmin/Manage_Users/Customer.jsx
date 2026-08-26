@@ -1,47 +1,66 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api'
+
+const PAGE_SIZE = 300
 
 export default function Customer() {
   const navigate = useNavigate()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [searchInput, setSearchInput] = useState('')   // what the user types, updates instantly
+  const [search, setSearch] = useState('')             // debounced value actually sent to the API
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
   const [actionOpen, setActionOpen] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
   const [selectedDetail, setSelectedDetail] = useState(null)
 
-      const fetchData = async (signal) => {
-    setLoading(true)
+  const fetchData = async (signal, currentOffset, searchTerm, append) => {
+    if (append) setLoadingMore(true)
+    else setLoading(true)
     try {
-      const res = await api.get('/customers/', { signal })
-      setRows(Array.isArray(res.data) ? res.data : (res.data.results || []))
-      setLoading(false)
+      const res = await api.get('/customers/', {
+        signal,
+        params: { offset: currentOffset, limit: PAGE_SIZE, search: searchTerm },
+      })
+      const newRows = res.data.results || []
+      setRows(prev => (append ? [...prev, ...newRows] : newRows))
+      setHasMore(!!res.data.has_more)
+      setTotalCount(res.data.total_count || 0)
     } catch (e) {
       if (e.name !== 'CanceledError' && e.name !== 'AbortError') {
         console.error('fetch customers error:', e)
-        setRows([])
-        setLoading(false)
+        if (!append) setRows([])
       }
-      // aborted ah irundha, loading false pannama vidu — real request innum run aaguthu
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
     }
   }
 
+  // Debounce — waits 400ms after the user stops typing before hitting the backend
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 400)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  // Whenever the debounced search changes (including on mount), reset to page 1 and refetch
   useEffect(() => {
     const controller = new AbortController()
-    fetchData(controller.signal)
+    setOffset(0)
+    fetchData(controller.signal, 0, search, false)
     return () => controller.abort()
-  }, [])
+  }, [search])
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return rows
-    return rows.filter(a =>
-      (a.customer_id || '').toLowerCase().includes(q) ||
-      (a.email || '').toLowerCase().includes(q) ||
-      (a.mobile_number || '').toLowerCase().includes(q)
-    )
-  }, [rows, search])
+  const handleLoadMore = () => {
+    const controller = new AbortController()
+    const nextOffset = offset + PAGE_SIZE
+    setOffset(nextOffset)
+    fetchData(controller.signal, nextOffset, search, true)
+  }
 
   const text = '#111817'
   const subtext = '#7A8987'
@@ -60,11 +79,11 @@ export default function Customer() {
       `}</style>
       <div style={{ background: 'rgba(253,253,252,0.97)', border: `1px solid ${border}`, borderRadius: '22px', padding: '34px 38px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '14px' }}>
-          <p style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
-            CUSTOMER ({filtered.length})
+              <p style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+            CUSTOMER ({totalCount})
           </p>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by ID, email, phone..."
+            <input value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder="Search by ID, email, phone..."
               style={{ height: '42px', minWidth: '280px', border: `1px solid ${border}`, borderRadius: '10px', padding: '0 14px', color: text, fontSize: '13px', outline: 'none' }} />
             <button type="button" onClick={() => navigate('/super-admin')}
               style={{ height: '42px', padding: '0 16px', borderRadius: '10px', border: `1px solid ${border}`, background: '#FFFFFF', color: '#0C4044', fontWeight: 800, cursor: 'pointer' }}>
@@ -96,7 +115,7 @@ export default function Customer() {
               </tbody>
             </table>
           </div>
-        ) : filtered.length === 0 ? (
+                ) : rows.length === 0 ? (
           <p style={{ color: subtext, textAlign: 'center', padding: '60px 0', fontSize: '15px' }}>
             {search ? `No results for "${search}"` : 'No Customers yet!'}
           </p>
@@ -111,7 +130,7 @@ export default function Customer() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(a => (
+                {rows.map(a => (
                   <tr key={a.id || a.customer_id} style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 700 }}>{a.first_name}</td>
                     <td style={{ padding: '14px 16px', color: text, fontWeight: 700 }}>{a.last_name}</td>
@@ -146,8 +165,31 @@ export default function Customer() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
+                            </tbody>
             </table>
+                        {loadingMore && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
+                <tbody>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={`skel-more-${i}`} style={{ borderBottom: '1px solid rgba(12,64,68,0.16)' }}>
+                      {Array.from({ length: 7 }).map((_, j) => (
+                        <td key={j} style={{ padding: '14px 16px' }}>
+                          <div style={{ height: '14px', borderRadius: '4px', width: j === 4 ? '70%' : '80%', background: 'linear-gradient(90deg,#E7EDEC 25%,#F3F3F0 50%,#E7EDEC 75%)', backgroundSize: '200% 100%', animation: 'skelShimmer 1.4s ease-in-out infinite' }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {hasMore && !loadingMore && (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0 4px' }}>
+                <button type="button" onClick={handleLoadMore}
+                  style={{ height: '42px', padding: '0 24px', borderRadius: '10px', border: `1px solid ${border}`, background: '#FFFFFF', color: '#0C4044', fontWeight: 800, cursor: 'pointer' }}>
+                  Load More
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

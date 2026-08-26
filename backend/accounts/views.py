@@ -663,8 +663,30 @@ class CreateCustomerView(APIView):
         if request.user.role in ['promotor', 'customer']:
             customers = customers.filter(created_by=request.user)
 
-        serializer = CustomerListSerializer(customers, many=True)
-        return Response(serializer.data)
+        # NEW: server-side search — only when the user actually searches, like Amazon
+        search = request.query_params.get('search', '').strip()
+        if search:
+            customers = customers.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(customer_id__icontains=search) |
+                Q(mobile_number__icontains=search) |
+                Q(user__email__icontains=search)
+            )
+
+        # NEW: offset/limit pagination — first batch 300, "Load More" click panna next batch
+        offset = int(request.query_params.get('offset', 0))
+        limit = int(request.query_params.get('limit', 300))
+
+        total_count = customers.count()
+        page = customers[offset:offset + limit]
+
+        serializer = CustomerListSerializer(page, many=True)
+        return Response({
+            'results': serializer.data,
+            'total_count': total_count,
+            'has_more': offset + limit < total_count,
+        })
 
 
 class PromotorListForView(APIView):
