@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense } from 'react'
+import { lazy, Suspense } from 'react'
 import { useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import CustomerNavbar from './collection/CustomerNavbar'
@@ -150,7 +150,7 @@ function WithInternalRoleNavbar({ children }) {
   )
 }
 
-// ── Role-aware navbar picker — customer ku CustomerNavbar, internal roles ku InternalRoleNavbar ──
+// -- Role-aware navbar picker — customer ku CustomerNavbar, internal roles ku InternalRoleNavbar --
 function WithAnyNavbar({ children }) {
   const role = localStorage.getItem('role')
   if (role === 'customer') return <WithCustomerNavbar>{children}</WithCustomerNavbar>
@@ -174,7 +174,7 @@ export default function App() {
       <ScrollToTop />
       <Suspense fallback={<RouteLoader />}>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/super-admin" element={<ProtectedRoute role="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
@@ -192,7 +192,7 @@ export default function App() {
           <Route path="/promotor" element={<ProtectedRoute role="promotor"><PromotorDashboard /></ProtectedRoute>} />
           <Route path="/promotor-hierarchy" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchy /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/promotor-hierarchy-grid" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchyGrid /></WithInternalRoleNavbar></ProtectedRoute>} />
-          <Route path="/customer" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar></ProtectedRoute>} />
+          <Route path="/customer" element={<WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar>} />
           <Route path="/profile" element={<WithCustomerNavbar><Profile /></WithCustomerNavbar>} />
           <Route path="/create-customer" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><CreateCustomer /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/collection/rings" element={<Navigate to={collectionPath('rings')} replace />} />
@@ -238,7 +238,7 @@ export default function App() {
           <Route path="/collection/gifting" element={<Navigate to="/collection/all?occasion=Birthday" replace />} />
           <Route path="/collection/new-arrivals" element={<Navigate to="/collection/all?new=true" replace />} />
 
-          <Route path="/cart" element={<WithCustomerNavbar><CardSection /></WithCustomerNavbar>} />
+          <Route path="/cart" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><CardSection /></WithCustomerNavbar></ProtectedRoute>} />
           <Route path="/product-display" element={<WithCustomerNavbar><ProductDisplay /></WithCustomerNavbar>} />
           <Route path="/add-product" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AddProduct /></WithSuperAdminNavbar></ProtectedRoute>} />
           <Route path="/add-new-product" element={<ProtectedRoute role="super_admin"><WithSuperAdminNavbar><AddNewProduct /></WithSuperAdminNavbar></ProtectedRoute>} />

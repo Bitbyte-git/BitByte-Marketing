@@ -503,6 +503,7 @@ export default function ProductDisplay() {
   // })
 
 const handleBuy = () => {
+    if (requireLogin()) return
     if (!product || !displayPrice) return
     navigate('/order-confirm', {
       state: {
@@ -553,6 +554,12 @@ const calcOriginalPriceMain = () => {
 const displayPrice = calcLivePriceMain()
 const displayOriginalPrice = calcOriginalPriceMain()
 
+  const requireLogin = () => {
+    if (localStorage.getItem('token')) return false
+    navigate('/login')
+    return true
+  }
+
   const calculatedWeightText = product?.net_weight ? `${parseFloat(product.net_weight)} gm` : '—'
   const productName = product?.name || product?.title || 'Jewellery Product'
   const productDesc = product?.desc || product?.description || product?.short_description || 'Premium handcrafted jewellery from BitByte Jewellers.'
@@ -589,6 +596,7 @@ const displayOriginalPrice = calcOriginalPriceMain()
   }
 
   const handleAddToCart = async () => {
+    if (requireLogin()) return
     if (!product) return
     const result = await addToCartDB(product.id, qty)
     if (result) { setShowAdded(true); setTimeout(() => setShowAdded(false), 1600) }

@@ -211,6 +211,10 @@ function ProductCard({ product, rates, navigate }) {
 
   const addCart = async event => {
     event.stopPropagation()
+    if (!localStorage.getItem('token')) {
+      navigate('/login')
+      return
+    }
     try {
       await api.post('/cart/', { product: product.id, qty: 1 })
       window.dispatchEvent(new Event('bb_cart_update'))
@@ -221,14 +225,14 @@ function ProductCard({ product, rates, navigate }) {
     <article className="an-product-card" onClick={goProduct}>
       <div className="an-product-image">
         <img src={image} alt={product.name} />
-        <button className="an-heart" type="button" onClick={event => event.stopPropagation()} aria-label="Wishlist">♡</button>
+        <button className="an-heart" type="button" onClick={event => event.stopPropagation()} aria-label="Wishlist">â™¡</button>
       </div>
       <div className="an-product-body">
         <h3>{product.name}</h3>
-        <p>{(product.grade || product.metal || 'Jewellery').toUpperCase()} {product.metal || 'Jewellery'} · {Number(product.net_weight || 0).toFixed(2)} g</p>
+        <p>{(product.grade || product.metal || 'Jewellery').toUpperCase()} {product.metal || 'Jewellery'} Â· {Number(product.net_weight || 0).toFixed(2)} g</p>
         <strong>{money(price)}</strong>
         <div className="an-rating">
-          <span>★★★★★</span>
+          <span>â˜…â˜…â˜…â˜…â˜…</span>
           <small>({reviews})</small>
           <button type="button" onClick={addCart} aria-label="Add to cart"><Icon type="lock" size={15} /></button>
         </div>
@@ -1087,7 +1091,7 @@ export default function AllCollection() {
                     </button>
                   ))}
                   <button type="button" onClick={() => navigate('/collection/all')}>
-                    <span className="view-all">→</span>
+                    <span className="view-all">â†’</span>
                     <span>View All</span>
                   </button>
                 </section>

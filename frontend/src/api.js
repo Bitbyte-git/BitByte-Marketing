@@ -17,6 +17,11 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
+    const hasAccessToken = Boolean(localStorage.getItem('token'))
+
+    if (error.response?.status === 401 && !hasAccessToken) {
+      return Promise.reject(error)
+    }
 
     // Skip refresh for login and refresh endpoints — no retry
     if (

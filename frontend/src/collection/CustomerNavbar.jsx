@@ -1186,6 +1186,7 @@ const ROLE_SWITCH_LABELS = {
 export default function CustomerNavbar() {
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
   const roleSwitchCfg = ROLE_SWITCH_LABELS[role];
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -1203,13 +1204,29 @@ export default function CustomerNavbar() {
   const megaRefs = useRef({});
   const recognitionRef = useRef(null);
 
+  const goLogin = () => navigate("/login");
+
+  const requireLogin = (route) => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+    navigate(route);
+  };
+
   const scrollMega = (label, dir) => {
     const el = megaRefs.current[label];
     if (el) el.scrollBy({ left: dir * 220, behavior: 'smooth' });
   };
 
   useEffect(() => {
-    const updateCount = async () => setCartCount(await getCartCountDB());
+    const updateCount = async () => {
+      if (!localStorage.getItem("token")) {
+        setCartCount(0);
+        return;
+      }
+      setCartCount(await getCartCountDB());
+    };
     updateCount();
     window.addEventListener("bb_cart_update", updateCount);
     return () => window.removeEventListener("bb_cart_update", updateCount);
@@ -1217,6 +1234,10 @@ export default function CustomerNavbar() {
 
   useEffect(() => {
     const updateWishCount = async () => {
+      if (!localStorage.getItem("token")) {
+        setWishlistCount(0);
+        return;
+      }
       try {
         const res = await api.get("/wishlist/");
         setWishlistCount(res.data.count || 0);
@@ -1703,6 +1724,30 @@ export default function CustomerNavbar() {
           background: rgba(255,255,255,0.7);
           color: #073B3F;
           box-shadow: none;
+        }
+        .login-pill {
+          height: 42px;
+          border-radius: 999px;
+          border: 1px solid #073B3F;
+          background: #073B3F;
+          color: #fff;
+          padding: 0 18px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13px;
+          font-weight: 900;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+        }
+
+        .login-pill:hover {
+          transform: translateY(-2px);
+          background: #0E4B46;
+          box-shadow: 0 10px 24px rgba(7,59,63,0.18);
         }
 
         .exact-actions {
@@ -2493,7 +2538,7 @@ export default function CustomerNavbar() {
               <button
                 className="summary-pill"
                 type="button"
-                onClick={() => navigate("/recharge")}
+                onClick={() => requireLogin("/recharge")}
               >
                 <Icon name="star" size={15} />{" "}
                 <span className="summary-text">AUG Coin</span>
@@ -2502,7 +2547,7 @@ export default function CustomerNavbar() {
               
 
               <button
-          onClick={() => navigate('/coin-shop')}
+          onClick={() => requireLogin("/coin-shop")}
           title="Shop with Coins"
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -2520,7 +2565,7 @@ export default function CustomerNavbar() {
               <button
                 className="exact-icon"
                 type="button"
-                onClick={() => navigate("/wishlist")}
+                onClick={() => requireLogin("/wishlist")}
                 aria-label="Wishlist"
               >
                 <Icon name="heart" filled={wishlistCount > 0} />
@@ -2532,7 +2577,7 @@ export default function CustomerNavbar() {
               <button
                 className="exact-icon"
                 type="button"
-                onClick={() => navigate("/cart")}
+                onClick={() => requireLogin("/cart")}
                 aria-label="Cart"
               >
                 <Icon name="cart" />
@@ -2540,6 +2585,11 @@ export default function CustomerNavbar() {
                   <span className="exact-badge">{cartCount}</span>
                 )}
               </button>
+              {!isLoggedIn && (
+                <button className="login-pill" type="button" onClick={goLogin}>
+                  Login
+                </button>
+              )}
 
               <button
                 className="exact-icon"
@@ -2690,7 +2740,7 @@ export default function CustomerNavbar() {
               type="button"
               onClick={() => {
                 setRoleDrawerOpen(false);
-                navigate("/profile");
+                requireLogin("/profile");
               }}
             >
               Profile
@@ -2701,7 +2751,7 @@ export default function CustomerNavbar() {
               type="button"
               onClick={() => {
                 setRoleDrawerOpen(false);
-                navigate("/order-summary");
+                requireLogin("/order-summary");
               }}
             >
               Order Summary
@@ -2712,7 +2762,7 @@ export default function CustomerNavbar() {
               type="button"
               onClick={() => {
                 setRoleDrawerOpen(false);
-                navigate("/create-customer");
+                requireLogin("/create-customer");
               }}
             >
               Create Customer
@@ -2733,14 +2783,14 @@ export default function CustomerNavbar() {
             )}
 
             <button
-              className="role-drawer-item role-drawer-logout"
+              className={`role-drawer-item ${isLoggedIn ? "role-drawer-logout" : ""}`}
               type="button"
               onClick={() => {
                 setRoleDrawerOpen(false);
-                logout();
+                if (isLoggedIn) logout(); else goLogin();
               }}
             >
-              Logout
+              {isLoggedIn ? "Logout" : "Login"}
             </button>
           </div>
         </div>

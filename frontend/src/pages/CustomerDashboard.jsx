@@ -314,7 +314,7 @@ function HomeBannerSlider() {
   );
 }
 
-function ProductCard({ product, wishIds, onWishlist, onOpen }) {
+function ProductCard({ product, wishIds, onWishlist, onOpen, onAddToCart }) {
   const name = safeText(product.name, "Jewellery Product");
   const image = productImage(product);
   const category = safeText(product.category, "Luxiva Collection").replaceAll("_", " ");
@@ -364,6 +364,7 @@ function ProductCard({ product, wishIds, onWishlist, onOpen }) {
             type="button"
             onClick={(event) => {
               event.stopPropagation();
+              onAddToCart(product);
             }}
             aria-label="Add to cart"
           >
@@ -388,6 +389,7 @@ function ProductCard({ product, wishIds, onWishlist, onOpen }) {
 
 export default function CustomerDashboard() {
   const navigate = useNavigate();
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
   const catTrackRef = useRef(null);
   const promoTrackRef = useRef(null);
   const promoRafRef = useRef(null);
@@ -407,13 +409,14 @@ export default function CustomerDashboard() {
     let alive = true;
 
     async function load() {
+      const hasToken = Boolean(localStorage.getItem("token"));
       const [profileRes, rateRes, annRes, productRes, wishRes] =
         await Promise.allSettled([
-          api.get("/dashboard/"),
+          hasToken ? api.get("/dashboard/") : Promise.resolve({ data: null }),
           api.get("/metal-rates/"),
           api.get("/announcements/"),
           api.get("/jewelry-products/"),
-          api.get("/wishlist/"),
+          hasToken ? api.get("/wishlist/") : Promise.resolve({ data: [] }),
         ]);
 
       if (!alive) return;
@@ -595,7 +598,19 @@ export default function CustomerDashboard() {
     );
   };
 
+  const requireLogin = () => {
+    if (isLoggedIn) return false;
+    navigate("/login");
+    return true;
+  };
+
+  const handleFeaturedAddToCart = () => {
+    if (requireLogin()) return;
+    navigate("/cart");
+  };
+
   const toggleWishlist = async (product) => {
+    if (requireLogin()) return;
     try {
       await api.post("/wishlist/", { product: product.id });
       setWishIds((prev) => new Set([...prev, product.id]));
@@ -1327,7 +1342,7 @@ export default function CustomerDashboard() {
 
         .hero-news-popover {
           position: absolute;
-          top: clamp(18px, 2.4vw, 34px);
+          top: 20px;
           right: clamp(18px, 3vw, 52px);
           z-index: 6;
           display: flex;
@@ -1660,7 +1675,7 @@ export default function CustomerDashboard() {
           .product-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
           .store-category-card { --cat-img-size: clamp(88px, 11vw, 104px); --cat-basis: calc((100% - 60px) / 6); padding-inline: 50px; }
           .store-banner { aspect-ratio: 16 / 6.5; }
-          .hero-news-popover { top: 14px; right: 18px; }
+          .hero-news-popover { top: 20px; right: 18px; }
           .hero-news-card { width: min(340px, calc(100vw - 36px)); }
         }
 
@@ -1695,7 +1710,7 @@ export default function CustomerDashboard() {
           .store-section { padding: 18px 0; }
           .store-heading h2 { font-size: 1.4rem; }
           .announcement-row { grid-template-columns: 1fr; }
-          .hero-news-popover { top: 10px; right: 10px; align-items: flex-end; }
+          .hero-news-popover { top: 20px; right: 10px; align-items: flex-end; }
           .hero-news-trigger { min-height: 36px; padding: 0 13px; font-size: 12px; }
           .hero-news-card { width: calc(100vw - 24px); max-height: min(440px, 78vh); padding: 16px; border-radius: 14px; }
           .hero-news-card h2 { font-size: 26px; }
@@ -2125,6 +2140,7 @@ export default function CustomerDashboard() {
                 wishIds={wishIds}
                 onWishlist={toggleWishlist}
                 onOpen={openProduct}
+                onAddToCart={handleFeaturedAddToCart}
               />
             ))}
           </div>
