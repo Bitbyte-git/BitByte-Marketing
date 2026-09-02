@@ -348,6 +348,23 @@ const allJewelleryMega = [
 
 const metalMega = {
   Gold: [
+
+        [
+      "Gold Coins",
+      "◎",
+      "/collection/coins?metal=gold",
+      [
+        "100mg Gold Coins",
+        "200mg Gold Coins",
+        "500mg Gold Coins",
+        "1g Gold Coins",
+        "2g Gold Coins",
+        "4g Gold Coins",
+        "8g Gold Coins",
+        "16g Gold Coins",
+      ],
+    ],
+
     [
       "Gold Rings",
       "◌",
@@ -684,6 +701,22 @@ const metalMega = {
     ],
   ],
   Silver: [
+
+    [
+      "Silver Coins",
+      "◎",
+      "/collection/coins?metal=silver",
+      [
+        "1g Silver Coins",
+        "2g Silver Coins",
+        "5g Silver Coins",
+        "10g Silver Coins",
+        "20g Silver Coins",
+        "50g Silver Coins",
+        "100g Silver Coins",
+      ],
+    ],
+
     [
       "Silver Rings",
       "◌",
@@ -821,7 +854,6 @@ const specialMega = {
         "4g Gold Coins",
         "8g Gold Coins",
         "16g Gold Coins",
-        "40g Gold Coins",
       ],
     ],
     [
@@ -2417,9 +2449,9 @@ export default function CustomerNavbar() {
               type="button"
               onClick={() => navigate("/customer")}
             >
-              <img
+                            <img
                 src="/luxiva-logo.svg"
-                alt="LUXIVA"
+                alt="Athirai"
                 className="team-mark"
                 loading="eager"
               />

@@ -2451,6 +2451,18 @@ class HierarchyAdminsView(APIView):
         rollup_counts = _month_rollup_counts()
         status_map = _month_status_map()
 
+        # ── NEW: red/orange/yellow/green breakdown of each admin's DIRECT dealers ──
+        dealers_for_status = list(
+            DealerProfile.objects.filter(assigned_admin__user_id__in=admin_ids)
+            .values('id', 'assigned_admin_id')
+        )
+        child_status_by_admin = {}
+        for d in dealers_for_status:
+            aid = d['assigned_admin_id']
+            st = status_map.get(('dealer', d['id']), 'red')
+            bucket = child_status_by_admin.setdefault(aid, {'red': 0, 'orange': 0, 'yellow': 0, 'green': 0})
+            bucket[st] += 1
+
         results = []
         for a in admins:
             oc = rollup_counts.get(('admin', a.id), 0)
@@ -2461,6 +2473,7 @@ class HierarchyAdminsView(APIView):
                 'mobile_number': a.mobile_number, 'city_name': a.city_name,
                 'dealer_count': dealer_counts.get(a.id, 0),
                 'order_count': oc, 'status': status,
+                'child_status_counts': child_status_by_admin.get(a.id, {'red': 0, 'orange': 0, 'yellow': 0, 'green': 0}),
             })
 
         # NEW: offset/limit pagination — first batch 300, "Load More" click panna next batch
@@ -2504,6 +2517,10 @@ class HierarchyChildrenView(APIView):
         child_ids = [c.user_id for c in children]
 
         grandchild_counts = {}
+        child_status_breakdown = {}   # ── NEW: parent_id -> {red,orange,yellow,green} ──
+        rollup_counts = _month_rollup_counts()
+        status_map = _month_status_map()
+
         # ── FIX: role == 'promotor' na, child_role == 'customer' — customer chain
         # ROLE_CONFIG la illa (assigned_promotor_id illama, created_by_id vachi
         # chain pogum), so idha separate ah handle pannanum. Illana andha customer
@@ -2514,17 +2531,31 @@ class HierarchyChildrenView(APIView):
                 .values('created_by_id').annotate(c=Count('id')).values_list('created_by_id', 'c')
             )
             grandchild_counts = gc  # ── key = user_id (created_by_id), not profile id ──
+
+            # ── NEW: nested customer-to-customer status breakdown ──
+            nested_customers = list(
+                CustomerProfile.objects.filter(created_by_id__in=child_ids).values('user_id', 'created_by_id')
+            )
+            for nc in nested_customers:
+                parent_uid = nc['created_by_id']
+                st = status_map.get(('customer', nc['user_id']), 'red')
+                bucket = child_status_breakdown.setdefault(parent_uid, {'red': 0, 'orange': 0, 'yellow': 0, 'green': 0})
+                bucket[st] += 1
         else:
             next_cfg = self.ROLE_CONFIG.get(cfg['child_role'])
             if next_cfg:
-                gc = dict(
+                grandchildren = list(
                     next_cfg['model'].objects.filter(**{f"{next_cfg['filter'].replace('_id','')}__id__in": [c.id for c in children]})
-                    .values(next_cfg['filter']).annotate(c=Count('id')).values_list(next_cfg['filter'], 'c')
+                    .values('id', next_cfg['filter'])
                 )
+                gc = {}
+                for g in grandchildren:
+                    parent_id = g[next_cfg['filter']]
+                    gc[parent_id] = gc.get(parent_id, 0) + 1
+                    st = status_map.get((next_cfg['child_role'], g['id']), 'red')
+                    bucket = child_status_breakdown.setdefault(parent_id, {'red': 0, 'orange': 0, 'yellow': 0, 'green': 0})
+                    bucket[st] += 1
                 grandchild_counts = gc
-
-        rollup_counts = _month_rollup_counts()
-        status_map = _month_status_map()
 
         count_key_attr = 'user_id' if cfg['child_role'] == 'customer' else 'id'
 
@@ -2539,6 +2570,7 @@ class HierarchyChildrenView(APIView):
                 'mobile_number': c.mobile_number, 'city_name': c.city_name,
                 'child_count': grandchild_counts.get(getattr(c, count_key_attr), 0),
                 'order_count': oc, 'status': status,
+                'child_status_counts': child_status_breakdown.get(getattr(c, count_key_attr), {'red': 0, 'orange': 0, 'yellow': 0, 'green': 0}),
             })
         return Response({'role': cfg['child_role'], 'items': results})
 
@@ -2560,6 +2592,17 @@ class HierarchyChildrenView(APIView):
         rollup_counts = _month_rollup_counts()
         status_map = _month_status_map()
 
+        # ── NEW: grandchild (nested customer) status breakdown ──
+        grandchildren = list(
+            CustomerProfile.objects.filter(created_by_id__in=child_ids).values('user_id', 'created_by_id')
+        )
+        child_status_breakdown = {}
+        for g in grandchildren:
+            parent_uid = g['created_by_id']
+            st = status_map.get(('customer', g['user_id']), 'red')
+            bucket = child_status_breakdown.setdefault(parent_uid, {'red': 0, 'orange': 0, 'yellow': 0, 'green': 0})
+            bucket[st] += 1
+
         results = []
         for c in children:
             oc = rollup_counts.get(('customer', c.user_id), 0)
@@ -2570,6 +2613,7 @@ class HierarchyChildrenView(APIView):
                 'mobile_number': c.mobile_number, 'city_name': c.city_name,
                 'child_count': sub_child_counts.get(c.user_id, 0),
                 'order_count': oc, 'status': status,
+                'child_status_counts': child_status_breakdown.get(c.user_id, {'red': 0, 'orange': 0, 'yellow': 0, 'green': 0}),
             })
         return Response({'role': 'customer', 'items': results})        
 

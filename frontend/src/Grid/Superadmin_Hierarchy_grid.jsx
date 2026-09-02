@@ -589,18 +589,16 @@ const sc = role === 'customer' ? STATUS_COLOR.green : (STATUS_COLOR[node.status]
 const c = sc
 const Icon = cfg.Icon
   const childRole = CHILD_ROLE[role]
-  const childCount = childRole && showChildCount ? (node[CHILD_KEY[role]] || []).length : null
+  // ── FIX: backend lazy-load API dealer_count / child_count field mattum tharum,
+  // full nested array tharathu — node[CHILD_KEY[role]] eppovume undefined ──
+  const childCount = childRole && showChildCount
+    ? (role === 'admin' ? (node.dealer_count ?? 0) : (node.child_count ?? 0))
+    : null
 
-  // ── NEW: count how many direct children (dealers/sub_dealers/promotors/customers)
-  // fall into each color bucket. Ithu than dots-la kaanpikkura number. ──
+  // ── FIX: red/orange/yellow/green breakdown backend-ல already vandhurukku
+  // (child_status_counts) — idha nesteda array-la irundhu recompute pannadhu ──
   const childStatusCounts = childRole
-    ? (() => {
-        const counts = { red: 0, orange: 0, yellow: 0, green: 0 }
-        ;(node[CHILD_KEY[role]] || []).forEach(ch => {
-          if (ch.status && counts[ch.status] !== undefined) counts[ch.status]++
-        })
-        return counts
-      })()
+    ? (node.child_status_counts || { red: 0, orange: 0, yellow: 0, green: 0 })
     : null
 
   return (

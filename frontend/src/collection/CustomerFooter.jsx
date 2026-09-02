@@ -382,7 +382,7 @@ export default function CustomerFooter() {
 
       <div className="rf-main">
         <section className="rf-brand" style={{ animationDelay: "80ms" }}>
-          <div className="rf-brand-name">LUXIVA</div>
+          <div className="rf-brand-name">ATHIRAI</div>
           <div className="rf-brand-sub">Where fashion meets luxury</div>
           <p className="rf-tagline">Shine. Crafted for generations.</p>
           <div className="rf-socials">
@@ -405,13 +405,13 @@ export default function CustomerFooter() {
         <section className="rf-contact" style={{ animationDelay: "420ms" }}>
           <h3 className="rf-heading">Contact Us</h3>
           <div className="rf-contact-row"><ContactIcon type="phone" /><a href="tel:+916385257541">+91 63852 57541</a></div>
-          <div className="rf-contact-row"><ContactIcon type="mail" /><a href="mailto:Luxiva@gmail.com">Luxiva@gmail.com</a></div>
+          <div className="rf-contact-row"><ContactIcon type="mail" /><a href="mailto:Athirai@gmail.com">Athirai@gmail.com</a></div>
           <div className="rf-contact-row"><ContactIcon type="location" /><span>44 Annai Indhira Nagar,<br />Ammapet, Salem 636003,<br />Tamil Nadu, India</span></div>
         </section>
       </div>
 
       <div className="rf-bottom">
-        <span>© {new Date().getFullYear()} Luxiva Jewellery. All Rights Reserved.</span>
+        <span>© {new Date().getFullYear()} Athirai Jewellery. All Rights Reserved.</span>
         <div className="rf-payments">
           <span>We accept:</span>
           {["VISA", "Mastercard", "UPI", "Paytm"].map((item) => <span className="rf-payment" key={item}>{item}</span>)}

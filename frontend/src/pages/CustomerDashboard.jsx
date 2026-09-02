@@ -313,7 +313,7 @@ function HomeBannerSlider() {
 function ProductCard({ product, wishIds, onWishlist, onOpen, onAddToCart }) {
   const name = safeText(product.name, "Jewellery Product");
   const image = productImage(product);
-  const category = safeText(product.category, "Luxiva Collection").replaceAll("_", " ");
+    const category = safeText(product.category, "Athirai Collection").replaceAll("_", " ");
 
   return (
     <article className="product-card" onClick={() => onOpen(product)}>
@@ -2116,7 +2116,7 @@ export default function CustomerDashboard() {
         <section className="store-section featured-section">
           <div className="store-heading">
             <div className="featured-heading-copy">
-              <span className="featured-kicker"><i /> THE LUXIVA EDIT</span>
+                            <span className="featured-kicker"><i /> THE ATHIRAI EDIT</span>
               <h2>Featured Jewellery</h2>
               <p>Exceptional pieces, selected for their beauty and craftsmanship.</p>
             </div>
@@ -2162,7 +2162,7 @@ export default function CustomerDashboard() {
               </svg>
             </div>
             <div>
-              <h2>Join The Luxiva Circle</h2>
+                            <h2>Join The Athirai Circle</h2>
               <p>
                 Be the first to know about new collections, exclusive offers
                 &amp; more.
