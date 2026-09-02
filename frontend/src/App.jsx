@@ -27,6 +27,7 @@ const PromotorHierarchy = lazy(() => import('./Hierarchy/Promotor_Hierarchy'))
 const PromotorHierarchyGrid = lazy(() => import('./Grid/Promotor_Hierarchy_grid'))
 const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard'))
 const ShopDashboard = lazy(() => import('./pages/ShopDashboard'))
+const AddShop = lazy(() => import('./Superadmin/AddShop'))
 const Profile = lazy(() => import('./collection/profile'))
 const CreateCustomer = lazy(() => import('./collection/create_customer'))
 const CoinsCollection = lazy(() => import('./collection/coins_collection'))
@@ -195,7 +196,8 @@ export default function App() {
           <Route path="/promotor-hierarchy" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchy /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/promotor-hierarchy-grid" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchyGrid /></WithInternalRoleNavbar></ProtectedRoute>} />
                     <Route path="/customer" element={<WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar>} />
-          <Route path="/shop-dashboard" element={<ProtectedRoute role="shop"><ShopDashboard /></ProtectedRoute>} />
+                    <Route path="/shop-dashboard" element={<ProtectedRoute role="shop"><ShopDashboard /></ProtectedRoute>} />
+          <Route path="/add-shop" element={<WithSuperAdminNavbar><AddShop /></WithSuperAdminNavbar>} />
 <Route path="/contact" element={<WithCustomerNavbar><Contact /></WithCustomerNavbar>} />
 <Route path="/profile" element={<WithCustomerNavbar><Profile /></WithCustomerNavbar>} />
           <Route path="/create-customer" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><CreateCustomer /></WithCustomerNavbar></ProtectedRoute>} />

@@ -277,11 +277,14 @@ class CreateAdminView(APIView):
         return Response(serializer.data)
 
 class CreateShopView(APIView):
-    permission_classes = [IsAuthenticated]
+    def get_permissions(self):
+        # Anyone can submit the shop registration form (Copy URL flow) —
+        # listing shops is still restricted to Super Admin only.
+        if self.request.method == 'POST':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def post(self, request):
-        if request.user.role != 'super_admin':
-            return Response({'error': 'Permission denied'}, status=403)
         serializer = ShopProfileSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()

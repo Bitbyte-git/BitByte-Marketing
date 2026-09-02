@@ -4,6 +4,33 @@ import api from '../api'
 import logo from '../assets/logo.png'
 import CopyUrlButton from '../collection/CopyUrlButton'
 
+function SectionHeader({ icon, label }) {
+  const paths = {
+    shop: <><rect x="3" y="10" width="18" height="11" rx="2" /><path d="M3 10 5 3h14l2 7" /><path d="M9 21v-6h6v6" /></>,
+    lock: <><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
+    pin: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="3" /></>,
+    briefcase: <><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>,
+  }
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '10px',
+      padding: '10px 14px', borderRadius: '10px', marginBottom: '20px',
+      background: 'linear-gradient(90deg, rgba(12,64,68,0.08), rgba(12,64,68,0.02))',
+    }}>
+      <div style={{
+        width: '30px', height: '30px', borderRadius: '9px', flexShrink: 0,
+        background: 'linear-gradient(135deg,#0C4044,#073B3F)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FDFDFC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {paths[icon] || paths.shop}
+        </svg>
+      </div>
+      <span style={{ color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+    </div>
+  )
+}
+
 export default function AddShop() {
   const navigate = useNavigate()
   const text = '#111817'
@@ -11,6 +38,7 @@ export default function AddShop() {
   const border = 'rgba(189,207,206,0.78)'
   const inpBg = '#FDFDFC'
   const inpBorder = '#BDCFCE'
+  const isLoggedInSuperAdmin = localStorage.getItem('role') === 'super_admin'
 
   const [form, setForm] = useState({
     shop_name: '', owner_name: '', mobile_number: '', whatsapp_number: '',
@@ -54,10 +82,9 @@ export default function AddShop() {
 
   const s = {
     card: { background: '#FDFDFC', border: `1px solid ${border}`, borderRadius: '22px', padding: '34px 38px', boxShadow: '0 22px 58px rgba(7,59,63,0.08)' },
-    secHead: { color: '#0C4044', fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 20px', paddingBottom: '14px', borderBottom: `1px solid ${border}` },
     lbl: { display: 'block', color: subtext, fontSize: '10.5px', fontWeight: 700, marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.05em' },
     inp: { width: '100%', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '9px', padding: '10px 13px', color: text, fontSize: '13.5px', outline: 'none', boxSizing: 'border-box' },
-    section: { background: '#FDFDFC', border: '1px solid rgba(189,207,206,0.55)', borderRadius: '16px', padding: '22px 24px', marginBottom: '20px' },
+    sectionCard: { background: '#FDFDFC', border: '1px solid rgba(189,207,206,0.55)', borderRadius: '16px', padding: '22px 24px', marginBottom: '20px' },
   }
 
   const handleSubmit = async e => {
@@ -70,7 +97,11 @@ export default function AddShop() {
     try {
       await api.post('/shops/', form)
       setMsg('Shop created successfully!')
-      setTimeout(() => navigate('/super-admin'), 1200)
+      setTimeout(() => {
+        // Logged-in Super Admin goes back to dashboard; a shop owner who
+        // opened this via the shared Copy URL link goes to Login instead.
+        navigate(isLoggedInSuperAdmin ? '/super-admin' : '/login')
+      }, 1400)
     } catch (err) {
       setMsg('Error: ' + JSON.stringify(err.response?.data))
     }
@@ -80,17 +111,23 @@ export default function AddShop() {
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', padding: '34px', fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
       <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <img src={logo} alt="Luxiva" style={{ width: 44, height: 44, objectFit: 'contain' }} />
             <div>
-              <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: text }}>Add New Shop</h2>
-              <div style={{ fontSize: '12px', color: subtext, marginTop: '2px' }}>Create a shop/branch record</div>
+              <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: text }}>
+                {isLoggedInSuperAdmin ? 'Add New Shop' : 'Shop Registration'}
+              </h2>
+              <div style={{ fontSize: '12px', color: subtext, marginTop: '2px' }}>
+                {isLoggedInSuperAdmin ? 'Create a shop/branch record' : 'Register your shop with BitByte'}
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <CopyUrlButton />
-            <button onClick={() => navigate(-1)} style={{ padding: '10px 20px', background: '#FFFFFF', border: `1px solid ${border}`, borderRadius: '10px', color: subtext, fontSize: '13px', cursor: 'pointer' }}>Back</button>
+            {isLoggedInSuperAdmin && <CopyUrlButton />}
+            {isLoggedInSuperAdmin && (
+              <button onClick={() => navigate(-1)} style={{ padding: '10px 20px', background: '#FFFFFF', border: `1px solid ${border}`, borderRadius: '10px', color: subtext, fontSize: '13px', cursor: 'pointer' }}>Back</button>
+            )}
           </div>
         </div>
 
@@ -103,15 +140,14 @@ export default function AddShop() {
         <div style={s.card}>
           <form onSubmit={handleSubmit}>
 
-            {/* Shop Info */}
-            <div style={s.section}>
-              <div style={s.secHead}>Shop Info</div>
+            <div style={s.sectionCard}>
+              <SectionHeader icon="shop" label="Shop Info" />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 <div><label style={s.lbl}>Shop Name *</label><input name="shop_name" value={form.shop_name} onChange={handleChange} required style={s.inp} /></div>
                 <div><label style={s.lbl}>Owner Name *</label><input name="owner_name" value={form.owner_name} onChange={handleChange} required style={s.inp} /></div>
                 <div>
                   <label style={s.lbl}>Select Shop *</label>
-                                    <select name="shop_type" value={form.shop_type} onChange={handleChange} required style={{ ...s.inp, cursor: 'pointer' }}>
+                  <select name="shop_type" value={form.shop_type} onChange={handleChange} required style={{ ...s.inp, cursor: 'pointer' }}>
                     <option value="live">Physical Shop</option>
                     <option value="virtual">Virtual Shop</option>
                   </select>
@@ -126,9 +162,8 @@ export default function AddShop() {
               </div>
             </div>
 
-            {/* Contact + Account */}
-            <div style={s.section}>
-              <div style={s.secHead}>Contact & Account</div>
+            <div style={s.sectionCard}>
+              <SectionHeader icon="lock" label="Contact & Account" />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 <div><label style={s.lbl}>Mobile Number *</label><input name="mobile_number" maxLength={10} value={form.mobile_number} onChange={handleChange} required style={s.inp} /></div>
                 <div><label style={s.lbl}>WhatsApp Number</label><input name="whatsapp_number" maxLength={10} value={form.whatsapp_number} onChange={handleChange} style={s.inp} /></div>
@@ -142,9 +177,8 @@ export default function AddShop() {
               </div>
             </div>
 
-            {/* Address */}
-            <div style={s.section}>
-              <div style={s.secHead}>Shop Address</div>
+            <div style={s.sectionCard}>
+              <SectionHeader icon="pin" label="Shop Address" />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 <div style={{ gridColumn: 'span 3' }}><label style={s.lbl}>Shop Address *</label><input name="shop_address" value={form.shop_address} onChange={handleChange} required style={s.inp} /></div>
                 <div>
@@ -159,9 +193,8 @@ export default function AddShop() {
               </div>
             </div>
 
-            {/* Optional Identity */}
-            <div style={s.section}>
-              <div style={s.secHead}>Identity (Optional)</div>
+            <div style={s.sectionCard}>
+              <SectionHeader icon="briefcase" label="Identity (Optional)" />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 <div><label style={s.lbl}>PAN</label><input name="pan_no" maxLength={10} value={form.pan_no} onChange={handleChange} style={s.inp} /></div>
                 <div><label style={s.lbl}>GST</label><input name="gst_no" maxLength={15} value={form.gst_no} onChange={handleChange} style={s.inp} /></div>
@@ -169,9 +202,11 @@ export default function AddShop() {
               </div>
             </div>
 
-            <button type="submit" disabled={saving} style={{ padding: '13px 30px', background: saving ? 'rgba(12,64,68,0.4)' : 'linear-gradient(90deg,#BDCFCE,#0C4044)', border: 'none', borderRadius: '12px', fontWeight: 800, color: '#FDFDFC', fontSize: '14px', cursor: saving ? 'not-allowed' : 'pointer' }}>
-              {saving ? 'Creating...' : 'Create Shop'}
-            </button>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
+              <button type="submit" disabled={saving} style={{ padding: '12px 28px', background: saving ? 'rgba(12,64,68,0.4)' : 'linear-gradient(90deg,#BDCFCE,#0C4044)', border: 'none', borderRadius: '12px', fontWeight: 800, color: '#FDFDFC', fontSize: '14px', cursor: saving ? 'not-allowed' : 'pointer' }}>
+                {saving ? 'Creating...' : 'Create Shop'}
+              </button>
+            </div>
           </form>
         </div>
       </div>

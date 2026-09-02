@@ -1259,10 +1259,10 @@ const fetchAllMembers = async (adminsData = []) => {
       api.get('/customers/'),
     ])
     const admins = adminsData
-    const dealers = dealerRes.status === 'fulfilled' ? dealerRes.value.data : []
-    const sds = sdRes.status === 'fulfilled' ? sdRes.value.data : []
-    const pros = proRes.status === 'fulfilled' ? proRes.value.data : []
-    const cuss = cusRes.status === 'fulfilled' ? cusRes.value.data : []
+        const dealers = dealerRes.status === 'fulfilled' ? (dealerRes.value.data?.results || dealerRes.value.data || []) : []
+    const sds = sdRes.status === 'fulfilled' ? (sdRes.value.data?.results || sdRes.value.data || []) : []
+    const pros = proRes.status === 'fulfilled' ? (proRes.value.data?.results || proRes.value.data || []) : []
+    const cuss = cusRes.status === 'fulfilled' ? (cusRes.value.data?.results || cusRes.value.data || []) : []
 
       const allMembers = [
         ...admins.map(m => ({ ...m, _role: 'Admin', _id: m.admin_id, _roleColor: '#BDCFCE', _dob: m.dob, _ann: m.anniversary_date, _joined: m.user?.created_at || null })),
