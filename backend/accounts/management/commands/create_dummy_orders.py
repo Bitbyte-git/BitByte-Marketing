@@ -128,9 +128,8 @@ class Command(BaseCommand):
                         with transaction.atomic():
                             JewelryOrder.objects.bulk_create(batch, batch_size=BATCH_SIZE)
                             for order_obj in batch:
-                                JewelryOrder.objects.filter(order_id=order_obj.order_id).update(
-                                    created_at=order_obj._staggered_time
-                                )
+                                order_obj.created_at = order_obj._staggered_time
+                            JewelryOrder.objects.bulk_update(batch, ['created_at'], batch_size=BATCH_SIZE)
                         created += len(batch)
                         batch = []
 
@@ -206,9 +205,8 @@ class Command(BaseCommand):
                     with transaction.atomic():
                         JewelryOrder.objects.bulk_create(batch, batch_size=BATCH_SIZE)
                         for order_obj in batch:
-                            JewelryOrder.objects.filter(order_id=order_obj.order_id).update(
-                                created_at=order_obj._staggered_time
-                            )
+                            order_obj.created_at = order_obj._staggered_time
+                        JewelryOrder.objects.bulk_update(batch, ['created_at'], batch_size=BATCH_SIZE)
                     created += len(batch)
                     batch = []
 
@@ -345,9 +343,8 @@ class Command(BaseCommand):
                 with transaction.atomic():
                     JewelryOrder.objects.bulk_create(batch, batch_size=BATCH_SIZE)
                     for order_obj in batch:
-                        JewelryOrder.objects.filter(order_id=order_obj.order_id).update(
-                            created_at=order_obj._staggered_time
-                        )
+                        order_obj.created_at = order_obj._staggered_time
+                    JewelryOrder.objects.bulk_update(batch, ['created_at'], batch_size=BATCH_SIZE)
                 created += len(batch)
                 self.stdout.write(self.style.SUCCESS(f"  ...{created}/{total_to_create} orders inserted"))
                 batch = []

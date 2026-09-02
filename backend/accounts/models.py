@@ -24,7 +24,7 @@ ROLE_CHOICES = [
     ('sub_dealer', 'Sub Dealer'), # NEW
     ('promotor', 'Promotor'),   # NEW
     ('customer', 'Customer'),   # NEW
-
+    ('shop', 'Shop'),           # NEW — standalone shop/branch entity
 ]
 
 OCCUPATION_CHOICES = [
@@ -438,6 +438,58 @@ class CustomerProfile(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
+
+class ShopProfile(models.Model):
+    SHOP_TYPE_CHOICES = [
+        ('live', 'Physical Shop'),
+        ('virtual', 'Virtual Shop'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='shop_profile')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_shops')
+
+    shop_name = models.CharField(max_length=150)
+    owner_name = models.CharField(max_length=150)
+    mobile_number = models.CharField(max_length=10)
+    whatsapp_number = models.CharField(max_length=10, blank=True, null=True)
+
+    shop_address = models.TextField()
+    pincode = models.CharField(max_length=6)
+    street_name = models.CharField(max_length=100)
+    city = models.CharField(max_length=50)
+    district = models.CharField(max_length=50)
+    state = models.CharField(max_length=50)
+
+    shop_type = models.CharField(max_length=10, choices=SHOP_TYPE_CHOICES, default='live')
+
+    # Optional identity fields
+    pan_no = models.CharField(max_length=10, blank=True, null=True)
+    gst_no = models.CharField(max_length=15, blank=True, null=True)
+    msme_no = models.CharField(max_length=25, blank=True, null=True)
+
+    shop_id = models.CharField(max_length=20, unique=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['created_by']),
+            models.Index(fields=['shop_type']),
+        ]
+
+    def save(self, *args, **kwargs):
+        # Auto-generate shop_id: BBJS{year}{00001}
+        if not self.shop_id:
+            from django.utils import timezone
+            year = timezone.now().year
+            count = ShopProfile.objects.count() + 1
+            new_id = f"BBJS{year}{count:05d}"
+            while ShopProfile.objects.filter(shop_id=new_id).exists():
+                count += 1
+                new_id = f"BBJS{year}{count:05d}"
+            self.shop_id = new_id
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.shop_name} ({self.shop_id})"
 
 class Announcement(models.Model):
     TARGET_ROLES = [

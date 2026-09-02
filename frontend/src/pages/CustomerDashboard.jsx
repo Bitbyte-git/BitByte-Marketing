@@ -54,11 +54,7 @@ const categoryRail = [
     image: "/Men's Jewellery.jpg",
   },
   { label: "Chains", route: "/collection/chains", image: "/dimand_chain.jpg" },
-  {
-    label: "Platinum",
-    route: "/collection/all?metal=platinum",
-    image: "/platinum_ring.jpg",
-  },
+  // { label: "Platinum", route: "/collection/all?metal=platinum", image: "/platinum_ring.jpg" },  // hidden — future use ku vachurukom
 ];
 
 const autoCategoryRail = Array.from({ length: 3 }, () => categoryRail).flat();
@@ -436,15 +432,17 @@ export default function CustomerDashboard() {
             .slice(0, 2),
         );
       }
+
+      // (this is hide for daimond and platinum )
       if (
-        productRes.status === "fulfilled" &&
-        Array.isArray(productRes.value.data)
-      ) {
-        const activeProducts = productRes.value.data.filter(
-          (p) => p.is_active !== false,
-        );
-        setFeatured(activeProducts.slice(0, 10));
-      }
+  productRes.status === "fulfilled" &&
+  Array.isArray(productRes.value.data)
+) {
+  const activeProducts = productRes.value.data.filter(
+    (p) => p.is_active !== false && p.metal !== "diamond" && p.metal !== "platinum",
+  );
+  setFeatured(activeProducts.slice(0, 10));
+}
       if (wishRes.status === "fulfilled") {
         const items = Array.isArray(wishRes.value.data?.items)
           ? wishRes.value.data.items
@@ -600,7 +598,7 @@ export default function CustomerDashboard() {
 
   const requireLogin = () => {
     if (isLoggedIn) return false;
-    navigate("/login");
+    navigate("/contact");
     return true;
   };
 

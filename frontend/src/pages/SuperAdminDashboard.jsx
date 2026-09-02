@@ -3109,6 +3109,16 @@ return (
   </svg>
   Sales Report
 </button>
+
+<button onClick={() => navigate('/add-shop')}
+  style={{ padding: '11px 28px', background: '#FFFFFF', border: '1px solid rgba(204,168,129,0.4)', borderRadius: '12px', fontWeight: 800, color: '#BB8958', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: 'none' }}>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#BB8958" strokeWidth="2">
+    <path d="M4 10h16l-1 12H5L4 10z"/>
+    <path d="M8 10V6a4 4 0 018 0v4" strokeLinecap="round"/>
+  </svg>
+  Add Shop
+</button>
+
             <button onClick={() => setShowForm(!showForm)} className="sa-grad-btn"
               style={{ padding: '11px 28px', background: '#0C4044', border: '1px solid #0C4044', borderRadius: '12px', fontWeight: 800, color: '#FFFFFF', fontSize: '14px', cursor: 'pointer', boxShadow: 'none' }}>
               {showForm ? 'Cancel' : '+ Create Admin'}

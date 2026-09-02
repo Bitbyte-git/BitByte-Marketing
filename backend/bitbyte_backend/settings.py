@@ -128,10 +128,6 @@ CLOUDINARY_STORAGE = {
 }
 
 
-# razonpay
-# RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_T0JMJzijqftP5f")
-# RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "CLm5lolSo1tLgZYh9fcwii5C")
-
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_TPFG9ug3Zow5ep")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "UYvsnNmaq5R8VFkw17dcaCvj")
 

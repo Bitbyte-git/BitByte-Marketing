@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder,JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, Wallet, CoinRecharge, AutoPayMandate , StockNotifyRequest
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, ShopProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder,JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, Wallet, CoinRecharge, AutoPayMandate , StockNotifyRequest
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -346,6 +346,51 @@ class CustomerListSerializer(serializers.ModelSerializer):
                   'mobile_number', 'city_name', 'created_at',
                   'dob', 'anniversary_date',
                   'assigned_promotor_id']
+
+class ShopProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(write_only=True)
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = ShopProfile
+        fields = [
+            'id', 'email', 'password', 'shop_name', 'owner_name',
+            'mobile_number', 'whatsapp_number',
+            'shop_address', 'pincode', 'street_name', 'city', 'district', 'state',
+            'shop_type', 'pan_no', 'gst_no', 'msme_no',
+            'shop_id', 'created_at'
+        ]
+        read_only_fields = ['shop_id', 'created_at']
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def create(self, validated_data):
+        email = validated_data.pop('email')
+        password = validated_data.pop('password')
+        request = self.context.get('request')
+        user = User.objects.create_user(email=email, password=password, role='shop')
+        profile = ShopProfile.objects.create(
+            user=user,
+            created_by=request.user if request.user.is_authenticated else None,
+            **validated_data
+        )
+        return profile
+
+
+class ShopListSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email')
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+
+    class Meta:
+        model = ShopProfile
+        fields = [
+            'id', 'user_id', 'shop_id', 'shop_name', 'owner_name',
+            'email', 'mobile_number', 'whatsapp_number',
+            'city', 'district', 'state', 'shop_type', 'created_at'
+        ]
         
 class AnnouncementSerializer(serializers.ModelSerializer):
     target_user = serializers.PrimaryKeyRelatedField(
@@ -356,6 +401,8 @@ class AnnouncementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Announcement
         fields = ['id', 'title', 'message', 'target_roles', 'target_user', 'target_user_email', 'created_at', 'is_active']
+
+
 
 class AnnouncementReplySerializer(serializers.ModelSerializer):
     replied_by_email = serializers.EmailField(source='replied_by.email', read_only=True)

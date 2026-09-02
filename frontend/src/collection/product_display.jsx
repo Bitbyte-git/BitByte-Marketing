@@ -398,8 +398,13 @@ export default function ProductDisplay() {
     })
   }, [])
 
-  useEffect(() => {
+useEffect(() => {
     setLoading(true)
+    if (metal === 'diamond' || metal === 'platinum') {
+      setProducts([])
+      setLoading(false)
+      return
+    }
     import('../api').then(({ default: api }) => {
       api.get(`/jewelry-products/?category=${category}&metal=${metal}`)
         .then(res => {
@@ -556,7 +561,7 @@ const displayOriginalPrice = calcOriginalPriceMain()
 
   const requireLogin = () => {
     if (localStorage.getItem('token')) return false
-    navigate('/login')
+    navigate('/contact')
     return true
   }
 

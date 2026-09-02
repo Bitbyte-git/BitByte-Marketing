@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../api";
 import { getCartCountDB } from "../collection/card_section";
 
@@ -135,8 +135,8 @@ function money(value) {
 const menuItems = [
   { label: "All Jewellery", route: "/collection/all" },
   { label: "Gold", route: "/collection/all?metal=gold" },
-  { label: "Diamond", route: "/collection/all?metal=diamond" },
-  { label: "Platinum", route: "/collection/all?metal=platinum" },
+  // { label: "Diamond", route: "/collection/all?metal=diamond" },
+  // { label: "Platinum", route: "/collection/all?metal=platinum" },
   { label: "Silver", route: "/collection/all?metal=silver" },
   { label: "Coins", route: "/collection/coins" },
   { label: "Offers", route: "/collection/offers" },
@@ -145,6 +145,71 @@ const menuItems = [
   { label: "Gifting", route: "/collection/gifting" },
   { label: "Nearby Shop", route: "/nearby-shop" },
 ];
+
+// const allJewelleryMega = [
+//   {
+//     title: "Gold Jewellery",
+//     icon: "◌",
+//     viewAll: ["View All Gold", "/collection/all?metal=gold"],
+//     links: [
+//       ["Gold Rings", "/collection/all?metal=gold&category=rings"],
+//       ["Gold Earrings", "/collection/all?metal=gold&category=earrings"],
+//       ["Gold Necklaces", "/collection/all?metal=gold&category=necklaces"],
+//       ["Gold Pendants", "/collection/all?metal=gold&category=pendants"],
+//       ["Gold Bangles", "/collection/all?metal=gold&category=bangles"],
+//       ["Gold Chains", "/collection/all?metal=gold&category=chains"],
+//       ["Gold Mangalsutra", "/collection/all?metal=gold&category=mangalsutra"],
+//       ["Gold Anklets", "/collection/all?metal=gold&category=anklets"],
+//     ],
+//   },
+//   {
+//     title: "Diamond Jewellery",
+//     icon: "◇",
+//     viewAll: ["View All Diamonds", "/collection/all?metal=diamond"],
+//     links: [
+//       ["Diamond Rings", "/collection/all?metal=diamond&category=rings"],
+//       ["Diamond Earrings", "/collection/all?metal=diamond&category=earrings"],
+//       ["Diamond Necklaces", "/collection/all?metal=diamond&category=necklaces"],
+//       ["Diamond Pendants", "/collection/all?metal=diamond&category=pendants"],
+//       ["Diamond Bracelets", "/collection/all?metal=diamond&category=bracelets"],
+//       ["Diamond Bangles", "/collection/all?metal=diamond&category=bangles"],
+//       [
+//         "Diamond Mangalsutra",
+//         "/collection/all?metal=diamond&category=mangalsutra",
+//       ],
+//       [
+//         "Solitaire Collection",
+//         "/collection/all?metal=diamond&search=solitaire",
+//       ],
+//     ],
+//   },
+//   {
+//     title: "Platinum Jewellery",
+//     icon: "P",
+//     viewAll: ["View All Platinum", "/collection/all?metal=platinum"],
+//     links: [
+//       ["Platinum Rings", "/collection/all?metal=platinum&category=rings"],
+//       ["Platinum Earrings", "/collection/all?metal=platinum&category=earrings"],
+//       [
+//         "Platinum Necklaces",
+//         "/collection/all?metal=platinum&category=necklaces",
+//       ],
+//       ["Platinum Pendants", "/collection/all?metal=platinum&category=pendants"],
+//       [
+//         "Platinum Bracelets",
+//         "/collection/all?metal=platinum&category=bracelets",
+//       ],
+//       ["Platinum Chains", "/collection/all?metal=platinum&category=chains"],
+//       [
+//         "Platinum Mangalsutra",
+//         "/collection/all?metal=platinum&category=mangalsutra",
+//       ],
+//       ["Men's Platinum", "/collection/all?metal=platinum&gender=men"],
+//     ],
+//   },
+//   {
+//     title: "Silver Jewellery",
+
 
 const allJewelleryMega = [
   {
@@ -162,51 +227,8 @@ const allJewelleryMega = [
       ["Gold Anklets", "/collection/all?metal=gold&category=anklets"],
     ],
   },
-  {
-    title: "Diamond Jewellery",
-    icon: "◇",
-    viewAll: ["View All Diamonds", "/collection/all?metal=diamond"],
-    links: [
-      ["Diamond Rings", "/collection/all?metal=diamond&category=rings"],
-      ["Diamond Earrings", "/collection/all?metal=diamond&category=earrings"],
-      ["Diamond Necklaces", "/collection/all?metal=diamond&category=necklaces"],
-      ["Diamond Pendants", "/collection/all?metal=diamond&category=pendants"],
-      ["Diamond Bracelets", "/collection/all?metal=diamond&category=bracelets"],
-      ["Diamond Bangles", "/collection/all?metal=diamond&category=bangles"],
-      [
-        "Diamond Mangalsutra",
-        "/collection/all?metal=diamond&category=mangalsutra",
-      ],
-      [
-        "Solitaire Collection",
-        "/collection/all?metal=diamond&search=solitaire",
-      ],
-    ],
-  },
-  {
-    title: "Platinum Jewellery",
-    icon: "P",
-    viewAll: ["View All Platinum", "/collection/all?metal=platinum"],
-    links: [
-      ["Platinum Rings", "/collection/all?metal=platinum&category=rings"],
-      ["Platinum Earrings", "/collection/all?metal=platinum&category=earrings"],
-      [
-        "Platinum Necklaces",
-        "/collection/all?metal=platinum&category=necklaces",
-      ],
-      ["Platinum Pendants", "/collection/all?metal=platinum&category=pendants"],
-      [
-        "Platinum Bracelets",
-        "/collection/all?metal=platinum&category=bracelets",
-      ],
-      ["Platinum Chains", "/collection/all?metal=platinum&category=chains"],
-      [
-        "Platinum Mangalsutra",
-        "/collection/all?metal=platinum&category=mangalsutra",
-      ],
-      ["Men's Platinum", "/collection/all?metal=platinum&gender=men"],
-    ],
-  },
+  // Diamond Jewellery section — hidden — future use ku vachurukom
+  // Platinum Jewellery section — hidden — future use ku vachurukom
   {
     title: "Silver Jewellery",
     icon: "◒",
@@ -290,10 +312,10 @@ const allJewelleryMega = [
         "Traditional Mangalsutra",
         "/collection/all?category=mangalsutra&search=traditional",
       ],
-      [
-        "Diamond Mangalsutra",
-        "/collection/all?category=mangalsutra&metal=diamond",
-      ],
+      // [
+      //   "Diamond Mangalsutra",
+      //   "/collection/all?category=mangalsutra&metal=diamond",
+      // ],
       [
         "Beaded Mangalsutra",
         "/collection/all?category=mangalsutra&search=beaded",
@@ -331,8 +353,9 @@ const metalMega = {
       "◌",
       "/collection/all?metal=gold&category=rings",
       [
+        // hide daimond
         "Plain Gold Rings",
-        "Diamond Gold Rings",
+        // "Diamond Gold Rings",
         "Gemstone Gold Rings",
         "Engagement Rings",
         "Couple Rings",
@@ -357,11 +380,12 @@ const metalMega = {
       "♧",
       "/collection/all?metal=gold&category=necklaces",
       [
+        // hide diamond
         "Plain Gold Necklaces",
         "Traditional Necklaces",
         "Temple Necklaces",
         "Chain Necklaces",
-        "Diamond Necklaces",
+        // "Diamond Necklaces",
         "Mangalsutra Necklaces",
       ],
     ],
@@ -370,8 +394,9 @@ const metalMega = {
       "♤",
       "/collection/all?metal=gold&category=pendants",
       [
+        // hide diamond
         "Religious Pendants",
-        "Diamond Pendants",
+        // "Diamond Pendants",
         "Initial Pendants",
         "Gemstone Pendants",
         "Kids Pendants",
@@ -382,8 +407,9 @@ const metalMega = {
       "◯",
       "/collection/all?metal=gold&category=bangles",
       [
+        // hide diamond
         "Plain Gold Bangles",
-        "Diamond Bangles",
+        // "Diamond Bangles",
         "Traditional Bangles",
         "Kada Bangles",
         "Kids Bangles",
@@ -406,8 +432,9 @@ const metalMega = {
       "♧",
       "/collection/all?metal=gold&category=mangalsutra",
       [
+        // hide diamond
         "Traditional Mangalsutra",
-        "Diamond Mangalsutra",
+        // "Diamond Mangalsutra",
         "Beaded Mangalsutra",
         "Short Mangalsutra",
         "Gold Mangalsutra Set",
@@ -780,20 +807,21 @@ const metalMega = {
 };
 
 const specialMega = {
-  Coins: [
-    [
+    Coins: [
+        [
       "Gold Coins",
       "◎",
       "/collection/coins?metal=gold",
       [
-        "24K Gold Coins",
-        "22K Gold Coins",
-        "18K Gold Coins",
-        "10g Gold Coins",
-        "20g Gold Coins",
-        "1/2 Sovereign Coins",
-        "1 Sovereign Coins",
-        "2 Sovereign Coins",
+        "100mg Gold Coins",
+        "200mg Gold Coins",
+        "500mg Gold Coins",
+        "1g Gold Coins",
+        "2g Gold Coins",
+        "4g Gold Coins",
+        "8g Gold Coins",
+        "16g Gold Coins",
+        "40g Gold Coins",
       ],
     ],
     [
@@ -811,19 +839,33 @@ const specialMega = {
         "500g Gold Bars",
       ],
     ],
-    [
+        [
       "Silver Coins",
       "◎",
       "/collection/coins?metal=silver",
       [
-        "999 Silver Coins",
-        "925 Silver Coins",
+        "1g Silver Coins",
+        "2g Silver Coins",
+        "5g Silver Coins",
         "10g Silver Coins",
         "20g Silver Coins",
         "50g Silver Coins",
         "100g Silver Coins",
-        "250g Silver Coins",
-        "500g Silver Coins",
+      ],
+    ],
+    [
+      "Silver Bars",
+      "▣",
+      "/collection/coins?metal=silver",
+      [
+        "10g Silver Bars",
+        "20g Silver Bars",
+        "50g Silver Bars",
+        "100g Silver Bars",
+        "250g Silver Bars",
+        "500g Silver Bars",
+        "1kg Silver Bars",
+        "5kg Silver Bars",
       ],
     ],
     [
@@ -884,13 +926,11 @@ const specialMega = {
         "Housewarming Coins",
       ],
     ],
-    [
+        [
       "Investment Coins",
       "↗",
       "/collection/coins?search=investment",
       [
-        "24K Investment Coins",
-        "22K Investment Coins",
         "Low Premium Coins",
         "High Resale Coins",
         "Popular Investment Coins",
@@ -929,7 +969,7 @@ const specialMega = {
         "Drop Earrings",
       ],
     ],
-    [
+       [
       "Bridal Rings",
       "◌",
       "/collection/all?wedding=true&category=rings",
@@ -937,7 +977,6 @@ const specialMega = {
         "Engagement Rings",
         "Wedding Rings",
         "Kundan Rings",
-        "Diamond Rings",
         "Temple Rings",
         "Couple Rings",
         "Antique Rings",
@@ -974,13 +1013,12 @@ const specialMega = {
         "Antique Sets",
       ],
     ],
-    [
+        [
       "Mangalsutra",
       "♧",
       "/collection/all?wedding=true&category=mangalsutra",
       [
         "Traditional Mangalsutra",
-        "Diamond Mangalsutra",
         "Beaded Mangalsutra",
         "Pendant Mangalsutra",
         "Short Mangalsutra",
@@ -998,7 +1036,7 @@ const specialMega = {
         "Polki Maang Tikka",
         "Temple Maang Tikka",
         "Antique Maang Tikka",
-        "Diamond Maang Tikka",
+        // "Diamond Maang Tikka",
         "Pearl Maang Tikka",
       ],
     ],
@@ -1185,8 +1223,13 @@ const ROLE_SWITCH_LABELS = {
 
 export default function CustomerNavbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const role = localStorage.getItem("role");
   const isLoggedIn = Boolean(localStorage.getItem("token"));
+  // AUG Coin pill, coin-shop icon, and the menu drawer are hidden for
+  // guests (not logged in) on any page — they show up as soon as the
+  // person logs in, regardless of which route they're on.
+  const isLandingPage = !isLoggedIn;
   const roleSwitchCfg = ROLE_SWITCH_LABELS[role];
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -1208,7 +1251,7 @@ export default function CustomerNavbar() {
 
   const requireLogin = (route) => {
     if (!isLoggedIn) {
-      navigate("/login");
+      navigate("/contact");
       return;
     }
     navigate(route);
@@ -1314,7 +1357,11 @@ export default function CustomerNavbar() {
         const res = await api.get(
           `/jewelry-products/?search=${encodeURIComponent(query)}`,
         );
-        setSearchResults(Array.isArray(res.data) ? res.data.slice(0, 6) : []);
+        const allResults = Array.isArray(res.data) ? res.data : [];
+        const filteredResults = allResults.filter(
+          (p) => p.metal !== "diamond" && p.metal !== "platinum",
+        );
+        setSearchResults(filteredResults.slice(0, 6));
         setShowSearchDrop(true);
       } catch {
         setSearchResults([]);
@@ -1633,7 +1680,7 @@ export default function CustomerNavbar() {
           min-width: 0;
         }
 
-        .rate-dropdown-toggle {
+                .rate-dropdown-toggle {
           height: 42px;
           border-radius: 999px;
           border: none;
@@ -1649,7 +1696,7 @@ export default function CustomerNavbar() {
           cursor: pointer;
           white-space: nowrap;
           box-shadow: 0 4px 12px rgba(7,59,63,0.22);
-          max-width: clamp(180px, 22vw, 292px);
+          max-width: clamp(220px, 26vw, 340px);
           min-width: 0;
           overflow: hidden;
         }
@@ -2391,7 +2438,7 @@ export default function CustomerNavbar() {
                   onKeyDown={(event) => {
                     if (event.key === "Enter") submitSearch();
                   }}
-                  placeholder="Search gold & diamond jewellery..."
+                  placeholder="Search gold & silver jewellery..."
                 />
                 <button
                   className={`exact-voice-btn ${voiceListening ? "is-listening" : ""}`}
@@ -2498,7 +2545,7 @@ export default function CustomerNavbar() {
                 </span>
               </button>
 
-              {ratesOpen && (
+              {/* {ratesOpen && (
                 <div className="rate-dropdown-panel">
                   <div className="rate-item">
                     <div className="rate-item-title">Gold 24K</div>
@@ -2532,35 +2579,59 @@ export default function CustomerNavbar() {
                   </div>
                 </div>
               )}
+              
+              */}
+
+                            {ratesOpen && (
+                <div className="rate-dropdown-panel">
+                  <div className="rate-item">
+                    <div className="rate-item-title">Gold 24K</div>
+                    <div className="rate-item-value">
+                      {money(rates?.gold_24k)}
+                    </div>
+                  </div>
+                  <div className="rate-item">
+                    <div className="rate-item-title">Silver</div>
+                    <div className="rate-item-value">
+                      {money(rates?.silver_999)}
+                    </div>
+                  </div>
+                  {/* Diamond 18K row — hidden — future use ku vachurukom */}
+                  {/* Diamond 22K row — hidden — future use ku vachurukom */}
+                  {/* Platinum row — hidden — future use ku vachurukom */}
+                </div>
+              )}
             </div>
 
             <div className="exact-actions">
-              <button
-                className="summary-pill"
-                type="button"
-                onClick={() => requireLogin("/recharge")}
-              >
-                <Icon name="star" size={15} />{" "}
-                <span className="summary-text">AUG Coin</span>
-              </button>
+              {!isLandingPage && (
+                <>
+                  <button
+                    className="summary-pill"
+                    type="button"
+                    onClick={() => requireLogin("/recharge")}
+                  >
+                    <Icon name="star" size={15} />{" "}
+                    <span className="summary-text">AUG Coin</span>
+                  </button>
 
-              
-
-              <button
-          onClick={() => requireLogin("/coin-shop")}
-          title="Shop with Coins"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 36, height: 36, borderRadius: '50%',
-            border: '1.5px solid #D1DFDE', background: '#fff', cursor: 'pointer',
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="9.5" fill="#F0C767" stroke="#B5842F" strokeWidth="1.4"/>
-            <circle cx="12" cy="12" r="7" fill="none" stroke="#B5842F" strokeWidth="1" opacity="0.55"/>
-            <text x="12" y="15.8" textAnchor="middle" fontSize="9" fontWeight="900" fill="#B5842F" fontFamily="Inter, sans-serif">$</text>
-          </svg>
-        </button>
+                  <button
+                    onClick={() => requireLogin("/coin-shop")}
+                    title="Shop with Coins"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: 36, height: 36, borderRadius: '50%',
+                      border: '1.5px solid #D1DFDE', background: '#fff', cursor: 'pointer',
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="9.5" fill="#F0C767" stroke="#B5842F" strokeWidth="1.4"/>
+                      <circle cx="12" cy="12" r="7" fill="none" stroke="#B5842F" strokeWidth="1" opacity="0.55"/>
+                      <text x="12" y="15.8" textAnchor="middle" fontSize="9" fontWeight="900" fill="#B5842F" fontFamily="Inter, sans-serif">$</text>
+                    </svg>
+                  </button>
+                </>
+              )}
 
               <button
                 className="exact-icon"
@@ -2585,21 +2656,23 @@ export default function CustomerNavbar() {
                   <span className="exact-badge">{cartCount}</span>
                 )}
               </button>
-              {!isLoggedIn && (
+                            {!isLoggedIn && (
                 <button className="login-pill" type="button" onClick={goLogin}>
                   Login
                 </button>
               )}
 
-              <button
-                className="exact-icon"
-                type="button"
-                onClick={() => setRoleDrawerOpen(true)}
-                aria-label="Menu"
-                title="Menu"
-              >
-                <Icon name="menu" />
-              </button>
+                            {!isLandingPage && (
+                <button
+                  className="exact-icon"
+                  type="button"
+                  onClick={() => setRoleDrawerOpen(true)}
+                  aria-label="Menu"
+                  title="Menu"
+                >
+                  <Icon name="menu" />
+                </button>
+              )}
 
               <button
                 className="exact-icon exact-mobile-toggle"

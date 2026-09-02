@@ -12,7 +12,7 @@ export default function LoginPage() {
   const handleLogin=async e=>{
     e.preventDefault(); setLoading(true); setError(''); ['token','refresh','role','email'].forEach(k=>localStorage.removeItem(k))
     const attempt=()=>api.post('/login/',{email,password})
-    const save=d=>{ Object.entries({token:d.access,refresh:d.refresh,role:d.role,email:d.email}).forEach(([k,v])=>localStorage.setItem(k,v)); const paths={super_admin:'/super-admin',admin:'/admin',dealer:'/dealer',sub_dealer:'/sub-dealer',promotor:'/promotor'}; navigate(paths[d.role]||'/customer',{replace:true}) }
+    const save=d=>{ Object.entries({token:d.access,refresh:d.refresh,role:d.role,email:d.email}).forEach(([k,v])=>localStorage.setItem(k,v)); const paths={super_admin:'/super-admin',admin:'/admin',dealer:'/dealer',sub_dealer:'/sub-dealer',promotor:'/promotor',shop:'/shop-dashboard'}; navigate(paths[d.role]||'/customer',{replace:true}) }
     try { save((await attempt()).data); return } catch(err) { if(err.response?.status<500){setError(err.response?.data?.error||err.response?.data?.detail||'Invalid email or password');setLoading(false);return} setError('The secure server is starting. Please wait a moment…') }
     for(let i=0;i<20;i++){ await new Promise(r=>setTimeout(r,2000)); try{save((await attempt()).data);return}catch(err){if(err.response?.status<500){setError(err.response?.data?.error||err.response?.data?.detail||'Invalid email or password');setLoading(false);return}setError(`The secure server is starting… (${i+1}/20)`)}}
     setError('The server is unavailable right now. Please try again in a minute.');setLoading(false)

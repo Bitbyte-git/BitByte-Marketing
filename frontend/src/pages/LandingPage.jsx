@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import CustomerFooter from '../collection/CustomerFooter'
@@ -16,20 +16,6 @@ const collections = [
     image: '/gold-women.png',
     route: '/collection/all?metal=gold',
     accent: '#b98219',
-  },
-  {
-    title: 'Diamond Edit',
-    caption: 'Rings, earrings, necklaces',
-    image: '/diamond_woman.jpg',
-    route: '/collection/all?metal=diamond',
-    accent: '#617a8f',
-  },
-  {
-    title: 'Platinum Pieces',
-    caption: 'Modern minimal premium wear',
-    image: '/platinum_ring.jpg',
-    route: '/collection/all?metal=platinum',
-    accent: '#788392',
   },
   {
     title: 'Silver Coins',
@@ -58,15 +44,14 @@ const stats = [
 export default function LandingPage() {
   const navigate = useNavigate()
   const [activeHero, setActiveHero] = useState(0)
-  const [ratesOpen, setRatesOpen] = useState(false)
 
-  const rateItems = [
-    { label: 'Gold 24K', value: 'Rs. 15000/-', color: '#d4af37' },
-    { label: 'Silver', value: 'Rs. 245/-', color: '#6b7280' },
-    { label: 'Diamond 18K', value: 'Rs. 10997/-', color: '#3b82f6' },
-    { label: 'Diamond 22K', value: 'Rs. 13430/-', color: '#60a5fa' },
-    { label: 'Platinum', value: 'Rs. 5400/-', color: '#9ca3af' },
-  ]
+  useEffect(() => {
+    // Guest entered through the public landing page — remember this
+    // for the whole session so any buy/cart/wishlist click later
+    // (even from Collection/Product pages) redirects to /contact
+    // instead of /login.
+    sessionStorage.setItem('bb_from_landing', '1')
+  }, [])
 
   return (
     <main className="bb-page" style={{ minHeight: '100vh', overflow: 'hidden' }}>
@@ -627,82 +612,7 @@ export default function LandingPage() {
         }
       `}</style>
 
-      <nav className="landing-nav">
-        <div
-          className="bb-container landing-nav-inner"
-          style={{
-            minHeight: 78,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 20,
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            style={{
-              border: 0,
-              background: 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              cursor: 'pointer',
-              color: 'var(--bb-ink)',
-            }}
-          >
-            <img src={logo} alt="LUXIVA" style={{ width: 58, height: 58, objectFit: 'contain' }} />
-            <span style={{ display: 'grid', textAlign: 'left', lineHeight: 1.1 }}>
-              <strong style={{ fontSize: 17, letterSpacing: 0 }}>LUXIVA</strong>
-              <small style={{ color: 'var(--bb-muted)', fontWeight: 700 }}>E-commerce</small>
-            </span>
-          </button>
-
-          <div className="landing-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              className="rate-dropdown"
-              onMouseEnter={() => setRatesOpen(true)}
-              onMouseLeave={() => setRatesOpen(false)}
-              onFocus={() => setRatesOpen(true)}
-              onBlur={() => setRatesOpen(false)}
-            >
-              <button
-                type="button"
-                className="rate-button"
-                aria-expanded={ratesOpen}
-                aria-haspopup="true"
-              >
-                <span>Today's Gold Rate 22K — Rs. 13800/-</span>
-                <span style={{ fontSize: 14, transform: ratesOpen ? 'rotate(270deg)' : 'rotate(90deg)', display: 'inline-block', transition: 'transform 150ms ease' }}>▾</span>
-              </button>
-
-              {ratesOpen && (
-                <div className="rate-dropdown-panel">
-                  {rateItems.map(item => (
-                    <div key={item.label} className="rate-item">
-                      <div className="rate-item-title" style={{ color: item.color }}>
-                        {item.label}
-                      </div>
-                      <div className="rate-item-value">{item.value}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button className="bb-btn bb-btn-secondary" type="button" onClick={() => navigate('/collection/all')}>
-              Explore
-            </button>
-            <button className="bb-btn bb-btn-primary" type="button" onClick={() => navigate('/login')}>
-              Login
-            </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <section className="bb-container landing-hero">
+            <section className="bb-container landing-hero">
         <div>
           <div className="bb-kicker">Jewellery commerce with hierarchy intelligence</div>
           <h1 className="bb-display landing-title">A brighter way to shop fine jewellery.</h1>

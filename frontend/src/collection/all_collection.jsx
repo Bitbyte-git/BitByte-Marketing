@@ -62,7 +62,7 @@ const goldFilterCategories = [
 const promos = [
   { title: 'Daily Wear', text: 'Elegant designs for everyday beauty.', route: '/collection/all?dailywear=true', image: '/dailywera.png' },
   { title: 'Wedding Collection', text: 'Make your big day even more special.', route: '/collection/all?wedding=true', image: '/wedding_necklaces.jpg' },
-  { title: 'Diamond Collection', text: 'Brilliance that lasts forever.', route: '/collection/all?metal=diamond', image: '/diamond_ring.jpg' },
+  // { title: 'Diamond Collection', text: 'Brilliance that lasts forever.', route: '/collection/all?metal=diamond', image: '/diamond_ring.jpg' },  // hidden — future use ku vachurukom
   { title: 'Silver Collection', text: 'Pure. Elegant. Timeless.', route: '/collection/all?metal=silver', image: '/silver-coin.jpg.jpeg' },
 ]
 
@@ -313,6 +313,12 @@ export default function AllCollection() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (metalFilter === 'diamond' || metalFilter === 'platinum') {
+      navigate('/collection/all', { replace: true })
+    }
+  }, [metalFilter, navigate])
+
+  useEffect(() => {
     api.get('/metal-rates/')
       .then(res => {
         const data = Array.isArray(res.data) ? res.data[0] : res.data
@@ -342,7 +348,9 @@ export default function AllCollection() {
         if (isWedding) params.set('occasion', 'Wedding')
         if (isDailywear) params.set('occasion', 'Casual Wear')
         const res = await api.get(`/jewelry-products/${params.toString() ? `?${params.toString()}` : ''}`)
-        setProducts(normalizeProductList(res.data))
+const allProducts = normalizeProductList(res.data)
+const filteredProducts = allProducts.filter(p => p.metal !== 'diamond' && p.metal !== 'platinum')
+setProducts(filteredProducts)
       } catch {
         setProducts([])
       } finally {

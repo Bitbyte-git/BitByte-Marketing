@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view, permission_classes
-from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge, AutoPayMandate
+from .models import User, AdminProfile, DealerProfile, SubDealerProfile, PromotorProfile, CustomerProfile, ShopProfile, Announcement, AnnouncementReply, ProfileUpdateRequest, MetalRate, MetalOrder, JewelryProduct, JewelryProductImage, HomeBanner, CartItem, Wishlist, JewelryOrder, CoinRequest, CoinRequestItem, CoinStock, DailyLoginLog, CoinRewardLog, ReferralLink,  Wallet, CoinRecharge, AutoPayMandate
 from django.db.models import Prefetch, Count, Q, Sum, Max
 from django.core.cache import cache   # ── NEW: for month_rollup/status caching ──
 from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth
@@ -175,6 +175,7 @@ def find_user_by_login_identifier(identifier):
         (SubDealerProfile, 'sub_dealer_id'),
         (PromotorProfile, 'promotor_id'),
         (CustomerProfile, 'customer_id'),
+        (ShopProfile, 'shop_id'),
     ]
 
     # 2) Public ID match
@@ -275,6 +276,24 @@ class CreateAdminView(APIView):
         serializer = AdminListSerializer(admins, many=True)
         return Response(serializer.data)
 
+class CreateShopView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+        serializer = ShopProfileSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Shop created successfully'}, status=201)
+        return Response(serializer.errors, status=400)
+
+    def get(self, request):
+        if request.user.role != 'super_admin':
+            return Response({'error': 'Permission denied'}, status=403)
+        shops = ShopProfile.objects.all().order_by('-created_at')
+        serializer = ShopListSerializer(shops, many=True)
+        return Response(serializer.data)
 
 class CreateDealerView(APIView):
     permission_classes = [IsAuthenticated]
@@ -527,6 +546,30 @@ class DashboardView(APIView):
                     'promotor_contact_no': p.assigned_promotor.promotor_contact_no if p.assigned_promotor else None,
                 })
             except CustomerProfile.DoesNotExist:
+                pass
+
+        elif user.role == 'shop':
+            try:
+                p = user.shop_profile
+                data.update({
+                    'shop_id': p.shop_id,
+                    'shop_name': p.shop_name,
+                    'owner_name': p.owner_name,
+                    'mobile_number': p.mobile_number,
+                    'whatsapp_number': p.whatsapp_number,
+                    'shop_address': p.shop_address,
+                    'pincode': p.pincode,
+                    'street_name': p.street_name,
+                    'city': p.city,
+                    'district': p.district,
+                    'state': p.state,
+                    'shop_type': p.shop_type,
+                    'pan_no': p.pan_no,
+                    'gst_no': p.gst_no,
+                    'msme_no': p.msme_no,
+                    'created_at': p.created_at,
+                })
+            except ShopProfile.DoesNotExist:
                 pass
 
         return Response(data)
@@ -1062,7 +1105,10 @@ class ProfileUpdateApproveView(APIView):
 
 
 class MetalRateView(APIView):
-    permission_classes = [IsAuthenticated]
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get(self, request):
         """Return today's rate; if not entered yet, return latest available."""

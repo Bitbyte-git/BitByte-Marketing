@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+﻿import { lazy, Suspense } from 'react'
 import { useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import CustomerNavbar from './collection/CustomerNavbar'
@@ -8,6 +8,7 @@ import InternalRoleNavbar from './collection/InternalRoleNavbar'
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const Contact = lazy(() => import('./pages/contact'))
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'))
 const SuperadminHierarchy = lazy(() => import('./Hierarchy/Superadmin_Hierarchy'))
 const SuperadminHierarchyGrid = lazy(() => import('./Grid/Superadmin_Hierarchy_grid'))
@@ -25,6 +26,7 @@ const PromotorDashboard = lazy(() => import('./pages/PromotorDashboard'))
 const PromotorHierarchy = lazy(() => import('./Hierarchy/Promotor_Hierarchy'))
 const PromotorHierarchyGrid = lazy(() => import('./Grid/Promotor_Hierarchy_grid'))
 const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard'))
+const ShopDashboard = lazy(() => import('./pages/ShopDashboard'))
 const Profile = lazy(() => import('./collection/profile'))
 const CreateCustomer = lazy(() => import('./collection/create_customer'))
 const CoinsCollection = lazy(() => import('./collection/coins_collection'))
@@ -192,10 +194,14 @@ export default function App() {
           <Route path="/promotor" element={<ProtectedRoute role="promotor"><PromotorDashboard /></ProtectedRoute>} />
           <Route path="/promotor-hierarchy" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchy /></WithInternalRoleNavbar></ProtectedRoute>} />
           <Route path="/promotor-hierarchy-grid" element={<ProtectedRoute role="promotor"><WithInternalRoleNavbar><PromotorHierarchyGrid /></WithInternalRoleNavbar></ProtectedRoute>} />
-          <Route path="/customer" element={<WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar>} />
-          <Route path="/profile" element={<WithCustomerNavbar><Profile /></WithCustomerNavbar>} />
+                    <Route path="/customer" element={<WithCustomerNavbar><CustomerDashboard /></WithCustomerNavbar>} />
+          <Route path="/shop-dashboard" element={<ProtectedRoute role="shop"><ShopDashboard /></ProtectedRoute>} />
+<Route path="/contact" element={<WithCustomerNavbar><Contact /></WithCustomerNavbar>} />
+<Route path="/profile" element={<WithCustomerNavbar><Profile /></WithCustomerNavbar>} />
           <Route path="/create-customer" element={<ProtectedRoute role={["customer", "promotor", "sub_dealer", "dealer", "admin"]}><WithCustomerNavbar><CreateCustomer /></WithCustomerNavbar></ProtectedRoute>} />
-          <Route path="/collection/rings" element={<Navigate to={collectionPath('rings')} replace />} />
+
+          {/* hide for daimond and platinim  */}
+          {/* <Route path="/collection/rings" element={<Navigate to={collectionPath('rings')} replace />} />
           <Route path="/gold-rings" element={<Navigate to={collectionPath('rings', 'gold')} replace />} />
           <Route path="/silver-rings" element={<Navigate to={collectionPath('rings', 'silver')} replace />} />
           <Route path="/diamond-rings" element={<Navigate to={collectionPath('rings', 'diamond')} replace />} />
@@ -229,7 +235,44 @@ export default function App() {
           <Route path="/gold-pendants" element={<Navigate to={collectionPath('pendants', 'gold')} replace />} />
           <Route path="/silver-pendants" element={<Navigate to={collectionPath('pendants', 'silver')} replace />} />
           <Route path="/diamond-pendants" element={<Navigate to={collectionPath('pendants', 'diamond')} replace />} />
-          <Route path="/platinum-pendants" element={<Navigate to={collectionPath('pendants', 'platinum')} replace />} />
+          <Route path="/platinum-pendants" element={<Navigate to={collectionPath('pendants', 'platinum')} replace />} /> */}
+
+                    <Route path="/collection/rings" element={<Navigate to={collectionPath('rings')} replace />} />
+          <Route path="/gold-rings" element={<Navigate to={collectionPath('rings', 'gold')} replace />} />
+          <Route path="/silver-rings" element={<Navigate to={collectionPath('rings', 'silver')} replace />} />
+          <Route path="/diamond-rings" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/platinum-rings" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/collection/bangles" element={<Navigate to={collectionPath('bangles')} replace />} />
+          <Route path="/gold-bangles" element={<Navigate to={collectionPath('bangles', 'gold')} replace />} />
+          <Route path="/silver-bangles" element={<Navigate to={collectionPath('bangles', 'silver')} replace />} />
+          <Route path="/diamond-bangles" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/platinum-bangles" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/collection/earrings" element={<Navigate to={collectionPath('earrings')} replace />} />
+          <Route path="/gold-earrings" element={<Navigate to={collectionPath('earrings', 'gold')} replace />} />
+          <Route path="/silver-earrings" element={<Navigate to={collectionPath('earrings', 'silver')} replace />} />
+          <Route path="/diamond-earrings" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/platinum-earrings" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/collection/chains" element={<Navigate to={collectionPath('chains')} replace />} />
+          <Route path="/gold-chain" element={<Navigate to={collectionPath('chains', 'gold')} replace />} />
+          <Route path="/silver-chain" element={<Navigate to={collectionPath('chains', 'silver')} replace />} />
+          <Route path="/diamond-chain" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/platinum-chain" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/collection/necklaces" element={<Navigate to={collectionPath('necklaces')} replace />} />
+          <Route path="/gold-necklaces" element={<Navigate to={collectionPath('necklaces', 'gold')} replace />} />
+          <Route path="/silver-necklaces" element={<Navigate to={collectionPath('necklaces', 'silver')} replace />} />
+          <Route path="/diamond-necklaces" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/platinum-necklaces" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/collection/bracelets" element={<Navigate to={collectionPath('bracelets')} replace />} />
+          <Route path="/gold-bracelets" element={<Navigate to={collectionPath('bracelets', 'gold')} replace />} />
+          <Route path="/silver-bracelets" element={<Navigate to={collectionPath('bracelets', 'silver')} replace />} />
+          <Route path="/diamond-bracelets" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/platinum-bracelets" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/collection/pendants" element={<Navigate to={collectionPath('pendants')} replace />} />
+          <Route path="/gold-pendants" element={<Navigate to={collectionPath('pendants', 'gold')} replace />} />
+          <Route path="/silver-pendants" element={<Navigate to={collectionPath('pendants', 'silver')} replace />} />
+          <Route path="/diamond-pendants" element={<Navigate to="/collection/all" replace />} />
+          <Route path="/platinum-pendants" element={<Navigate to="/collection/all" replace />} />
+
           <Route path="/collection/mangalsutra" element={<Navigate to={collectionPath('mangalsutra')} replace />} />
           <Route path="/collection/nose-pin" element={<Navigate to={collectionPath('nosepin')} replace />} />
           <Route path="/collection/anklets" element={<Navigate to={collectionPath('anklets')} replace />} />
