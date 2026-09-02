@@ -8,7 +8,7 @@ import InternalRoleNavbar from './collection/InternalRoleNavbar'
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
-const Contact = lazy(() => import('./pages/contact'))
+const Contact = lazy(() => import('./pages/Contact'))
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'))
 const SuperadminHierarchy = lazy(() => import('./Hierarchy/Superadmin_Hierarchy'))
 const SuperadminHierarchyGrid = lazy(() => import('./Grid/Superadmin_Hierarchy_grid'))
