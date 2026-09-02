@@ -2,7 +2,7 @@ from django import views
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
-    LoginView, CreateAdminView, CreateShopView, CreateDealerView,
+    LoginView, CreateAdminView, CreateShopView, MyShopProfileView, CreateDealerView,
     CreateSubDealerView, CreatePromotorView, CreateCustomerView,
     DashboardView, AdminListForAdminView, DealerListForDealerView,
     SubDealerListForView, PromotorListForView,  FullHierarchyView, AnnouncementView, AnnouncementReplyView, DashboardQuickStatsView,ProfileUpdateRequestView, ProfileUpdateApproveView,MetalRateView,MetalOrderView, MetalOrderSummaryView, JewelryProductView, JewelryProductDetailView, SoldOutProductsView,StockNotifyRequestView, JewelryProductImageDeleteView, HomeBannerView, HomeBannerDetailView, CartView, CartItemQtyView, WishlistView, JewelryOrderView, create_razorpay_order, verify_payment, ping,
@@ -22,6 +22,7 @@ urlpatterns = [
     path('admins/', CreateAdminView.as_view()),
     path('admins/list/', AdminListForAdminView.as_view()),
     path('shops/', CreateShopView.as_view()),
+    path('my-shop-profile/', MyShopProfileView.as_view()),
     path('dealers/', CreateDealerView.as_view()),         
     path('dealers/list/', DealerListForDealerView.as_view()),  
     path('sub-dealers/', CreateSubDealerView.as_view()),   

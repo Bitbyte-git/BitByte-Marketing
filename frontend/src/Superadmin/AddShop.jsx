@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
 import logo from '../assets/logo.png'
-import CopyUrlButton from '../collection/CopyUrlButton'
+import CopyShopUrlButton from '../collection/CopyShopUrlButton'
 
 function SectionHeader({ icon, label }) {
   const paths = {
@@ -124,7 +124,7 @@ export default function AddShop() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            {isLoggedInSuperAdmin && <CopyUrlButton />}
+                        {isLoggedInSuperAdmin && <CopyShopUrlButton />}
             {isLoggedInSuperAdmin && (
               <button onClick={() => navigate(-1)} style={{ padding: '10px 20px', background: '#FFFFFF', border: `1px solid ${border}`, borderRadius: '10px', color: subtext, fontSize: '13px', cursor: 'pointer' }}>Back</button>
             )}

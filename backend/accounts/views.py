@@ -298,6 +298,31 @@ class CreateShopView(APIView):
         serializer = ShopListSerializer(shops, many=True)
         return Response(serializer.data)
 
+class MyShopProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'shop':
+            return Response({'error': 'Permission denied'}, status=403)
+        try:
+            p = request.user.shop_profile
+        except ShopProfile.DoesNotExist:
+            return Response({'error': 'Shop profile not found'}, status=404)
+        return Response(ShopSelfSerializer(p).data)
+
+    def patch(self, request):
+        if request.user.role != 'shop':
+            return Response({'error': 'Permission denied'}, status=403)
+        try:
+            p = request.user.shop_profile
+        except ShopProfile.DoesNotExist:
+            return Response({'error': 'Shop profile not found'}, status=404)
+        serializer = ShopSelfSerializer(p, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
 class CreateDealerView(APIView):
     permission_classes = [IsAuthenticated]
 

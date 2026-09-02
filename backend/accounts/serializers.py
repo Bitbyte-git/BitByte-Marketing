@@ -391,7 +391,20 @@ class ShopListSerializer(serializers.ModelSerializer):
             'email', 'mobile_number', 'whatsapp_number',
             'city', 'district', 'state', 'shop_type', 'created_at'
         ]
-        
+
+class ShopSelfSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = ShopProfile
+        fields = [
+            'id', 'shop_id', 'email', 'shop_name', 'owner_name',
+            'mobile_number', 'whatsapp_number',
+            'shop_address', 'pincode', 'street_name', 'city', 'district', 'state',
+            'shop_type', 'pan_no', 'gst_no', 'msme_no', 'created_at'
+        ]
+        read_only_fields = ['shop_id', 'created_at', 'email']
+                
 class AnnouncementSerializer(serializers.ModelSerializer):
     target_user = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), required=False, allow_null=True
