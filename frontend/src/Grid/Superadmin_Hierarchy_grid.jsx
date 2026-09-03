@@ -365,7 +365,7 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
   if (!document.getElementById('chain-popup-styles')) {
     const s = document.createElement('style')
     s.id = 'chain-popup-styles'
-    s.textContent = `
+        s.textContent = `
       #chain-popup::-webkit-scrollbar{width:6px}
       #chain-popup::-webkit-scrollbar-track{background:rgba(255,255,255,0.03);border-radius:10px;margin:4px 0}
       #chain-popup::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#22c55e,#38bdf8);border-radius:10px;box-shadow:0 0 6px rgba(34,197,94,0.4)}
@@ -376,6 +376,21 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
       @keyframes acpGlow{0%,100%{box-shadow:0 0 0px rgba(34,197,94,0)}50%{box-shadow:0 0 20px rgba(34,197,94,0.22)}}
       @keyframes acpShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
       @keyframes acpBadgePop{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}
+            @media(max-width:480px){
+        #chain-popup{min-width:140px!important;max-width:165px!important;padding:10px!important;border-radius:14px!important}
+        #chain-popup > div{padding:8px 9px!important;margin-bottom:5px!important}
+        #chain-popup div[style*="width:30px"]{width:20px!important;height:20px!important;border-radius:6px!important}
+        #chain-popup div[style*="width:30px"] svg{width:11px!important;height:11px!important}
+        #chain-popup div[style*="font-size:14px"]{font-size:11px!important;margin-bottom:5px!important}
+        #chain-popup div[style*="font-size:9px"]{font-size:7px!important}
+        #chain-popup div[style*="font-size:12px"]{font-size:9.5px!important}
+        #chain-popup div[style*="width:20px;height:20px"]{width:15px!important;height:15px!important}
+        #chain-popup div[style*="width:20px;height:20px"] svg{width:9px!important;height:9px!important}
+        #chain-popup div[style*="font-size:11px"]{font-size:8.5px!important}
+        #chain-popup div[style*="font-size:8px"]{font-size:6.5px!important;padding:2px 6px!important}
+        #chain-popup div[style*="height:16px"]{height:11px!important}
+        #chain-popup div[style*="height:7px"]{border-bottom-width:5px!important}
+      }
     `
     document.head.appendChild(s)
   }
@@ -525,12 +540,23 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
   el.scrollTop = el.scrollHeight
   requestAnimationFrame(() => { el.style.scrollBehavior = 'smooth' })
 
-  const rect = anchorEl.getBoundingClientRect()
-  const popW = 280
+  const isMobileScreen = window.innerWidth <= 480
+  const popW = isMobileScreen ? Math.min(190, window.innerWidth - 24) : 280
   const popH = Math.min(el.scrollHeight || 460, window.innerHeight * 0.85)
-  let left = rect.right + 18
-  let top = rect.top + (rect.height / 2) - (popH / 2)
-  if (left + popW > window.innerWidth - 12) left = rect.left - popW - 18
+
+  let left, top
+  if (isMobileScreen) {
+    // ── mobile la card side-la vekkadhu, screen center-la nடுவே kondu varrom ──
+    left = (window.innerWidth - popW) / 2
+    top = (window.innerHeight - popH) / 2
+  } else {
+    const rect = anchorEl.getBoundingClientRect()
+    left = rect.right + 18
+    top = rect.top + (rect.height / 2) - (popH / 2)
+    if (left + popW > window.innerWidth - 12) left = rect.left - popW - 18
+  }
+  if (left < 12) left = 12
+  if (left + popW > window.innerWidth - 12) left = window.innerWidth - popW - 12
   if (top < 12) top = 12
   if (top + popH > window.innerHeight - 12) top = window.innerHeight - popH - 12
   el.style.left = left + 'px'
@@ -610,7 +636,7 @@ const Icon = cfg.Icon
       title={role !== 'super_admin' && node.status ? `Target status: ${node.status?.toUpperCase()} (${node.order_count ?? 0}/10)` : undefined}
       onMouseLeave={() => scheduleHideChainPopup()}
     >
-      {/* ── NEW: Direct message button, top-right corner ── */}
+            {/* ── NEW: Direct message button, top-right corner ── */}
       <button
         onClick={e => { e.stopPropagation(); clearTimeout(_chainHideTimer); removeChainPopup(); onMessage({ node, role }) }}
         className="gcard-msg-btn"
@@ -618,6 +644,20 @@ const Icon = cfg.Icon
         title={`Message ${node.first_name} only`}
       >
         <IconMessage color={c} />
+      </button>
+
+      {/* ── NEW: mobile-tap chain popup trigger — hover illatha screen-kku (touch) idhu than mattum popup ah kaanpikkum ── */}
+      <button
+        onClick={e => {
+          e.stopPropagation()
+          if (document.getElementById('chain-popup')) { removeChainPopup(); return }
+          showChainPopup(e.currentTarget.closest('.gcard'), ancestors, { node, role }, dark, superAdminEmail)
+        }}
+        className="gcard-info-btn"
+        style={{ '--nc': c }}
+        title="View hierarchy chain"
+      >
+        i
       </button>
 
       <div className="gcard-badge" style={{ '--nc': c }}>
@@ -1067,7 +1107,7 @@ const selectAdmin = (node) => {
 
   return (
     <>
-    <div style={{ minHeight: '100vh', background: '#FFFFFF', color: text, fontFamily: '"Inter",system-ui,sans-serif', padding: '28px 32px' }}>
+<div className="sahg-page" style={{ minHeight: '100vh', background: '#FFFFFF', color: text, fontFamily: '"Inter",system-ui,sans-serif', padding: '28px 32px' }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         .gcard{
@@ -1078,7 +1118,7 @@ const selectAdmin = (node) => {
           flex-shrink:0;
         }
         .gcard:hover{ transform:translateY(-3px); box-shadow:0 16px 34px rgba(7,59,63,0.20); }
-        .gcard-msg-btn{
+                .gcard-msg-btn{
           position:absolute; top:8px; right:8px; z-index:2;
           width:22px; height:22px; border-radius:6px;
           background:#FFFFFF; border:1.5px solid var(--nc);
@@ -1086,6 +1126,15 @@ const selectAdmin = (node) => {
           cursor:pointer; transition:background .2s ease, transform .2s ease;
         }
         .gcard-msg-btn:hover{ background:var(--nc); color:#FFFFFF; transform:scale(1.08); }
+        .gcard-info-btn{
+          position:absolute; top:8px; left:8px; z-index:2;
+          width:20px; height:20px; border-radius:50%;
+          background:#FFFFFF; border:1.5px solid var(--nc);
+          color:var(--nc); display:flex; align-items:center; justify-content:center;
+          cursor:pointer; font-size:11px; font-weight:900; font-style:italic; font-family:Georgia,serif;
+          transition:background .2s ease, transform .2s ease;
+        }
+        .gcard-info-btn:hover{ background:var(--nc); color:#FFFFFF; transform:scale(1.1); }
         .gcard-active{ opacity:1; transform:translateY(-3px); box-shadow:0 0 0 2px var(--sc), 0 18px 36px rgba(7,59,63,0.20); }
         .gcard-dim{ opacity:1; }
         .gcard-dim:hover{ opacity:1; }
@@ -1116,15 +1165,34 @@ const selectAdmin = (node) => {
         .glane-empty-pro{ display:flex; align-items:center; gap:10px; padding:16px 18px; border:1.5px dashed var(--nc); border-radius:14px; opacity:0.85; font-size:12.5px; font-weight:600; }
         .glane-divider{ height:4px; border-radius:3px; margin:0 4px 4px 4px; opacity:0.9; }
 
-        .gsa-card{
+                .gsa-card{
           display:inline-flex; align-items:center; gap:10px;
           background:rgba(12,64,68,0.08); border:1.5px solid #0C4044; border-radius:12px;
           padding:10px 18px; margin-bottom:22px;
         }
+        @media(max-width:768px){
+          .sahg-page{padding:16px!important}
+          .sahg-header{flex-direction:column;align-items:stretch!important}
+          .sahg-search-input{width:100%!important}
+          .gcard{min-width:150px!important;max-width:180px!important}
+        }
+        @media(max-width:480px){
+  .sahg-page{padding:10px!important}
+  .gcard{min-width:118px!important;max-width:145px!important;padding:9px 10px!important;border-radius:12px!important}
+  .gcard-badge{font-size:8px!important;padding:1px 6px!important;margin-bottom:5px!important}
+  .gcard-id{font-size:9px!important;margin-bottom:4px!important}
+  .gcard-name{font-size:11.5px!important;margin-bottom:5px!important}
+  .gcard-sub{font-size:10px!important;margin-bottom:2px!important}
+  .gcard-btn{font-size:8.5px!important;padding:4px 0!important}
+  .gcard-msg-btn{width:18px!important;height:18px!important}
+  .gcard-status-dots{margin-top:6px!important;gap:4px!important}
+  .gcard-dot{width:16px!important;height:16px!important;font-size:7px!important}
+  .gcard-count{font-size:8.5px!important;padding:1px 6px!important}
+}
       `}</style>
 
       {/* ── HEADER ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
+<div className="sahg-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
         <div>
          
 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1163,10 +1231,11 @@ const selectAdmin = (node) => {
               <IconSearch color={subtext} />
             </span>
             <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search ID, Name, Phone..."
-              style={{ width: '240px', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '20px', padding: '9px 14px 9px 34px', color: text, fontSize: '13px', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s ease, box-shadow .15s ease' }}
+  className="sahg-search-input"
+  value={search}
+  onChange={e => setSearch(e.target.value)}
+  placeholder="Search ID, Name, Phone..."
+  style={{ width: '240px', background: inpBg, border: `1px solid ${inpBorder}`, borderRadius: '20px', padding: '9px 14px 9px 34px', color: text, fontSize: '13px', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s ease, box-shadow .15s ease' }}
               onFocus={e => { e.target.style.borderColor = '#0C4044'; e.target.style.boxShadow = '0 0 0 3px rgba(12,64,68,0.12)' }}
               onBlur={e => { e.target.style.borderColor = inpBorder; e.target.style.boxShadow = 'none' }}
             />

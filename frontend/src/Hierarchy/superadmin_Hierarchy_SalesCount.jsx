@@ -187,8 +187,9 @@ export default function SuperAdminHierarchySalesCount() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [pulseId, setPulseId] = useState(null)
-  const [expandedChildren, setExpandedChildren] = useState({})   // ── NEW
+    const [expandedChildren, setExpandedChildren] = useState({})   // ── NEW
   const [loadingNode, setLoadingNode] = useState(null)            // ── NEW
+  const [locatingPerson, setLocatingPerson] = useState(false)     // ── NEW: tree side "finding this person" overlay
 
   // ── NEW: root node — light info mattum fetch (name/phone/order_count), tree illama ──
   useEffect(() => {
@@ -247,15 +248,12 @@ export default function SuperAdminHierarchySalesCount() {
     setTimeout(() => setPulseId(null), 1600)
   }
 
-  // ── NEW: right-side product card-la "owner" click pண்ணினா — root-la irundhu
-  // andha customer varaikkum tree-la irukka ella level-ஐயும் one-by-one expand
-  // pண்ணி, kடைசில அந்த customer-க்கு smooth scroll pண்ணும். ──
   const revealPathToCustomer = async (owner) => {
     if (!owner?.user_id || !root) {
-      // fallback — old behaviour, might not find the node if collapsed
       jumpToCustomer(owner)
       return
     }
+    setLocatingPerson(true)   // ── NEW: left side shows "Locating..." right away, same moment right side starts loading
     try {
       const res = await api.get('/hierarchy/path-to-node/', {
         params: { root_role: root.type, root_id: root.id, target_user_id: owner.user_id },
@@ -266,26 +264,19 @@ export default function SuperAdminHierarchySalesCount() {
         return
       }
 
-      let parentNode = root
-      for (const node of path) {
-        const parentKey = `${parentNode.type}-${parentNode.id}`
-        if (!expandedChildren[parentKey]) {
-          await fetchChildren(parentNode)
-        }
-        parentNode = node
-      }
+      const parentsToFetch = [root, ...path.slice(0, -1)].filter(
+        p => !expandedChildren[`${p.type}-${p.id}`]
+      )
+      await Promise.all(parentsToFetch.map(p => fetchChildren(p)))
 
       jumpToCustomer(path[path.length - 1])
     } catch (err) {
       console.error('revealPathToCustomer failed:', err)
       jumpToCustomer(owner)
+    } finally {
+      setLocatingPerson(false)   // ── NEW
     }
   }
-
-  // ══════════════════════════════════════════════════════════════════
-  // RIGHT SIDE — idhu touch pannala, adhே logic (data source mattum
-  // node-orders API vachi, aana output/rendering EXACT ah adhே) ──
-  // ══════════════════════════════════════════════════════════════════
   const [groupedList, setGroupedList] = useState([])
   const [overallCount, setOverallCount] = useState(0)
   const [overallAmount, setOverallAmount] = useState(0)
@@ -310,24 +301,22 @@ export default function SuperAdminHierarchySalesCount() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: 12, padding: '18px 32px',
-          background: 'rgba(253,253,252,0.94)', backdropFilter: 'blur(14px)',
-          borderBottom: '1px solid rgba(189,207,206,0.72)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.24)' }} />
-            <div>
-              <SkeletonText width="260px" height="17px" />
-              <div style={{ marginTop: 6 }}><SkeletonText width="320px" height="12px" /></div>
+               <div className="shier-content">
+          <div className="shier-topbar" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexWrap: 'wrap', gap: 12, marginBottom: 20,
+            background: 'rgba(253,253,252,0.94)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: '16px 22px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.24)' }} />
+              <div>
+                <SkeletonText width="260px" height="17px" />
+                <div style={{ marginTop: 6 }}><SkeletonText width="320px" height="12px" /></div>
+              </div>
             </div>
+            <SkeletonText width="90px" height="36px" />
           </div>
-          <SkeletonText width="90px" height="36px" />
-        </div>
-        <div style={{ padding: '28px 32px', paddingTop: 108 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 22, alignItems: 'start' }}>
+          <div className="shier-grid">
             <div style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 14 }}>
               <SkeletonText width="140px" height="12px" />
               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -403,6 +392,7 @@ export default function SuperAdminHierarchySalesCount() {
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FDFDFC 0%,#F3F3F0 46%,#E7EDEC 100%)', color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
       <style>{`
         @keyframes sheaderShimmer{ 0%{ background-position:-200% center; } 100%{ background-position:200% center; } }
+        @keyframes sspin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
         .sheader-shimmer{ position:absolute; left:0; right:0; bottom:-1px; height:2px; background: linear-gradient(90deg, transparent, #0C4044, #CCA881, #BB8958, transparent); background-size: 200% auto; animation: sheaderShimmer 5s linear infinite; }
         .stree-node{ position:relative; }
         .stree-children{ margin-left:18px; padding-left:16px; margin-top:8px; border-left:2px solid rgba(189,207,206,0.55); border-radius:0 0 0 10px; }
@@ -437,40 +427,71 @@ export default function SuperAdminHierarchySalesCount() {
         .sprod-row{ display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:4px 0; }
         .sprod-row + .sprod-row{ border-top:1px solid rgba(189,207,206,0.4); }
         .sprod-label{ color:#7A8987; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; }
+
+                /* ══════════════ RESPONSIVE ══════════════ */
+                .shier-content{ padding:28px 32px; }
+        .shier-grid{ position:relative; }
+        .stree-panel-fixed{
+          position: fixed;
+          top: 124px;
+          left: 32px;
+          width: 340px;
+          max-height: calc(100vh - 144px);
+          overflow-y: auto;
+          z-index: 40;
+        }
+        .shier-right-col{ margin-left: 362px; }
+        @media (max-width: 1500px) { .stree-panel-fixed{ top:156px; max-height:calc(100vh - 176px); } }
+        @media (max-width: 1100px) { .stree-panel-fixed{ top:102px; max-height:calc(100vh - 122px); } }
+        @media (max-width: 640px) { .stree-panel-fixed{ top:148px; max-height:calc(100vh - 168px); } }
+
+        @media (max-width: 1024px) {
+          .shier-grid{ grid-template-columns:300px 1fr; gap:16px; }
+          .shier-content{ padding:20px; padding-top:112px; }
+          .sprod-grid{ grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); }
+        }
+
+                @media (max-width: 900px) {
+          .shier-grid{ grid-template-columns:1fr; }
+          .stree-panel{ position:static !important; max-height:none !important; top:auto !important; }
+        }
+
+        @media (max-width: 640px) {
+          .shier-topbar{ padding:14px 16px; flex-direction:column; align-items:flex-start !important; }
+          .shier-topbar-title{ font-size:15px !important; }
+          .shier-topbar-sub{ font-size:11px !important; }
+          .shier-content{ padding:14px; padding-top:150px; }
+          .sstat-card{ min-width:100% !important; }
+          .sprod-grid{ grid-template-columns:1fr 1fr; gap:10px; }
+          .sprod-card{ padding:10px !important; }
+          .sprod-img{ height:100px !important; }
+        }
+
+        @media (max-width: 420px) {
+          .sprod-grid{ grid-template-columns:1fr; }
+          .shier-content{ padding-top:172px; }
+        }
+      
       `}</style>
 
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 12, padding: '18px 32px',
-        background: 'rgba(253,253,252,0.94)', backdropFilter: 'blur(14px)',
-        borderBottom: '1px solid rgba(189,207,206,0.72)',
-        boxShadow: '0 16px 34px rgba(7,59,63,0.04)',
-      }}>
-        <div className="sheader-shimmer" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(12,64,68,0.08)', border: '1px solid rgba(12,64,68,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <IconChart color="#0C4044" size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#0C4044' }}>Sales Count — Hierarchy Breakdown</div>
-            <div style={{ fontSize: 12, color: subtext, marginTop: 2 }}>
-              {period === 'today' ? "Showing TODAY's orders only" : 'Left-la oru person click pannu, right-la avanga sales details varum'}
-            </div>
-          </div>
-        </div>
-        <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+            <div className="shier-content">
+        <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: 'rgba(201,32,53,0.1)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 700, marginBottom: 16, width: 'fit-content' }}>
           <IconBack color="#C92035" /> Back
         </button>
-      </div>
 
-      <div style={{ padding: '28px 32px', paddingTop: 108 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 22, alignItems: 'start' }}>
+        <div className="shier-grid">
 
-          <div className="stree-panel" style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 14, maxHeight: 'calc(100vh - 128px)', overflowY: 'auto', position: 'sticky', top: 108, boxShadow: '0 22px 58px rgba(7,59,63,0.06)' }}>
+          <div className="stree-panel stree-panel-fixed" style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 14, boxShadow: '0 22px 58px rgba(7,59,63,0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 4px 12px 4px', marginBottom: 10, borderBottom: '1px solid rgba(189,207,206,0.5)' }}>
               <IconLink color="#0C4044" size={14} />
               <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#0C4044' }}>HIERARCHY TREE</span>
+              {/* ── NEW: syncs with right side's skeleton so both feel connected ── */}
+              {locatingPerson && (
+                <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 700, color: '#BB8958' }}>
+                  <span style={{ width: 12, height: 12, border: '2px solid rgba(187,137,88,0.3)', borderTop: '2px solid #BB8958', borderRadius: '50%', animation: 'sspin 0.7s linear infinite', display: 'inline-block' }} />
+                  Locating...
+                </span>
+              )}
             </div>
             <TreeItem
               node={root}
@@ -487,7 +508,7 @@ export default function SuperAdminHierarchySalesCount() {
           </div>
 
           {/* ══════════════════ RIGHT SIDE — skeleton while loading fix ══════════════════ */}
-          <div style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 24, boxShadow: '0 22px 58px rgba(7,59,63,0.06)' }}>
+          <div className="shier-right-col" style={{ background: 'rgba(253,253,252,0.97)', border: '1px solid rgba(189,207,206,0.72)', borderRadius: 16, padding: 24, boxShadow: '0 22px 58px rgba(7,59,63,0.06)' }}>
             {selected && (ordersLoading ? (
               // ── NEW: role/id change aana udanE, old data kaamikkama skeleton kaatuvom ──
               <div key={`skeleton-${selected.type}-${selected.id}`} className="sfade-in">
@@ -572,11 +593,10 @@ export default function SuperAdminHierarchySalesCount() {
                     {groupedList.map((g, i) => {
                       const imgUrl = getImageUrl(g.image)
                       return (
-                                                <div
+                                               <div
                           key={`${g.product_name}-${g.owner?.id}-${i}`}
                           className="sprod-card"
-                          onClick={() => g.owner && revealPathToCustomer(g.owner)}
-                          style={{ animationDelay: `${i * 45}ms`, cursor: g.owner ? 'pointer' : 'default' }}
+                          style={{ animationDelay: `${i * 45}ms`, cursor: 'default' }}
                         >
                           <div className="sprod-img">
                             {imgUrl ? (

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
 import CustomerFooter from './CustomerFooter'
+import { getSubcategories } from '../config/categoryConfig'
 
 const API_ORIGIN = (api.defaults.baseURL || '').replace(/\/api\/?$/, '')
 
@@ -30,33 +31,33 @@ const goldRail = [
 ]
 
 const filterCategories = [
-  ['All Jewellery', '/collection/all'],
-  ['Necklaces', '/collection/all?category=necklaces'],
-  ['Earrings', '/collection/all?category=earrings'],
-  ['Rings', '/collection/all?category=rings'],
-  ['Bracelets', '/collection/all?category=bracelets'],
-  ['Pendants', '/collection/all?category=pendants'],
-  ['Chains', '/collection/all?category=chains'],
-  ['Mangalsutra', '/collection/all?category=mangalsutra'],
-  ['Bangles', '/collection/all?category=bangles'],
-  ['Necklace Set', '/collection/all?category=necklaces'],
-  ['Nose Pin', '/collection/all?category=nosepin'],
-  ['Anklets', '/collection/all?category=anklets'],
-  ['Coin & Bars', '/collection/coins'],
+  ['All Jewellery', '/collection/all', null],
+  ['Necklaces', '/collection/all?category=necklaces', 'necklaces'],
+  ['Earrings', '/collection/all?category=earrings', 'earrings'],
+  ['Rings', '/collection/all?category=rings', 'rings'],
+  ['Bracelets', '/collection/all?category=bracelets', 'bracelets'],
+  ['Pendants', '/collection/all?category=pendants', 'pendants'],
+  ['Chains', '/collection/all?category=chains', 'chains'],
+  ['Mangalsutra', '/collection/all?category=mangalsutra', 'mangalsutra'],
+  ['Bangles', '/collection/all?category=bangles', 'bangles'],
+  ['Necklace Set', '/collection/all?category=necklaces', 'necklaces'],
+  ['Nose Pin', '/collection/all?category=nosepin', null],
+  ['Anklets', '/collection/all?category=anklets', 'anklets'],
+  ['Coin & Bars', '/collection/coins', null],
 ]
 
 const goldFilterCategories = [
-  ['All Gold Jewellery', '/collection/all?metal=gold'],
-  ['Gold Necklaces', '/collection/all?metal=gold&category=necklaces'],
-  ['Gold Earrings', '/collection/all?metal=gold&category=earrings'],
-  ['Gold Rings', '/collection/all?metal=gold&category=rings'],
-  ['Gold Bangles', '/collection/all?metal=gold&category=bangles'],
-  ['Gold Chains', '/collection/all?metal=gold&category=chains'],
-  ['Gold Pendants', '/collection/all?metal=gold&category=pendants'],
-  ['Mangalsutra', '/collection/all?metal=gold&category=mangalsutra'],
-  ['Gold Nose Pin', '/collection/all?metal=gold&category=nosepin'],
-  ['Gold Anklets', '/collection/all?metal=gold&category=anklets'],
-  ['Coin & Bars', '/collection/coins?metal=gold'],
+  ['All Gold Jewellery', '/collection/all?metal=gold', null],
+  ['Gold Necklaces', '/collection/all?metal=gold&category=necklaces', 'necklaces'],
+  ['Gold Earrings', '/collection/all?metal=gold&category=earrings', 'earrings'],
+  ['Gold Rings', '/collection/all?metal=gold&category=rings', 'rings'],
+  ['Gold Bangles', '/collection/all?metal=gold&category=bangles', 'bangles'],
+  ['Gold Chains', '/collection/all?metal=gold&category=chains', 'chains'],
+  ['Gold Pendants', '/collection/all?metal=gold&category=pendants', 'pendants'],
+  ['Mangalsutra', '/collection/all?metal=gold&category=mangalsutra', 'mangalsutra'],
+  ['Gold Nose Pin', '/collection/all?metal=gold&category=nosepin', null],
+  ['Gold Anklets', '/collection/all?metal=gold&category=anklets', 'anklets'],
+  ['Coin & Bars', '/collection/coins?metal=gold', null],
 ]
 
 const promos = [
@@ -241,27 +242,69 @@ function ProductCard({ product, rates, navigate }) {
   )
 }
 
-function FilterPanel({ activeRoute, navigate, metalFilter }) {
+function FilterPanel({ activeRoute, navigate, metalFilter, categoryFilter, subcategoryFilter }) {
   const categories = metalFilter === 'gold' ? goldFilterCategories : filterCategories
   const collapses = metalFilter === 'gold'
     ? ['Price Range', 'Occasion', 'Gender', 'Purity', 'Collection']
     : ['Price', 'Occasion', 'Gender', 'Metal Type', 'Collection']
+
+  // accordion — URL-la already category iருந்தா andha section auto-open aagும்
+  const [expandedKey, setExpandedKey] = useState(categoryFilter || null)
+
+  useEffect(() => {
+    setExpandedKey(categoryFilter || null)
+  }, [categoryFilter])
+
+  const subcategoryMetal = metalFilter || 'gold'
+
+  const buildSubcategoryRoute = (baseRoute, subLabel) => {
+    const sep = baseRoute.includes('?') ? '&' : '?'
+    return `${baseRoute}${sep}subcategory=${encodeURIComponent(subLabel)}`
+  }
 
   return (
     <aside className="an-filter">
       <h2>{metalFilter === 'gold' ? 'FILTERS' : 'Shop By'}</h2>
       <div className="an-filter-section">
         <div className="an-filter-title">Category <span>{metalFilter === 'gold' ? '^' : '-'}</span></div>
-        {categories.map(([label, route]) => (
-          <button
-            className={activeRoute === route ? 'active' : ''}
-            type="button"
-            key={label}
-            onClick={() => navigate(route)}
-          >
-            {label}
-          </button>
-        ))}
+        {categories.map(([label, route, key]) => {
+          const subOptions = key ? getSubcategories(key, subcategoryMetal) : []
+          const isOpen = key && expandedKey === key
+          return (
+            <div key={label}>
+              <button
+                className={activeRoute === route && !subcategoryFilter ? 'active' : ''}
+                type="button"
+                onClick={() => {
+                  if (key && subOptions.length) {
+                    setExpandedKey(isOpen ? null : key)
+                  }
+                  navigate(route)
+                }}
+              >
+                {label}
+                {subOptions.length > 0 && (
+                  <span style={{ float: 'right' }}>{isOpen ? '−' : '+'}</span>
+                )}
+              </button>
+              {isOpen && subOptions.length > 0 && (
+                <div style={{ margin: '2px 0 6px 14px', paddingLeft: '8px', borderLeft: '1.5px solid #e7e1d9' }}>
+                  {subOptions.map(sub => (
+                    <button
+                      key={sub}
+                      type="button"
+                      style={{ fontSize: '12px' }}
+                      className={subcategoryFilter === sub ? 'active' : ''}
+                      onClick={() => navigate(buildSubcategoryRoute(route, sub))}
+                    >
+                      {sub}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
       {collapses.map(label => (
         <div className="an-filter-collapse" key={label}>
@@ -300,17 +343,20 @@ export default function AllCollection() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const metalFilter = searchParams.get('metal')
-  const categoryFilter = searchParams.get('category')
+    const categoryFilter = searchParams.get('category')
+  const subcategoryFilter = searchParams.get('subcategory')
   const genderFilter = searchParams.get('gender')
   const occasionFilter = searchParams.get('occasion')
   const priceFilter = searchParams.get('price')
   const searchFilter = searchParams.get('search')
   const isWedding = searchParams.get('wedding') === 'true'
   const isDailywear = searchParams.get('dailywear') === 'true'
-  const [products, setProducts] = useState([])
+   const [products, setProducts] = useState([])
   const [rates, setRates] = useState({})
   const [sortBy, setSortBy] = useState('popular')
   const [loading, setLoading] = useState(true)
+  const [subcategorySections, setSubcategorySections] = useState([])
+  const [sectionsLoading, setSectionsLoading] = useState(false)
 
   useEffect(() => {
     if (metalFilter === 'diamond' || metalFilter === 'platinum') {
@@ -339,8 +385,9 @@ export default function AllCollection() {
       setLoading(true)
       try {
         const params = new URLSearchParams()
-        if (metalFilter) params.set('metal', metalFilter)
+                if (metalFilter) params.set('metal', metalFilter)
         if (categoryFilter) params.set('category', categoryFilter)
+        if (subcategoryFilter) params.set('subcategory', subcategoryFilter)
         if (genderFilter) params.set('gender', genderFilter)
         if (occasionFilter) params.set('occasion', occasionFilter)
         if (priceFilter) params.set('price', priceFilter)
@@ -358,8 +405,60 @@ setProducts(filteredProducts)
       }
     }
 
-    loadProducts()
-  }, [metalFilter, categoryFilter, genderFilter, occasionFilter, priceFilter, searchFilter, isWedding, isDailywear])
+        loadProducts()
+  }, [metalFilter, categoryFilter, subcategoryFilter, genderFilter, occasionFilter, priceFilter, searchFilter, isWedding, isDailywear])
+
+  // subcategory scroll — clicked subcategory first, remaining subcategories
+  // (same category, navbar order) follow one after another below it
+  useEffect(() => {
+    if (!subcategoryFilter || !categoryFilter) {
+      setSubcategorySections([])
+      return
+    }
+
+    let alive = true
+
+    const loadSections = async () => {
+      setSectionsLoading(true)
+      const metal = metalFilter || 'gold'
+      const allSubs = getSubcategories(categoryFilter, metal)
+      if (!allSubs.length) {
+        setSubcategorySections([])
+        setSectionsLoading(false)
+        return
+      }
+
+      // clicked subcategory first, rest in navbar list order
+      const orderedSubs = [
+        subcategoryFilter,
+        ...allSubs.filter(s => s !== subcategoryFilter),
+      ]
+
+      try {
+        const results = await Promise.all(
+          orderedSubs.map(async (sub) => {
+            const params = new URLSearchParams()
+            params.set('category', categoryFilter)
+            if (metalFilter) params.set('metal', metalFilter)
+            params.set('subcategory', sub)
+            const res = await api.get(`/jewelry-products/?${params.toString()}`)
+            const list = normalizeProductList(res.data).filter(
+              p => p.metal !== 'diamond' && p.metal !== 'platinum'
+            )
+            return { name: sub, products: list }
+          })
+        )
+        if (alive) setSubcategorySections(results.filter(s => s.products.length))
+      } catch {
+        if (alive) setSubcategorySections([])
+      } finally {
+        if (alive) setSectionsLoading(false)
+      }
+    }
+
+    loadSections()
+    return () => { alive = false }
+  }, [subcategoryFilter, categoryFilter, metalFilter])
 
   const visibleProducts = useMemo(() => {
     const list = [...products]
@@ -404,6 +503,27 @@ setProducts(filteredProducts)
   ) : (
     <section className="an-empty">No products found. Try another collection.</section>
   )
+
+  const subcategoryResults = sectionsLoading ? (
+    <section className="an-loading">Loading products...</section>
+  ) : subcategorySections.length ? (
+    subcategorySections.map(section => (
+      <section key={section.name} style={{ marginTop: '32px' }}>
+        <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', marginBottom: '16px', color: '#111' }}>
+          {section.name}
+        </h2>
+        <div className="an-products">
+          {section.products.map(product => (
+            <ProductCard key={product.id} product={product} rates={rates} navigate={navigate} />
+          ))}
+        </div>
+      </section>
+    ))
+  ) : (
+    <section className="an-empty">No products found. Try another collection.</section>
+  )
+
+  const mainContent = subcategoryFilter ? subcategoryResults : productResults
 
   return (
     <div className="an-page">
@@ -1053,7 +1173,7 @@ setProducts(filteredProducts)
 
       <main className="an-shell">
         <section className="an-layout">
-          <FilterPanel activeRoute={activeRoute} navigate={navigate} metalFilter={metalFilter} />
+                    <FilterPanel activeRoute={activeRoute} navigate={navigate} metalFilter={metalFilter} categoryFilter={categoryFilter} subcategoryFilter={subcategoryFilter} />
 
           <div className="an-content">
             <div className="an-main-head">
@@ -1104,7 +1224,7 @@ setProducts(filteredProducts)
                   </button>
                 </section>
 
-                {productResults}
+                                {mainContent}
               </>
             ) : (
               <>
@@ -1125,7 +1245,7 @@ setProducts(filteredProducts)
                   ))}
                 </section>
 
-                {productResults}
+                                                {mainContent}
               </>
             )}
           </div>

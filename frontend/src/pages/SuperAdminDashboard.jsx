@@ -1859,8 +1859,12 @@ const fetchCoinStock = async () => {
         .sa-today-card .sa-side-stat-row span:first-child{font-size:13px!important;color:#53615F!important;font-weight:650!important;white-space:nowrap}
         .sa-today-card .sa-side-stat-row span:last-child{font-size:14px!important;color:#BB8958!important;font-weight:900!important;white-space:nowrap}
         .sa-today-divider{height:1px!important;background:rgba(189,207,206,.72)!important;margin:11px 0!important}
-        .sa-network-label{font-size:11px!important;color:#53615F!important;font-weight:700!important;letter-spacing:.02em}
+                .sa-network-label{font-size:11px!important;color:#53615F!important;font-weight:700!important;letter-spacing:.02em}
         .sa-admin-tools-head{flex-wrap:wrap;gap:14px;filter:none!important;box-shadow:none!important;isolation:isolate}.sa-admin-tools-head > div{flex-wrap:wrap;filter:none!important;box-shadow:none!important}.sa-admin-tools-head button{flex:1 1 180px;justify-content:center;box-shadow:none!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.sa-admin-tools-head + .sa-grad-btn,.sa-admin-tools-head .sa-grad-btn::after{display:none!important}
+        .sa-form-grid3{grid-template-columns:repeat(3,1fr)}
+        .sa-form-grid2{grid-template-columns:repeat(2,1fr)}
+        @media(max-width:900px){.sa-form-grid3{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:640px){.sa-form-grid3,.sa-form-grid2{grid-template-columns:1fr}.sa-card,.sectionCard{padding:20px 16px!important}}
         @media (max-width:1340px){.sa-rates-layout{grid-template-columns:minmax(180px,220px) minmax(0,1fr)}.sa-today-orders-panel{grid-column:1/-1;border-left:0!important;border-top:1px solid ${border};display:grid!important;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));align-items:stretch;gap:14px!important}.sa-today-orders-panel > div:first-child,.sa-today-orders-panel > div:last-child{grid-column:1/-1}.sa-rate-card-grid{grid-template-columns:repeat(auto-fit,minmax(88px,1fr))}}
         @media (max-width:980px){.sa-rates-layout{grid-template-columns:1fr}.sa-order-summary-panel,.sa-today-orders-panel{border-right:0!important;border-left:0!important}.sa-order-summary-panel{border-bottom:1px solid ${border};display:grid!important;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));align-items:start;gap:14px!important}.sa-order-summary-panel > div:first-child,.sa-order-summary-panel > div:last-child{grid-column:1/-1}.sa-today-orders-panel{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));border-top:1px solid ${border}}.sa-rates-center{padding:18px 14px!important}.sa-rate-card-grid{grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}}
         @media (max-width:680px){.sa-main-offset{padding-left:12px!important;padding-right:12px!important}.sa-rates-layout{border-radius:16px!important}.sa-order-summary-panel,.sa-today-orders-panel{grid-template-columns:1fr!important;padding:16px 12px!important}.sa-rates-header{align-items:flex-start!important}.sa-rates-header > div:first-child{align-items:flex-start!important}.sa-rates-center{padding:16px 10px!important}.sa-rate-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important}.sa-rate-card img{width:56px!important;height:56px!important}.sa-admin-tools-head{align-items:stretch!important}.sa-admin-tools-head h2{font-size:19px!important}.sa-admin-tools-head > div{width:100%}.sa-admin-tools-head button{width:100%;padding:11px 14px!important}}
@@ -1964,52 +1968,6 @@ const fetchCoinStock = async () => {
         .modal-scroll{scrollbar-width:none;-ms-overflow-style:none}
       `}</style>
 
-
-      <aside className="sa-sidebar" style={{ position: 'fixed', inset: '0 auto 0 0', width: '286px', zIndex: 25, background: 'rgba(253,253,252,0.96)', borderRight: '1px solid rgba(189,207,206,0.72)', boxShadow: '22px 0 54px rgba(7,59,63,0.06)', padding: '28px 18px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-        <div onClick={() => navigate('/super-admin')} title="Go to dashboard" style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '0 8px 26px', borderBottom: '1px solid rgba(189,207,206,0.64)', cursor: 'pointer' }}>
-          <img src={logo} alt="Luxiva" style={{ width: 54, height: 54, objectFit: 'contain' }} />
-          <div>
-            <div className="lux-display" style={{ fontSize: '30px', lineHeight: 1, fontWeight: 800 }}>LUXIVA</div>
-            <div style={{ marginTop: '4px', color: '#BB8958', fontSize: '11px', fontWeight: 900, letterSpacing: '0.24em' }}>SUPER ADMIN</div>
-          </div>
-        </div>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '24px' }}>
-          <div className="lux-side-item is-active">Dashboard</div>
-          <div className="lux-side-item" onClick={() => navigate('/add-product')}>Products</div>
-          <div className="lux-side-item" onClick={() => navigate('/admin-orders')}>Orders</div>
-          <div className="lux-side-item" onClick={() => setShowTodayRates(true)}>Gold Rate</div>
-          <div className="lux-side-item">Settings</div>
-        </nav>
-        <div style={{ borderTop: '1px solid #E4ECEB', marginTop: '24px', padding: '22px 16px 0' }}>
-          <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', color: '#071A2D', marginBottom: 18 }}>Quick Summary</div>
-          {[
-            { label: 'Total Orders', value: orderStats.today.gold_22k.count + orderStats.today.gold_24k.count + orderStats.today.silver_999.count, growth: '+0%' },
-            { label: 'Total Customers', value: totalStats?.customers || 0, growth: '+12.5%' },
-            { label: 'Total Dealers', value: totalStats?.dealers || 0, growth: '+6.8%' },
-            { label: 'Total Products', value: 256, growth: '+5.2%' },
-            { label: 'Active Users', value: loginStatus.active_count, growth: '+8.3%' },
-          ].map(item => (
-            <div key={item.label} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-              <div style={{ width: 22, height: 22, color: '#0C4044' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></div>
-              <div><div style={{ fontSize: 12, color: '#0C4044', fontWeight: 700 }}>{item.label}</div><div style={{ fontSize: 18, color: '#071A2D', fontWeight: 900 }}>{item.value}</div></div>
-              <div style={{ fontSize: 11, color: '#009957', fontWeight: 900 }}>{item.growth}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ marginTop: 'auto', borderRadius: '8px', overflow: 'hidden', background: '#FFFFFF', border: '1px solid #E0E9E8', padding: '18px 16px' }}>
-          <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', color: '#071A2D', marginBottom: 14 }}>System Status</div>
-          <div style={{ color: '#0C4044', fontSize: 12, fontWeight: 900, marginBottom: 20 }}>Manual <span style={{ color: '#6E7D7B', fontWeight: 700 }}>- Refresh on demand</span></div>
-          <div style={{ fontSize: 11, color: '#6E7D7B', marginBottom: 8 }}>Last updated</div>
-          <div style={{ fontSize: 12, color: '#071A2D', fontWeight: 800 }}>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} | {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
-        </div>
-        <div style={{ marginTop: 'auto', borderRadius: '8px', overflow: 'hidden', background: 'linear-gradient(145deg,#004B55,#072D34)', border: '1px solid #0C4044', padding: '28px 22px', color: '#FFFFFF' }}>
-          <div style={{ width: 76, height: 76, borderRadius: '50%', border: '1px solid rgba(255,255,255,.2)', display: 'grid', placeItems: 'center', marginBottom: 18 }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z"/><path d="M9 12h6v5H9z"/><path d="M10 12v-2a2 2 0 114 0v2"/></svg>
-          </div>
-          <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 12 }}>Secure & Protected</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, color: '#E7EDEC' }}>Your system is secure and running smoothly.</div>
-        </div>
-      </aside>
 
       {/* Super Admin Navbar */}
       {/* <header className="sa-top-shell">
@@ -2425,7 +2383,7 @@ const fetchCoinStock = async () => {
         </div>
       </div> */}
 
-            <div className="sa-main-offset sa-dashboard-row" style={{ display: 'flex', width: 'calc(100% - 286px)', marginLeft: 286, gap: 22, padding: '24px 34px 0', boxSizing: 'border-box', alignItems: 'stretch' }}>
+            <div className="sa-main-offset sa-dashboard-row" style={{ display: 'flex', width: '100%', marginLeft: 0, gap: 22, padding: '24px 34px 0', boxSizing: 'border-box', alignItems: 'stretch' }}>
         <div className="sa-dashboard-grid">
   {quickStatsLoading ? (                                            // ✅ NEW
     Array.from({ length: 4 }).map((_, i) => (
@@ -2596,7 +2554,7 @@ style={{ cursor: 'pointer' }}
         </div>
       </div>
 
-      <div className="sa-main-offset" style={{ position: 'relative', padding: '28px 34px 48px', width: 'calc(100% - 286px)', marginLeft: 286, boxSizing: 'border-box' }}>
+      <div className="sa-main-offset" style={{ position: 'relative', padding: '28px 34px 48px', width: '100%', marginLeft: 0, boxSizing: 'border-box' }}>
         {msg && (
           <div style={{ background: msg.includes('âœ…') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${msg.includes('âœ…') ? 'rgba(12,64,68,0.25)' : 'rgba(201,32,53,0.3)'}`, color: msg.includes('âœ…') ? '#0C4044' : '#C92035', borderRadius: '12px', padding: '14px 20px', fontSize: '14px', marginBottom: '20px' }}>
             {msg}
@@ -5249,9 +5207,9 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
                 <CopyUrlButton />
               </div>
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div style={s.sectionCard}>
+                                          <div style={s.sectionCard}>
               <SectionHeader icon="user" label="Personal Info" />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div className="sa-form-grid3" style={{ display: 'grid', gap: '16px' }}>
                 <div><label style={s.lbl}>Initial</label>
                   <input name="initial" maxLength={5} value={form.initial} onChange={handleChange} className="sa-inp" style={s.inp} />
                 </div>
@@ -5326,9 +5284,9 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
               </div>
               </div>
 
-                            <div style={s.sectionCard}>
+                                          <div style={s.sectionCard}>
               <SectionHeader icon="lock" label="Account Info" />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div className="sa-form-grid3" style={{ display: 'grid', gap: '16px' }}>
                 <div><label style={s.lbl}>Email *</label>
                   <input type="email" name="email" value={form.email} onChange={handleChange} required className="sa-inp" style={s.inp} />
                 </div>
@@ -5371,9 +5329,9 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
 
               </div>
 
-                            <div style={s.sectionCard}>
+                              <div style={s.sectionCard}>
               <SectionHeader icon="pin" label="Address" />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div className="sa-form-grid3" style={{ display: 'grid', gap: '16px' }}>
                 <div><label style={s.lbl}>Door No *</label><input name="door_no" value={form.door_no} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>Street Name *</label><input name="street_name" value={form.street_name} onChange={handleChange} required className="sa-inp" style={s.inp} /></div>
                 <div>
@@ -5394,15 +5352,15 @@ style={{ width: '100%', padding: '15px', background: announcingSending ? 'rgba(1
 
                             <div style={s.sectionCard}>
               <SectionHeader icon="id" label="Identity" />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="sa-form-grid2" style={{ display: 'grid', gap: '16px' }}>
                 <div><label style={s.lbl}>Aadhaar No</label><input name="aadhaar_no" maxLength={12} value={form.aadhaar_no} onChange={handleChange} className="sa-inp" style={s.inp} /></div>
                 <div><label style={s.lbl}>PAN No</label><input name="pan_no" maxLength={10} value={form.pan_no} onChange={handleChange} className="sa-inp" style={s.inp} /></div>
               </div>
               </div>
 
-              <div style={s.sectionCard}>
+                            <div style={s.sectionCard}>
               <SectionHeader icon="briefcase" label="Occupation" />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div className="sa-form-grid3" style={{ display: 'grid', gap: '16px' }}>
                 <div><label style={s.lbl}>Occupation</label>
                   <select name="occupation" value={form.occupation} onChange={handleChange} className="sa-inp" style={{ ...s.inp, cursor: 'pointer' }}>
                     {OCCUPATION_OPTIONS.map(o => <option key={o} value={o} style={{ background: '#F3F3F0' }}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}

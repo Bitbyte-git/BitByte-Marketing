@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
+import { getSubcategories } from '../config/categoryConfig'
 
 function Icon({ name, size = 16, className = '' }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, className }
@@ -142,7 +143,7 @@ export default function AddNewProduct() {
   const [productForm, setProductForm] = useState({
     category: '', metal: '', grade: '', name: '', description: '',
     cross_weight: '', stone_weight: '', making_charge: '', stone_value: '',
-    tag: '', occasion: '', wedding_category: '', gender: 'all', wastage_charge: '',
+    tag: '', subcategory: '', occasion: '', wedding_category: '', gender: 'all', wastage_charge: '',
     stock_quantity: ''
   })
   const [productSaving, setProductSaving] = useState(false)
@@ -245,10 +246,17 @@ export default function AddNewProduct() {
     if (!productForm.metal)          { setProductMsg('ERR: Metal required');    return }
     if (!productForm.grade) { setProductMsg('ERR: Grade required'); return }
     if (!productForm.stock_quantity) { setProductMsg('ERR: Stock Quantity required'); return }
-    setProductSaving(true)
+        setProductSaving(true)
     try {
+      // subcategory-ah tag field-oda combine pannuvom — backend tag field mattum than store pannும்
+      const combinedTag = [productForm.tag, productForm.subcategory].filter(Boolean).join(', ')
+
       const fd = new FormData()
-      Object.entries(productForm).forEach(([k, v]) => fd.append(k, v))
+      Object.entries(productForm).forEach(([k, v]) => {
+        if (k === 'subcategory') return   // subcategory field backend model-la illa — skip pannanum
+        if (k === 'tag') { fd.append('tag', combinedTag); return }
+        fd.append(k, v)
+      })
       fd.append('net_weight', netWeight || 0)
       if (livePrice) fd.append('price', livePrice)
       if (originalPrice) fd.append('original_price', originalPrice)
@@ -364,12 +372,34 @@ export default function AddNewProduct() {
                 {OCCASIONS.map(o => <option key={o} value={o} style={{ background: optionBg }}>{o}</option>)}
               </select>
             </div>
-            <div>
+                        <div>
               <label style={lblStyle}>Tag</label>
               <select value={productForm.tag} onChange={e => setProductForm(f => ({ ...f, tag: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
                 <option value="" style={{ background: optionBg }}>-- None --</option>
                 {TAGS.map(t => <option key={t} value={t} style={{ background: optionBg }}>{t}</option>)}
               </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px', marginBottom: '14px' }}>
+            <div>
+              <label style={lblStyle}>Subcategory (navbar filter)</label>
+              <select
+                value={productForm.subcategory}
+                disabled={!productForm.category || !productForm.metal}
+                onChange={e => setProductForm(f => ({ ...f, subcategory: e.target.value }))}
+                style={{ ...inpStyle, cursor: 'pointer' }}
+              >
+                <option value="" style={{ background: optionBg }}>-- None --</option>
+                {getSubcategories(productForm.category, productForm.metal).map(s => (
+                  <option key={s} value={s} style={{ background: optionBg }}>{s}</option>
+                ))}
+              </select>
+              {productForm.category && productForm.metal && getSubcategories(productForm.category, productForm.metal).length === 0 && (
+                <div style={{ fontSize: '10px', color: subtext, marginTop: '4px' }}>
+                  No subcategories configured for this category/metal yet
+                </div>
+              )}
             </div>
           </div>
 

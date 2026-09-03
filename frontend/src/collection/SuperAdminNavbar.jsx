@@ -460,7 +460,11 @@ export default function SuperAdminNavbar({
 .san-secure { margin-top: auto; border-radius: 8px; background: linear-gradient(145deg, #073B3F, #0C4044); border: 1px solid rgba(204,168,129,.32); padding: 24px 20px; color: #FDFDFC; box-shadow: 0 18px 36px rgba(7,59,63,.14); }
 .san-secure strong { display: block; font-size: 16px; margin-bottom: 8px; }
 .san-secure span { display: block; color: #D1DFDE; font-size: 13px; line-height: 1.6; }
-.san-top-shell { position: sticky; top: 0; z-index: 65; background: rgba(253,253,252,.98); border-bottom: 1px solid rgba(189,207,206,.74); box-shadow: 0 16px 38px rgba(7,59,63,.055); backdrop-filter: blur(16px); }
+.san-top-shell { position: fixed; top: 0; left: 0; right: 0; z-index: 65; background: rgba(253,253,252,.98); border-bottom: 1px solid rgba(189,207,206,.74); box-shadow: 0 16px 38px rgba(7,59,63,.055); backdrop-filter: blur(16px); }
+.san-top-spacer { height: 104px; }
+@media (max-width: 1500px) { .san-top-spacer { height: 136px; } }
+@media (max-width: 1100px) { .san-top-spacer { height: 82px; } }
+@media (max-width: 640px) { .san-top-spacer { height: 128px; } }
 .san-top-inner { min-height: 104px; display: flex; align-items: center; gap: 12px; padding: 0 14px; flex-wrap: nowrap; }
 .san-navbar-brand { width: auto; min-width: 0; flex-shrink: 0; border: 0; background: transparent; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 0; cursor: pointer; }
 .san-navbar-brand img { width: 54px; height: 54px; object-fit: contain; }
@@ -611,11 +615,12 @@ export default function SuperAdminNavbar({
                 <Icon name="stock" size={16} />Stock
               </button>
             </div>
-            <button className="san-hamburger" type="button" onClick={() => setShowMobileDrawer(true)} aria-label="Open menu">
+                     <button className="san-hamburger" type="button" onClick={() => setShowMobileDrawer(true)} aria-label="Open menu">
               <Icon name="menu" size={22} />
             </button>
           </div>
         </header>
+        <div className="san-top-spacer" />
       </div>
 
       {/* ── RATE ENTRY POPUP ── */}
