@@ -140,8 +140,8 @@ export default function AddNewProduct() {
   const [productImages, setProductImages] = useState([])
   const [productPreviewUrls, setProductPreviewUrls] = useState([])
   const [productMsg, setProductMsg] = useState('')
-  const [productForm, setProductForm] = useState({
-    category: '', metal: '', grade: '', name: '', description: '',
+   const [productForm, setProductForm] = useState({
+    category: '', metal: '', grade: '', name: '', nameChoice: '', description: '',
     cross_weight: '', stone_weight: '', making_charge: '', stone_value: '',
     tag: '', subcategory: '', occasion: '', wedding_category: '', gender: 'all', wastage_charge: '',
     stock_quantity: ''
@@ -246,15 +246,11 @@ export default function AddNewProduct() {
     if (!productForm.metal)          { setProductMsg('ERR: Metal required');    return }
     if (!productForm.grade) { setProductMsg('ERR: Grade required'); return }
     if (!productForm.stock_quantity) { setProductMsg('ERR: Stock Quantity required'); return }
-        setProductSaving(true)
+    setProductSaving(true)
     try {
-      // subcategory-ah tag field-oda combine pannuvom — backend tag field mattum than store pannும்
-      const combinedTag = [productForm.tag, productForm.subcategory].filter(Boolean).join(', ')
-
-      const fd = new FormData()
+          const fd = new FormData()
       Object.entries(productForm).forEach(([k, v]) => {
-        if (k === 'subcategory') return   // subcategory field backend model-la illa — skip pannanum
-        if (k === 'tag') { fd.append('tag', combinedTag); return }
+        if (k === 'subcategory' || k === 'nameChoice') return   // backend model-la illa — skip pannanum
         fd.append(k, v)
       })
       fd.append('net_weight', netWeight || 0)
@@ -349,21 +345,38 @@ export default function AddNewProduct() {
 
           {/* Row 2 - Product Name / Occasion / Tag */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-            <div>
+                        <div>
               <label style={lblStyle}>Product Name *</label>
-              <input
-                list="product-name-options"
-                value={productForm.name}
-                onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))}
-                placeholder={productForm.category && productForm.metal ? 'Select a suggestion or type a custom name' : 'Select metal and product first'}
+              <select
+                value={productForm.nameChoice === 'other' ? 'other' : productForm.name}
+                onChange={e => {
+                  const v = e.target.value
+                  if (v === 'other') {
+                    setProductForm(f => ({ ...f, nameChoice: 'other', name: '' }))
+                  } else {
+                    setProductForm(f => ({ ...f, nameChoice: v, name: v }))
+                  }
+                }}
                 disabled={!productForm.category || !productForm.metal}
                 style={{ ...inpStyle, cursor: 'pointer' }}
-              />
-              <datalist id="product-name-options">
-                {(SUBCATEGORIES[productForm.category]?.[productForm.metal] || []).map(n => (
-                  <option key={n} value={n} />
+              >
+                <option value="" style={{ background: optionBg }}>
+                  {productForm.category && productForm.metal ? '-- Select --' : 'Select metal and product first'}
+                </option>
+                {getSubcategories(productForm.category, productForm.metal).map(n => (
+                  <option key={n} value={n} style={{ background: optionBg }}>{n}</option>
                 ))}
-              </datalist>
+                <option value="other" style={{ background: optionBg }}>Other (type custom name)</option>
+              </select>
+              {productForm.nameChoice === 'other' && (
+                <input
+                  type="text"
+                  value={productForm.name}
+                  onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="Type custom product name"
+                  style={{ ...inpStyle, marginTop: '8px' }}
+                />
+              )}
             </div>
             <div>
               <label style={lblStyle}>Occasion</label>
@@ -378,28 +391,6 @@ export default function AddNewProduct() {
                 <option value="" style={{ background: optionBg }}>-- None --</option>
                 {TAGS.map(t => <option key={t} value={t} style={{ background: optionBg }}>{t}</option>)}
               </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px', marginBottom: '14px' }}>
-            <div>
-              <label style={lblStyle}>Subcategory (navbar filter)</label>
-              <select
-                value={productForm.subcategory}
-                disabled={!productForm.category || !productForm.metal}
-                onChange={e => setProductForm(f => ({ ...f, subcategory: e.target.value }))}
-                style={{ ...inpStyle, cursor: 'pointer' }}
-              >
-                <option value="" style={{ background: optionBg }}>-- None --</option>
-                {getSubcategories(productForm.category, productForm.metal).map(s => (
-                  <option key={s} value={s} style={{ background: optionBg }}>{s}</option>
-                ))}
-              </select>
-              {productForm.category && productForm.metal && getSubcategories(productForm.category, productForm.metal).length === 0 && (
-                <div style={{ fontSize: '10px', color: subtext, marginTop: '4px' }}>
-                  No subcategories configured for this category/metal yet
-                </div>
-              )}
             </div>
           </div>
 

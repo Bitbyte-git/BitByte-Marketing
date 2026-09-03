@@ -147,71 +147,6 @@ const menuItems = [
   { label: "Nearby Shop", route: "/nearby-shop" },
 ];
 
-// const allJewelleryMega = [
-//   {
-//     title: "Gold Jewellery",
-//     icon: "◌",
-//     viewAll: ["View All Gold", "/collection/all?metal=gold"],
-//     links: [
-//       ["Gold Rings", "/collection/all?metal=gold&category=rings"],
-//       ["Gold Earrings", "/collection/all?metal=gold&category=earrings"],
-//       ["Gold Necklaces", "/collection/all?metal=gold&category=necklaces"],
-//       ["Gold Pendants", "/collection/all?metal=gold&category=pendants"],
-//       ["Gold Bangles", "/collection/all?metal=gold&category=bangles"],
-//       ["Gold Chains", "/collection/all?metal=gold&category=chains"],
-//       ["Gold Mangalsutra", "/collection/all?metal=gold&category=mangalsutra"],
-//       ["Gold Anklets", "/collection/all?metal=gold&category=anklets"],
-//     ],
-//   },
-//   {
-//     title: "Diamond Jewellery",
-//     icon: "◇",
-//     viewAll: ["View All Diamonds", "/collection/all?metal=diamond"],
-//     links: [
-//       ["Diamond Rings", "/collection/all?metal=diamond&category=rings"],
-//       ["Diamond Earrings", "/collection/all?metal=diamond&category=earrings"],
-//       ["Diamond Necklaces", "/collection/all?metal=diamond&category=necklaces"],
-//       ["Diamond Pendants", "/collection/all?metal=diamond&category=pendants"],
-//       ["Diamond Bracelets", "/collection/all?metal=diamond&category=bracelets"],
-//       ["Diamond Bangles", "/collection/all?metal=diamond&category=bangles"],
-//       [
-//         "Diamond Mangalsutra",
-//         "/collection/all?metal=diamond&category=mangalsutra",
-//       ],
-//       [
-//         "Solitaire Collection",
-//         "/collection/all?metal=diamond&search=solitaire",
-//       ],
-//     ],
-//   },
-//   {
-//     title: "Platinum Jewellery",
-//     icon: "P",
-//     viewAll: ["View All Platinum", "/collection/all?metal=platinum"],
-//     links: [
-//       ["Platinum Rings", "/collection/all?metal=platinum&category=rings"],
-//       ["Platinum Earrings", "/collection/all?metal=platinum&category=earrings"],
-//       [
-//         "Platinum Necklaces",
-//         "/collection/all?metal=platinum&category=necklaces",
-//       ],
-//       ["Platinum Pendants", "/collection/all?metal=platinum&category=pendants"],
-//       [
-//         "Platinum Bracelets",
-//         "/collection/all?metal=platinum&category=bracelets",
-//       ],
-//       ["Platinum Chains", "/collection/all?metal=platinum&category=chains"],
-//       [
-//         "Platinum Mangalsutra",
-//         "/collection/all?metal=platinum&category=mangalsutra",
-//       ],
-//       ["Men's Platinum", "/collection/all?metal=platinum&gender=men"],
-//     ],
-//   },
-//   {
-//     title: "Silver Jewellery",
-
-
 const allJewelleryMega = [
   {
     title: "Gold Jewellery",
@@ -314,10 +249,6 @@ const allJewelleryMega = [
         "Traditional Mangalsutra",
         "/collection/all?category=mangalsutra&search=traditional",
       ],
-      // [
-      //   "Diamond Mangalsutra",
-      //   "/collection/all?category=mangalsutra&metal=diamond",
-      // ],
       [
         "Beaded Mangalsutra",
         "/collection/all?category=mangalsutra&search=beaded",
@@ -349,7 +280,7 @@ const allJewelleryMega = [
 ];
 
 const metalMega = {
-        Gold: [
+  Gold: [
     [
       "Gold Coins",
       "◎",
@@ -421,239 +352,7 @@ const metalMega = {
     ],
   ],
 
-  // Diamond: [
-  //   [
-  //     "Diamond Rings",
-  //     "◇",
-  //     "/collection/all?metal=diamond&category=rings",
-  //     [
-  //       "Solitaire Rings",
-  //       "Engagement Rings",
-  //       "Wedding Rings",
-  //       "Cocktail Rings",
-  //       "Fashion Rings",
-  //       "Cluster Rings",
-  //       "Men's Diamond Rings",
-  //       "Kids Diamond Rings",
-  //     ],
-  //   ],
-  //   [
-  //     "Diamond Earrings",
-  //     "♢",
-  //     "/collection/all?metal=diamond&category=earrings",
-  //     [
-  //       "Stud Earrings",
-  //       "Drop Earrings",
-  //       "Hoop Earrings",
-  //       "Jhumka Earrings",
-  //       "Sui Dhaga Earrings",
-  //       "Chandbali Earrings",
-  //       "Party Wear Earrings",
-  //       "Kids Diamond Earrings",
-  //     ],
-  //   ],
-  //   [
-  //     "Diamond Pendants",
-  //     "♤",
-  //     "/collection/all?metal=diamond&category=pendants",
-  //     [
-  //       "Solitaire Pendants",
-  //       "Halo Pendants",
-  //       "Religious Pendants",
-  //       "Initial Pendants",
-  //       "Heart Pendants",
-  //       "Shape Pendants",
-  //       "Fancy Pendants",
-  //       "Kids Diamond Pendants",
-  //     ],
-  //   ],
-  //   [
-  //     "Diamond Necklaces",
-  //     "♧",
-  //     "/collection/all?metal=diamond&category=necklaces",
-  //     [
-  //       "Solitaire Necklaces",
-  //       "Tennis Necklaces",
-  //       "Cluster Necklaces",
-  //       "Bridal Necklaces",
-  //       "Choker Necklaces",
-  //       "Long Necklaces",
-  //       "Mang tikka / Neck Sets",
-  //       "Contemporary Necklaces",
-  //     ],
-  //   ],
-  //   [
-  //     "Diamond Bracelets",
-  //     "◌",
-  //     "/collection/all?metal=diamond&category=bracelets",
-  //     [
-  //       "Tennis Bracelets",
-  //       "Chain Bracelets",
-  //       "Bangle Bracelets",
-  //       "Charm Bracelets",
-  //       "Cuff Bracelets",
-  //       "ID Bracelets",
-  //       "Men's Bracelets",
-  //     ],
-  //   ],
-  //   [
-  //     "Diamond Bangles",
-  //     "◇",
-  //     "/collection/all?metal=diamond&category=bangles",
-  //     [
-  //       "Line Bangles",
-  //       "Bracelet Bangles",
-  //       "Openable Bangles",
-  //       "Kada Bangles",
-  //       "Designer Bangles",
-  //       "Party Wear Bangles",
-  //     ],
-  //   ],
-  //   [
-  //     "Diamond Mangalsutra",
-  //     "♧",
-  //     "/collection/all?metal=diamond&category=mangalsutra",
-  //     [
-  //       "Single Line Mangalsutra",
-  //       "Tanmaniya Mangalsutra",
-  //       "Pendant Mangalsutra",
-  //       "Beaded Mangalsutra",
-  //       "Diamond Mangalsutra Set",
-  //       "Contemporary Mangalsutra",
-  //     ],
-  //   ],
-  //   [
-  //     "Diamond By Shape",
-  //     "◇",
-  //     "/collection/all?metal=diamond",
-  //     [
-  //       "Round Diamond",
-  //       "Princess Cut",
-  //       "Oval Diamond",
-  //       "Pear Shape",
-  //       "Emerald Cut",
-  //       "Cushion Cut",
-  //       "Marquise Cut",
-  //     ],
-  //   ],
-  // ],
-  // Platinum: [
-  //   [
-  //     "Platinum Rings",
-  //     "◌",
-  //     "/collection/all?metal=platinum&category=rings",
-  //     [
-  //       "Men's Platinum Rings",
-  //       "Women's Platinum Rings",
-  //       "Couple Platinum Rings",
-  //       "Engagement Platinum Rings",
-  //       "Wedding Platinum Rings",
-  //       "Fashion Platinum Rings",
-  //       "Kids Platinum Rings",
-  //     ],
-  //   ],
-  //   [
-  //     "Platinum Earrings",
-  //     "♢",
-  //     "/collection/all?metal=platinum&category=earrings",
-  //     [
-  //       "Stud Earrings",
-  //       "Drop Earrings",
-  //       "Hoop Earrings",
-  //       "Jhumka Earrings",
-  //       "Sui Dhaga Earrings",
-  //       "Chandbali Earrings",
-  //       "Ear Cuffs",
-  //     ],
-  //   ],
-  //   [
-  //     "Platinum Pendants",
-  //     "♤",
-  //     "/collection/all?metal=platinum&category=pendants",
-  //     [
-  //       "Initial Pendants",
-  //       "Religious Pendants",
-  //       "Heart Pendants",
-  //       "Solitaire Pendants",
-  //       "Shape Pendants",
-  //       "Fancy Pendants",
-  //       "Kids Pendants",
-  //     ],
-  //   ],
-  //   [
-  //     "Platinum Necklaces",
-  //     "♧",
-  //     "/collection/all?metal=platinum&category=necklaces",
-  //     [
-  //       "Chains",
-  //       "Solitaire Necklaces",
-  //       "Layered Necklaces",
-  //       "Symbol Necklaces",
-  //       "Choker Necklaces",
-  //       "Long Necklaces",
-  //       "Mangalsutra Necklaces",
-  //     ],
-  //   ],
-  //   [
-  //     "Platinum Bracelets",
-  //     "◌",
-  //     "/collection/all?metal=platinum&category=bracelets",
-  //     [
-  //       "Chain Bracelets",
-  //       "Tennis Bracelets",
-  //       "Bangle Bracelets",
-  //       "Cuff Bracelets",
-  //       "ID Bracelets",
-  //       "Charm Bracelets",
-  //       "Men's Bracelets",
-  //     ],
-  //   ],
-  //   [
-  //     "Platinum Bangles",
-  //     "◯",
-  //     "/collection/all?metal=platinum&category=bangles",
-  //     [
-  //       "Plain Bangles",
-  //       "Diamond Bangles",
-  //       "Openable Bangles",
-  //       "Designer Bangles",
-  //       "Kada Bangles",
-  //       "Slim Bangles",
-  //       "Stackable Bangles",
-  //     ],
-  //   ],
-  //   [
-  //     "Platinum Chains",
-  //     "⌁",
-  //     "/collection/all?metal=platinum&category=chains",
-  //     [
-  //       "Men's Chains",
-  //       "Women's Chains",
-  //       "Rope Chains",
-  //       "Box Chains",
-  //       "Figaro Chains",
-  //       "Snake Chains",
-  //       "Bead Chains",
-  //     ],
-  //   ],
-  //   [
-  //     "Platinum Collection",
-  //     "◇",
-  //     "/collection/all?metal=platinum",
-  //     [
-  //       "Love Collection",
-  //       "Infinity Collection",
-  //       "Minimal Collection",
-  //       "Men's Collection",
-  //       "Wedding Collection",
-  //       "Kids Collection",
-  //       "Office Wear Collection",
-  //     ],
-  //   ],
-  // ],
-
-  
-      Silver: [
+  Silver: [
     [
       "Silver Coins",
       "◎",
@@ -704,7 +403,7 @@ const metalMega = {
       "/collection/all?metal=silver&category=pendants",
       getSubcategories("pendants", "silver"),
     ],
-        [
+    [
       "Silver Chains",
       "⌁",
       "/collection/all?metal=silver&category=necklaces",
@@ -734,8 +433,8 @@ const metalMega = {
 };
 
 const specialMega = {
-    Coins: [
-        [
+  Coins: [
+    [
       "Gold Coins",
       "◎",
       "/collection/coins?metal=gold",
@@ -765,7 +464,7 @@ const specialMega = {
         "500g Gold Bars",
       ],
     ],
-        [
+    [
       "Silver Coins",
       "◎",
       "/collection/coins?metal=silver",
@@ -837,7 +536,7 @@ const specialMega = {
         "Housewarming Coins",
       ],
     ],
-        [
+    [
       "Investment Coins",
       "↗",
       "/collection/coins?search=investment",
@@ -849,7 +548,7 @@ const specialMega = {
       ],
     ],
   ],
-    Wedding: [
+  Wedding: [
     [
       "Mangalsutra",
       "♧",
@@ -1087,26 +786,35 @@ const specialMega = {
   ],
 };
 
-const buildSections = (list) =>
-  list.map(([title, icon, route, links]) => ({
-    title,
-    icon,
-    viewAll: [
-      `View All ${title.replace(/^Gold |^Diamond |^Platinum |^Silver /, "")}`,
-      route,
-    ],
-    links: links.map((label) => [
-      label,
-      `${route}${route.includes("?") ? "&" : "?"}search=${encodeURIComponent(label)}`,
-    ]),
-  }));
+// ── FIXED: Gold/Silver category links (Rings/Earrings/Bangles/Pendants/
+// Chains/Necklaces/Mangalsutra/Anklets/Bracelets) now use ?subcategory=
+// instead of ?search= so AllCollection.jsx's accordion highlight + scroll
+// sections actually pick them up. Non-category routes (Gold Coins, Silver
+// Articles etc) keep using ?search= — untouched, so they don't break. ──
+const buildSections = (list, useSubcategoryParam = false) =>
+  list.map(([title, icon, route, links]) => {
+    const applySubParam =
+      useSubcategoryParam &&
+      route.includes("/collection/all") &&
+      route.includes("category=");
+    return {
+      title,
+      icon,
+      viewAll: [
+        `View All ${title.replace(/^Gold |^Diamond |^Platinum |^Silver /, "")}`,
+        route,
+      ],
+      links: links.map((label) => [
+        label,
+        `${route}${route.includes("?") ? "&" : "?"}${applySubParam ? "subcategory" : "search"}=${encodeURIComponent(label)}`,
+      ]),
+    };
+  });
 
 const megaByLabel = {
   "All Jewellery": allJewelleryMega,
-  Gold: buildSections(metalMega.Gold),
-  // Diamond: buildSections(metalMega.Diamond),
-  // Platinum: buildSections(metalMega.Platinum),
-  Silver: buildSections(metalMega.Silver),
+  Gold: buildSections(metalMega.Gold, true),
+  Silver: buildSections(metalMega.Silver, true),
   Coins: buildSections(specialMega.Coins),
   Wedding: buildSections(specialMega.Wedding),
   Gifting: buildSections(specialMega.Gifting),
@@ -2455,44 +2163,7 @@ export default function CustomerNavbar() {
                 </span>
               </button>
 
-              {/* {ratesOpen && (
-                <div className="rate-dropdown-panel">
-                  <div className="rate-item">
-                    <div className="rate-item-title">Gold 24K</div>
-                    <div className="rate-item-value">
-                      {money(rates?.gold_24k)}
-                    </div>
-                  </div>
-                  <div className="rate-item">
-                    <div className="rate-item-title">Silver</div>
-                    <div className="rate-item-value">
-                      {money(rates?.silver_999)}
-                    </div>
-                  </div>
-                  <div className="rate-item">
-                    <div className="rate-item-title">Diamond 18K</div>
-                    <div className="rate-item-value">
-                      {money(rates?.diamond_18k)}
-                    </div>
-                  </div>
-                  <div className="rate-item">
-                    <div className="rate-item-title">Diamond 22K</div>
-                    <div className="rate-item-value">
-                      {money(rates?.diamond_22k)}
-                    </div>
-                  </div>
-                  <div className="rate-item">
-                    <div className="rate-item-title">Platinum</div>
-                    <div className="rate-item-value">
-                      {money(rates?.platinum_92)}
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              */}
-
-                            {ratesOpen && (
+              {ratesOpen && (
                 <div className="rate-dropdown-panel">
                   <div className="rate-item">
                     <div className="rate-item-title">Gold 24K</div>

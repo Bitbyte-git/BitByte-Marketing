@@ -1292,10 +1292,9 @@ class JewelryProductView(APIView):
         if category:
             qs = qs.filter(category=category)
 
-        # ── NEW: subcategory filter — tag field-la store pannina subcategory name vachi filter pannும் ──
         subcategory = request.query_params.get('subcategory')
         if subcategory:
-            qs = qs.filter(tag__icontains=subcategory)
+            qs = qs.filter(name__icontains=subcategory)
 
         new = request.query_params.get('new')
         if new == 'true':

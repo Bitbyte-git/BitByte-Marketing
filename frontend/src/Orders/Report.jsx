@@ -9,43 +9,43 @@ import { SkeletonCard } from '../components/Skeleton'
 const ROLE_ICONS = {
   super_admin: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z" strokeLinejoin="round"/>
-      <path d="M9.5 12l1.8 1.8L15 10" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z" strokeLinejoin="round" />
+      <path d="M9.5 12l1.8 1.8L15 10" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   admin: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z" strokeLinejoin="round"/>
-      <path d="M9.5 12l1.8 1.8L15 10" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z" strokeLinejoin="round" />
+      <path d="M9.5 12l1.8 1.8L15 10" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   dealer: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 10l2-6h14l2 6" strokeLinejoin="round"/>
-      <path d="M4 10v9h16v-9M9 19v-5h6v5" strokeLinejoin="round"/>
+      <path d="M3 10l2-6h14l2 6" strokeLinejoin="round" />
+      <path d="M4 10v9h16v-9M9 19v-5h6v5" strokeLinejoin="round" />
     </svg>
   ),
   sub_dealer: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="6" cy="6" r="2.5"/>
-      <circle cx="18" cy="6" r="2.5"/>
-      <circle cx="12" cy="18" r="2.5"/>
-      <path d="M8 7.5L11 16M16 7.5L13 16" strokeLinecap="round"/>
+      <circle cx="6" cy="6" r="2.5" />
+      <circle cx="18" cy="6" r="2.5" />
+      <circle cx="12" cy="18" r="2.5" />
+      <path d="M8 7.5L11 16M16 7.5L13 16" strokeLinecap="round" />
     </svg>
   ),
   promotor: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 2l2.5 6.5L21 9l-5 4.5L17.5 21 12 17l-5.5 4L8 13.5 3 9l6.5-.5z" strokeLinejoin="round"/>
+      <path d="M12 2l2.5 6.5L21 9l-5 4.5L17.5 21 12 17l-5.5 4L8 13.5 3 9l6.5-.5z" strokeLinejoin="round" />
     </svg>
   ),
 }
 
 const ROLE_CFG = {
   super_admin: { label: 'Super Admin', color: '#0E5A57' },
-  admin:       { label: 'Admin',       color: '#0E5A57' },
-  dealer:      { label: 'Dealer',      color: '#2C4D4B' },
-  sub_dealer:  { label: 'Sub Dealer',  color: '#C99A3A' },
-  promotor:    { label: 'Promotor',    color: '#7BA7A3' },
+  admin: { label: 'Admin', color: '#0E5A57' },
+  dealer: { label: 'Dealer', color: '#2C4D4B' },
+  sub_dealer: { label: 'Sub Dealer', color: '#C99A3A' },
+  promotor: { label: 'Promotor', color: '#7BA7A3' },
 }
 
 // â”€â”€ NEW: same status colors as the hierarchy grid â€” customer order_count base
@@ -55,18 +55,18 @@ const STATUS_COLOR = { red: '#B86F74', orange: '#C99A3A', yellow: '#D6B45F', gre
 // â”€â”€ Column labels shown in the breakdown table, based on root type â”€â”€
 const COLUMN_MAP = {
   super_admin_view: ['Admin', 'Dealer', 'Sub Dealer', 'Promotor', 'Customer'],
-  admin:      ['Dealer', 'Sub Dealer', 'Promotor', 'Customer'],
-  dealer:     ['Sub Dealer', 'Promotor', 'Customer'],
+  admin: ['Dealer', 'Sub Dealer', 'Promotor', 'Customer'],
+  dealer: ['Sub Dealer', 'Promotor', 'Customer'],
   sub_dealer: ['Promotor', 'Customer'],
-  promotor:   ['Customer'],
+  promotor: ['Customer'],
 }
 
 const DRILL_LEVELS = {
   super_admin: ['own', 'admin', 'dealer', 'sub_dealer', 'promotor', 'customer'],
-  admin:       ['own', 'dealer', 'sub_dealer', 'promotor', 'customer'],
-  dealer:      ['own', 'sub_dealer', 'promotor', 'customer'],
-  sub_dealer:  ['own', 'promotor', 'customer'],
-  promotor:    ['own', 'customer'],
+  admin: ['own', 'dealer', 'sub_dealer', 'promotor', 'customer'],
+  dealer: ['own', 'sub_dealer', 'promotor', 'customer'],
+  sub_dealer: ['own', 'promotor', 'customer'],
+  promotor: ['own', 'customer'],
 }
 
 const LEVEL_LABELS = {
@@ -249,50 +249,50 @@ function buildTrendBuckets(rows, range) {
   if (range === 'Today') {
     // 6 buckets of 4 hours each
     buckets = Array.from({ length: 6 }, (_, i) => ({ label: `${i * 4}:00`, total: 0, count: 0 }))
-rows.forEach(r => r.rawOrders.forEach(o => {
-  const d = orderDate(o)
-  if (!isInRange(d, range)) return
-  const idx = Math.min(5, Math.floor(d.getHours() / 4))
-  buckets[idx].total += parseFloat(o.total_price) || 0
-  buckets[idx].count += 1
-}))
+    rows.forEach(r => r.rawOrders.forEach(o => {
+      const d = orderDate(o)
+      if (!isInRange(d, range)) return
+      const idx = Math.min(5, Math.floor(d.getHours() / 4))
+      buckets[idx].total += parseFloat(o.total_price) || 0
+      buckets[idx].count += 1
+    }))
   } else if (range === 'Week') {
-    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     buckets = Array.from({ length: 7 }, (_, i) => {
-  const d = new Date(now); d.setDate(now.getDate() - (6 - i))
-  return { label: days[d.getDay()], total: 0, count: 0, _key: d.toDateString() }
-})
-rows.forEach(r => r.rawOrders.forEach(o => {
-  const d = orderDate(o)
-  if (!isInRange(d, range)) return
-  const b = buckets.find(b => b._key === d.toDateString())
-  if (b) { b.total += parseFloat(o.total_price) || 0; b.count += 1 }
-}))
+      const d = new Date(now); d.setDate(now.getDate() - (6 - i))
+      return { label: days[d.getDay()], total: 0, count: 0, _key: d.toDateString() }
+    })
+    rows.forEach(r => r.rawOrders.forEach(o => {
+      const d = orderDate(o)
+      if (!isInRange(d, range)) return
+      const b = buckets.find(b => b._key === d.toDateString())
+      if (b) { b.total += parseFloat(o.total_price) || 0; b.count += 1 }
+    }))
   } else if (range === 'Month') {
     // 4 weekly buckets
     buckets = Array.from({ length: 4 }, (_, i) => ({ label: `Week ${i + 1}`, total: 0, count: 0 }))
-rows.forEach(r => r.rawOrders.forEach(o => {
-  const d = orderDate(o)
-  if (!isInRange(d, range)) return
-  const daysAgo = Math.floor((now - d) / (1000 * 60 * 60 * 24))
-  const idx = Math.min(3, Math.floor(daysAgo / 7))
-  buckets[3 - idx].total += parseFloat(o.total_price) || 0
-  buckets[3 - idx].count += 1
-}))
+    rows.forEach(r => r.rawOrders.forEach(o => {
+      const d = orderDate(o)
+      if (!isInRange(d, range)) return
+      const daysAgo = Math.floor((now - d) / (1000 * 60 * 60 * 24))
+      const idx = Math.min(3, Math.floor(daysAgo / 7))
+      buckets[3 - idx].total += parseFloat(o.total_price) || 0
+      buckets[3 - idx].count += 1
+    }))
   } else {
     // Year â€” 12 monthly buckets
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     buckets = Array.from({ length: 12 }, (_, i) => {
-  const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1)
-  return { label: months[d.getMonth()], total: 0, count: 0, _key: `${d.getFullYear()}-${d.getMonth()}` }
-})
-rows.forEach(r => r.rawOrders.forEach(o => {
-  const d = orderDate(o)
-  if (!isInRange(d, range)) return
-  const key = `${d.getFullYear()}-${d.getMonth()}`
-  const b = buckets.find(b => b._key === key)
-  if (b) { b.total += parseFloat(o.total_price) || 0; b.count += 1 }
-}))
+      const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1)
+      return { label: months[d.getMonth()], total: 0, count: 0, _key: `${d.getFullYear()}-${d.getMonth()}` }
+    })
+    rows.forEach(r => r.rawOrders.forEach(o => {
+      const d = orderDate(o)
+      if (!isInRange(d, range)) return
+      const key = `${d.getFullYear()}-${d.getMonth()}`
+      const b = buckets.find(b => b._key === key)
+      if (b) { b.total += parseFloat(o.total_price) || 0; b.count += 1 }
+    }))
   }
 
   return buckets
@@ -399,6 +399,11 @@ function HierarchyBreakdownGrid({ cardBg, border, text, subtext, selectedNode, o
   const [cache, setCache] = useState({})
   const [loadingKey, setLoadingKey] = useState(null)
   const [selChain, setSelChain] = useState([])
+  const laneRefs = useRef({})   // ── NEW: ovvoru lane track-oda DOM ref, arrow button scroll pண்ண ──
+  const scrollLane = (depthIdx, dir) => {
+    const el = laneRefs.current[depthIdx]
+    if (el) el.scrollBy({ left: dir * 240, behavior: 'smooth' })
+  }
 
   const fetchLevel = async (fetchRole, fetchId, key) => {
     setLoadingKey(key)
@@ -466,15 +471,23 @@ function HierarchyBreakdownGrid({ cardBg, border, text, subtext, selectedNode, o
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, maxWidth: '100%' }}>
       {lanes.map((lane, depthIdx) => {
         const laneColor = ROLE_CFG[lane.role]?.color || subtext
         return (
-          <div key={depthIdx}>
-            <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', color: subtext, marginBottom: '10px', textTransform: 'uppercase' }}>
-              {LEVEL_LABELS[lane.role] || lane.role} {lane.items ? lane.items.length : ''}
+          <div key={depthIdx} style={{ minWidth: 0, maxWidth: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1.2px', color: subtext, textTransform: 'uppercase' }}>
+                {LEVEL_LABELS[lane.role] || lane.role} {lane.items ? lane.items.length : ''}
+              </div>
+              {lane.items && lane.items.length > 2 && (
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => scrollLane(depthIdx, -1)} className="sr-lane-arrow" style={{ '--nc': laneColor }} aria-label="Scroll left">‹</button>
+                  <button onClick={() => scrollLane(depthIdx, 1)} className="sr-lane-arrow" style={{ '--nc': laneColor }} aria-label="Scroll right">›</button>
+                </div>
+              )}
             </div>
-            <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '14px' }}>
+            <div className="sr-lane-track" ref={el => { laneRefs.current[depthIdx] = el }} style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '14px' }}>
               {lane.items === null ? (
                 <>
                   <SkeletonCard color={laneColor} />
@@ -659,33 +672,33 @@ export default function Report() {
   const [ancestors, setAncestors] = useState([])
 
   const [selectedLevel, setSelectedLevel] = useState('own')
-const [selectedNodeId, setSelectedNodeId] = useState('')
-const [timeRange, setTimeRange] = useState('Week')
+  const [selectedNodeId, setSelectedNodeId] = useState('')
+  const [timeRange, setTimeRange] = useState('Week')
 
-// â”€â”€ NEW: Network breakdown grid la click pannina node â”€â”€
-const [gridSelectedNode, setGridSelectedNode] = useState(null)
+  // â”€â”€ NEW: Network breakdown grid la click pannina node â”€â”€
+  const [gridSelectedNode, setGridSelectedNode] = useState(null)
 
-// ── NEW: summary cards (Total Sales / Orders / Customers) — DB aggregate mattum ──
-const [summaryData, setSummaryData] = useState({ total_sales: 0, total_orders: 0, customers_with_orders: 0 })
+  // ── NEW: summary cards (Total Sales / Orders / Customers) — DB aggregate mattum ──
+  const [summaryData, setSummaryData] = useState({ total_sales: 0, total_orders: 0, customers_with_orders: 0 })
 
-// ── NEW: trend graph data — period-wise thani API call ──
-const [trendData, setTrendData] = useState([])
-const [trendLoading, setTrendLoading] = useState(true)   // ── NEW: period switch pண்ணும்போது skeleton kாட்ட ──
+  // ── NEW: trend graph data — period-wise thani API call ──
+  const [trendData, setTrendData] = useState([])
+  const [trendLoading, setTrendLoading] = useState(true)   // ── NEW: period switch pண்ணும்போது skeleton kாட்ட ──
 
-// ── NEW: scoped active/inactive login list (super_admin only) — backend scope pண்ணும் ──
-const [scopedLoginStats, setScopedLoginStats] = useState({ active: [], inactive: [] })
+  // ── NEW: scoped active/inactive login list (super_admin only) — backend scope pண்ணும் ──
+  const [scopedLoginStats, setScopedLoginStats] = useState({ active: [], inactive: [] })
 
-// â”€â”€ NEW: coin stock for scoped node (or own account) â”€â”€
-const [coinStock, setCoinStock] = useState([])
+  // â”€â”€ NEW: coin stock for scoped node (or own account) â”€â”€
+  const [coinStock, setCoinStock] = useState([])
 
-const [nodeSearch, setNodeSearch] = useState('')
-const [debouncedNodeSearch, setDebouncedNodeSearch] = useState('')
-const [showNodeDropdown, setShowNodeDropdown] = useState(false)
+  const [nodeSearch, setNodeSearch] = useState('')
+  const [debouncedNodeSearch, setDebouncedNodeSearch] = useState('')
+  const [showNodeDropdown, setShowNodeDropdown] = useState(false)
 
-useEffect(() => {
-  const t = setTimeout(() => setDebouncedNodeSearch(nodeSearch), 150)
-  return () => clearTimeout(t)
-}, [nodeSearch])
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedNodeSearch(nodeSearch), 150)
+    return () => clearTimeout(t)
+  }, [nodeSearch])
 
   const bg = 'linear-gradient(180deg,#E6F1EF 0%,#FFFCF8 38%,#FFFFFF 100%)'
   const text = '#1F1F1F'
@@ -715,37 +728,37 @@ useEffect(() => {
   const cfg = ROLE_CFG[role] || { label: role, color: '#0E5A57' }
   const availableLevels = DRILL_LEVELS[role] || ['own']
 
-// ── NEW: URL-based deep-link (?role=admin&id=5) feature remove pannirom —
-// old full-tree data base panni irundhadhu, adhu ippo illa. Level maarina
-// simple ah node selection reset pannurom mattum. ──
-useEffect(() => {
-  setSelectedNodeId('')
-  setNodeSearch('')
-  setGridSelectedNode(null)
-}, [selectedLevel])
+  // ── NEW: URL-based deep-link (?role=admin&id=5) feature remove pannirom —
+  // old full-tree data base panni irundhadhu, adhu ippo illa. Level maarina
+  // simple ah node selection reset pannurom mattum. ──
+  useEffect(() => {
+    setSelectedNodeId('')
+    setNodeSearch('')
+    setGridSelectedNode(null)
+  }, [selectedLevel])
 
-// ── NEW: backend search — old full-tree walk vendaam, /hierarchy/search-person/
-// endpoint use pannurom. Debounced text vachi mattum call pogum. ──
-const [filteredNodes, setFilteredNodes] = useState([])
+  // ── NEW: backend search — old full-tree walk vendaam, /hierarchy/search-person/
+  // endpoint use pannurom. Debounced text vachi mattum call pogum. ──
+  const [filteredNodes, setFilteredNodes] = useState([])
 
-useEffect(() => {
-  if (selectedLevel === 'own') { setFilteredNodes([]); return }
-  const query = debouncedNodeSearch.trim()
-  if (!query) { setFilteredNodes([]); return }
-  api.get(`/hierarchy/search-person/?q=${encodeURIComponent(query)}`)
-    .then(res => {
-      const matches = (res.data.results || [])
-        .filter(r => r.role === selectedLevel)
-        .map(r => ({
-          id: r.id, user_id: r.user_id, type: r.role,
-          first_name: r.first_name, last_name: r.last_name,
-          mobile_number: r.mobile_number, city_name: r.city_name,
-          [`${r.role}_id`]: r.public_id,
-        }))
-      setFilteredNodes(matches)
-    })
-    .catch(() => setFilteredNodes([]))
-}, [debouncedNodeSearch, selectedLevel])
+  useEffect(() => {
+    if (selectedLevel === 'own') { setFilteredNodes([]); return }
+    const query = debouncedNodeSearch.trim()
+    if (!query) { setFilteredNodes([]); return }
+    api.get(`/hierarchy/search-person/?q=${encodeURIComponent(query)}`)
+      .then(res => {
+        const matches = (res.data.results || [])
+          .filter(r => r.role === selectedLevel)
+          .map(r => ({
+            id: r.id, user_id: r.user_id, type: r.role,
+            first_name: r.first_name, last_name: r.last_name,
+            mobile_number: r.mobile_number, city_name: r.city_name,
+            [`${r.role}_id`]: r.public_id,
+          }))
+        setFilteredNodes(matches)
+      })
+      .catch(() => setFilteredNodes([]))
+  }, [debouncedNodeSearch, selectedLevel])
 
   // ── NEW: old full-tree "activeTree" logic remove pannirom — full-tree data
   // ippo fetch pannaathu. scopedNode mattum than "eppo edha kaatanum" nu decide pannum:
@@ -754,57 +767,57 @@ useEffect(() => {
   const isMultiAdminViewStats = false
 
   const scopedNode = gridSelectedNode
-const scopedLoginLabel = scopedNode ? `${LEVEL_LABELS[scopedNode.type] || scopedNode.type}${nodeName(scopedNode)}` : 'Full Network'
+  const scopedLoginLabel = scopedNode ? `${LEVEL_LABELS[scopedNode.type] || scopedNode.type}: ${nodeName(scopedNode)}` : 'Full Network'
 
-useEffect(() => {
-  const targetUserId = scopedNode?.user_id
-  if (targetUserId) {
-    api.get('/coin-stock/for-user/', { params: { user_id: targetUserId } })
-      .then(res => setCoinStock(res.data || []))
-      .catch(() => setCoinStock([]))
-  } else {
-    api.get('/coin-stock/')
-      .then(res => setCoinStock(res.data || []))
-      .catch(() => setCoinStock([]))
-  }
-}, [scopedNode])
+  useEffect(() => {
+    const targetUserId = scopedNode?.user_id
+    if (targetUserId) {
+      api.get('/coin-stock/for-user/', { params: { user_id: targetUserId } })
+        .then(res => setCoinStock(res.data || []))
+        .catch(() => setCoinStock([]))
+    } else {
+      api.get('/coin-stock/')
+        .then(res => setCoinStock(res.data || []))
+        .catch(() => setCoinStock([]))
+    }
+  }, [scopedNode])
 
-// ── NEW: Summary cards — scopedNode select pண்ணின role+id vachi thani API call ──
-useEffect(() => {
-  const params = {}
-  if (scopedNode) { params.role = scopedNode.type; params.id = scopedNode.id }
-  api.get('/sales-report/summary/', { params })
-    .then(res => setSummaryData(res.data))
-    .catch(() => {})
-}, [scopedNode])
+  // ── NEW: Summary cards — scopedNode select pண்ணின role+id vachi thani API call ──
+  useEffect(() => {
+    const params = {}
+    if (scopedNode) { params.role = scopedNode.type; params.id = scopedNode.id }
+    api.get('/sales-report/summary/', { params })
+      .then(res => setSummaryData(res.data))
+      .catch(() => { })
+  }, [scopedNode])
 
-// ── NEW: Trend graph — timeRange (Today/Week/Month/Year) button click pண்ணும்போது
-// thani thani API call pண்ணும். scopedNode select pண்ணினாலும் andha scope-ku mattum ──
-useEffect(() => {
-  let cancelled = false   // ── NEW: stale response-ah ignore pannurom, latest click mattum win aagum ──
-  setTrendLoading(true)
-  const params = { period: timeRange.toLowerCase() }
-  if (scopedNode) { params.role = scopedNode.type; params.id = scopedNode.id }
-  api.get('/sales-report/trend/', { params })
-    .then(res => { if (!cancelled) { setTrendData(res.data.data || []); setTrendLoading(false) } })
-    .catch(() => { if (!cancelled) setTrendLoading(false) })
-  return () => { cancelled = true }
-}, [scopedNode, timeRange])
+  // ── NEW: Trend graph — timeRange (Today/Week/Month/Year) button click pண்ணும்போது
+  // thani thani API call pண்ணும். scopedNode select pண்ணினாலும் andha scope-ku mattum ──
+  useEffect(() => {
+    let cancelled = false   // ── NEW: stale response-ah ignore pannurom, latest click mattum win aagum ──
+    setTrendLoading(true)
+    const params = { period: timeRange.toLowerCase() }
+    if (scopedNode) { params.role = scopedNode.type; params.id = scopedNode.id }
+    api.get('/sales-report/trend/', { params })
+      .then(res => { if (!cancelled) { setTrendData(res.data.data || []); setTrendLoading(false) } })
+      .catch(() => { if (!cancelled) setTrendLoading(false) })
+    return () => { cancelled = true }
+  }, [scopedNode, timeRange])
 
-// ── NEW: Login Status — scopedNode select pண்ணின role+id vachi backend-லேயே scope pண்ணும் ──
-useEffect(() => {
-  if (role !== 'super_admin') return
-  const params = {}
-  if (scopedNode) { params.scope_role = scopedNode.type; params.scope_id = scopedNode.id }
-  api.get('/today-login-status/', { params })
-    .then(res => setScopedLoginStats({ active: res.data.active || [], inactive: res.data.inactive || [] }))
-    .catch(() => {})
-}, [role, scopedNode])
+  // ── NEW: Login Status — scopedNode select pண்ணின role+id vachi backend-லேயே scope pண்ணும் ──
+  useEffect(() => {
+    if (role !== 'super_admin') return
+    const params = {}
+    if (scopedNode) { params.scope_role = scopedNode.type; params.scope_id = scopedNode.id }
+    api.get('/today-login-status/', { params })
+      .then(res => setScopedLoginStats({ active: res.data.active || [], inactive: res.data.inactive || [] }))
+      .catch(() => { })
+  }, [role, scopedNode])
 
-const goToActiveLogin = () => navigate('/login-active', { state: { ids: scopedNode ? Array.from(collectSubtreeRoleIds(scopedNode)) : null, scopeLabel: scopedLoginLabel } })
-const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scopedNode ? Array.from(collectSubtreeRoleIds(scopedNode)) : null, scopeLabel: scopedLoginLabel } })
+  const goToActiveLogin = () => navigate('/login-active', { state: { ids: scopedNode ? Array.from(collectSubtreeRoleIds(scopedNode)) : null, scopeLabel: scopedLoginLabel } })
+  const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scopedNode ? Array.from(collectSubtreeRoleIds(scopedNode)) : null, scopeLabel: scopedLoginLabel } })
 
- const totalSales = summaryData.total_sales
+  const totalSales = summaryData.total_sales
   const totalOrders = summaryData.total_orders
   const totalCustomers = summaryData.customers_with_orders
 
@@ -881,30 +894,30 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
   }
 
   if (loading) {
-  return (
-    <div style={{ minHeight: '100vh', background: bg, color: text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Manrope, Segoe UI, system-ui, sans-serif', gap: '18px' }}>
-      <style>{`
+    return (
+      <div style={{ minHeight: '100vh', background: bg, color: text, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Manrope, Segoe UI, system-ui, sans-serif', gap: '18px' }}>
+        <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulseText { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
       `}</style>
-      <div style={{
-        width: '46px', height: '46px',
-        border: '3px solid rgba(34,211,238,0.15)',
-        borderTop: '3px solid #0E5A57',
-        borderRadius: '50%',
-        animation: 'spin 0.9s linear infinite',
-      }} />
-      <div style={{
-        fontSize: '14px',
-        color: '#6B6B6B',
-        letterSpacing: '0.05em',
-        animation: 'pulseText 1.6s ease-in-out infinite',
-      }}>
-        Loading report...
+        <div style={{
+          width: '46px', height: '46px',
+          border: '3px solid rgba(34,211,238,0.15)',
+          borderTop: '3px solid #0E5A57',
+          borderRadius: '50%',
+          animation: 'spin 0.9s linear infinite',
+        }} />
+        <div style={{
+          fontSize: '14px',
+          color: '#6B6B6B',
+          letterSpacing: '0.05em',
+          animation: 'pulseText 1.6s ease-in-out infinite',
+        }}>
+          Loading report...
+        </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
 
   if (error) {
     return (
@@ -915,9 +928,12 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
   }
 
   return (
-    <div className="sales-report-page" style={{ minHeight: '100vh', background: bg, color: text, fontFamily: '"Manrope", "Segoe UI", system-ui, sans-serif' }}>
+    <div className="sales-report-page" style={{ minHeight: '100vh', width: '100%', maxWidth: '100vw', background: bg, color: text, fontFamily: '"Manrope", "Segoe UI", system-ui, sans-serif', boxSizing: 'border-box' }}>
       <style>{`
-        .sales-report-page{position:relative;overflow-x:hidden;}
+                        html,body{overflow-x:hidden!important;max-width:100vw!important;}
+                .sales-report-page{position:relative;overflow-x:clip;width:100%;max-width:100vw;}
+                .sales-report-page *{min-width:0;}
+                .sr-lane-track{min-width:0!important;max-width:100%!important;}
         .sales-report-page::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 8% 0%,rgba(230,241,239,.95),transparent 34%),radial-gradient(circle at 92% 8%,rgba(201,154,58,.10),transparent 26%);pointer-events:none;z-index:0;}
         .sales-report-page > *{position:relative;z-index:1;}
 .report-topbar{position:relative;background:transparent !important;border-bottom:none !important;box-shadow:none !important;}
@@ -957,11 +973,45 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
           }
           .print-table-wrap { overflow: visible !important; width: 100% !important; }
           td:last-child, th:last-child { text-align: right !important; }
-          @page { size: landscape; margin: 8mm; }
+                   @page { size: landscape; margin: 8mm; }
         }
+        @media(max-width:900px){
+          .sr-main-container{flex-direction:column!important}
+          .sr-sidebar{width:100%!important;position:static!important}
+          .print-container{padding:20px 20px!important}
+          .report-topbar{padding:20px 20px 0!important}
+        }
+                @media(max-width:640px){
+          .sr-topbar{flex-direction:column;align-items:stretch!important}
+          .sr-topbar > div{flex-direction:column;align-items:stretch!important;width:100%}
+          .sr-search-input{min-width:0!important;width:100%!important}
+          .report-control{width:100%!important}
+          .print-container{padding:16px 14px!important}
+          .report-topbar{padding:16px 14px 0!important}
+        }
+        .sr-lane-track{
+          -webkit-overflow-scrolling:touch!important;
+          touch-action:pan-x!important;
+          overscroll-behavior-x:contain;
+          scroll-snap-type:x proximity;
+        }
+        .sr-lane-track .report-lane-card{ scroll-snap-align:start; }
+               @media(max-width:640px){
+          .sr-lane-track{gap:10px!important}
+          .report-lane-card{min-width:148px!important;max-width:170px!important;padding:11px 13px!important}
+          .report-lane-card div[style*="font-size: 13px"]{font-size:12px!important}
+        }
+        .sr-lane-arrow{
+          width:26px;height:26px;border-radius:50%;
+          background:#FFFFFF;border:1.5px solid var(--nc);color:var(--nc);
+          font-size:16px;font-weight:900;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;line-height:1;
+          transition:background .15s ease,color .15s ease;
+        }
+        .sr-lane-arrow:hover,.sr-lane-arrow:active{background:var(--nc);color:#FFFFFF;}
       `}</style>
-    {/* Page toolbar — plain content, not a sticky navbar bar */}
-      <div className="no-print report-topbar" style={{ padding: '24px 40px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', maxWidth: '1500px', margin: '0 auto' }}>
+      {/* Page toolbar — plain content, not a sticky navbar bar */}
+      <div className="no-print report-topbar sr-topbar" style={{ padding: '24px 40px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', maxWidth: '1500px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={() => { setGridSelectedNode(null); setSelectedLevel('own'); setSelectedNodeId('') }}
@@ -978,92 +1028,92 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
 
         {/* Drill-down dropdowns + export buttons */}
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-         <select
-  value={selectedLevel}
-  onChange={e => {
-    const val = e.target.value
-    startTransition(() => setSelectedLevel(val))
-  }}
-  className="report-control" style={{ background: cardBg, color: text, border: `1px solid ${border}`, borderRadius: '10px', padding: '8px 12px', fontSize: '13px', transition: 'border-color 0.15s ease', willChange: 'contents' }}
->
+          <select
+            value={selectedLevel}
+            onChange={e => {
+              const val = e.target.value
+              startTransition(() => setSelectedLevel(val))
+            }}
+            className="report-control" style={{ background: cardBg, color: text, border: `1px solid ${border}`, borderRadius: '10px', padding: '8px 12px', fontSize: '13px', transition: 'border-color 0.15s ease', willChange: 'contents' }}
+          >
             {availableLevels.map(lvl => (
               <option key={lvl} value={lvl} style={{ background: '#FFFCF8' }}>{LEVEL_LABELS[lvl]}</option>
             ))}
           </select>
 
-         {selectedLevel !== 'own' && (
-  <div style={{ position: 'relative' }}>
-    <input
-      value={
-        showNodeDropdown
-          ? nodeSearch
-          : (gridSelectedNode ? nodeName(gridSelectedNode) : '')
-      }
-      onChange={e => { setNodeSearch(e.target.value); setShowNodeDropdown(true) }}
-      onFocus={() => { setShowNodeDropdown(true); setNodeSearch('') }}
-      onBlur={() => setTimeout(() => setShowNodeDropdown(false), 150)}
-      placeholder={`Search ${LEVEL_LABELS[selectedLevel]} by ID, name, phone...`}
-      className="report-control" style={{ background: cardBg, color: text, border: `1px solid ${border}`, borderRadius: '10px', padding: '8px 12px', fontSize: '13px', minWidth: '220px', outline: 'none', boxSizing: 'border-box' }}
-      onFocusCapture={e => e.target.style.borderColor = cfg.color}
-    />
-    {showNodeDropdown && (
-      <div style={{
-        position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 50,
-        background: '#FFFCF8', border: `1px solid ${border}`, borderRadius: '10px',
-        maxHeight: '260px', overflowY: 'auto', boxShadow: '0 18px 34px rgba(14,90,87,0.16)',
-      }}>
-        {filteredNodes.length === 0 ? (
-          <div style={{ padding: '12px', color: subtext, fontSize: '13px', textAlign: 'center' }}>No matches found</div>
-        ) : filteredNodes.map(n => {
-          const id = n.customer_id || n[`${n.type}_id`] || n.id
-          const name = n.first_name ? `${n.first_name} ${n.last_name || ''}`.trim() : (n.dealer_name || n.promotor_name || id)
-          return (
-            <div
-              key={id}
-              onMouseDown={() => {
-                setSelectedNodeId(id.toString())
-                setGridSelectedNode(n)   // ── NEW: direct ah scoped node set pannurom, summary/trend/login/coin ella-um udane update aagum ──
-                setShowNodeDropdown(false)
-                setNodeSearch('')
-              }}
-              style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: `1px solid ${border}` }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,241,239,0.72)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-            >
-              <div style={{ color: cfg.color, fontFamily: 'monospace', fontSize: '11px' }}>{id}</div>
-              <div style={{ color: text, fontSize: '13px', fontWeight: 600 }}>{name}</div>
-              {n.mobile_number && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: subtext, fontSize: '11px' }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  {n.mobile_number}
+          {selectedLevel !== 'own' && (
+            <div style={{ position: 'relative' }}>
+              <input
+                value={
+                  showNodeDropdown
+                    ? nodeSearch
+                    : (gridSelectedNode ? nodeName(gridSelectedNode) : '')
+                }
+                onChange={e => { setNodeSearch(e.target.value); setShowNodeDropdown(true) }}
+                onFocus={() => { setShowNodeDropdown(true); setNodeSearch('') }}
+                onBlur={() => setTimeout(() => setShowNodeDropdown(false), 150)}
+                placeholder={`Search ${LEVEL_LABELS[selectedLevel]} by ID, name, phone...`}
+                className="report-control sr-search-input" style={{ background: cardBg, color: text, border: `1px solid ${border}`, borderRadius: '10px', padding: '8px 12px', fontSize: '13px', minWidth: '220px', outline: 'none', boxSizing: 'border-box' }}
+                onFocusCapture={e => e.target.style.borderColor = cfg.color}
+              />
+              {showNodeDropdown && (
+                <div style={{
+                  position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 50,
+                  background: '#FFFCF8', border: `1px solid ${border}`, borderRadius: '10px',
+                  maxHeight: '260px', overflowY: 'auto', boxShadow: '0 18px 34px rgba(14,90,87,0.16)',
+                }}>
+                  {filteredNodes.length === 0 ? (
+                    <div style={{ padding: '12px', color: subtext, fontSize: '13px', textAlign: 'center' }}>No matches found</div>
+                  ) : filteredNodes.map(n => {
+                    const id = n.customer_id || n[`${n.type}_id`] || n.id
+                    const name = n.first_name ? `${n.first_name} ${n.last_name || ''}`.trim() : (n.dealer_name || n.promotor_name || id)
+                    return (
+                      <div
+                        key={id}
+                        onMouseDown={() => {
+                          setSelectedNodeId(id.toString())
+                          setGridSelectedNode(n)   // ── NEW: direct ah scoped node set pannurom, summary/trend/login/coin ella-um udane update aagum ──
+                          setShowNodeDropdown(false)
+                          setNodeSearch('')
+                        }}
+                        style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: `1px solid ${border}` }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(230,241,239,0.72)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ color: cfg.color, fontFamily: 'monospace', fontSize: '11px' }}>{id}</div>
+                        <div style={{ color: text, fontSize: '13px', fontWeight: 600 }}>{name}</div>
+                        {n.mobile_number && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: subtext, fontSize: '11px' }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            {n.mobile_number}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
-          )
-        })}
-      </div>
-    )}
-  </div>
-)}
+          )}
 
-         <button onClick={handleExportExcel}
-  style={{ background: 'linear-gradient(145deg,rgba(14,90,87,0.12),rgba(230,241,239,0.74))', border: '1px solid rgba(14,90,87,0.28)', color: '#0E5A57', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E5A57" strokeWidth="2">
-    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-  Export Excel
-</button>
+          <button onClick={handleExportExcel}
+            style={{ background: 'linear-gradient(145deg,rgba(14,90,87,0.12),rgba(230,241,239,0.74))', border: '1px solid rgba(14,90,87,0.28)', color: '#0E5A57', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E5A57" strokeWidth="2">
+              <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Export Excel
+          </button>
           <button onClick={handleExportPDF}
-  style={{ background: 'linear-gradient(145deg,rgba(184,111,116,0.12),rgba(255,252,248,0.88))', border: '1px solid rgba(184,111,116,0.28)', color: '#B86F74', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B86F74" strokeWidth="2">
-    <path d="M6 3h9l5 5v13H6z" strokeLinejoin="round"/>
-    <path d="M15 3v5h5" strokeLinejoin="round"/>
-    <path d="M9 13h6M9 16h6M9 10h2" strokeLinecap="round"/>
-  </svg>
-  Export PDF
-</button>
+            style={{ background: 'linear-gradient(145deg,rgba(184,111,116,0.12),rgba(255,252,248,0.88))', border: '1px solid rgba(184,111,116,0.28)', color: '#B86F74', borderRadius: '10px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B86F74" strokeWidth="2">
+              <path d="M6 3h9l5 5v13H6z" strokeLinejoin="round" />
+              <path d="M15 3v5h5" strokeLinejoin="round" />
+              <path d="M9 13h6M9 16h6M9 10h2" strokeLinecap="round" />
+            </svg>
+            Export PDF
+          </button>
           <button
             onClick={() => navigate(-1)}
             style={{ background: 'transparent', border: `1px solid ${border}`, color: subtext, borderRadius: '8px', padding: '6px 14px', cursor: 'pointer', fontSize: '13px' }}
@@ -1071,30 +1121,30 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
         </div>
       </div>
 
-      <div className="print-container" style={{ padding: '32px 40px', maxWidth: '1500px', margin: '0 auto', display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+      <div className="print-container sr-main-container" style={{ padding: '32px 40px', maxWidth: '1500px', margin: '0 auto', display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
 
         <div style={{ flex: '1 1 0%', minWidth: 0 }}>
 
-        
-{gridSelectedNode && (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', background: cardBg, border: `1px solid ${border}`, borderRadius: '10px', padding: '10px 16px' }}>
-    <span style={{ color: subtext, fontSize: '12px' }}>Showing data for</span>
-    <span style={{ color: nodeColor(gridSelectedNode), fontWeight: 700, fontSize: '13px' }}>
-      {(LEVEL_LABELS[gridSelectedNode.type] || gridSelectedNode.type)}{nodeName(gridSelectedNode)}
-    </span>
-    <button onClick={() => setGridSelectedNode(null)}
-      style={{ marginLeft: 'auto', background: 'transparent', border: `1px solid ${border}`, color: subtext, borderRadius: '8px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}>
-      Clear
-    </button>
-  </div>
-)}
 
-{/* Summary cards */}
-<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '28px' }}>
-           <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
-    <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total sales</div>
-    <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900, lineHeight: 1.2, letterSpacing: 'normal', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-  </div>
+          {gridSelectedNode && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', background: cardBg, border: `1px solid ${border}`, borderRadius: '10px', padding: '10px 16px' }}>
+              <span style={{ color: subtext, fontSize: '12px' }}>Showing data for</span>
+              <span style={{ color: nodeColor(gridSelectedNode), fontWeight: 700, fontSize: '13px' }}>
+                {(LEVEL_LABELS[gridSelectedNode.type] || gridSelectedNode.type)}: {nodeName(gridSelectedNode)}
+              </span>
+              <button onClick={() => setGridSelectedNode(null)}
+                style={{ marginLeft: 'auto', background: 'transparent', border: `1px solid ${border}`, color: subtext, borderRadius: '8px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}>
+                Clear
+              </button>
+            </div>
+          )}
+
+          {/* Summary cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+            <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
+              <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total sales</div>
+              <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900, lineHeight: 1.2, letterSpacing: 'normal', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+            </div>
             <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
               <div style={{ color: subtext, fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total orders</div>
               <div className="report-kpi-value" style={{ fontSize: '24px', fontWeight: 900 }}>{totalOrders}</div>
@@ -1137,21 +1187,21 @@ const goToInactiveLogin = () => navigate('/login-inactive', { state: { ids: scop
           </div>
 
           {/* Breakdown grid â€” same lane style as the hierarchy grid page */}
-          <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '24px 28px' }}>
+          <div className="print-card" style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '16px', padding: '24px 28px', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
             <div className="report-section-title" style={{ fontSize: '13px', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '18px' }}>
               Network breakdown
             </div>
             <HierarchyBreakdownGrid
-  cardBg={cardBg} border={border} text={text} subtext={subtext}
-  selectedNode={gridSelectedNode}
-  onSelectNode={setGridSelectedNode}
-/>
+              cardBg={cardBg} border={border} text={text} subtext={subtext}
+              selectedNode={gridSelectedNode}
+              onSelectNode={setGridSelectedNode}
+            />
           </div>
 
         </div>
 
-       {/* â”€â”€ RIGHT: Login Status + Coin Stock Pie panels â”€â”€ */}
-        <div style={{ width: '320px', flexShrink: 0, position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* â”€â”€ RIGHT: Login Status + Coin Stock Pie panels â”€â”€ */}
+        <div className="sr-sidebar" style={{ width: '320px', flexShrink: 0, position: 'sticky', top: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {role === 'super_admin' && (
             <LoginStatusPie
               activeCount={scopedLoginStats.active.length}
