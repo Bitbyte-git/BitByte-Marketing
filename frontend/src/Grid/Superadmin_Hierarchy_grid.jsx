@@ -545,7 +545,7 @@ function showChainPopup(anchorEl, ancestors, current, dark, superAdminEmail) {
 // `active` = this is the currently selected one in its row (full bright).
 // not active = dimmed, but still clickable.
 // ══════════════════════════════════════════════════════════════════
-const STATUS_COLOR = { red: '#C92035', orange: '#BB8958', yellow: '#CCA881', green: '#16A34A' }
+const STATUS_COLOR = { red: '#DC2626', orange: '#F97316', yellow: '#EAB308', green: '#16A34A' }
 
 
 // ── NEW: professional "end of chain" empty state icon ──
@@ -990,18 +990,22 @@ const customerLanes = useMemo(() => {
   // (so the next rows auto-fall-back to their own "first" item) ──
 const selectAdmin = (node) => {
     setSelAdmin(node.id); setSelDealer(null); setSelSubDealer(null); setSelPromotor(null); setCustomerChain([])
+    setActiveStatusFilter(null)
     if (!dealerCache[node.id]) fetchChildren('admin', node.id, node.id, setDealerCache)
   }
   const selectDealer = (node) => {
     setSelDealer(node.id); setSelSubDealer(null); setSelPromotor(null); setCustomerChain([])
+    setActiveStatusFilter(null)
     if (!subDealerCache[node.id]) fetchChildren('dealer', node.id, node.id, setSubDealerCache)
   }
   const selectSubDealer = (node) => {
     setSelSubDealer(node.id); setSelPromotor(null); setCustomerChain([])
+    setActiveStatusFilter(null)
     if (!promotorCache[node.id]) fetchChildren('sub_dealer', node.id, node.id, setPromotorCache)
   }
   const selectPromotor = (node) => {
     setSelPromotor(node.id); setCustomerChain([])
+    setActiveStatusFilter(null)
     if (!customerCache[`p_${node.id}`]) fetchChildren('promotor', node.id, `p_${node.id}`, setCustomerCache)
   }
 
@@ -1017,10 +1021,12 @@ const selectAdmin = (node) => {
   const selectFns = { admin: selectAdmin, dealer: selectDealer, sub_dealer: selectSubDealer, promotor: selectPromotor }
   const currentSelIds = { admin: selAdmin, dealer: selDealer, sub_dealer: selSubDealer, promotor: selPromotor }
   const toggleStatusFilter = (role, node, status) => {
+    // ── FIX: select FIRST (this now clears any stale filter internally),
+    // THEN set the wanted filter — so the filter always wins last ──
+    if (currentSelIds[role] !== node.id) selectFns[role](node)
     setActiveStatusFilter(prev =>
       (prev && prev.role === role && prev.nodeId === node.id && prev.status === status) ? null : { role, nodeId: node.id, status }
     )
-    if (currentSelIds[role] !== node.id) selectFns[role](node)
   }
 
   // ── search across the whole hierarchy (unchanged from before) ──

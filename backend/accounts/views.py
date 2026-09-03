@@ -2325,7 +2325,8 @@ class HierarchyNodeOrdersView(APIView):
                 'image': img_url,
                 'total_qty': g['total_qty'], 'total_amount': float(g['total_amount']),
                 'last_rate': float(g['last_unit_price']), 'latest_at': g['latest_at'],
-                'owner': {'id': owner.id, 'first_name': owner.first_name, 'last_name': owner.last_name} if owner else None,
+                # ── NEW: user_id add pண்ணுறோம் — front-end path-to-node lookup ku thevai ──
+                'owner': {'id': owner.id, 'user_id': owner.user_id, 'first_name': owner.first_name, 'last_name': owner.last_name} if owner else None,
             })
 
         return Response({
@@ -2658,6 +2659,93 @@ class HierarchyNodeInfoView(APIView):
             'order_count': order_count,
         })
 
+
+class HierarchyPathToNodeView(APIView):
+    """Given a currently-displayed root (role+id) and a buyer's User id,
+    walks the created_by chain from buyer up to that root and returns the
+    ordered path (root's direct child ... buyer) so the frontend can
+    auto-expand the tree one level at a time down to that person."""
+    permission_classes = [IsAuthenticated]
+
+    ROLE_PROFILE_ATTR = {
+        'admin': ('admin_profile', 'admin_id'),
+        'dealer': ('dealer_profile', 'dealer_id'),
+        'sub_dealer': ('sub_dealer_profile', 'sub_dealer_id'),
+        'promotor': ('promotor_profile', 'promotor_id'),
+        'customer': ('customer_profile', 'customer_id'),
+    }
+
+    def get(self, request):
+        root_role = request.query_params.get('root_role')
+        root_id = request.query_params.get('root_id')
+        target_user_id = request.query_params.get('target_user_id')
+
+        if not target_user_id:
+            return Response({'error': 'target_user_id required'}, status=400)
+        try:
+            target_user_id = int(target_user_id)
+        except ValueError:
+            return Response({'error': 'invalid target_user_id'}, status=400)
+
+        try:
+            buyer = User.objects.get(id=target_user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'buyer not found'}, status=404)
+
+        # ── Walk up buyer -> ... -> super_admin, using the same created_by
+        # chain the commission engine uses ──
+        chain_users = [buyer]
+        current = buyer
+        seen = set()
+        while True:
+            creator = _get_creator_user(current)
+            if not creator or creator.id in seen:
+                break
+            seen.add(creator.id)
+            chain_users.append(creator)
+            if creator.role == 'super_admin':
+                break
+            current = creator
+        chain_users.reverse()   # top (near super_admin) -> bottom (buyer)
+
+        path = []
+        for u in chain_users:
+            if u.role == 'super_admin':
+                continue
+            attr, id_field = self.ROLE_PROFILE_ATTR.get(u.role, (None, None))
+            if not attr:
+                continue
+            try:
+                p = getattr(u, attr)
+            except Exception:
+                continue
+            path.append({
+                'type': u.role,
+                'id': p.id,
+                'user_id': u.id,
+                id_field: getattr(p, id_field, None),
+                'first_name': p.first_name,
+                'last_name': p.last_name,
+                'mobile_number': getattr(p, 'mobile_number', None),
+                'city_name': getattr(p, 'city_name', None),
+            })
+
+        # ── Trim everything above the currently-open root node ──
+        if root_role and root_id:
+            try:
+                root_id_int = int(root_id)
+            except ValueError:
+                root_id_int = None
+            trimmed = []
+            found_root = False
+            for node in path:
+                if found_root:
+                    trimmed.append(node)
+                elif node['type'] == root_role and node['id'] == root_id_int:
+                    found_root = True
+            path = trimmed if found_root else path
+
+        return Response({'path': path})
 
 # ── NEW: role-scoped hierarchy for Admin / Dealer / Sub Dealer / Promotor logins.
 # Ovvoruthar their own subtree mattum kaanpanum — SuperAdmin mari full tree venaam. ──

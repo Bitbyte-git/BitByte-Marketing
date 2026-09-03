@@ -901,21 +901,6 @@ const specialMega = {
       ],
     ],
     [
-      "Silver Bars",
-      "▣",
-      "/collection/coins?metal=silver",
-      [
-        "10g Silver Bars",
-        "20g Silver Bars",
-        "50g Silver Bars",
-        "100g Silver Bars",
-        "250g Silver Bars",
-        "500g Silver Bars",
-        "1kg Silver Bars",
-        "5kg Silver Bars",
-      ],
-    ],
-    [
       "Collectible Coins",
       "◎",
       "/collection/coins",

@@ -9,7 +9,7 @@ from .views import (
 HierarchySubtreeOrdersView, HierarchyAdminsView, HierarchyChildrenView, SalesReportView, OrderTimeSeriesView, TodayLoginStatusView,OrderTimeSeriesView, CoinRequestView, CoinRequestApproveView, CoinRequestRejectView, CoinRequestApproveAllView, CoinStockView, SuperAdminAddCoinsView, CoinStockForUserView, MyHierarchyView, TodayRewardsView, MyBasicInfoView,
  RetailerPromotionListView, RetailerPromotionActionView, WholesaleDealerPromotionListView, WholesaleDealerPromotionActionView, DistributorPromotionListView, DistributorPromotionActionView, SuperStockistPromotionListView, SuperStockistPromotionActionView, PromotionCustomerListView, PromotionCustomerListView, PromotionNodeListView,
  ReferrerInfoView, PublicCustomerRegisterView,GenerateReferralLinkView, RechargeCreateOrderView, RechargeVerifyPaymentView, WalletView, RechargeHistoryView, RechargeStatementView, PayWithCoinsView, PaymentsSummaryView, UserLookupView, SendCoinsView, AdminUserHistoryView, AdminSentHistoryView, AutoPayCreateView, AutoPayConfirmView, AutoPayStatusView, AutoPayToggleView, autopay_webhook,AutoPayMandateListView, AffordableProductsView,
- HierarchyPersonSearchView, SalesSummaryView, SalesTrendView, HierarchyNodeOrdersView, HierarchyNodeInfoView,
+ HierarchyPersonSearchView, SalesSummaryView, SalesTrendView, HierarchyNodeOrdersView, HierarchyNodeInfoView, HierarchyPathToNodeView, 
 
 
 
@@ -37,6 +37,7 @@ urlpatterns = [
     path('hierarchy/children/', HierarchyChildrenView.as_view()),
     path('hierarchy/node-orders/', HierarchyNodeOrdersView.as_view()),
     path('hierarchy/node-info/', HierarchyNodeInfoView.as_view()),
+     path('hierarchy/path-to-node/', HierarchyPathToNodeView.as_view()),
     path('dashboard/', DashboardView.as_view()),
     path('dashboard-quick-stats/', DashboardQuickStatsView.as_view()),
     path('announcements/', AnnouncementView.as_view()),

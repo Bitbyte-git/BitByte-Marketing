@@ -204,17 +204,17 @@ export default function SuperAdminHierarchySalesCount() {
       .finally(() => setLoading(false))
   }, [role, id])
 
-  // ── NEW: node expand pannும்போது, children fetch (cache-first, sessionStorage) ──
-  const fetchChildren = async (node) => {
+    const fetchChildren = async (node) => {
     const key = `${node.type}-${node.id}`
     setLoadingNode(key)
     try {
       const cacheKey = `stree_children_${key}`
       const cached = sessionStorage.getItem(cacheKey)
       if (cached) {
-        setExpandedChildren(prev => ({ ...prev, [key]: JSON.parse(cached) }))
+        const parsed = JSON.parse(cached)
+        setExpandedChildren(prev => ({ ...prev, [key]: parsed }))
         setLoadingNode(null)
-        return
+        return parsed   // ── NEW: return so callers can chain without waiting on state ──
       }
       const childRole = ROLE_CFG[node.type].childRole
       let res
@@ -228,20 +228,58 @@ export default function SuperAdminHierarchySalesCount() {
       const children = (res.data.items || []).map(c => ({ ...c, type: childRole }))
       setExpandedChildren(prev => ({ ...prev, [key]: children }))
       sessionStorage.setItem(cacheKey, JSON.stringify(children))   // ── non-sensitive summary mattum cache ──
+      setLoadingNode(null)
+      return children   // ── NEW ──
     } catch (err) {
       setExpandedChildren(prev => ({ ...prev, [key]: [] }))
+      setLoadingNode(null)
+      return []   // ── NEW ──
     }
-    setLoadingNode(null)
   }
 
   const jumpToCustomer = (custNode) => {
     setSelected(custNode)
-    setPulseId(`customer-${custNode.id}`)
+    setPulseId(`${custNode.type || 'customer'}-${custNode.id}`)
     setTimeout(() => {
-      const el = document.getElementById(`streeid-customer-${custNode.id}`)
+      const el = document.getElementById(`streeid-${custNode.type || 'customer'}-${custNode.id}`)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 60)
     setTimeout(() => setPulseId(null), 1600)
+  }
+
+  // ── NEW: right-side product card-la "owner" click pண்ணினா — root-la irundhu
+  // andha customer varaikkum tree-la irukka ella level-ஐயும் one-by-one expand
+  // pண்ணி, kடைசில அந்த customer-க்கு smooth scroll pண்ணும். ──
+  const revealPathToCustomer = async (owner) => {
+    if (!owner?.user_id || !root) {
+      // fallback — old behaviour, might not find the node if collapsed
+      jumpToCustomer(owner)
+      return
+    }
+    try {
+      const res = await api.get('/hierarchy/path-to-node/', {
+        params: { root_role: root.type, root_id: root.id, target_user_id: owner.user_id },
+      })
+      const path = res.data.path || []
+      if (path.length === 0) {
+        jumpToCustomer(owner)
+        return
+      }
+
+      let parentNode = root
+      for (const node of path) {
+        const parentKey = `${parentNode.type}-${parentNode.id}`
+        if (!expandedChildren[parentKey]) {
+          await fetchChildren(parentNode)
+        }
+        parentNode = node
+      }
+
+      jumpToCustomer(path[path.length - 1])
+    } catch (err) {
+      console.error('revealPathToCustomer failed:', err)
+      jumpToCustomer(owner)
+    }
   }
 
   // ══════════════════════════════════════════════════════════════════
@@ -534,10 +572,10 @@ export default function SuperAdminHierarchySalesCount() {
                     {groupedList.map((g, i) => {
                       const imgUrl = getImageUrl(g.image)
                       return (
-                        <div
+                                                <div
                           key={`${g.product_name}-${g.owner?.id}-${i}`}
                           className="sprod-card"
-                          onClick={() => g.owner && jumpToCustomer(g.owner)}
+                          onClick={() => g.owner && revealPathToCustomer(g.owner)}
                           style={{ animationDelay: `${i * 45}ms`, cursor: g.owner ? 'pointer' : 'default' }}
                         >
                           <div className="sprod-img">
