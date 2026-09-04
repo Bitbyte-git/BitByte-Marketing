@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api'
 import CustomerFooter from './CustomerFooter'
@@ -48,18 +48,18 @@ const filterCategories = [
 
 const goldFilterCategories = [
   ['All Gold Jewellery', '/collection/all?metal=gold', null],
-  ['Gold Necklaces', '/collection/all?metal=gold&category=necklaces', 'necklaces'],
-  ['Gold Earrings', '/collection/all?metal=gold&category=earrings', 'earrings'],
+  ['Gold Coins', '/collection/coins?metal=gold', null],
   ['Gold Rings', '/collection/all?metal=gold&category=rings', 'rings'],
+  ['Gold Earrings', '/collection/all?metal=gold&category=earrings', 'earrings'],
   ['Gold Bangles', '/collection/all?metal=gold&category=bangles', 'bangles'],
-  ['Gold Chains', '/collection/all?metal=gold&category=chains', 'chains'],
   ['Gold Pendants', '/collection/all?metal=gold&category=pendants', 'pendants'],
-  ['Mangalsutra', '/collection/all?metal=gold&category=mangalsutra', 'mangalsutra'],
-  ['Gold Nose Pin', '/collection/all?metal=gold&category=nosepin', null],
+  ['Gold Chains', '/collection/all?metal=gold&category=chains', 'chains'],
+  ['Gold Necklaces', '/collection/all?metal=gold&category=necklaces', 'necklaces'],
+  ['Gold Mangalsutra', '/collection/all?metal=gold&category=mangalsutra', 'mangalsutra'],
+  ['Gold Nose Pin', '/collection/all?metal=gold&category=nosepin', 'nosepin'],
   ['Gold Anklets', '/collection/all?metal=gold&category=anklets', 'anklets'],
-  ['Coin & Bars', '/collection/coins?metal=gold', null],
+  ['Gold Coins & Bars', '/collection/coins?metal=gold', null],
 ]
-
 const promos = [
   { title: 'Daily Wear', text: 'Elegant designs for everyday beauty.', route: '/collection/all?dailywear=true', image: '/dailywera.png' },
   { title: 'Wedding Collection', text: 'Make your big day even more special.', route: '/collection/all?wedding=true', image: '/wedding_necklaces.jpg' },
@@ -79,7 +79,6 @@ const metalCopy = {
   gold: {
     title: 'Gold Jewellery',
     crumb: 'Gold',
-    subtitle: 'Timeless gold jewellery crafted with purity and perfection.',
     accent: '#a36b18',
     bannerTitle: 'Shine in Every Moment',
     bannerText: 'Explore our exclusive gold collections designed to celebrate you.',
@@ -90,7 +89,6 @@ const metalCopy = {
   diamond: {
     title: 'Diamond Jewellery',
     crumb: 'Diamond',
-    subtitle: 'Radiant pieces designed for brilliance, elegance and everyday luxury.',
     accent: '#65758a',
     bannerTitle: 'Brilliance for Every Occasion',
     bannerText: 'Discover rings, earrings and necklaces with lasting sparkle.',
@@ -101,7 +99,6 @@ const metalCopy = {
   silver: {
     title: 'Silver Jewellery',
     crumb: 'Silver',
-    subtitle: 'Pure silver designs for gifting, daily style and classic moments.',
     accent: '#6b7280',
     bannerTitle: 'Pure. Elegant. Everyday.',
     bannerText: 'Explore silver jewellery and coins with trusted purity.',
@@ -112,7 +109,6 @@ const metalCopy = {
   platinum: {
     title: 'Platinum Jewellery',
     crumb: 'Platinum',
-    subtitle: 'Modern platinum pieces with a refined premium finish.',
     accent: '#788392',
     bannerTitle: 'Minimal Luxury in Platinum',
     bannerText: 'Premium designs for moments that deserve quiet elegance.',
@@ -120,6 +116,58 @@ const metalCopy = {
     sideImage: '/platinum_necklas.jpg',
     sideTitle: 'Modern. Rare. Refined.',
   },
+}
+
+function useFixedSidebar() {
+  const wrapRef = useRef(null)
+  const asideRef = useRef(null)
+  const [style, setStyle] = useState({})
+
+  useEffect(() => {
+    const update = () => {
+      if (!wrapRef.current || !asideRef.current) return
+      if (window.innerWidth <= 820) {
+        setStyle({})
+        return
+      }
+
+      const wrapRect = wrapRef.current.getBoundingClientRect()
+      const asideHeight = asideRef.current.offsetHeight
+      const topOffset = 192
+
+      // wrap-div bottom edge (content column mudinja idam) varaikkum eppadi
+      // space irukku nu check pannuvom
+      const spaceBelow = wrapRect.bottom - topOffset
+
+      if (spaceBelow < asideHeight) {
+        // content mudinjididuchu (footer vara pogudhu) — sidebar-a
+        // wrap-div oda kadaisi bottom-la stop pannidalam, footer mela varaadhu
+        setStyle({
+          position: 'absolute',
+          left: 0,
+          width: '100%',
+          bottom: 0,
+          top: 'auto',
+        })
+      } else {
+        setStyle({
+          position: 'fixed',
+          top: topOffset,
+          left: wrapRect.left,
+          width: wrapRect.width,
+        })
+      }
+    }
+    update()
+    window.addEventListener('resize', update)
+    window.addEventListener('scroll', update)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update)
+    }
+  }, [])
+
+  return { wrapRef, asideRef, style }
 }
 
 function Icon({ type, size = 22 }) {
@@ -226,14 +274,14 @@ function ProductCard({ product, rates, navigate }) {
     <article className="an-product-card" onClick={goProduct}>
       <div className="an-product-image">
         <img src={image} alt={product.name} />
-        <button className="an-heart" type="button" onClick={event => event.stopPropagation()} aria-label="Wishlist">â™¡</button>
+                <button className="an-heart" type="button" onClick={event => event.stopPropagation()} aria-label="Wishlist">♡</button>
       </div>
       <div className="an-product-body">
         <h3>{product.name}</h3>
-        <p>{(product.grade || product.metal || 'Jewellery').toUpperCase()} {product.metal || 'Jewellery'} Â· {Number(product.net_weight || 0).toFixed(2)} g</p>
+        <p>{(product.grade || product.metal || 'Jewellery').toUpperCase()} {product.metal || 'Jewellery'} · {Number(product.net_weight || 0).toFixed(2)} g</p>
         <strong>{money(price)}</strong>
         <div className="an-rating">
-          <span>â˜…â˜…â˜…â˜…â˜…</span>
+          <span>★★★★★</span>
           <small>({reviews})</small>
           <button type="button" onClick={addCart} aria-label="Add to cart"><Icon type="lock" size={15} /></button>
         </div>
@@ -242,7 +290,9 @@ function ProductCard({ product, rates, navigate }) {
   )
 }
 
-function FilterPanel({ activeRoute, navigate, metalFilter, categoryFilter, subcategoryFilter }) {
+function FilterPanel({ activeRoute, navigate, metalFilter, categoryFilter, subcategoryFilter, activeScrollSub }) {
+  const { wrapRef, asideRef, style } = useFixedSidebar()
+
   const categories = metalFilter === 'gold' ? goldFilterCategories : filterCategories
   const collapses = metalFilter === 'gold'
     ? ['Price Range', 'Occasion', 'Gender', 'Purity', 'Collection']
@@ -256,6 +306,17 @@ function FilterPanel({ activeRoute, navigate, metalFilter, categoryFilter, subca
   }, [categoryFilter])
 
   const subcategoryMetal = metalFilter || 'gold'
+  const subButtonRefs = useRef({})
+
+  // right side-la eந்த subcategory active-a maarudhோ, adhoda left side
+  // button-a smooth-a visible idathukku scroll pannும்
+  useEffect(() => {
+    if (!activeScrollSub) return
+    const el = subButtonRefs.current[activeScrollSub]
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [activeScrollSub])
 
   const buildSubcategoryRoute = (baseRoute, subLabel) => {
     const sep = baseRoute.includes('?') ? '&' : '?'
@@ -263,38 +324,40 @@ function FilterPanel({ activeRoute, navigate, metalFilter, categoryFilter, subca
   }
 
   return (
-    <aside className="an-filter">
-      <h2>{metalFilter === 'gold' ? 'FILTERS' : 'Shop By'}</h2>
-      <div className="an-filter-section">
-        <div className="an-filter-title">Category <span>{metalFilter === 'gold' ? '^' : '-'}</span></div>
-        {categories.map(([label, route, key]) => {
-          const subOptions = key ? getSubcategories(key, subcategoryMetal) : []
-          const isOpen = key && expandedKey === key
-          return (
-            <div key={label}>
-              <button
-                className={activeRoute === route && !subcategoryFilter ? 'active' : ''}
-                type="button"
-                onClick={() => {
-                  if (key && subOptions.length) {
-                    setExpandedKey(isOpen ? null : key)
-                  }
-                  navigate(route)
-                }}
-              >
-                {label}
-                {subOptions.length > 0 && (
-                  <span style={{ float: 'right' }}>{isOpen ? '−' : '+'}</span>
-                )}
-              </button>
-              {isOpen && subOptions.length > 0 && (
+    <div ref={wrapRef} className="an-filter-wrap">
+      <aside ref={asideRef} className="an-filter" style={style}>
+        <h2>{metalFilter === 'gold' ? 'FILTERS' : 'Shop By'}</h2>
+        <div className="an-filter-section">
+          <div className="an-filter-title">Category <span>{metalFilter === 'gold' ? '^' : '-'}</span></div>
+          {categories.map(([label, route, key]) => {
+            const subOptions = key ? getSubcategories(key, subcategoryMetal) : []
+            const isOpen = key && expandedKey === key
+            return (
+              <div key={label}>
+                <button
+                  className={activeRoute === route && !subcategoryFilter ? 'active' : ''}
+                  type="button"
+                  onClick={() => {
+                    if (key && subOptions.length) {
+                      setExpandedKey(isOpen ? null : key)
+                    }
+                    navigate(route)
+                  }}
+                >
+                  {label}
+                  {subOptions.length > 0 && (
+                    <span style={{ float: 'right' }}>{isOpen ? '−' : '+'}</span>
+                  )}
+                </button>
+                              {isOpen && subOptions.length > 0 && (
                 <div style={{ margin: '2px 0 6px 14px', paddingLeft: '8px', borderLeft: '1.5px solid #e7e1d9' }}>
                   {subOptions.map(sub => (
                     <button
                       key={sub}
+                      ref={el => (subButtonRefs.current[sub] = el)}
                       type="button"
                       style={{ fontSize: '12px' }}
-                      className={subcategoryFilter === sub ? 'active' : ''}
+                      className={(activeScrollSub || subcategoryFilter) === sub ? 'active' : ''}
                       onClick={() => navigate(buildSubcategoryRoute(route, sub))}
                     >
                       {sub}
@@ -302,18 +365,19 @@ function FilterPanel({ activeRoute, navigate, metalFilter, categoryFilter, subca
                   ))}
                 </div>
               )}
-            </div>
-          )
-        })}
-      </div>
-      {collapses.map(label => (
-        <div className="an-filter-collapse" key={label}>
-          <strong>{label}</strong>
-          <span>+</span>
+              </div>
+            )
+          })}
         </div>
-      ))}
-      <button className="an-clear" type="button" onClick={() => navigate('/collection/all')}>Clear All Filters</button>
-    </aside>
+        {collapses.map(label => (
+          <div className="an-filter-collapse" key={label}>
+            <strong>{label}</strong>
+            <span>+</span>
+          </div>
+        ))}
+        <button className="an-clear" type="button" onClick={() => navigate('/collection/all')}>Clear All Filters</button>
+      </aside>
+    </div>
   )
 }
 
@@ -357,6 +421,8 @@ export default function AllCollection() {
   const [loading, setLoading] = useState(true)
   const [subcategorySections, setSubcategorySections] = useState([])
   const [sectionsLoading, setSectionsLoading] = useState(false)
+  const [activeScrollSub, setActiveScrollSub] = useState(null)
+  const sectionRefs = useRef({})
 
   useEffect(() => {
     if (metalFilter === 'diamond' || metalFilter === 'platinum') {
@@ -409,9 +475,11 @@ setProducts(filteredProducts)
   }, [metalFilter, categoryFilter, subcategoryFilter, genderFilter, occasionFilter, priceFilter, searchFilter, isWedding, isDailywear])
 
   // subcategory scroll — clicked subcategory first, remaining subcategories
-  // (same category, navbar order) follow one after another below it
+  // (same category, navbar order) follow one after another below it.
+  // Top-level category click (subcategory illama) — first subcategory-ah
+  // default-a eduthukom, appadiye same section-scroll view varum.
   useEffect(() => {
-    if (!subcategoryFilter || !categoryFilter) {
+    if (!categoryFilter) {
       setSubcategorySections([])
       return
     }
@@ -428,10 +496,12 @@ setProducts(filteredProducts)
         return
       }
 
-      // clicked subcategory first, rest in navbar list order
+      // subcategoryFilter iruntha adha first-a vachukom;
+      // illainaa list-oda first subcategory-ah default-a eduthukom
+      const selectedSub = subcategoryFilter || allSubs[0]
       const orderedSubs = [
-        subcategoryFilter,
-        ...allSubs.filter(s => s !== subcategoryFilter),
+        selectedSub,
+        ...allSubs.filter(s => s !== selectedSub),
       ]
 
       try {
@@ -460,6 +530,32 @@ setProducts(filteredProducts)
     return () => { alive = false }
   }, [subcategoryFilter, categoryFilter, metalFilter])
 
+  // right side scroll aagும்போது eந்த subcategory section top-la
+  // varudhோ adha detect pannitu left side active-a update pannும்
+  useEffect(() => {
+    if (!subcategoryFilter || !subcategorySections.length) {
+      setActiveScrollSub(null)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setActiveScrollSub(entry.target.dataset.subsection)
+          }
+        })
+      },
+      { rootMargin: '-160px 0px -70% 0px', threshold: 0 }
+    )
+
+    Object.values(sectionRefs.current).forEach(el => {
+      if (el) observer.observe(el)
+    })
+
+    return () => observer.disconnect()
+  }, [subcategorySections, subcategoryFilter])
+
   const visibleProducts = useMemo(() => {
     const list = [...products]
     if (sortBy === 'price-low') list.sort((a, b) => productPrice(a, rates) - productPrice(b, rates))
@@ -479,7 +575,6 @@ setProducts(filteredProducts)
             ? 'Daily Wear'
             : 'All Jewellery',
     crumb: 'All Jewellery',
-    subtitle: 'Explore our wide range of timeless designs crafted for every you.',
     accent: '#073B3F',
     bannerTitle: 'Heritage Crafted For Generations',
     bannerText: 'Explore jewellery collections made for every occasion.',
@@ -508,7 +603,12 @@ setProducts(filteredProducts)
     <section className="an-loading">Loading products...</section>
   ) : subcategorySections.length ? (
     subcategorySections.map(section => (
-      <section key={section.name} style={{ marginTop: '32px' }}>
+      <section
+        key={section.name}
+        ref={el => (sectionRefs.current[section.name] = el)}
+        data-subsection={section.name}
+        style={{ marginTop: '32px' }}
+      >
         <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '22px', marginBottom: '16px', color: '#111' }}>
           {section.name}
         </h2>
@@ -523,7 +623,7 @@ setProducts(filteredProducts)
     <section className="an-empty">No products found. Try another collection.</section>
   )
 
-  const mainContent = subcategoryFilter ? subcategoryResults : productResults
+   const mainContent = categoryFilter ? subcategoryResults : productResults
 
   return (
     <div className="an-page">
@@ -535,8 +635,8 @@ setProducts(filteredProducts)
           font-family: Inter, "Montserrat", system-ui, sans-serif;
         }
 
-        .an-shell {
-          width: min(100% - 76px, 1810px);
+               .an-shell {
+          width: min(100% - 48px, 2200px);
           margin: 0 auto;
         }
 
@@ -560,13 +660,31 @@ setProducts(filteredProducts)
           box-shadow: 0 12px 36px rgba(7,31,34,0.06);
         }
 
-        .an-filter {
+        .an-filter-wrap {
+          width: 100%;
+          min-height: 1px;
+          position: relative;
+          align-self: stretch;
+        }
+
+                .an-filter {
           position: sticky;
           top: 192px;
           align-self: start;
           border-radius: 10px;
-          overflow: hidden;
+          overflow-y: auto;
+          max-height: calc(100vh - 210px);
           background: linear-gradient(180deg,#fdfaf7,#f8f4ef);
+          scroll-behavior: smooth;
+        }
+
+        .an-filter::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .an-filter::-webkit-scrollbar-thumb {
+          background: #cfc6ba;
+          border-radius: 999px;
         }
 
         .an-filter h2 {
@@ -942,9 +1060,10 @@ setProducts(filteredProducts)
           background: #fff5e7;
         }
 
-        .an-products {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+         .an-products {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: start;
           gap: clamp(22px, 2.2vw, 34px);
           margin-top: 30px;
           align-items: start;
@@ -952,6 +1071,7 @@ setProducts(filteredProducts)
 
         .an-product-card {
           min-width: 0;
+          flex: 0 0 calc(25% - 26px);
           border: 1px solid #eadfd3;
           border-radius: 10px;
           overflow: hidden;
@@ -1147,10 +1267,10 @@ setProducts(filteredProducts)
           .an-products { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
         }
 
-        @media (max-width: 820px) {
+                @media (max-width: 820px) {
           .an-shell { width: min(100% - 28px, 1810px); }
           .an-layout { grid-template-columns: 1fr; padding-top: 18px; }
-          .an-filter { position: static; }
+          .an-filter { position: static !important; left: auto !important; width: 100% !important; }
           .an-main-head { grid-template-columns: 1fr; }
           .an-category-grid,
           .an-products { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
@@ -1173,7 +1293,7 @@ setProducts(filteredProducts)
 
       <main className="an-shell">
         <section className="an-layout">
-                    <FilterPanel activeRoute={activeRoute} navigate={navigate} metalFilter={metalFilter} categoryFilter={categoryFilter} subcategoryFilter={subcategoryFilter} />
+                    <FilterPanel activeRoute={activeRoute} navigate={navigate} metalFilter={metalFilter} categoryFilter={categoryFilter} subcategoryFilter={subcategoryFilter} activeScrollSub={activeScrollSub} />
 
           <div className="an-content">
             <div className="an-main-head">
@@ -1198,31 +1318,8 @@ setProducts(filteredProducts)
 
             {metalFilter ? (
               <>
-                <section className="an-metal-banner">
-                  <div>
-                    <h2>{copy.bannerTitle}</h2>
-                    <p>{copy.bannerText}</p>
-                    <button className="an-primary-btn" type="button" onClick={() => navigate('/collection/all')}>Explore Collections</button>
-                  </div>
-                  <div className="an-banner-badges">
-                    <div><Icon type="hallmark" /><br />22K & 18K<br />Certified Gold</div>
-                    <div><Icon type="hallmark" /><br />BIS<br />Hallmarked</div>
-                    <div><Icon type="exchange" /><br />Lifetime<br />Exchange</div>
-                  </div>
-                </section>
 
-                <section className="an-cat-rail">
-                  {goldRail.map(item => (
-                    <button type="button" key={item.label} onClick={() => navigate(item.route || `/collection/all?metal=${metalFilter}&category=${item.category}`)}>
-                      <img src={item.image} alt={item.label} />
-                      <span>{item.label}</span>
-                    </button>
-                  ))}
-                  <button type="button" onClick={() => navigate('/collection/all')}>
-                    <span className="view-all">â†’</span>
-                    <span>View All</span>
-                  </button>
-                </section>
+                
 
                                 {mainContent}
               </>
@@ -1233,18 +1330,6 @@ setProducts(filteredProducts)
                     <CategoryTile key={item.label} item={item} navigate={navigate} />
                   ))}
                 </section>
-
-                <section className="an-promo-grid">
-                  {promos.map(item => (
-                    <button className="an-promo" type="button" key={item.title} onClick={() => navigate(item.route)}>
-                      <h3>{item.title}</h3>
-                      <p>{item.text}</p>
-                      <span>Explore Now -&gt;</span>
-                      <img src={item.image} alt="" />
-                    </button>
-                  ))}
-                </section>
-
                                                 {mainContent}
               </>
             )}

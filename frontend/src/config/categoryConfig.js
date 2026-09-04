@@ -37,15 +37,18 @@ export const CATEGORY_SUBCATEGORIES = {
     silver: ["Silver Mangalsutra", "Silver Black Bead Mangalsutra", "Silver Short Mangalsutra"],
   },
   anklets: {
-    gold: [],
+    gold: ["Gold Anklets", "Beaded Gold Anklets", "Kids Gold Anklets", "Bridal Gold Anklets"],
     silver: ["Plain Silver Anklets", "Oxidised Anklets", "Beaded Anklets", "Charm Anklets", "Designer Anklets", "Pair Anklets", "Kids Anklets", "Temple Anklets"],
   },
   coins: {
     gold: ["Gold Coins", "Gold Bars", "Gift Coins", "Religious Coins", "Collectible Coins"],
     silver: ["1g Silver Coins", "2g Silver Coins", "5g Silver Coins", "10g Silver Coins", "20g Silver Coins", "50g Silver Coins", "100g Silver Coins"],
   },
-  // nosepin, toerings, cufflinks, brooches, tiepins — subcategory venumna appuram add pannalam
-  nosepin: { gold: [], silver: [] },
+  nosepin: {
+    gold: ["Gold Nose Pin", "Gold Stud Nose Pin", "Gold Hoop Nose Pin", "Bridal Gold Nose Pin"],
+    silver: ["Silver Nose Pin", "Oxidised Silver Nose Pin", "Silver Stud Nose Pin"],
+  },
+  // toerings, cufflinks, brooches, tiepins — subcategory venumna appuram add pannalam
   toerings: { gold: [], silver: [] },
   cufflinks: { gold: [], silver: [] },
   brooches: { gold: [], silver: [] },
