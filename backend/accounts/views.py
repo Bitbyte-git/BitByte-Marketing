@@ -1320,6 +1320,14 @@ class JewelryProductView(APIView):
         if wedding_category:
             qs = qs.filter(wedding_category__icontains=wedding_category)
 
+        gift_tag = request.query_params.get('gift_tag')
+        if gift_tag:
+            qs = qs.filter(gift_tags__icontains=gift_tag)   # JSONField la icontains — list-oda text match
+
+        gift_type = request.query_params.get('gift_type')
+        if gift_type:
+            qs = qs.filter(gift_subcategory__icontains=gift_type)
+
         grade = request.query_params.get('grade')
         if grade:
             qs = qs.filter(grade=grade)

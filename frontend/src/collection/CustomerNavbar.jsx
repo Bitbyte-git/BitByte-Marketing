@@ -232,12 +232,12 @@ const allJewelleryMega = [
     icon: "□",
     viewAll: ["View All Gifting", "/collection/gifting"],
     links: [
-      ["Gift For Her", "/collection/gifting?gender=women"],
-      ["Gift For Him", "/collection/gifting?gender=men"],
-      ["Kids Jewellery", "/collection/all?gender=kids"],
-      ["Corporate Gifts", "/collection/gifting?search=corporate"],
-      ["Anniversary Gifts", "/collection/gifting?occasion=Anniversary"],
-      ["Birthday Gifts", "/collection/gifting?occasion=Birthday"],
+      ["Gift For Her", "/collection/gifting?gift_tag=Her"],
+      ["Gift For Him", "/collection/gifting?gift_tag=Him"],
+      ["Kids Jewellery", "/collection/gifting?gift_tag=Kids"],
+      ["Corporate Gifts", "/collection/gifting?gift_tag=Corporate"],
+      ["Anniversary Gifts", "/collection/gifting?gift_tag=Occasion&gift_type=Anniversary%20Gifts"],
+      ["Birthday Gifts", "/collection/gifting?gift_tag=Occasion&gift_type=Birthday%20Gifts"],
     ],
   },
   {
@@ -667,7 +667,7 @@ const specialMega = {
     [
       "Gifts For Her",
       "□",
-      "/collection/gifting?gender=women",
+      "/collection/gifting?gift_tag=Her",
       [
         "Necklaces",
         "Earrings",
@@ -682,7 +682,7 @@ const specialMega = {
     [
       "Gifts For Him",
       "♙",
-      "/collection/gifting?gender=men",
+      "/collection/gifting?gift_tag=Him",
       [
         "Chains",
         "Bracelets",
@@ -697,7 +697,7 @@ const specialMega = {
     [
       "Gifts For Kids",
       "☻",
-      "/collection/all?gender=kids",
+      "/collection/gifting?gift_tag=Kids",
       [
         "Baby Jewellery",
         "Chains",
@@ -712,7 +712,7 @@ const specialMega = {
     [
       "Gifts For Couple",
       "♡",
-      "/collection/gifting?search=couple",
+      "/collection/gifting?gift_tag=Couple",
       [
         "Couple Rings",
         "Couple Pendants",
@@ -726,7 +726,7 @@ const specialMega = {
     [
       "Gifts For Parents",
       "♚",
-      "/collection/gifting?search=parents",
+      "/collection/gifting?gift_tag=Parents",
       [
         "Gold Coins",
         "Religious Pendants",
@@ -741,7 +741,7 @@ const specialMega = {
     [
       "Occasion Gifts",
       "▣",
-      "/collection/gifting?occasion=Birthday",
+      "/collection/gifting?gift_tag=Occasion",
       [
         "Birthday Gifts",
         "Anniversary Gifts",
@@ -756,7 +756,7 @@ const specialMega = {
     [
       "Corporate Gifts",
       "▤",
-      "/collection/gifting?search=corporate",
+      "/collection/gifting?gift_tag=Corporate",
       [
         "Gold Coins",
         "Silver Coins",
@@ -771,7 +771,7 @@ const specialMega = {
     [
       "Religious Gifts",
       "♙",
-      "/collection/gifting?search=religious",
+      "/collection/gifting?gift_tag=Religious",
       [
         "Gold Idols",
         "Silver Idols",
@@ -811,13 +811,26 @@ const buildSections = (list, useSubcategoryParam = false) =>
     };
   });
 
+// Gifting mega-menu mattum thani logic — search= illa, gift_type= param
+// use pannும் (namba gift_tags/gift_subcategory backend fields ku matching).
+const buildGiftingSections = (list) =>
+  list.map(([title, icon, route, links]) => ({
+    title,
+    icon,
+    viewAll: [`View All ${title}`, route],
+    links: links.map((label) => [
+      label,
+      `${route}&gift_type=${encodeURIComponent(label)}`,
+    ]),
+  }));
+
 const megaByLabel = {
   "All Jewellery": allJewelleryMega,
   Gold: buildSections(metalMega.Gold, true),
   Silver: buildSections(metalMega.Silver, true),
   Coins: buildSections(specialMega.Coins),
   Wedding: buildSections(specialMega.Wedding),
-  Gifting: buildSections(specialMega.Gifting),
+  Gifting: buildGiftingSections(specialMega.Gifting),
 };
 
 const megaIconFor = (title) => {
