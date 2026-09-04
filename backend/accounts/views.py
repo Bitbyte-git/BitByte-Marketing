@@ -1381,6 +1381,7 @@ class JewelryProductDetailView(APIView):
                       'cross_weight', 'stone_weight', 'net_weight',
                       'making_charge', 'wastage_charge', 'stone_value', 'tax_percent',
                       'price', 'original_price', 'tag', 'occasion', 'wedding_category',
+                      'gift_tags', 'gift_subcategory',
                       'gender', 'is_active',
                       'stock_quantity', 'low_stock_threshold']:   # ── NEW: restock fields ──
             if field in request.data:

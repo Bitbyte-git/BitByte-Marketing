@@ -622,6 +622,7 @@ class MetalOrder(models.Model):
 # AFTER — ADD THIS NEW MODEL:
 class JewelryProduct(models.Model):
     CATEGORY_CHOICES = [
+        ('goldcoin', 'Gold Coin'),
         ('rings', 'Rings'),
         ('necklaces', 'Necklaces'),
         ('bangles', 'Bangles'),
@@ -630,6 +631,7 @@ class JewelryProduct(models.Model):
         ('chains', 'Chains'),
         ('pendants', 'Pendants'),
         ('mangalsutra', 'Mangalsutra'),
+        ('maangtikka', 'Maang Tikka'),
         ('anklets', 'Anklets'),
         ('nosepin', 'Nose Pin'),
         ('toerings', 'Toe Rings'),
@@ -673,14 +675,6 @@ class JewelryProduct(models.Model):
         ('Traditional Wear', 'Traditional Wear'),
         ('', 'N/A'),
     ]
-    WEDDING_CATEGORY_CHOICES = [
-        ('Wedding Ring', 'Wedding Ring'),
-        ('Wedding Necklaces', 'Wedding Necklaces'),
-        ('Wedding Chain', 'Wedding Chain'),
-        ('Wedding Bangles', 'Wedding Bangles'),
-        ('Wedding Earring', 'Wedding Earring'),
-        ('', 'N/A'),
-    ]
 
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     metal = models.CharField(max_length=10, choices=METAL_CHOICES)
@@ -698,13 +692,15 @@ class JewelryProduct(models.Model):
     original_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     tag = models.CharField(max_length=50, choices=TAG_CHOICES, blank=True)
     occasion = models.CharField(max_length=50, choices=OCCASION_CHOICES, blank=True)
-    wedding_category = models.CharField(max_length=50, choices=WEDDING_CATEGORY_CHOICES, blank=True)
+    wedding_category = models.CharField(max_length=100, blank=True)
     gender = models.CharField(
     max_length=10,
     choices=[('men', 'Men'), ('women', 'Women'), ('kids', 'Kids'), ('all', 'All')],
     default='all',
     blank=True
 )
+    gift_tags = models.JSONField(default=list, blank=True)   # ["Her","Couple"] mari list
+    gift_subcategory = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -72,3 +72,34 @@ export const CATEGORY_META = {
 export function getSubcategories(category, metal) {
   return CATEGORY_SUBCATEGORIES[category]?.[metal] || [];
 }
+
+// Wedding/bridal type list — navbar's Wedding mega-menu ku matching data.
+// Category select pannina, andha category ku matching bridal types mattum kaatum.
+export const WEDDING_SUBCATEGORIES = {
+  rings: ["Engagement Rings", "Wedding Rings", "Kundan Rings", "Temple Rings", "Couple Rings", "Antique Rings", "Polki Rings"],
+  necklaces: ["Temple Necklaces", "Kundan Necklaces", "Antique Necklaces", "Polki Necklaces", "Traditional Necklaces", "Long Haaram", "Choker Necklaces", "Rani Haar"],
+  bangles: ["Gold Bangles", "Kundan Bangles", "Antique Bangles", "Polki Bangles", "Kada Bangles", "Temple Bangles", "Designer Bangles"],
+  earrings: ["Jhumka Earrings", "Kundan Earrings", "Temple Earrings", "Chandbali Earrings", "Polki Earrings", "Long Earrings", "Stud Earrings", "Drop Earrings"],
+  mangalsutra: ["Traditional Mangalsutra", "Beaded Mangalsutra", "Pendant Mangalsutra", "Short Mangalsutra", "Gold Mangalsutra", "Black Bead Mangalsutra", "Mangalsutra Sets"],
+};
+
+export function getWeddingSubcategories(category) {
+  return WEDDING_SUBCATEGORIES[category] || [];
+}
+
+// Gift Tags sub-list — navbar's Gifting mega-menu ku matching data.
+// Admin oru gift tag (Her/Him/Kids...) select pannina, andha tag-oda specific items mattum dropdown la varum.
+export const GIFT_TAG_SUBCATEGORIES = {
+  her: ["Necklaces", "Earrings", "Rings", "Bracelets", "Pendants", "Bangles", "Mangalsutra", "Nose Pins"],
+  him: ["Chains", "Bracelets", "Rings", "Pendants", "Cufflinks", "Tie Pins", "Men's Kada", "Coins & Bars"],
+  kids: ["Baby Jewellery", "Chains", "Earrings", "Bracelets", "Nazariya", "Anklets", "Pendants", "ID Bracelets"],
+  couple: ["Couple Rings", "Couple Pendants", "Matching Bracelets", "His & Her Sets", "Engagement Gifts", "Anniversary Gifts", "Personalised Gifts"],
+  parents: ["Gold Coins", "Religious Pendants", "Chains", "Bracelets", "Rings", "Pooja Articles", "Silver Articles", "Health Pendants"],
+  occasion: ["Birthday Gifts", "Anniversary Gifts", "Wedding Gifts", "Housewarming Gifts", "Festive Gifts", "Graduation Gifts", "Promotion Gifts", "Baby Shower Gifts"],
+  corporate: ["Gold Coins", "Silver Coins", "Desk Accessories", "Pen Sets", "Customized Coins", "Mementos", "Trophies", "Premium Sets"],
+  religious: ["Gold Idols", "Silver Idols", "Pooja Items", "Religious Pendants", "Yantra Pendants", "Mala & Chains", "Temple Jewellery", "Spiritual Coins"],
+};
+
+export function getGiftSubcategories(tag) {
+  return GIFT_TAG_SUBCATEGORIES[tag?.toLowerCase()] || [];
+}

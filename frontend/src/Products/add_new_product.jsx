@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api'
-import { getSubcategories } from '../config/categoryConfig'
+import { getSubcategories, getWeddingSubcategories, getGiftSubcategories } from '../config/categoryConfig'
 
 function Icon({ name, size = 16, className = '' }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, className }
@@ -18,6 +18,7 @@ function Icon({ name, size = 16, className = '' }) {
 }
 
 const CATEGORIES = [
+  { key: 'goldcoin', label: 'Gold Coin', emoji: '' },
   { key: 'rings', label: 'Rings', emoji: 'R' },
   { key: 'necklaces', label: 'Necklaces', emoji: 'N' },
   { key: 'bangles', label: 'Bangles', emoji: 'B' },
@@ -32,12 +33,13 @@ const CATEGORIES = [
   { key: 'cufflinks', label: 'Cufflinks', emoji: 'CF' },
   { key: 'brooches', label: 'Brooches', emoji: 'BC' },
   { key: 'tiepins', label: 'Tie Pins', emoji: 'TP' },
-  { key: 'coins', label: 'Coins & Bars', emoji: 'CB' },
+  { key: 'coins', label: 'Gold Bar', emoji: 'CB' },
 ]
 
+const HIDDEN_METALS = ['diamond', 'platinum']  
 const TAGS = ['Bestseller', 'Bridal', 'Premium', 'Statement', 'Stackable', 'New', 'Limited']
 const OCCASIONS = ['Wedding', 'Birthday', 'Anniversary', 'Auspicious', 'Office Wear', 'Modern Wear', 'Casual Wear', 'Traditional Wear']
-const WEDDING_CATEGORIES = ['Wedding Ring', 'Wedding Necklaces', 'Wedding Chain', 'Wedding Bangles', 'Wedding Earring']
+// const WEDDING_CATEGORIES = ['Wedding Ring', 'Wedding Necklaces', 'Wedding Chain', 'Wedding Bangles', 'Wedding Earring']
 const GENDERS = ['all', 'women', 'men', 'kids']
 
 const SUBCATEGORIES = {
@@ -125,7 +127,7 @@ const getGradeOptions = (metal, category) => {
   if (metal === 'diamond') return ['18k', '22k']
   if (metal === 'platinum') return ['92']
   if (metal === 'silver') return ['999']
-  if (metal === 'gold') return category === 'coins' ? ['22k', '24k'] : ['22k']
+  if (metal === 'gold') return ['22k', '24k']
   return []
 }
 
@@ -144,7 +146,7 @@ export default function AddNewProduct() {
     category: '', metal: '', grade: '', name: '', nameChoice: '', description: '',
     cross_weight: '', stone_weight: '', making_charge: '', stone_value: '',
     tag: '', subcategory: '', occasion: '', wedding_category: '', gender: 'all', wastage_charge: '',
-    stock_quantity: ''
+    stock_quantity: '', gift_tags: [], gift_subcategory: ''
   })
   const [productSaving, setProductSaving] = useState(false)
   const [livePrice, setLivePrice] = useState(null)
@@ -251,6 +253,7 @@ export default function AddNewProduct() {
           const fd = new FormData()
       Object.entries(productForm).forEach(([k, v]) => {
         if (k === 'subcategory' || k === 'nameChoice') return   // backend model-la illa — skip pannanum
+        if (k === 'gift_tags') { fd.append(k, JSON.stringify(v)); return }   // array-ah JSON string-a send pannanum
         fd.append(k, v)
       })
       fd.append('net_weight', netWeight || 0)
@@ -265,28 +268,37 @@ export default function AddNewProduct() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: bg, color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
+    <div className="anp-page" style={{ minHeight: '100vh', background: bg, color: text, fontFamily: '"Manrope","Inter",system-ui,sans-serif' }}>
       <style>{`
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
         @keyframes spin { to { transform: rotate(360deg) } }
         .anp-spin { animation: spin 1s linear infinite; }
-        input:focus, textarea:focus, select:focus { border-color:#0C4044 !important; box-shadow:0 0 0 4px rgba(209,223,222,.65) !important }
+        .anp-page { --anp-ink:#172525; --anp-muted:#70817f; --anp-line:#d5dfdd; --anp-gold:#b77b46; }
+        .anp-page input, .anp-page textarea, .anp-page select { border-color:var(--anp-line) !important; background:rgba(255,255,255,.72) !important; border-radius:10px !important; min-height:48px; }
+        .anp-page input:focus, .anp-page textarea:focus, .anp-page select:focus { border-color:#0C4044 !important; box-shadow:0 0 0 4px rgba(209,223,222,.65) !important }
+        .anp-page label { font-family:"Manrope","Inter",system-ui,sans-serif; }
+        .anp-nav { position:relative; overflow:hidden; }
+        .anp-title { display:flex; align-items:center; gap:12px; color:#073B3F; font-family:Georgia,"Times New Roman",serif; font-size:26px; letter-spacing:0; text-transform:none; }
+        .anp-title-mark { width:32px; height:32px; display:grid; place-items:center; border:1px solid rgba(183,123,70,.5); border-radius:50%; color:#9F6130; background:rgba(243,232,222,.65); }
+        .anp-back { position:relative; z-index:1; transition:transform .2s ease, box-shadow .2s ease !important; }
+        .anp-back:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(201,32,53,.14); }
+        .anp-shell { position:relative; }
+        .anp-card { position:relative; overflow:hidden; }
+        .anp-card::before { content:""; display:block; width:72px; height:3px; margin-bottom:22px; background:linear-gradient(90deg,#9F6130,#E6D6C5); border-radius:4px; }
+        .anp-grid { position:relative; }
+        .anp-grid::before { content:""; position:absolute; left:0; right:0; top:-1px; height:1px; background:linear-gradient(90deg,transparent,rgba(183,123,70,.3),transparent); }
+        .anp-grid > div { min-width:0; }
+        .anp-card select { appearance:auto; }
+        .anp-card textarea { min-height:74px !important; }
+        .anp-save { min-height:50px !important; box-shadow:0 14px 30px rgba(7,59,63,.2); transition:transform .2s ease, box-shadow .2s ease, background .2s ease !important; }
+        .anp-save:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 18px 36px rgba(7,59,63,.27); }
+        @media (max-width: 900px) { .anp-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
+        @media (max-width: 560px) { .anp-nav { padding:16px 18px !important; } .anp-title { font-size:21px; } .anp-back { padding:10px 12px !important; font-size:11px !important; } .anp-shell { padding:22px 12px 38px !important; } .anp-card { padding:20px 16px !important; border-radius:16px !important; } .anp-grid { grid-template-columns:1fr !important; } }
       `}</style>
 
-      {/* ── NAVBAR ── */}
-      <div style={{ background: glass, borderBottom: `1px solid ${border}`, padding: '18px 32px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 18px 42px rgba(7,59,63,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0C4044', fontSize: '15px', fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-          <Icon name="plus" size={16} />Add New Product
-        </div>
-        <div style={{ flex: 1 }} />
-        <button onClick={() => navigate('/add-product')} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '11px 16px', borderRadius: '14px', background: 'rgba(201,32,53,0.08)', border: '1px solid rgba(201,32,53,0.3)', color: '#C92035', fontSize: '12px', fontWeight: 800, cursor: 'pointer' }}>
-          <Icon name="back" size={14} />Back to Products
-        </button>
-      </div>
-
       {/* ── PAGE BODY ── */}
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '34px 32px 56px' }}>
-        <div style={{ background: cardBg, border: cardBorder, borderRadius: '22px', padding: '30px', animation: 'fadeIn 0.3s ease', boxShadow: '0 24px 64px rgba(7,59,63,0.08)' }}>
+      <div className="anp-shell" style={{ maxWidth: '1240px', margin: '0 auto', padding: '34px 32px 56px' }}>
+        <div className="anp-card" style={{ background: cardBg, border: cardBorder, borderRadius: '22px', padding: '34px', animation: 'fadeIn 0.3s ease', boxShadow: '0 24px 64px rgba(7,59,63,0.08)' }}>
 
           {productMsg && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: productMsg.startsWith('OK:') ? 'rgba(12,64,68,0.1)' : 'rgba(201,32,53,0.1)', border: `1px solid ${productMsg.startsWith('OK:') ? 'rgba(12,64,68,0.3)' : 'rgba(201,32,53,0.3)'}`, color: productMsg.startsWith('OK:') ? '#0C4044' : '#C92035', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px' }}>
@@ -295,45 +307,35 @@ export default function AddNewProduct() {
             </div>
           )}
 
-          {/* Row 1 - metal / category / wedding category / grade */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                    {/* Row 1 - metal / grade / product / gender */}
+          <div className="anp-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '18px', marginBottom: '16px', paddingTop: '18px' }}>
             <div>
               <label style={lblStyle}>Metal *</label>
               <select value={productForm.metal} onChange={e => setProductForm(f => ({ ...f, metal: e.target.value, grade: '', name: '' }))} style={{ ...inpStyle, cursor: 'pointer' }}>
                 <option value="" style={{ background: optionBg }}>-- Select --</option>
-                <option value="gold" style={{ background: optionBg }}>🏅 Gold</option>
-                <option value="silver" style={{ background: optionBg }}>🥈 Silver</option>
-                <option value="diamond" style={{ background: optionBg }}>💎 Diamond</option>
-                <option value="platinum" style={{ background: optionBg }}>⚪ Platinum</option>
+                {!HIDDEN_METALS.includes('gold') && <option value="gold" style={{ background: optionBg }}>🏅 Gold</option>}
+                {!HIDDEN_METALS.includes('silver') && <option value="silver" style={{ background: optionBg }}>🥈 Silver</option>}
+                {!HIDDEN_METALS.includes('diamond') && <option value="diamond" style={{ background: optionBg }}>💎 Diamond</option>}
+                {!HIDDEN_METALS.includes('platinum') && <option value="platinum" style={{ background: optionBg }}>⚪ Platinum</option>}
               </select>
             </div>
 
-            <div>
-              <label style={lblStyle}>Product *</label>
-              <select value={productForm.category} onChange={e => setProductForm(f => ({ ...f, category: e.target.value, grade: '', name: '' }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-                <option value="" style={{ background: optionBg }}>-- Select --</option>
-                {CATEGORIES.map(c => <option key={c.key} value={c.key} style={{ background: optionBg }}>{c.emoji} {c.label}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label style={lblStyle}>Wedding Category</label>
-              <select value={productForm.wedding_category} onChange={e => setProductForm(f => ({ ...f, wedding_category: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-                <option value="" style={{ background: optionBg }}>-- None --</option>
-                {WEDDING_CATEGORIES.map(w => <option key={w} value={w} style={{ background: optionBg }}>{w}</option>)}
-              </select>
-            </div>
-
-            {(() => {
+                        {(() => {
               const m = productForm.metal
               const cat = productForm.category
-              if (!m || m === '') return <div />
               const gradeOptions = getGradeOptions(m, cat)
               return (
                 <div>
                   <label style={lblStyle}>Grade *</label>
-                  <select value={productForm.grade} onChange={e => setProductForm(f => ({ ...f, grade: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-                    <option value="" style={{ background: optionBg }}>-- Select --</option>
+                  <select
+                    value={productForm.grade}
+                    onChange={e => setProductForm(f => ({ ...f, grade: e.target.value }))}
+                    disabled={!m}
+                    style={{ ...inpStyle, cursor: 'pointer' }}
+                  >
+                    <option value="" style={{ background: optionBg }}>
+                      {m ? '-- Select --' : 'Select metal first'}
+                    </option>
                     {gradeOptions.map(g => (
                       <option key={g} value={g} style={{ background: optionBg }}>{g.toUpperCase()}</option>
                     ))}
@@ -341,11 +343,26 @@ export default function AddNewProduct() {
                 </div>
               )
             })()}
+
+            <div>
+              <label style={lblStyle}>Product *</label>
+              <select value={productForm.category} onChange={e => setProductForm(f => ({ ...f, category: e.target.value, name: '' }))} style={{ ...inpStyle, cursor: 'pointer' }}>
+                <option value="" style={{ background: optionBg }}>-- Select --</option>
+                {CATEGORIES.map(c => <option key={c.key} value={c.key} style={{ background: optionBg }}>{c.emoji} {c.label}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={lblStyle}>Gender</label>
+              <select value={productForm.gender} onChange={e => setProductForm(f => ({ ...f, gender: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
+                {GENDERS.map(g => <option key={g} value={g} style={{ background: optionBg }}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>)}
+              </select>
+            </div>
           </div>
 
-          {/* Row 2 - Product Name / Occasion / Tag */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-                        <div>
+          {/* Row 2 - product name / wedding category / gift tags / gift subcategory */}
+          <div className="anp-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '18px', marginBottom: '16px', paddingTop: '18px' }}>
+            <div>
               <label style={lblStyle}>Product Name *</label>
               <select
                 value={productForm.nameChoice === 'other' ? 'other' : productForm.name}
@@ -378,6 +395,62 @@ export default function AddNewProduct() {
                 />
               )}
             </div>
+
+            <div>
+              <label style={lblStyle}>Wedding Category</label>
+              <select
+                value={productForm.wedding_category}
+                onChange={e => setProductForm(f => ({ ...f, wedding_category: e.target.value }))}
+                disabled={!productForm.category}
+                style={{ ...inpStyle, cursor: 'pointer' }}
+              >
+                <option value="" style={{ background: optionBg }}>
+                  {productForm.category ? '-- None --' : 'Select product first'}
+                </option>
+                {getWeddingSubcategories(productForm.category).map(w => (
+                  <option key={w} value={w} style={{ background: optionBg }}>{w}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={lblStyle}>Gift Tags</label>
+              <select
+                value={productForm.gift_tags[0] || ''}
+                onChange={e => setProductForm(f => ({
+                  ...f,
+                  gift_tags: e.target.value ? [e.target.value] : [],
+                  gift_subcategory: ''
+                }))}
+                style={{ ...inpStyle, cursor: 'pointer' }}
+              >
+                <option value="" style={{ background: optionBg }}>-- None --</option>
+                {['Her', 'Him', 'Kids', 'Couple', 'Parents',  'Occasion', 'Corporate', 'Religious'].map(gt => (
+                  <option key={gt} value={gt} style={{ background: optionBg, padding: '6px' }}>{gt}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={lblStyle}>Gift Type</label>
+              <select
+                value={productForm.gift_subcategory}
+                onChange={e => setProductForm(f => ({ ...f, gift_subcategory: e.target.value }))}
+                disabled={productForm.gift_tags.length === 0}
+                style={{ ...inpStyle, cursor: 'pointer' }}
+              >
+                <option value="" style={{ background: optionBg }}>
+                  {productForm.gift_tags.length ? '-- None --' : 'Select gift tag first'}
+                </option>
+                {[...new Set(productForm.gift_tags.flatMap(t => getGiftSubcategories(t)))].map(gs => (
+                  <option key={gs} value={gs} style={{ background: optionBg }}>{gs}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Row 3 - occasion / tag */}
+          <div className="anp-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px', marginBottom: '16px', paddingTop: '18px' }}>
             <div>
               <label style={lblStyle}>Occasion</label>
               <select value={productForm.occasion} onChange={e => setProductForm(f => ({ ...f, occasion: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
@@ -385,21 +458,11 @@ export default function AddNewProduct() {
                 {OCCASIONS.map(o => <option key={o} value={o} style={{ background: optionBg }}>{o}</option>)}
               </select>
             </div>
-                        <div>
+            <div>
               <label style={lblStyle}>Tag</label>
               <select value={productForm.tag} onChange={e => setProductForm(f => ({ ...f, tag: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
                 <option value="" style={{ background: optionBg }}>-- None --</option>
                 {TAGS.map(t => <option key={t} value={t} style={{ background: optionBg }}>{t}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Row 3 - Gender */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-            <div>
-              <label style={lblStyle}>Gender</label>
-              <select value={productForm.gender} onChange={e => setProductForm(f => ({ ...f, gender: e.target.value }))} style={{ ...inpStyle, cursor: 'pointer' }}>
-                {GENDERS.map(g => <option key={g} value={g} style={{ background: optionBg }}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>)}
               </select>
             </div>
           </div>
@@ -411,7 +474,7 @@ export default function AddNewProduct() {
           </div>
 
           {/* Weight Section + Stock */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+          <div className="anp-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '18px', marginBottom: '16px', paddingTop: '18px' }}>
             <div>
               <label style={lblStyle}>Cross Weight (g) *</label>
               <input type="number" step="0.0001" value={productForm.cross_weight}
@@ -457,7 +520,7 @@ export default function AddNewProduct() {
           </div>
 
           {/* Making Charge + Stone Value + Final Price */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+          <div className="anp-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '18px', marginBottom: '18px', paddingTop: '18px' }}>
             <div>
               <label style={lblStyle}>Making Charge (%)</label>
               <input type="number" step="0.01" value={productForm.making_charge}
@@ -546,7 +609,7 @@ export default function AddNewProduct() {
             )}
           </div>
 
-          <button disabled={productSaving} onClick={handleSave}
+          <button className="anp-save" disabled={productSaving} onClick={handleSave}
             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 32px', background: productSaving ? 'rgba(12,64,68,0.22)' : 'linear-gradient(135deg,#0C4044,#073B3F)', border: 'none', borderRadius: '12px', fontWeight: 900, fontSize: '14px', color: productSaving ? '#0C4044' : '#FDFDFC', cursor: productSaving ? 'not-allowed' : 'pointer' }}>
             {productSaving ? <><Icon name="spinner" size={15} className="anp-spin" />Saving...</> : <><Icon name="check" size={15} />Add Product</>}
           </button>
